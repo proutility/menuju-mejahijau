@@ -141,83 +141,116 @@
         .feature-icon { color: var(--primary); font-size: 0.95rem; background: rgba(0,77,0,0.08); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
         .dev-footer { grid-column: 1 / -1; font-size: 0.75rem; color: #666; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); font-weight: 500; text-align: center; opacity: 0.7; }
         
-        /* ====================================================== */
-        /* KHUSUS TAMPILAN HP (MOBILE ONLY FIX) - PASTE DI BAWAH */
-        /* ====================================================== */
+        /* ============================================================ */
+        /* 🔥 FINAL MOBILE FIX: GABUNGAN LAYOUT + HEADER (PASTE PALING BAWAH) 🔥 */
+        /* ============================================================ */
         @media only screen and (max-width: 768px) {
         
-            /* 1. RESET LAYOUT UTAMA: Ubah dari Grid (Laptop) ke Tumpuk (HP) */
-            .hero-section {
-                display: flex !important;           /* Matikan Grid, pake Flex */
-                flex-direction: column !important;  /* Tumpuk ke bawah */
-                height: auto !important;            /* Tinggi menyesuaikan isi */
-                min-height: 100vh !important;       /* Minimal setinggi layar */
-                padding: 85px 20px 40px 20px !important; /* Padding Atas 85px biar gak ketutup Navbar */
-                gap: 25px !important;               /* Jarak antar elemen */
-                align-items: center !important;
+            /* --- 1. BAGIAN HEADER (NAVBAR & LOGIN) --- */
+            .landing-nav {
+                padding: 10px 15px !important; /* Jarak aman pinggir layar */
+                gap: 10px !important;
             }
         
-            /* 2. BAGIAN TEKS MOTIVASI (KIRI) */
+            .landing-logo {
+                height: 35px !important; /* Logo agak kecil biar muat */
+            }
+        
+            .brand-text-wrapper {
+                padding-left: 5px !important;
+                justify-content: center !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+            }
+        
+            .brand-title {
+                font-size: 1rem !important;
+                margin-bottom: 2px !important;
+                line-height: 1.1 !important;
+            }
+        
+            .brand-subtitle {
+                font-size: 0.7rem !important;
+                display: block !important;
+                padding-top: 2px !important;
+            }
+        
+            .nav-login-btn {
+                padding: 8px 12px !important; /* Padding tombol login PAS */
+                font-size: 0.8rem !important;
+                margin-left: auto !important; /* Dorong ke kanan mentok */
+            }
+            
+            .nav-login-btn span { display: none !important; } /* Sembunyiin teks panjang */
+            .nav-login-btn::after { content: "LOGIN"; }      /* Ganti jadi pendek */
+        
+            /* --- 2. CONTAINER UTAMA (URUTAN ATAS-BAWAH) --- */
+            .hero-section {
+                display: flex !important;           /* Matikan Grid Laptop */
+                flex-direction: column !important;  /* Tumpuk ke bawah */
+                padding: 90px 20px 40px 20px !important; /* Padding aman dari Navbar */
+                height: auto !important;
+                min-height: auto !important;
+                gap: 30px !important;
+                align-items: center !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+        
+            /* --- 3. TEKS MOTIVASI (KIRI -> JADI ATAS) --- */
             .hero-left {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                text-align: center !important;      /* Teks rata tengah di HP */
+                text-align: center !important; /* Rata Tengah */
             }
         
             .hero-quote {
-                font-size: 1.4rem !important;       /* Ukuran font disesuaikan HP */
+                font-size: 1.5rem !important; /* Font judul pas di HP */
                 line-height: 1.4 !important;
-                margin-bottom: 10px !important;
+                margin-bottom: 15px !important;
                 width: 100% !important;
             }
         
-            /* 3. BAGIAN FITUR (KANAN) - PERBAIKAN BIAR GAK KEPOTONG */
+            /* --- 4. LIST FITUR (KANAN -> JADI BAWAH) --- */
             .hero-right {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                align-items: stretch !important;    /* Biar lebar ngisi layar */
+                display: block !important;
+                align-items: stretch !important;
             }
         
             .hero-features {
-                display: flex !important;           /* Paksa jadi Flex */
-                flex-direction: column !important;  /* Tumpuk ke bawah satu-satu */
-                gap: 10px !important;
+                display: flex !important;           /* Pake Flex */
+                flex-direction: column !important;  /* Arah ke Bawah */
                 width: 100% !important;
-                grid-template-columns: none !important; /* Matikan efek 2 kolom laptop */
+                gap: 12px !important;
+                grid-template-columns: none !important; /* Matikan Grid Laptop */
             }
         
             .hero-features li {
-                width: 100% !important;             /* Lebar Penuh */
-                box-sizing: border-box !important;  /* PENTING: Biar padding gak bikin lebar offside */
-                margin: 0 !important;
-                font-size: 0.9rem !important;       /* Font isi fitur pas di mata */
-                padding: 12px 15px !important;
-            }
-        
-            /* 4. NAVBAR HP (Biar Rapi & Tombol Login Gak Gede Banget) */
-            .landing-nav {
-                padding: 10px 15px !important;
-            }
-            .landing-logo {
-                height: 35px !important;
-            }
-            .brand-title { font-size: 1rem !important; }
-            .brand-subtitle { font-size: 0.65rem !important; }
-            
-            .nav-login-btn {
-                padding: 8px 12px !important;
-                font-size: 0.8rem !important;
-            }
-            .nav-login-btn span { display: none !important; } /* Sembunyiin tulisan panjang di HP */
-            .nav-login-btn::after { content: "LOGIN"; }      /* Ganti jadi tulisan pendek */
-        
-            /* 5. FOOTER */
-            .dev-footer {
-                margin-top: 30px !important;
                 width: 100% !important;
+                margin: 0 !important;
+                box-sizing: border-box !important;  /* KUNCI: Biar gak kepotong samping */
+                font-size: 0.9rem !important;
+                padding: 12px 15px !important;
+                max-width: none !important;
+            }
+        
+            .feature-icon {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 1rem !important;
+                flex-shrink: 0 !important;
+            }
+        
+            /* --- 5. FOOTER --- */
+            .dev-footer {
+                width: 100% !important;
+                margin-top: 30px !important;
                 position: relative !important;
+                text-align: center !important;
             }
         }
         /* APP STYLES */
@@ -3341,6 +3374,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
