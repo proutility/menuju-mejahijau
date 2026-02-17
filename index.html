@@ -141,106 +141,85 @@
         .feature-icon { color: var(--primary); font-size: 0.95rem; background: rgba(0,77,0,0.08); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
         .dev-footer { grid-column: 1 / -1; font-size: 0.75rem; color: #666; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); font-weight: 500; text-align: center; opacity: 0.7; }
         
-       /* ========================================= */
-        /* RESPONSIVE: GABUNGAN FIX HEADER + ORIGINAL BODY */
-        /* ========================================= */
-        @media (max-width: 992px) {
-            /* --- 1. BAGIAN HEADER (INI YANG BARU & RAPI) --- */
-            .landing-nav { 
-                padding: 10px 15px; 
-                gap: 10px; 
-            }
-            .nav-brand {
-                gap: 10px;
-            }
-            .landing-logo { 
-                height: 38px; 
-            }
-            
-            /* Teks Jadi Atas Bawah (Simetris) */
-            .brand-text-wrapper {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0;
-                line-height: 1.2;
-            }
-            .brand-title {
-                font-size: 1.1rem;
-            }
-            .brand-subtitle {
-                font-size: 0.7rem;
-                color: var(--gold);
-                font-weight: 600;
-            }
-
-            /* Tombol Login Kompak */
-            .nav-login-btn { 
-                padding: 6px 12px; 
-                font-size: 0.8rem; 
-                border-radius: 50px; 
-            }
-            .nav-login-btn img { 
-                width: 18px; height: 18px; 
-            }
-            .nav-login-btn span { display: none; } /* Umpetin teks panjang */
-            .nav-login-btn::after { content: "LOGIN"; } /* Ganti jadi pendek */
-
-
-            /* --- 2. BAGIAN BODY & FOOTER (INI DIBALIKIN KE ASALNYA) --- */
+        /* ====================================================== */
+        /* KHUSUS TAMPILAN HP (MOBILE ONLY FIX) - PASTE DI BAWAH */
+        /* ====================================================== */
+        @media only screen and (max-width: 768px) {
+        
+            /* 1. RESET LAYOUT UTAMA: Ubah dari Grid (Laptop) ke Tumpuk (HP) */
             .hero-section {
-                    display: flex !important; /* Paksa Flexbox, matikan Grid laptop */
-                    flex-direction: column !important;
-                    padding: 40px 20px 80px 20px !important; /* Atas, Kanan, Bawah, Kiri */
-                    height: auto !important; /* Biar bisa di-scroll kalau panjang */
-                    min-height: auto !important;
-                    gap: 30px !important;
-                }
-            
-            .hero-left {
-                    padding-right: 0 !important;
-                    text-align: center !important; /* Rata tengah di HP lebih rapi */
-                    width: 100% !important;
-                }
-
-            .hero-quote {
-                    font-size: 1.6rem !important; /* Ukuran font dikecilin (sebelumnya 2.8rem) */
-                    line-height: 1.3 !important;
-                    margin-bottom: 10px !important;
-                }
-            
-            .hero-right {
-                    padding-left: 0 !important;
-                    width: 100% !important;
-                    align-items: stretch !important; /* Paksa lebar penuh */
-                }
-            
-            .hero-features {
-                    display: flex !important; /* Pake Flex biar gampang */
-                    flex-direction: column !important; /* Tumpuk ke bawah */
-                    gap: 10px !important;
-                }
-            
-            .hero-features li {
-                    width: 100% !important; /* Paksa lebar 100% layar */
-                    box-sizing: border-box !important; /* Biar padding gak bikin lebar meleb */
-                    font-size: 0.85rem !important;
-                    padding: 12px 15px !important;
-                    margin: 0 !important;
-                }
-                
-            .feature-icon {
-                    width: 30px !important;
-                    height: 30px !important;
-                    font-size: 1rem !important;
-                }
-            
-             .dev-footer {
-                    margin-top: 20px !important;
-                    position: relative !important;
-                    bottom: auto !important;
-                    border-top: none !important;
-                }
+                display: flex !important;           /* Matikan Grid, pake Flex */
+                flex-direction: column !important;  /* Tumpuk ke bawah */
+                height: auto !important;            /* Tinggi menyesuaikan isi */
+                min-height: 100vh !important;       /* Minimal setinggi layar */
+                padding: 85px 20px 40px 20px !important; /* Padding Atas 85px biar gak ketutup Navbar */
+                gap: 25px !important;               /* Jarak antar elemen */
+                align-items: center !important;
             }
+        
+            /* 2. BAGIAN TEKS MOTIVASI (KIRI) */
+            .hero-left {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                text-align: center !important;      /* Teks rata tengah di HP */
+            }
+        
+            .hero-quote {
+                font-size: 1.4rem !important;       /* Ukuran font disesuaikan HP */
+                line-height: 1.4 !important;
+                margin-bottom: 10px !important;
+                width: 100% !important;
+            }
+        
+            /* 3. BAGIAN FITUR (KANAN) - PERBAIKAN BIAR GAK KEPOTONG */
+            .hero-right {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                align-items: stretch !important;    /* Biar lebar ngisi layar */
+            }
+        
+            .hero-features {
+                display: flex !important;           /* Paksa jadi Flex */
+                flex-direction: column !important;  /* Tumpuk ke bawah satu-satu */
+                gap: 10px !important;
+                width: 100% !important;
+                grid-template-columns: none !important; /* Matikan efek 2 kolom laptop */
+            }
+        
+            .hero-features li {
+                width: 100% !important;             /* Lebar Penuh */
+                box-sizing: border-box !important;  /* PENTING: Biar padding gak bikin lebar offside */
+                margin: 0 !important;
+                font-size: 0.9rem !important;       /* Font isi fitur pas di mata */
+                padding: 12px 15px !important;
+            }
+        
+            /* 4. NAVBAR HP (Biar Rapi & Tombol Login Gak Gede Banget) */
+            .landing-nav {
+                padding: 10px 15px !important;
+            }
+            .landing-logo {
+                height: 35px !important;
+            }
+            .brand-title { font-size: 1rem !important; }
+            .brand-subtitle { font-size: 0.65rem !important; }
+            
+            .nav-login-btn {
+                padding: 8px 12px !important;
+                font-size: 0.8rem !important;
+            }
+            .nav-login-btn span { display: none !important; } /* Sembunyiin tulisan panjang di HP */
+            .nav-login-btn::after { content: "LOGIN"; }      /* Ganti jadi tulisan pendek */
+        
+            /* 5. FOOTER */
+            .dev-footer {
+                margin-top: 30px !important;
+                width: 100% !important;
+                position: relative !important;
+            }
+        }
         /* APP STYLES */
         #appSection { display: none; width: 100%; height: 100%; display: flex; background-color: #f4f7f6; position: fixed; top: 0; left: 0; z-index: 10; }
         .sidebar-left { width: 280px; background-color: white; border-right: 1px solid #ddd; display: flex; flex-direction: column; height: 100%; flex-shrink: 0; z-index: 10; transition: margin-left 0.3s ease; }
@@ -3362,6 +3341,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
