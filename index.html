@@ -141,15 +141,15 @@
         .feature-icon { color: var(--primary); font-size: 0.95rem; background: rgba(0,77,0,0.08); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
         .dev-footer { grid-column: 1 / -1; font-size: 0.75rem; color: #666; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); font-weight: 500; text-align: center; opacity: 0.7; }
         
-        /* ==================================================================== */
-        /* 🔥 FINAL GOLD FIX: HEADER KIRI RAPET + BODY TENGAH ESTETIK 🔥       */
-        /* (Paste ini di baris PALING BAWAH dalam tag <style>)                  */
-        /* ==================================================================== */
+        /* ========================================================================= */
+        /* 🔥 FINAL MOBILE FIX V4: HEADER RAPET BANGET + BODY TENGAH ESTETIK 🔥     */
+        /* (Paste ini di baris PALING BAWAH dalam tag <style>, Timpa yang lama)      */
+        /* ========================================================================= */
         @media only screen and (max-width: 768px) {
         
             /* --- 1. HEADER (NAVBAR) --- */
             .landing-nav {
-                padding: 8px 15px !important;
+                padding: 8px 12px !important; /* Padding pinggir diperkecil dikit */
                 display: flex !important;
                 justify-content: space-between !important;
                 align-items: center !important;
@@ -159,26 +159,29 @@
                 display: flex !important;
                 align-items: center !important;
                 flex: 1 !important;
-                /* Hapus gap di sini, kita atur pake margin di text-wrapper */
+                justify-content: flex-start !important; /* Paksa nempel kiri */
+                gap: 0 !important; /* Hapus gap bawaan flex */
             }
         
             .landing-logo {
-                height: 38px !important; /* Ukuran Logo */
+                height: 35px !important; /* Ukuran Logo */
+                margin-right: 0 !important; /* Pastikan gak ada margin kanan */
+                display: block !important;
             }
         
-            /* TEKS PRO-TAMA: RATA KIRI & RAPET */
+            /* TEKS PRO-TAMA: RAPETIN MARGIN KIRI */
             .brand-text-wrapper {
                 display: flex !important;
-                flex-direction: column !important; /* Atas Bawah */
-                align-items: flex-start !important; /* RATA KIRI (POJOK) */
+                flex-direction: column !important;
+                align-items: flex-start !important;
                 justify-content: center !important;
-                margin-left: 6px !important; /* Jarak dari Logo ke Teks */
-                gap: 0 !important; /* Hapus jarak antar teks */
+                margin-left: 6px !important; /* Jarak Logo ke Tulisan (Kecil aja) */
+                gap: 0 !important;
                 line-height: 1 !important;
             }
         
             .brand-title {
-                font-size: 1rem !important;
+                font-size: 0.9rem !important; /* Ukuran Font Judul Pas */
                 margin: 0 !important;
                 padding: 0 !important;
                 font-weight: 800 !important;
@@ -186,24 +189,24 @@
             }
         
             .brand-subtitle {
-                font-size: 0.65rem !important;
+                font-size: 0.6rem !important; /* Subtitle kecil rapi */
                 margin: 0 !important;
                 padding: 0 !important;
                 color: var(--gold) !important;
                 display: block !important;
-                margin-top: 2px !important; /* Jarak super tipis dari judul */
+                margin-top: 1px !important;
             }
         
             /* TOMBOL LOGIN */
             .nav-login-btn {
-                padding: 6px 12px !important;
+                padding: 6px 10px !important;
                 font-size: 0.75rem !important;
                 margin: 0 !important;
             }
             .nav-login-btn span { display: none !important; }
             .nav-login-btn::after { content: "LOGIN"; }
         
-            /* --- 2. BODY / KONTEN UTAMA --- */
+            /* --- 2. BODY / KONTEN UTAMA (TETAP SAMA YANG LO SUKA) --- */
             .hero-section {
                 display: flex !important;
                 flex-direction: column !important;
@@ -212,10 +215,9 @@
                 gap: 25px !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
-                align-items: center !important; /* Tengahin konten body */
+                align-items: center !important;
             }
         
-            /* TEKS MOTIVASI (Tengah) */
             .hero-left {
                 width: 100% !important;
                 padding: 0 !important;
@@ -229,14 +231,13 @@
                 margin-bottom: 10px !important;
             }
         
-            /* LIST FITUR (Tengah Estetik) */
             .hero-right {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
-                align-items: center !important; /* Tengahin List */
+                align-items: center !important;
             }
         
             .hero-features {
@@ -244,23 +245,22 @@
                 flex-direction: column !important;
                 width: 100% !important;
                 gap: 10px !important;
-                align-items: center !important; /* Item di tengah */
+                align-items: center !important;
                 grid-template-columns: none !important;
             }
         
             .hero-features li {
-                width: 85% !important;       /* Lebar 90% biar estetik (sisa kiri kanan) */
-                max-width: 350px !important; /* Biar gak kepanjangan di tablet */
+                width: 90% !important;
+                max-width: 350px !important;
                 margin: 0 auto !important;
                 box-sizing: border-box !important;
                 font-size: 0.85rem !important;
                 padding: 10px 15px !important;
-                justify-content: flex-start !important; /* Teks dalam kotak rata kiri */
-                background: white !important; /* Pastikan background putih bersih */
+                justify-content: flex-start !important;
+                background: white !important;
                 box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
             }
         
-            /* Footer */
             .dev-footer {
                 width: 100% !important;
                 margin-top: 20px !important;
@@ -3388,6 +3388,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
