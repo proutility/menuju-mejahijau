@@ -141,56 +141,60 @@
         .feature-icon { color: var(--primary); font-size: 0.95rem; background: rgba(0,77,0,0.08); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
         .dev-footer { grid-column: 1 / -1; font-size: 0.75rem; color: #666; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.05); font-weight: 500; text-align: center; opacity: 0.7; }
         
-        /* =============================================================== */
-        /* 🔥 FINAL FIX MOBILE V3: HEADER RAPET & FITUR TENGAH ESTETIK 🔥 */
-        /* (Hapus @media HP sebelumnya, ganti dengan ini semua)            */
-        /* =============================================================== */
+        /* ==================================================================== */
+        /* 🔥 FINAL GOLD FIX: HEADER KIRI RAPET + BODY TENGAH ESTETIK 🔥       */
+        /* (Paste ini di baris PALING BAWAH dalam tag <style>)                  */
+        /* ==================================================================== */
         @media only screen and (max-width: 768px) {
         
-            /* --- 1. BAGIAN HEADER (NAVBAR) RAPET & RAPI --- */
+            /* --- 1. HEADER (NAVBAR) --- */
             .landing-nav {
                 padding: 8px 15px !important;
-                align-items: center !important;
                 display: flex !important;
                 justify-content: space-between !important;
+                align-items: center !important;
             }
         
             .nav-brand {
                 display: flex !important;
                 align-items: center !important;
-                gap: 8px !important; /* Jarak Logo ke Teks */
                 flex: 1 !important;
+                /* Hapus gap di sini, kita atur pake margin di text-wrapper */
             }
         
             .landing-logo {
-                height: 32px !important; /* Ukuran Logo Pas */
+                height: 38px !important; /* Ukuran Logo */
             }
         
-            /* INI KUNCINYA BIAR TEKS NEMPEL ATAS BAWAH */
+            /* TEKS PRO-TAMA: RATA KIRI & RAPET */
             .brand-text-wrapper {
                 display: flex !important;
-                flex-direction: column !important; /* Susun Atas Bawah */
+                flex-direction: column !important; /* Atas Bawah */
+                align-items: flex-start !important; /* RATA KIRI (POJOK) */
                 justify-content: center !important;
-                gap: 0 !important;       /* HAPUS JARAK ANTAR BARIS */
-                line-height: 1 !important; /* Rapatkan baris */
+                margin-left: 10px !important; /* Jarak dari Logo ke Teks */
+                gap: 0 !important; /* Hapus jarak antar teks */
+                line-height: 1 !important;
             }
         
             .brand-title {
-                font-size: 0.95rem !important;
-                margin: 0 !important;    /* Hapus Margin */
+                font-size: 1rem !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 font-weight: 800 !important;
+                display: block !important;
             }
         
             .brand-subtitle {
                 font-size: 0.65rem !important;
-                margin: 0 !important;    /* Hapus Margin */
+                margin: 0 !important;
                 padding: 0 !important;
                 color: var(--gold) !important;
                 display: block !important;
+                margin-top: 2px !important; /* Jarak super tipis dari judul */
             }
         
-            /* Tombol Login di Kanan */
+            /* TOMBOL LOGIN */
             .nav-login-btn {
                 padding: 6px 12px !important;
                 font-size: 0.75rem !important;
@@ -199,19 +203,19 @@
             .nav-login-btn span { display: none !important; }
             .nav-login-btn::after { content: "LOGIN"; }
         
-            /* --- 2. CONTAINER UTAMA (URUTAN ATAS-BAWAH) --- */
+            /* --- 2. BODY / KONTEN UTAMA --- */
             .hero-section {
                 display: flex !important;
                 flex-direction: column !important;
-                padding: 80px 20px 40px 20px !important; /* Padding Atas cukup */
+                padding: 90px 20px 40px 20px !important;
                 height: auto !important;
                 gap: 25px !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
-                overflow-x: hidden !important; /* Cegah scroll samping */
+                align-items: center !important; /* Tengahin konten body */
             }
         
-            /* --- 3. TEKS MOTIVASI (KIRI -> JADI ATAS) --- */
+            /* TEKS MOTIVASI (Tengah) */
             .hero-left {
                 width: 100% !important;
                 padding: 0 !important;
@@ -221,18 +225,18 @@
         
             .hero-quote {
                 font-size: 1.4rem !important;
-                line-height: 1.3 !important;
+                line-height: 1.4 !important;
                 margin-bottom: 10px !important;
             }
         
-            /* --- 4. LIST FITUR (ESTETIK DI TENGAH & GAK KEPOTONG) --- */
+            /* LIST FITUR (Tengah Estetik) */
             .hero-right {
                 width: 100% !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 display: flex !important;
                 flex-direction: column !important;
-                align-items: center !important; /* POIN PENTING: Tengahin Konten */
+                align-items: center !important; /* Tengahin List */
             }
         
             .hero-features {
@@ -240,17 +244,20 @@
                 flex-direction: column !important;
                 width: 100% !important;
                 gap: 10px !important;
-                align-items: center !important; /* Item List di Tengah */
+                align-items: center !important; /* Item di tengah */
+                grid-template-columns: none !important;
             }
         
             .hero-features li {
-                width: 90% !important;      /* Lebar 90% biar ada sisa kiri-kanan (ESTETIK) */
-                max-width: 350px !important; /* Batasin lebar biar gak aneh di tablet */
-                margin: 0 auto !important;   /* Posisi Tengah Otomatis */
+                width: 80% !important;       /* Lebar 90% biar estetik (sisa kiri kanan) */
+                max-width: 350px !important; /* Biar gak kepanjangan di tablet */
+                margin: 0 auto !important;
                 box-sizing: border-box !important;
                 font-size: 0.85rem !important;
                 padding: 10px 15px !important;
-                justify-content: flex-start !important; /* Ikon & Teks tetep rata kiri dalam kotak */
+                justify-content: flex-start !important; /* Teks dalam kotak rata kiri */
+                background: white !important; /* Pastikan background putih bersih */
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
             }
         
             /* Footer */
@@ -3381,6 +3388,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
