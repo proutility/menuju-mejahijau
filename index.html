@@ -493,13 +493,15 @@
         }
 
         .btn-hero-cta {
-            margin-top: 15px; 
-            width: 100%; 
+            margin-top: 25px; /* Jarak aman dari kotak fitur */
+            align-self: center; /* Bikin posisi tombol pas di tengah kolom kanan */
+            width: 60%; /* Lebarnya dikurangi biar nggak mentok ujung ke ujung */
+            min-width: 250px; /* Jaga-jaga biar tombol gak kekecilan kalau layarnya sempit */
             box-sizing: border-box; 
             background: linear-gradient(135deg, var(--gold), #e5c158); 
-            color: white; /* <--- INI UBAH JADI WHITE */
+            color: white; 
             border: none;
-            padding: 12px 20px;
+            padding: 14px 20px; /* Atas-bawah ditebelin dikit biar proporsional */
             border-radius: 8px;
             font-family: 'Poppins', sans-serif; 
             font-size: 0.95rem; 
@@ -514,7 +516,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden; 
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* <--- TAMBAHIN INI BIAR TEKS PUTIHNYA LEBIH NGE-POP */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); 
         }
         
         /* Efek Kilau Tipis */
@@ -3475,6 +3477,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
