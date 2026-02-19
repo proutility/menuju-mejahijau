@@ -485,36 +485,69 @@
         }
 
         .btn-hero-cta {
-            margin-top: 25px; /* Jarak dari kotak fitur terbawah */
-            width: 100%; /* Biar lebarnya sejajar sama 2 kolom fitur di atasnya */
-            background: linear-gradient(135deg, var(--gold), #e5c158);
-            color: var(--primary); /* Teks hijau tua biar kontras sama emas */
+            margin-top: 30px; /* Jarak sedikit diperlega */
+            width: 100%; /* Ini kuncinya biar lebarnya simetris sama grid fitur di atasnya */
+            box-sizing: border-box; /* Pastiin padding gak bikin tombol melebar keluar */
+            
+            /* Latar Gradient Emas yang Lebih Mewah & Modern */
+            background: linear-gradient(to right, #d4af37, #edc967); 
+            color: #1a4d2e; /* Teks warna hijau tua (var(--primary)) biar kontras elegan */
             border: none;
-            padding: 15px 20px;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 800;
+            padding: 18px 30px; /* Tombol lebih tebal dan mantap */
+            border-radius: 50px; /* Bentuk PIL (Pill Shape) yang modern banget */
+            
+            /* Typography yang Estetik */
+            font-family: 'Poppins', sans-serif; /* Pake font modern kalau tersedia, atau fallback ke default */
+            font-size: 1.15rem;
+            font-weight: 700; /* Bold tapi gak kaku */
+            text-transform: uppercase; /* Huruf kapital semua biar berwibawa */
+            letter-spacing: 1.5px; /* Jarak antar huruf diperlebar biar lega */
+            
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); /* Shadow warna emas */
-            transition: all 0.3s ease;
+            gap: 15px;
+            
+            /* Shadow yang Lebih Lembut dan Dalam */
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* Animasi lebih halus */
+            position: relative;
+            overflow: hidden; /* Buat nampung efek kilau */
         }
         
+        /* Efek Kilau (Shine) Pas Hover */
+        .btn-hero-cta::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -120%; /* Mulai dari luar kiri */
+            width: 100%;
+            height: 100%;
+            /* Garis cahaya putih transparan */
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+            transition: all 0.6s ease; /* Durasi kilatan */
+            transform: skewX(-20deg); /* Miringin dikit biar dinamis */
+        }
+        
+        /* Hover State: Tombol Naik + Shadow Melebar + Kilau Lewat */
         .btn-hero-cta:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
-            filter: brightness(1.1);
+            transform: translateY(-5px); /* Naik lebih tinggi */
+            box-shadow: 0 12px 35px rgba(212, 175, 55, 0.7); /* Shadow makin dramatis */
         }
         
+        .btn-hero-cta:hover::after {
+            left: 120%; /* Kilau bergerak sampai keluar kanan */
+        }
+        
+        /* Penyesuaian Ikon Google biar pas sama tombol baru */
         .btn-hero-cta img {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             background: white;
             border-radius: 50%;
-            padding: 3px;
+            padding: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -590,7 +623,7 @@
             </ul>
             <button class="btn-hero-cta" onclick="handleLogin()">
                 <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
-                <span>Mulai Simulasi Sekarang</span>
+                <span>Mulai Sekarang</span>
             </button>
         </div>
         <div id="loginError" style="color: #c0392b; font-size: 0.9rem; position:absolute; top:80px; right:60px;"></div>
@@ -3454,6 +3487,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
