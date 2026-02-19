@@ -497,12 +497,12 @@
             width: 100%; 
             box-sizing: border-box; 
             background: linear-gradient(135deg, var(--gold), #e5c158); 
-            color: var(--primary); 
+            color: white; /* <--- INI UBAH JADI WHITE */
             border: none;
-            padding: 12px 20px; /* Dibikin lebih tipis / slim */
-            border-radius: 8px; /* Disamakan dengan lengkungan kotak fitur */
+            padding: 12px 20px;
+            border-radius: 8px;
             font-family: 'Poppins', sans-serif; 
-            font-size: 0.95rem; /* Font dikecilin biar elegan */
+            font-size: 0.95rem; 
             font-weight: 800; 
             text-transform: uppercase; 
             letter-spacing: 1px; 
@@ -510,10 +510,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); /* Shadow diperhalus */
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); 
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden; 
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* <--- TAMBAHIN INI BIAR TEKS PUTIHNYA LEBIH NGE-POP */
         }
         
         /* Efek Kilau Tipis */
@@ -3474,6 +3475,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
