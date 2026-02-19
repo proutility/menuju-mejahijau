@@ -483,6 +483,39 @@
             background: linear-gradient(135deg, #217346, #27ae60);
             border: 1px solid #1e8449; 
         }
+
+        .btn-hero-cta {
+            margin-top: 25px; /* Jarak dari kotak fitur terbawah */
+            width: 100%; /* Biar lebarnya sejajar sama 2 kolom fitur di atasnya */
+            background: linear-gradient(135deg, var(--gold), #e5c158);
+            color: var(--primary); /* Teks hijau tua biar kontras sama emas */
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); /* Shadow warna emas */
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+            filter: brightness(1.1);
+        }
+        
+        .btn-hero-cta img {
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            padding: 3px;
+        }
     </style>
 </head>
 <body>
@@ -555,6 +588,10 @@
                 <li><i class="fas fa-volume-up feature-icon"></i> <span>Audio Pembahasan Otomatis</span></li>
                 <li><i class="fas fa-mobile-alt feature-icon"></i> <span>Akses Fleksibel (Laptop & HP)</span></li>
             </ul>
+            <button class="btn-hero-cta" onclick="handleLogin()">
+                <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+                <span>Mulai Simulasi Sekarang</span>
+            </button>
         </div>
         <div id="loginError" style="color: #c0392b; font-size: 0.9rem; position:absolute; top:80px; right:60px;"></div>
         <div class="dev-footer">Developed by Ilham Nur Pratama - APP 2023 - PA SERANG</div>
@@ -3417,6 +3454,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
