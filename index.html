@@ -137,31 +137,29 @@
         .hero-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 30px; }
         .hero-features { 
             display: grid; 
-            /* Gue ubah ke 1 kolom penuh biar teksnya punya ruang memanjang */
-            grid-template-columns: 1fr; 
-            gap: 10px; 
+            grid-template-columns: repeat(2, 1fr); /* Membagi rata jadi 2 kolom (3 kiri, 3 kanan) */
+            gap: 12px; 
             width: 100%; 
-            max-width: 500px; /* Gue batesin lebarnya biar gak terlalu melar ke kanan */
         }
         .hero-features li { 
-            /* Font gue kecilin dikit ke 0.8rem biar teks panjang aman satu baris */
-            font-size: 0.8rem; 
+            font-size: 0.75rem; /* Font pas untuk 1 baris */
             color: #444; 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
+            gap: 10px; 
             font-weight: 600; 
             background: rgba(255,255,255,0.8); 
             backdrop-filter: blur(5px); 
-            padding: 12px 20px; /* Padding gue sesuain biar lebih elegan */
+            padding: 12px 15px; 
             border-radius: 8px; 
             border-left: 4px solid var(--gold); 
             box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
             transition: all 0.2s; 
             margin: 0; 
             cursor: default; 
-            /* Tambahan biar teks maksa satu baris dan gak turun */
-            white-space: nowrap; 
+            white-space: nowrap; /* Memaksa teks lurus 1 baris */
+            overflow: hidden; 
+            text-overflow: ellipsis; /* Aman kalau ada layar yang agak sempit */
         }
         .hero-features li:hover { transform: translateY(-3px); background: white; border-left-color: var(--primary); box-shadow: 0 8px 15px rgba(0,77,0,0.1); }
         .feature-icon { color: var(--primary); font-size: 0.95rem; background: rgba(0,77,0,0.08); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; flex-shrink: 0; }
@@ -276,7 +274,7 @@
             }
         
             .hero-features li {
-                width: 90% !important; /* Gue lebarin dikit dari 85% biar teks panjang lebih leluasa */
+                width: 85% !important; /* Gue lebarin dikit dari 85% biar teks panjang lebih leluasa */
                 max-width: 350px !important;
                 margin: 0 auto !important;
                 box-sizing: border-box !important;
@@ -3419,6 +3417,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
