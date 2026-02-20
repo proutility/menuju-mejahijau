@@ -2800,32 +2800,134 @@ window.openStats = async function(mode = 'hukum') {
         document.querySelector('.footer-nav').style.visibility = 'hidden';
         
         // --- UPDATE BARU: SWAP SIDEBAR ---
-        // Sembunyikan Grid Ujian
         const examSide = document.getElementById('examSidebarContent');
         if(examSide) examSide.style.display = 'none';
 
-        // Tampilkan Statistik Lobby
         const lobbySide = document.getElementById('lobbySidebarContent');
         if(lobbySide) lobbySide.style.display = 'flex'; 
         // ---------------------------------
 
         const qText = document.getElementById('questionText');
+        
+        // Ambil nama depan user biar personal
+        const namaPanggilan = currentUser ? currentUser.displayName.split(" ")[0] : "Peserta";
+
         qText.innerHTML = `
-            <div style="text-align: center; padding: 60px 20px;">
-                <div style="font-size: 3rem; margin-bottom: 20px;">👈</div>
-                <h3 style="color: #2c3e50; margin-bottom: 10px;">Siap Latihan?</h3>
-                <p style="font-size: 1.2rem; color: #555;">
-                    Silahkan <b>klik salah satu modul</b> di menu samping kiri<br>untuk memulai simulasi ujian.
-                </p>
+            <div style="padding: 20px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.5s;">
+                <div style="text-align: center; margin-bottom: 35px;">
+                    <div style="font-size: 3.5rem; margin-bottom: 10px;">👋</div>
+                    <h2 style="color: var(--primary); margin-bottom: 5px; font-weight: 800;">Halo, ${namaPanggilan}! Siap Latihan?</h2>
+                    <p style="font-size: 1.05rem; color: #666;">
+                        Silahkan klik salah satu modul di menu samping kiri untuk memulai simulasi ujian.
+                    </p>
+                </div>
+
+                <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f4f7f6; padding-bottom: 12px; margin-bottom: 15px;">
+                        <h4 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">
+                            <i class="fas fa-history" style="color: var(--gold); margin-right: 8px;"></i> Riwayat 5 Tes Terakhir
+                        </h4>
+                        <button onclick="openStats('hukum')" style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 0.85rem; padding: 5px;">
+                            Lihat Semua >
+                        </button>
+                    </div>
+                    
+                    <div id="tableLobbyContainer" style="overflow-x: auto;">
+                        <div style="text-align: center; padding: 30px;">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: #ddd;"></i>
+                            <p style="color: #999; margin-top: 10px; font-size: 0.9rem;">Memuat riwayat belajar...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>
         `;
+        
         document.getElementById('optionsContainer').innerHTML = '';
         document.getElementById('feedbackBox').style.display = 'none';
         document.querySelectorAll('.modul-btn').forEach(el => el.classList.remove('active-modul'));
-        
-        // Reset Timer Tampilan
         document.getElementById('timerDisplay').innerText = "00:00:00";
+
+        // Panggil fungsi penarik datanya
+        if(typeof loadRiwayatLobby === 'function') setTimeout(loadRiwayatLobby, 500);
     }
+
+    // --- FUNGSI BARU: NAMPILIN RIWAYAT DI TENGAH DASHBOARD ---
+    window.loadRiwayatLobby = async () => {
+        const container = document.getElementById('tableLobbyContainer');
+        if (!container || !currentUser || !db) return;
+
+        try {
+            // Kita import tools query Firestore
+            const { query, collection, where, orderBy, limit, getDocs } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+            
+            // Tarik 5 data terbaru punya user ini (Berdasarkan waktu)
+            const q = query(
+                collection(db, "riwayat_belajar"),
+                where("uid", "==", currentUser.uid),
+                orderBy("timestamp", "desc"),
+                limit(5)
+            );
+            
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 30px 0; color: #999;">
+                        <i class="fas fa-clipboard-list" style="font-size: 2rem; margin-bottom: 10px; color: #e0e0e0;"></i>
+                        <br>Belum ada riwayat tes.<br>Yuk mulai simulasi pertamamu!
+                    </div>`;
+                return;
+            }
+
+            // Bikin struktur tabel modern
+            let tableHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead>
+                        <tr style="background-color: #f9fbf9; color: #555; text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; border-radius: 8px 0 0 0;">Tanggal</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee;">Modul</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center;">Skor</th>
+                            <th style="padding: 12px; border-bottom: 2px solid #eee; text-align: center; border-radius: 0 8px 0 0;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                const isLulus = d.score >= 70; // Standar Lulus MA
+                const colorScore = isLulus ? 'var(--success)' : 'var(--danger)';
+                
+                // Bikin Badge Status Estetik
+                const statusBadge = isLulus 
+                    ? '<span style="background:#e8f5e9; color:#2e7d32; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; letter-spacing: 0.5px;">LULUS</span>' 
+                    : '<span style="background:#ffebee; color:#c62828; padding:4px 10px; border-radius:20px; font-size:0.75rem; font-weight:bold; letter-spacing: 0.5px;">GAGAL</span>';
+                
+                // Rapiin nama modul (misal "modul1" jadi "MODUL 1")
+                const modulName = (d.modul || "").replace('modul', 'Modul ').toUpperCase();
+                
+                // Rapiin tanggal (hilangin jam kalau terlalu panjang)
+                const tanggalPendek = d.date ? d.date.split(' ')[0] : '-';
+
+                tableHTML += `
+                    <tr style="border-bottom: 1px solid #f4f4f4; transition: background 0.2s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+                        <td style="padding: 12px; color: #666;">${tanggalPendek}</td>
+                        <td style="padding: 12px; font-weight: 600; color: #333;">${modulName}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 800; color: ${colorScore}; font-size: 1rem;">${d.score}</td>
+                        <td style="padding: 12px; text-align: center;">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `</tbody></table>`;
+            container.innerHTML = tableHTML;
+
+        } catch (e) {
+            console.error("Error load riwayat lobby:", e);
+            container.innerHTML = '<p style="color:red; text-align:center; padding: 20px;">Gagal memuat riwayat. Pastikan internet lancar.</p>';
+        }
+    };
 
     // --- TAMBAHAN: LOAD DATA LOBBY ---
     setTimeout(() => { 
@@ -3477,6 +3579,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
