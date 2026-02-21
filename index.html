@@ -949,8 +949,12 @@
             </div>
             
             <div style="display:flex; gap:20px; height: 400px;">
-                <div id="listSoalAdmin" style="flex:1; border:1px solid #ddd; overflow-y:scroll; background:#f9f9f9; padding:10px;">
-                    <p style="color:gray;">Klik Load Soal dulu...</p>
+                <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                    <input type="text" id="searchSoalAdmin" placeholder="🔍 Cari penggalan soal..." onkeyup="filterSoalAdmin()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:0.85rem;">
+                    
+                    <div id="listSoalAdmin" style="flex:1; border:1px solid #ddd; overflow-y:scroll; background:#f9f9f9; padding:10px;">
+                        <p style="color:gray;">Klik Load Soal dulu...</p>
+                    </div>
                 </div>
                 
                 <div style="flex:1.5; display:flex; flex-direction:column; gap:8px; overflow-y:auto;">
@@ -3061,6 +3065,9 @@ window.openStats = async function(mode = 'hukum') {
         if(!modulId) return alert("Isi nama modul!");
         currentAdminModul = modulId;
 
+        const searchInput = document.getElementById('searchSoalAdmin');
+        if(searchInput) searchInput.value = "";
+
         const listDiv = document.getElementById('listSoalAdmin');
         listDiv.innerHTML = "Loading... (Sedang mengambil data)";
 
@@ -3155,6 +3162,23 @@ window.openStats = async function(mode = 'hukum') {
             alert("Gagal hapus: " + e.message);
         }
     };
+        // --- FITUR BARU: PENCARIAN SOAL REAL-TIME ---
+        window.filterSoalAdmin = () => {
+            let input = document.getElementById("searchSoalAdmin").value.toLowerCase();
+            let listContainer = document.getElementById("listSoalAdmin");
+            // Karena list soal di-generate pake tag <div>, kita ambil div-nya
+            let itemSoal = listContainer.getElementsByTagName("div"); 
+    
+            for (let i = 0; i < itemSoal.length; i++) {
+                let teksSoal = itemSoal[i].textContent || itemSoal[i].innerText;
+                // Kalau teks cocok dengan ketikan, tampilkan. Kalau nggak, sembunyikan.
+                if (teksSoal.toLowerCase().indexOf(input) > -1) {
+                    itemSoal[i].style.display = ""; 
+                } else {
+                    itemSoal[i].style.display = "none";
+                }
+            }
+        };
         // ==========================================
         // LOGIKA TAHAP HAFALAN (MODUL 19.3)
         // ==========================================
@@ -3579,6 +3603,7 @@ window.openStats = async function(mode = 'hukum') {
 
 </body>
 </html>
+
 
 
 
