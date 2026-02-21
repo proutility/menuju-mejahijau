@@ -2392,15 +2392,34 @@
     }
 
     window.saveAndShowChart = async function(finalScore, correct, wrong) {
-        const usedSeconds = totalExamTime - timeRemaining; 
-        const resultData = {
-            uid: currentUser.uid, nama: currentUser.displayName, modul: currentModulKey,            
-            score: finalScore, correct: correct, wrong: wrong, date: new Date().toLocaleString('id-ID'), 
-            timestamp: new Date(), duration: usedSeconds
+            const usedSeconds = totalExamTime - timeRemaining;
+    
+            // --- TAMBAHAN BARU: REKAM DETAIL JAWABAN ---
+            let arrayDetailPembahasan = [];
+            if (typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
+                currentQuestions.forEach((q, index) => {
+                    let userAns = userAnswers[index]; 
+                    arrayDetailPembahasan.push({
+                        soal: q.q,
+                        opsi: q.options,
+                        jawabanUser: userAns !== undefined ? userAns : null,
+                        kunciJawaban: q.answer,
+                        pembahasan: q.explanation || "Tidak ada pembahasan spesifik."
+                    });
+                });
+            }
+            // ------------------------------------------
+    
+            const resultData = {
+                uid: currentUser.uid, nama: currentUser.displayName, modul: currentModulKey,
+                score: finalScore, correct: correct, wrong: wrong, date: new Date().toLocaleString('id-ID'),
+                timestamp: new Date(), duration: usedSeconds,
+                detailData: arrayDetailPembahasan // <--- INI DIA KUNCI FITURNYA BRO
+            };
+    
+            try { await addDoc(collection(db, "riwayat_belajar"), resultData); }
+            catch (e) { console.error("Gagal simpan history:", e); }
         };
-        try { await addDoc(collection(db, "riwayat_belajar"), resultData); } 
-        catch (e) { console.error("Gagal simpan history:", e); }
-    };
 
     window.resetStats = async function() {
         if(!confirm("⚠️ Yakin mau menghapus SEMUA riwayat nilai untuk modul ini? Data di Cloud akan hilang permanen.")) return;
@@ -2700,25 +2719,39 @@ window.openStats = async function(mode = 'hukum') {
             else {
                 let targetModul = window.currentDatabaseId || 'modul1';
                 if(statsTitle) statsTitle.innerText = "Data Modul: " + targetModul;
-                thead.innerHTML = '<th>No</th><th>Tanggal</th><th>Nilai</th><th>Salah</th><th>Benar</th>';
+                
+                // 1. UPDATE HEADER TABEL
+                thead.innerHTML = '<th style="padding: 10px; border-radius: 8px 0 0 0;">No</th><th style="padding: 10px; text-align: left;">Tanggal</th><th style="padding: 10px;">Benar</th><th style="padding: 10px;">Salah</th><th style="padding: 10px;">Nilai</th><th style="padding: 10px; border-radius: 0 8px 0 0;">Ket</th>';
 
                 const currentModulHistory = allHistory.filter(h => h.modul === targetModul);
-                
+
                 tableBody.innerHTML = '';
                 if (currentModulHistory.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5">Belum ada data untuk modul ini.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="6" style="padding:15px;">Belum ada data untuk modul ini.</td></tr>';
                 } else {
-                    [...currentModulHistory].reverse().forEach((d, idx) => {
+                    // 2. REVERSE DATA & SIMPAN KE VARIABEL GLOBAL BUAT POPUP
+                    let sortedHistory = [...currentModulHistory].reverse();
+                    window.tempDataRiwayatStats = sortedHistory;
+
+                    // 3. RENDER TABEL BARU DENGAN TOMBOL REVIEW
+                    sortedHistory.forEach((d, idx) => {
                         tableBody.innerHTML += `
-                            <tr>
-                                <td>${idx+1}</td>
-                                <td>${d.date}</td>
-                                <td style="font-weight:bold; color:${d.score>=70?'green':'red'}">${d.score}</td>
-                                <td>${d.wrong} ❌</td>
-                                <td>${d.correct} ✅</td>
-                            </tr>`;
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px;">${idx+1}</td>
+                                <td style="padding: 10px; text-align: left;">${d.date || '-'}</td>
+                                <td style="padding: 10px; color: var(--success); font-weight: bold;">${d.correct || d.benar || 0} <i class="fas fa-check"></i></td>
+                                <td style="padding: 10px; color: var(--danger); font-weight: bold;">${d.wrong || d.salah || 0} <i class="fas fa-times"></i></td>
+                                <td style="padding: 10px; font-weight: 900; font-size: 1.1rem; color: ${d.score >= 70 ? 'var(--success)' : 'var(--danger)'};">${d.score}</td>
+                                <td style="padding: 10px;">
+                                    <button onclick="bukaReviewRiwayat(${idx})" style="background: var(--gold); color: #333; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;">
+                                        🔍 Detail
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
                     });
                 }
+            }
 
                 // Grafik Garis Ujian
                 setTimeout(() => {
@@ -3599,10 +3632,76 @@ window.openStats = async function(mode = 'hukum') {
         alert("Gagal membedah data: " + e.message);
     }
 };
+    // --- FITUR BARU: POP-UP REVIEW PEMBAHASAN DARI STATISTIK ---
+    window.bukaReviewRiwayat = (index) => {
+        const data = window.tempDataRiwayatStats[index];
+        
+        if (!data || !data.detailData || data.detailData.length === 0) {
+            alert("⚠️ Detail pembahasan tidak tersedia. Ini karena tes ini dikerjakan sebelum fitur review diaktifkan.");
+            return;
+        }
+
+        let listSoalHTML = "";
+        data.detailData.forEach((item, i) => {
+            let isBenar = item.jawabanUser === item.kunciJawaban;
+            let bgColor = isBenar ? "#f1f8e9" : "#ffebee";
+            let borderColor = isBenar ? "#c8e6c9" : "#ffcdd2";
+            let iconTitle = isBenar ? "✅ BENAR" : "❌ SALAH";
+            let ansUserText = (item.jawabanUser !== null && item.jawabanUser !== undefined && item.jawabanUser !== "") ? item.opsi[item.jawabanUser] : "<i>(Kosong / Tidak Menjawab)</i>";
+            let ansKunciText = item.opsi[item.kunciJawaban];
+
+            listSoalHTML += `
+                <div style="background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong style="font-size: 1.1rem; color: #333;">Soal No. ${i + 1}</strong>
+                        <strong style="color: ${isBenar ? 'green' : 'red'};">${iconTitle}</strong>
+                    </div>
+                    <p style="margin: 0 0 15px 0; font-size: 0.95rem; line-height: 1.5; color: #222;">${item.soal}</p>
+                    
+                    <div style="font-size: 0.9rem; margin-bottom: 15px; background: rgba(255,255,255,0.6); padding: 10px; border-radius: 6px;">
+                        <div style="margin-bottom: 5px;">Jawaban Kamu: <b style="color: ${isBenar ? 'green' : 'red'};">${ansUserText}</b></div>
+                        ${!isBenar ? `<div>Kunci Jawaban: <b style="color: green;">${ansKunciText}</b></div>` : ""}
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px dashed ${borderColor}; margin: 10px 0;">
+                    <div style="font-size: 0.9rem;">
+                        <strong><i class="fas fa-gavel" style="color: var(--primary);"></i> Pembahasan:</strong><br>
+                        <span style="color: #444; line-height: 1.5;">${item.pembahasan}</span>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Bikin Overlay Modal (z-index dibikin gede banget biar nutupin modal statistik)
+        let modalHTML = `
+            <div id="modalReviewOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999999; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
+                <div style="background: white; width: 100%; max-width: 800px; height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease;">
+                    
+                    <div style="padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; border-radius: 12px 12px 0 0;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.2rem; color: white;">Detail Pembahasan</h3>
+                            <small style="color: #ddd;">Skor Akhir: <b style="color: var(--gold);">${data.score}</b> | Tanggal: ${data.date}</small>
+                        </div>
+                        <button onclick="document.getElementById('modalReviewOverlay').remove()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;">
+                            <i class="fas fa-times"></i> Tutup
+                        </button>
+                    </div>
+
+                    <div style="padding: 20px; overflow-y: auto; flex: 1; background: #fafafa;">
+                        ${listSoalHTML}
+                    </div>
+                </div>
+            </div>
+            <style>@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }</style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    };
 </script>
 
 </body>
 </html>
+
 
 
 
