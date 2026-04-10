@@ -48,11 +48,17 @@ if(auth) {
             // A. PANGGIL MAINTENACE (Supaya User Terpantau)
             watchMaintenance(); 
 
-            // B. CEK ADMIN (Fitur Copy Paste Nyala, TAPI TETAP KENA CEK VIP)
+        // B. CEK ADMIN (Fitur Copy Paste Nyala, TAPI TETAP KENA CEK VIP)
             if (user.email === ADMIN_EMAIL) {
                 document.body.classList.add('is-admin'); 
                 const btnAdmin = document.getElementById('btnAdminPanel');
                 if(btnAdmin) btnAdmin.style.display = 'flex'; 
+                
+                // --- TAMBAHAN BIAR TOMBOL ADMIN MUNCUL DI LOBBY ---
+                const btnAdminLobby = document.getElementById('btnAdminLobby');
+                if(btnAdminLobby) btnAdminLobby.style.display = 'block';
+                // --------------------------------------------------
+
                 console.log("Admin Login: Anti-Cheat OFF, tapi wajib verifikasi kode.");
             } else {
                 document.body.classList.remove('is-admin');
@@ -2776,7 +2782,7 @@ window.loadStatusAdmin = async () => {
 
             let badgeStatus = isBeneranOnline 
                 ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟢 Online</span>` 
-                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">⚪ Offline</span>`;
+                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🔴 Offline</span>`;
             
             let infoAktivitas = isBeneranOnline 
                 ? `<span style="color:var(--primary); font-weight:bold;">${d.currentModul || 'Lobby'}</span>`
