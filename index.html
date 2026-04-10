@@ -184,9 +184,14 @@
                 <div id="feedbackBox" class="feedback-box">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <h3 style="margin-top:0;">Pembahasan</h3>
-                        <button onclick="toggleSpeech()" id="btnSpeak" style="background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--primary);" title="Dengarkan Pembahasan">
-                            <i class="fas fa-volume-up"></i>
-                        </button>
+                        <div style="display:flex; gap:15px; align-items:center;">
+                            <button onclick="openLaporModal()" id="btnLapor" style="background:none; border:none; cursor:pointer; font-size:0.95rem; color:#d32f2f; font-weight:bold; display:flex; align-items:center; gap:5px;" title="Lapor Kesalahan Soal">
+                                <i class="fas fa-flag"></i> Lapor
+                            </button>
+                            <button onclick="toggleSpeech()" id="btnSpeak" style="background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--primary);" title="Dengarkan Pembahasan">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </div>
                     </div>
                     <p id="feedbackText"></p>
                     <span id="feedbackCite" style="display:block; margin-top:10px; font-style:italic; font-weight:bold; color:#555;"></span>
@@ -415,6 +420,24 @@
                     <p style="color:gray;">Pilih modul untuk review pembahasan...</p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="laporOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000000; align-items:center; justify-content:center; font-family:'Poppins', sans-serif;">
+        <div style="background:white; padding:25px; border-radius:15px; width:400px; max-width:90%; border-top:5px solid #d32f2f; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0; color:#d32f2f;"><i class="fas fa-flag"></i> Lapor Soal</h3>
+                <button onclick="closeLaporModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#666;">&times;</button>
+            </div>
+            <p style="font-size:0.85rem; color:#555; margin-bottom:15px;">Punya koreksi untuk soal ini? Kasih tahu admin beserta dasar hukumnya.</p>
+            
+            <label style="font-weight:bold; font-size:0.9rem; color:#333;">Alasan Kesalahan:</label>
+            <textarea id="laporAlasan" rows="3" placeholder="Contoh: Kunci jawaban harusnya C, bukan A..." style="width:100%; padding:10px; margin-top:5px; margin-bottom:15px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:inherit;"></textarea>
+            
+            <label style="font-weight:bold; font-size:0.9rem; color:#333;">Dasar Hukum / Referensi:</label>
+            <input type="text" id="laporReferensi" placeholder="Contoh: Pasal 1 UU Perkawinan" style="width:100%; padding:10px; margin-top:5px; margin-bottom:20px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-family:inherit;">
+            
+            <button id="btnSubmitLaporan" onclick="submitLaporan()" style="width:100%; background:#d32f2f; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:1rem; transition:0.3s;">Kirim Laporan</button>
         </div>
     </div>
 
