@@ -1867,16 +1867,21 @@ window.switchAdminTab = (tab) => {
     document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
     document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
     
-    // Ini tambahan biar tab Laporan bisa nongol
+    // Tab Laporan
     const tabLaporan = document.getElementById('tabLaporan');
     if (tabLaporan) {
         tabLaporan.style.display = (tab === 'laporan' ? 'block' : 'none');
     }
     
-    // Otomatis manggil database pas tabnya diklik
-    if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') {
-        window.loadLaporanAdmin();
+    // --- INI YANG KETINGGALAN: Tab Status (Radar) ---
+    const tabStatus = document.getElementById('tabStatus');
+    if (tabStatus) {
+        tabStatus.style.display = (tab === 'status' ? 'block' : 'none');
     }
+    
+    // Auto-load data pas tabnya diklik
+    if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
+    if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
     
 window.loadReviewPembahasan = async () => {
