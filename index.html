@@ -233,6 +233,9 @@
                 </div>
 
                 <div style="margin-top: auto; padding-bottom: 60px;">
+                    <button id="btnAdminLobby" class="btn" onclick="openAdminPanel()" style="display:none; width: 100%; margin-bottom: 10px; background: #2c3e50; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <i class="fas fa-cogs"></i> Panel Admin
+                     </button>
                      <button class="btn" onclick="openStats()" style="width: 100%; margin-bottom: 10px; background: var(--purple); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                         <i class="fas fa-chart-pie"></i> Detail Statistik
                      </button>
@@ -368,7 +371,7 @@
                     <button onclick="switchAdminTab('edit')" class="admin-nav-btn btn-edit-soal"><i class="fas fa-edit"></i> Edit / Revisi</button>
                     <button onclick="switchAdminTab('review')" class="admin-nav-btn btn-review"><i class="fas fa-tasks"></i> Review Jawaban</button>
                     <button onclick="switchAdminTab('laporan')" class="admin-nav-btn" style="background:#d32f2f; color:white;"><i class="fas fa-flag"></i> Laporan Masuk</button>
-                    <button onclick="switchAdminTab('status')" class="admin-nav-btn" style="background:#2980b9; color:white;"><i class="fas fa-network-wired"></i> Radar Peserta</button>
+                    <button onclick="switchAdminTab('status')" class="admin-nav-btn" style="background:#795548; color:white;"><i class="fas fa-network-wired"></i> Radar Peserta</button>
                     <div style="display:flex; gap:5px; margin-left:auto;">
                         <button onclick="downloadSoalExcel()" class="admin-nav-btn btn-excel"><i class="fas fa-file-excel"></i> Excel (.xls)</button>
                         <button onclick="downloadSoalJSON()" class="admin-nav-btn" style="background: #34495e; color:white;"><i class="fas fa-file-code"></i> JSON (Backup)</button>
