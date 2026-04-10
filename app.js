@@ -1858,6 +1858,10 @@ window.switchAdminTab = (tab) => {
     document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
     document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
     document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
+    document.getElementById('tabLaporan').style.display = (tab === 'laporan' ? 'block' : 'none');
+    
+    // Auto-load kalau buka tab laporan
+    if(tab === 'laporan') loadLaporanAdmin();
 };
     
 window.loadReviewPembahasan = async () => {
@@ -2590,5 +2594,89 @@ window.submitLaporan = async () => {
         btnSubmit.innerText = "Kirim Laporan";
         btnSubmit.disabled = false;
         btnSubmit.style.background = "#d32f2f";
+    }
+};
+
+// ==========================================
+// FUNGSI ADMIN CEK LAPORAN (INJECTED)
+// ==========================================
+
+window.loadLaporanAdmin = async () => {
+    const container = document.getElementById('containerLaporan');
+    if(!container) return;
+
+    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Sabar, lagi narik data laporan...</div>`;
+
+    try {
+        // Tarik data dari Firestore, diurutin dari yang paling baru
+        const qLaporan = query(collection(window.db, "laporan_soal"), orderBy("tanggal_lapor", "desc"));
+        const snap = await getDocs(qLaporan);
+        
+        container.innerHTML = "";
+
+        if (snap.empty) {
+            container.innerHTML = `<div style="text-align:center; padding:20px; color:green; font-weight:bold;"><i class="fas fa-check-circle"></i> Mantap! Belum ada laporan masuk.</div>`;
+            return;
+        }
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const idDoc = docSnap.id;
+            
+            // Format tanggal yang enak dibaca
+            const tgl = d.tanggal_lapor ? d.tanggal_lapor.toDate().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : "-";
+
+            const item = document.createElement('div');
+            item.style = "background:white; border:1px solid #ccc; border-radius:8px; padding:15px; margin-bottom:15px; box-shadow:0 2px 5px rgba(0,0,0,0.05);";
+            
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:10px;">
+                    <div>
+                        <span style="background:var(--primary); color:white; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem;">${(d.modul_id || "Modul").toUpperCase()} - SOAL NO. ${d.nomor_soal_index}</span>
+                        <span style="font-size:0.8rem; color:#666; margin-left:10px;"><i class="far fa-clock"></i> ${tgl}</span>
+                    </div>
+                    <div style="font-size:0.8rem; font-weight:bold; color:#555;">
+                        <i class="fas fa-user"></i> ${d.nama_pelapor || "Anonim"}
+                    </div>
+                </div>
+                
+                <div style="font-size:0.9rem; color:#444; margin-bottom:10px; background:#f5f5f5; padding:8px; border-radius:4px;">
+                    <em>" ${d.teks_soal_penggalan || "(Teks soal)"} "</em>
+                </div>
+
+                <div style="font-size:0.9rem; margin-bottom:5px;">
+                    <span style="font-weight:bold; color:#d32f2f;">Alasan:</span> ${d.alasan}
+                </div>
+                <div style="font-size:0.9rem; margin-bottom:15px;">
+                    <span style="font-weight:bold; color:var(--success);">Dasar Hukum:</span> ${d.dasar_hukum}
+                </div>
+
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button onclick="hapusLaporan('${idDoc}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
+                        <i class="fas fa-trash"></i> Hapus Laporan
+                    </button>
+                    <button onclick="document.getElementById('editModulTarget').value = '${d.modul_id}'; window.switchAdminTab('edit'); window.loadSoalAdmin();" style="background:var(--gold); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
+                        <i class="fas fa-pencil-alt"></i> Menuju Form Edit
+                    </button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+
+    } catch (e) {
+        container.innerHTML = `<p style="color:red">Error ngambil data: ${e.message}</p>`;
+        console.error(e);
+    }
+};
+
+window.hapusLaporan = async (idDoc) => {
+    if(!confirm("Udah beres direvisi? Yakin mau hapus laporan ini dari daftar?")) return;
+    
+    try {
+        await deleteDoc(doc(window.db, "laporan_soal", idDoc));
+        alert("Laporan berhasil dihapus!");
+        loadLaporanAdmin(); // Refresh list otomatis
+    } catch (error) {
+        alert("Gagal menghapus laporan: " + error.message);
     }
 };
