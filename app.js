@@ -2520,3 +2520,75 @@ window.bukaReviewRiwayat = (index) => {
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 };
+
+// ==========================================
+// FUNGSI LAPOR KESALAHAN SOAL (INJECTED)
+// ==========================================
+
+// 1. Fungsi Buka/Tutup Modal Laporan
+window.openLaporModal = () => {
+    // Pastikan user udah milih modul dan lagi di soal berapa
+    if (!window.currentDatabaseId || currentIdx === undefined) {
+        alert("Sistem belum memuat soal secara penuh.");
+        return;
+    }
+    document.getElementById('laporOverlay').style.display = 'flex';
+    // Fokusin kursor ke text area biar user langsung bisa ngetik
+    document.getElementById('laporAlasan').focus();
+};
+
+window.closeLaporModal = () => {
+    document.getElementById('laporOverlay').style.display = 'none';
+    // Kosongin inputan kalo di-close
+    document.getElementById('laporAlasan').value = "";
+    document.getElementById('laporReferensi').value = "";
+};
+
+// 2. Fungsi Kirim Data ke Firebase
+window.submitLaporan = async () => {
+    const alasan = document.getElementById('laporAlasan').value.trim();
+    const referensi = document.getElementById('laporReferensi').value.trim();
+    const btnSubmit = document.getElementById('btnSubmitLaporan');
+
+    // Validasi input
+    if (!alasan) {
+        alert("Alasan kesalahannya wajib diisi ya bro!");
+        return;
+    }
+
+    // Ambil teks soalnya sekalian biar lo sebagai admin gampang ngeceknya
+    const qData = currentQuestions[currentIdx];
+    const teksSoal = qData ? qData.q : "Teks soal tidak ditemukan";
+
+    // Ubah tombol biar ada efek loading
+    btnSubmit.innerText = "Mengirim...";
+    btnSubmit.disabled = true;
+    btnSubmit.style.background = "#999";
+
+    try {
+        // Nembak ke collection baru bernama 'laporan_soal'
+        await addDoc(collection(window.db, "laporan_soal"), {
+            uid_pelapor: currentUser.uid,
+            nama_pelapor: currentUser.displayName,
+            modul_id: window.currentDatabaseId, // Modul apa (cth: modul1)
+            nomor_soal_index: currentIdx + 1,     // Index soal (ditambah 1 biar sesuai nomor layar)
+            teks_soal_penggalan: teksSoal.substring(0, 50) + "...", // Penggalan buat clue
+            alasan: alasan,
+            dasar_hukum: referensi || "Tidak melampirkan dasar hukum",
+            status: "Belum Diperbaiki",         // Status awal
+            tanggal_lapor: new Date()
+        });
+
+        alert("✅ Laporan berhasil dikirim! Makasih ya koreksinya.");
+        window.closeLaporModal();
+
+    } catch (error) {
+        console.error("Gagal ngirim laporan:", error);
+        alert("Gagal mengirim laporan: " + error.message);
+    } finally {
+        // Balikin tombol ke semula
+        btnSubmit.innerText = "Kirim Laporan";
+        btnSubmit.disabled = false;
+        btnSubmit.style.background = "#d32f2f";
+    }
+};
