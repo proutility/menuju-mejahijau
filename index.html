@@ -368,6 +368,7 @@
                     <button onclick="switchAdminTab('edit')" class="admin-nav-btn btn-edit-soal"><i class="fas fa-edit"></i> Edit / Revisi</button>
                     <button onclick="switchAdminTab('review')" class="admin-nav-btn btn-review"><i class="fas fa-tasks"></i> Review Jawaban</button>
                     <button onclick="switchAdminTab('laporan')" class="admin-nav-btn" style="background:#d32f2f; color:white;"><i class="fas fa-flag"></i> Laporan Masuk</button>
+                    <button onclick="switchAdminTab('status')" class="admin-nav-btn" style="background:#2980b9; color:white;"><i class="fas fa-network-wired"></i> Radar Peserta</button>
                     <div style="display:flex; gap:5px; margin-left:auto;">
                         <button onclick="downloadSoalExcel()" class="admin-nav-btn btn-excel"><i class="fas fa-file-excel"></i> Excel (.xls)</button>
                         <button onclick="downloadSoalJSON()" class="admin-nav-btn" style="background: #34495e; color:white;"><i class="fas fa-file-code"></i> JSON (Backup)</button>
@@ -428,6 +429,15 @@
                 </div>
                 <div id="containerLaporan" style="max-height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; background:#f9f9f9; border-radius:8px;">
                     <p style="color:gray; text-align:center;">Klik Refresh Data untuk melihat laporan terbaru...</p>
+                </div>
+            </div>
+            <div id="tabStatus" style="display:none;">
+                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                    <h4 style="margin:0; flex:1;"><i class="fas fa-network-wired" style="color:#2980b9;"></i> Radar Peserta</h4>
+                    <button onclick="loadStatusAdmin()" class="btn-small" style="background:var(--primary); color: white !important;">🔄 Refresh Radar</button>
+                </div>
+                <div id="containerStatus" style="max-height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; background:#f9f9f9; border-radius:8px;">
+                    <p style="color:gray; text-align:center;">Klik Refresh Radar untuk melihat status...</p>
                 </div>
             </div>
         </div>
