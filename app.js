@@ -162,6 +162,8 @@ function lanjutKeAplikasi() {
     setTimeout(() => { 
         if(typeof window.loadLobbyData === 'function') window.loadLobbyData(); 
     }, 1000);
+    
+    window.updateUserStatus(true, "Lobby Utama");
 }
 
 // Fungsi Tampilkan Form Input Kode
@@ -210,9 +212,12 @@ window.handleLogin = async () => {
     try { await signInWithPopup(auth, provider); } 
     catch (error) { document.getElementById('loginError').innerText = error.message; }
 };
-window.handleLogout = () => { if(auth) signOut(auth).then(() => location.reload()); };
-
-
+window.handleLogout = async () => { 
+    if(auth) {
+        if(currentUser) await window.updateUserStatus(false, "Offline");
+        signOut(auth).then(() => location.reload()); 
+    }
+};
 // --- 5. FUNGSI MAINTENANCE (WAJIB DITARUH DISINI BIAR GAK ERROR) ---
 function watchMaintenance() {
     if (!db) return;
@@ -536,6 +541,8 @@ window.switchDatabase = async function(key) {
     if(examSide) examSide.style.display = 'flex';
     currentModulKey = key;
     window.currentDatabaseId = key;
+
+    window.updateUserStatus(true, "Mengerjakan " + key.toUpperCase());
     
     const qText = document.getElementById('questionText');
     const optCont = document.getElementById('optionsContainer');
@@ -1250,6 +1257,7 @@ window.backToMenu = function() {
         if(modulTitle) modulTitle.innerText = "Menu Utama";
         document.getElementById('qNum').innerText = "-";
         window.tampilkanLobby();
+        window.updateUserStatus(true, "Lobby Utama");
 
         if (window.innerWidth <= 768) {
             document.getElementById('mobileFooter').style.display = 'none';
@@ -2685,5 +2693,102 @@ window.hapusLaporan = async (idDoc) => {
         loadLaporanAdmin(); // Refresh list otomatis
     } catch (error) {
         alert("Gagal menghapus laporan: " + error.message);
+    }
+};
+
+// ==========================================
+// FUNGSI PRESENCE (STATUS ONLINE) & RADAR ADMIN
+// ==========================================
+
+// 1. Fungsi ngirim sinyal ke Firebase
+window.updateUserStatus = async (isOnline, modulName = "Lobby") => {
+    if (!currentUser || !window.db) return;
+    try {
+        const statusRef = doc(window.db, "user_status", currentUser.uid);
+        await setDoc(statusRef, {
+            uid: currentUser.uid,
+            nama: currentUser.displayName,
+            email: currentUser.email,
+            isOnline: isOnline,
+            lastActive: new Date(),
+            currentModul: modulName
+        }, { merge: true });
+    } catch (e) {
+        console.error("Gagal update status:", e);
+    }
+};
+
+// 2. Deteksi kalau user tiba-tiba nutup tab browser (X)
+window.addEventListener('beforeunload', () => {
+    if (currentUser) window.updateUserStatus(false, "Offline");
+});
+
+// 3. Fungsi Admin buat nampilin data di tabel
+window.loadStatusAdmin = async () => {
+    const container = document.getElementById('containerStatus');
+    if(!container) return;
+
+    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Mendeteksi sinyal peserta...</div>`;
+
+    try {
+        const qStatus = query(collection(window.db, "user_status"), orderBy("lastActive", "desc"));
+        const snap = await getDocs(qStatus);
+        
+        container.innerHTML = "";
+
+        if (snap.empty) {
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:gray;">Belum ada data peserta terekam.</p>`;
+            return;
+        }
+
+        let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead><tr style="background:#eee; text-align:left;">
+                <th style="padding:10px;">Nama</th>
+                <th style="padding:10px;">Status</th>
+                <th style="padding:10px;">Aktivitas Terakhir</th>
+            </tr></thead><tbody>`;
+
+        const sekarang = new Date();
+
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const waktu = d.lastActive ? d.lastActive.toDate() : new Date();
+            
+            const selisihMs = sekarang - waktu;
+            const selisihMenit = Math.floor(selisihMs / 60000);
+            const selisihJam = Math.floor(selisihMenit / 60);
+            const selisihHari = Math.floor(selisihJam / 24);
+
+            let ketWaktu = "";
+            if (selisihMenit < 1) ketWaktu = "Baru saja";
+            else if (selisihMenit < 60) ketWaktu = `${selisihMenit} menit lalu`;
+            else if (selisihJam < 24) ketWaktu = `${selisihJam} jam lalu`;
+            else ketWaktu = `${selisihHari} hari lalu`;
+
+            // Trik jitu: Kalau udah lebih dari 2 jam (120 menit) gak ada aktivitas, anggap Offline (jaga-jaga error pas nutup browser)
+            let isBeneranOnline = d.isOnline;
+            if (selisihMenit > 120) isBeneranOnline = false;
+
+            let badgeStatus = isBeneranOnline 
+                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟢 Online</span>` 
+                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">⚪ Offline</span>`;
+            
+            let infoAktivitas = isBeneranOnline 
+                ? `<span style="color:var(--primary); font-weight:bold;">${d.currentModul || 'Lobby'}</span>`
+                : `<span style="color:#888;">${ketWaktu}</span>`;
+
+            html += `<tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px; font-weight:bold; color:#444;">${d.nama}</td>
+                <td style="padding:10px;">${badgeStatus}</td>
+                <td style="padding:10px;">${infoAktivitas}</td>
+            </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+
+    } catch (e) {
+        container.innerHTML = `<p style="color:red">Error radar: ${e.message}</p>`;
+        console.error(e);
     }
 };
