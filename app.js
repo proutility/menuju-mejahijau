@@ -1858,10 +1858,17 @@ window.switchAdminTab = (tab) => {
     document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
     document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
     document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
-    document.getElementById('tabLaporan').style.display = (tab === 'laporan' ? 'block' : 'none');
     
-    // Auto-load kalau buka tab laporan
-    if(tab === 'laporan') loadLaporanAdmin();
+    // Ini tambahan biar tab Laporan bisa nongol
+    const tabLaporan = document.getElementById('tabLaporan');
+    if (tabLaporan) {
+        tabLaporan.style.display = (tab === 'laporan' ? 'block' : 'none');
+    }
+    
+    // Otomatis manggil database pas tabnya diklik
+    if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') {
+        window.loadLaporanAdmin();
+    }
 };
     
 window.loadReviewPembahasan = async () => {
