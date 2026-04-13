@@ -530,105 +530,102 @@ body.mode-focus #floatingTimer { display: block !important; }
 @keyframes blink { 50% { opacity: 0.5; } }
 
 /* ==========================================
-   MODE GELAP (DARK MODE) - REVISI ESTETIKA & VISIBILITAS
+   MODE GELAP (DARK MODE) - REVISI ANTI-BOCOR
    ========================================== */
 
-/* Warna Dasar Body */
-body.dark-mode {
-    background-color: #121212 !important; /* Hitam pekat agar fokus */
-    color: #e0e0e0 !important;
+/* 1. KEMBALIKAN LANDING PAGE KE ASAL */
+/* Kita pakai #appSection agar Dark Mode HANYA jalan di dalam aplikasi ujian. 
+   Halaman depan/Lobby dijamin 100% tidak akan tersentuh (kembali normal). */
+body.dark-mode #appSection {
+    background-color: #121212 !important;
 }
 
-/* 1. CONTAINER UTAMA (Sidebars, Main Content Area) */
-body.dark-mode .sidebar-left, 
-body.dark-mode .sidebar-right,
-body.dark-mode aside,
-body.dark-mode footer,
-body.dark-mode .app-section {
-    background-color: #1a1a1a !important; /* Sedikit lebih terang dari body */
+/* 2. CONTAINER UTAMA (Sidebars, Main Content Area) */
+body.dark-mode #appSection .sidebar-left, 
+body.dark-mode #appSection .sidebar-right,
+body.dark-mode #appSection aside,
+body.dark-mode #appSection .main-content {
+    background-color: #1a1a1a !important; 
     border-color: #333 !important;
 }
 
-/* 2. AREA KONTEN TENGAH (Depth Effect) */
-body.dark-mode .main-content {
-    background-color: #202020 !important; /* Lebih terang dikit lagi biar ada dimensi */
-}
-
-/* 3. KOTAK SOAL, NOMOR SOAL, AREA TOMBOL BAWAH (Surface Elements) */
-body.dark-mode .card,
-body.dark-mode .question-container,
-body.dark-mode .bottom-bar,
-body.dark-mode .action-buttons,
-body.dark-mode .nav-buttons,
-body.dark-mode .q-nav-btn, /* Kotak nomor soal kanan */
-body.dark-mode .grid-btn,
-body.dark-mode .modul-btn { /* Tombol modul kiri */
-    background-color: #2d2d2d !important; /* Lighter surface for contrast */
+/* 3. KOTAK SOAL, NOMOR SOAL, AREA TOMBOL BAWAH */
+body.dark-mode #appSection .card,
+body.dark-mode #appSection .question-container,
+body.dark-mode #appSection .bottom-bar,
+body.dark-mode #appSection .action-buttons,
+body.dark-mode #appSection .nav-buttons,
+body.dark-mode #appSection .q-nav-btn, 
+body.dark-mode #appSection .grid-btn,
+body.dark-mode #appSection .modul-btn { 
+    background-color: #2d2d2d !important; 
     border-color: #444 !important;
     color: #e0e0e0 !important;
 }
 
-/* Hover effect biar makin pro */
-body.dark-mode .q-nav-btn:hover,
-body.dark-mode .modul-btn:hover {
+body.dark-mode #appSection .q-nav-btn:hover,
+body.dark-mode #appSection .modul-btn:hover {
     background-color: #3d3d3d !important;
 }
 
 /* 4. OPSI JAWABAN (A, B, C, D) */
-body.dark-mode .option-label {
+body.dark-mode #appSection .option-label {
     background-color: transparent !important;
     border-color: #555 !important;
     color: #e0e0e0 !important;
 }
 
-body.dark-mode .option-label:hover {
+body.dark-mode #appSection .option-label:hover {
     background-color: #3d3d3d !important;
 }
 
 /* 5. HEADER (Sidebar header, Question header) */
-body.dark-mode .sidebar-header,
-body.dark-mode .right-header,
-body.dark-mode .question-header {
+body.dark-mode #appSection .sidebar-header,
+body.dark-mode #appSection .right-header,
+body.dark-mode #appSection .question-header {
     background-color: #1a1a1a !important;
     border-bottom-color: #333 !important;
 }
 
 /* ==========================================
-   6. PERBAIKAN VISIBILITAS IKON (SANGAT PENTING!)
-   Target: Garis 3 (Hamburger), Mode Fokus, Ikon Navigasi, dll.
+   6. PERBAIKAN VISIBILITAS IKON (Garis 3 & Otak)
    ========================================== */
-body.dark-mode .sidebar-header i, 
-body.dark-mode .question-header i,
-body.dark-mode #menu-toggle i, /* Ikon garis 3 */
-body.dark-mode #focusModeBtn i, /* Ikon fokus mode */
-body.dark-mode .header-controls i,
-body.dark-mode .header i {
-    color: #ffffff !important; /* Paksa icon jadi putih bersih */
-    opacity: 0.9;
+body.dark-mode #appSection .sidebar-header i, 
+body.dark-mode #appSection .question-header i,
+body.dark-mode #appSection .header-controls i,
+body.dark-mode #appSection .fas.fa-brain, /* Ikon Mode Fokus (Otak) */
+body.dark-mode #appSection .fas.fa-bars,  /* Ikon Garis 3 */
+body.dark-mode #appSection #menu-toggle i {
+    color: #ffffff !important; 
+    opacity: 1 !important;
 }
 
-/* Hover effect ikon biar kelihatan aktif */
-body.dark-mode #menu-toggle i:hover,
-body.dark-mode #focusModeBtn i:hover {
-    opacity: 1;
-    color: #ffffff !important;
-}
-
-/* 7. WARNA TEKS SAPU JAGAT */
-body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
-body.dark-mode h4, body.dark-mode h5, body.dark-mode p, 
-body.dark-mode label, body.dark-mode .question-text,
-body.dark-mode span:not(.brand-title),
-body.dark-mode small,
-body.dark-mode .timer-display {
+/* 7. WARNA TEKS (Sapu Jagat yang Aman) */
+body.dark-mode #appSection h1, 
+body.dark-mode #appSection h2, 
+body.dark-mode #appSection h3, 
+body.dark-mode #appSection h4, 
+body.dark-mode #appSection h5, 
+body.dark-mode #appSection p, 
+body.dark-mode #appSection label, 
+body.dark-mode #appSection .question-text,
+body.dark-mode #appSection small,
+body.dark-mode #appSection .timer-display {
     color: #e0e0e0 !important;
 }
 
-body.dark-mode small {
-    color: #aaa !important;
+/* 8. TEKS JUDUL MODUL & KETERANGAN SOAL */
+body.dark-mode #appSection #modulTitle, 
+body.dark-mode #appSection .modul-title,
+body.dark-mode #appSection #qNum,
+body.dark-mode #appSection .keterangan-modul,
+body.dark-mode #appSection .soal-keterangan,
+body.dark-mode #appSection .header-title {
+    color: #ffffff !important; 
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5); 
 }
 
-/* 8. FLOATING TOGGLE BUTTON (Style update) */
+/* 9. FLOATING TOGGLE BUTTON */
 #btnDarkModeToggle {
     transition: transform 0.2s ease, background 0.3s ease;
 }
@@ -636,23 +633,11 @@ body.dark-mode small {
     transform: scale(1.1);
 }
 body.dark-mode #btnDarkModeToggle {
-    background: #333 !important; /* Background gelap di mode gelap */
-    color: #f39c12 !important; /* Matahari oren */
+    background: #333 !important; 
+    color: #f39c12 !important; 
     box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3) !important;
 }
 body:not(.dark-mode) #btnDarkModeToggle {
-    background: #2c3e50 !important; /* Background biru tua di mode terang */
-    color: #f1c40f !important; /* Bulan kuning */
-}
-/* ==========================================
-   9. PERBAIKAN TEKS JUDUL MODUL & KETERANGAN SOAL
-   ========================================== */
-body.dark-mode #modulTitle, 
-body.dark-mode .modul-title,
-body.dark-mode #qNum,
-body.dark-mode .keterangan-modul,
-body.dark-mode .soal-keterangan,
-body.dark-mode .header-title {
-    color: #ffffff !important; /* Paksa jadi putih bersih biar kontras */
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Kasih bayangan dikit biar makin jelas */
+    background: #2c3e50 !important; 
+    color: #f1c40f !important; 
 }
