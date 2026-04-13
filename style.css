@@ -643,6 +643,34 @@ body:not(.dark-mode) #btnDarkModeToggle {
 }
 
 /* ==========================================
+   10. PERBAIKAN TABEL RIWAYAT & TEKS LOBBY
+   ========================================== */
+/* Bikin latar tabel jadi gelap nyatu sama card-nya */
+body.dark-mode #appSection table,
+body.dark-mode #appSection .table-responsive {
+    background-color: #2d2d2d !important;
+}
+
+/* Paksa teks di dalam tabel (Tanggal, Modul, Skor) jadi putih */
+body.dark-mode #appSection th,
+body.dark-mode #appSection td {
+    background-color: #2d2d2d !important;
+    border-bottom: 1px solid #444 !important;
+    color: #ffffff !important;
+}
+
+/* Bikin header tabel (paling atas) sedikit lebih gelap biar rapi */
+body.dark-mode #appSection th {
+    background-color: #1a1a1a !important;
+}
+
+/* Sapu jagat biar teks keterangan di Lobby (kayak Rata-Rata & Peringkat) ikut putih terang */
+body.dark-mode #appSection .card,
+body.dark-mode #appSection .right-sidebar {
+    color: #ffffff !important;
+}
+
+/* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
 body.dark-mode #appSection .question-header button,
