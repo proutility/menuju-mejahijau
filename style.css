@@ -593,11 +593,11 @@ body.dark-mode #appSection .question-header {
 body.dark-mode #appSection .sidebar-header i, 
 body.dark-mode #appSection .question-header i,
 body.dark-mode #appSection .header-controls i,
-body.dark-mode #appSection .fas.fa-brain, /* Ikon Mode Fokus (Otak) */
-body.dark-mode #appSection .fas.fa-bars,  /* Ikon Garis 3 */
+body.dark-mode #appSection .fas.fa-brain, 
+body.dark-mode #appSection .fas.fa-bars,  
 body.dark-mode #appSection #menu-toggle i {
     color: #ffffff !important; 
-    opacity: 1 !important;
+    fill: #ffffff !important;
 }
 
 /* 7. WARNA TEKS (Sapu Jagat yang Aman) */
@@ -648,12 +648,31 @@ body:not(.dark-mode) #btnDarkModeToggle {
 body.dark-mode #appSection .question-header button,
 body.dark-mode #appSection .question-header a,
 body.dark-mode #appSection .question-header .btn-icon,
-body.dark-mode #appSection .question-header [class*="fa-"], /* Sikat semua fontawesome */
+body.dark-mode #appSection .question-header [class*="fa-"], 
 body.dark-mode #appSection .question-header svg,
 body.dark-mode #appSection .question-header path {
     color: #ffffff !important;
     fill: #ffffff !important;
     stroke: #ffffff !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    /* visibility & opacity dihapus biar ga bocor ke lobby */
+}
+
+/* ==========================================
+   PERBAIKAN KOTAK RAGU-RAGU (BACKGROUND HITAM, TEKS KUNING)
+   ========================================== */
+body.dark-mode #appSection .card label, /* Target label ragu-ragu */
+body.dark-mode #appSection .action-buttons div, /* Target wadah ragu-ragu */
+body.dark-mode #appSection label:has(input[type="checkbox"]),
+body.dark-mode #appSection [style*="background-color: white"], /* Antisipasi kalau ada inline style warna putih */
+body.dark-mode #appSection [style*="background: white"] {
+    background-color: transparent !important; /* Paksa background jadi transparan/nyatu sama hitamnya */
+    background: none !important;
+    border-color: #555 !important; /* Garis pinggir dibikin gelap */
+    color: #f39c12 !important; /* Paksa teks kembali kuning cerah */
+}
+
+/* Pastikan teks span/label di sebelahnya juga kuning */
+body.dark-mode #appSection input[type="checkbox"] + span,
+body.dark-mode #appSection input[type="checkbox"] + label {
+    color: #f39c12 !important;
 }
