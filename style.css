@@ -641,3 +641,17 @@ body:not(.dark-mode) #btnDarkModeToggle {
     background: #2c3e50 !important; 
     color: #f1c40f !important; 
 }
+
+/* ==========================================
+   TAMBAHAN KHUSUS: PAKSA MUNCUL IKON BANDEL
+   ========================================== */
+/* Tembak semua format Ikon dan SVG di area Header Soal */
+body.dark-mode #appSection .question-header i,
+body.dark-mode #appSection .question-header svg,
+body.dark-mode #appSection .question-header path,
+body.dark-mode #appSection [class*="fa-brain"], /* Sapu jagat semua ikon otak */
+body.dark-mode #appSection [class*="fa-bars"] { /* Sapu jagat semua ikon garis 3 */
+    color: #ffffff !important;
+    fill: #ffffff !important; /* Ini jurusnya kalau ikon lo pakai SVG */
+    opacity: 1 !important;
+}
