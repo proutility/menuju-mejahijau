@@ -643,15 +643,17 @@ body:not(.dark-mode) #btnDarkModeToggle {
 }
 
 /* ==========================================
-   TAMBAHAN KHUSUS: PAKSA MUNCUL IKON BANDEL
+   TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
-/* Tembak semua format Ikon dan SVG di area Header Soal */
-body.dark-mode #appSection .question-header i,
+body.dark-mode #appSection .question-header button,
+body.dark-mode #appSection .question-header a,
+body.dark-mode #appSection .question-header .btn-icon,
+body.dark-mode #appSection .question-header [class*="fa-"], /* Sikat semua fontawesome */
 body.dark-mode #appSection .question-header svg,
-body.dark-mode #appSection .question-header path,
-body.dark-mode #appSection [class*="fa-brain"], /* Sapu jagat semua ikon otak */
-body.dark-mode #appSection [class*="fa-bars"] { /* Sapu jagat semua ikon garis 3 */
+body.dark-mode #appSection .question-header path {
     color: #ffffff !important;
-    fill: #ffffff !important; /* Ini jurusnya kalau ikon lo pakai SVG */
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
     opacity: 1 !important;
+    visibility: visible !important;
 }
