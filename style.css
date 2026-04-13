@@ -740,101 +740,78 @@ body.dark-mode #appSection .main-content .text-success {
 }
 
 /* ==========================================
-   13. FIX FINAL: RAGU-RAGU, NOMOR SOAL, & PEMBAHASAN
+   13. REVISI TOTAL: RAGU-RAGU, NOMOR SOAL, PEMBAHASAN & IKON
    ========================================== */
 
-/* 1. HANCURKAN KOTAK PUTIH RAGU-RAGU */
-/* Sikat semua class yang ngasih background putih di area tombol */
+/* --- 1. RAGU-RAGU (BACKGROUND NYATU, TEKS KUNING) --- */
+/* Paksa semua wadah di area tombol bawah jadi transparan */
+body.dark-mode #appSection .card .d-flex.align-items-center,
 body.dark-mode #appSection .bottom-bar .bg-white,
-body.dark-mode #appSection .d-flex.bg-white,
-body.dark-mode #appSection label.bg-white,
-body.dark-mode #appSection .question-container [class*="bg-white"] {
+body.dark-mode #appSection .bg-white:has(input[type="checkbox"]),
+body.dark-mode #appSection label:has(input[type="checkbox"]) {
     background-color: transparent !important;
     background: none !important;
+    border: none !important;
+}
+/* Paksa teks "Ragu-Ragu" jadi Kuning */
+body.dark-mode #appSection input[type="checkbox"] + label,
+body.dark-mode #appSection input[type="checkbox"] + span,
+body.dark-mode #appSection .form-check-label {
+    color: #f39c12 !important; 
+    font-weight: bold;
 }
 
-/* 2. SIKAT AREA NOMOR SOAL KANAN BIAR GELAP & JELAS */
-/* Bikin latar belakang area nomor jadi gelap */
+/* --- 2. NOMOR SOAL KANAN (BACKGROUND GELAP, TEKS PUTIH) --- */
+/* Wadah background kanan */
 body.dark-mode #appSection .right-sidebar .card-body,
-body.dark-mode #appSection .right-sidebar .overflow-auto,
-body.dark-mode #appSection .right-sidebar [style*="background"] {
+body.dark-mode #appSection .sidebar-right .card-body {
     background-color: #1a1a1a !important;
 }
-/* Paksa tombol nomor soal jadi abu gelap dengan teks putih jelas */
-body.dark-mode #appSection .right-sidebar .q-nav-btn,
-body.dark-mode #appSection .right-sidebar .grid-btn,
-body.dark-mode #appSection .right-sidebar button {
+/* Tombol Kotak Nomor */
+body.dark-mode #appSection .right-sidebar button,
+body.dark-mode #appSection .sidebar-right button,
+body.dark-mode #appSection .q-nav-btn,
+body.dark-mode #appSection .btn-outline-secondary,
+body.dark-mode #appSection .btn-light {
     background-color: #2d2d2d !important;
-    border-color: #555 !important;
-    color: #ffffff !important; 
-    font-weight: bold; /* Ditebelin dikit biar mantap */
+    border: 1px solid #555 !important;
+    color: #ffffff !important;
 }
-/* Warna pas tombol nomor disorot (hover) */
-body.dark-mode #appSection .right-sidebar .q-nav-btn:hover {
+body.dark-mode #appSection .right-sidebar button:hover,
+body.dark-mode #appSection .sidebar-right button:hover {
     background-color: #3d3d3d !important;
 }
 
-/* 3. PERBAIKAN TEKS KOTAK PEMBAHASAN (KUNING -> TEKS GELAP) */
-/* Paksa teks di dalem kotak pembahasan (kuning) jadi Hitam/Abu Gelap biar enak dibaca */
-body.dark-mode #appSection .pembahasan-box,
-body.dark-mode #appSection .pembahasan-box p,
-body.dark-mode #appSection .pembahasan-box span,
-body.dark-mode #appSection .pembahasan-box div,
+/* --- 3. KOTAK PEMBAHASAN (KUNING DENGAN TEKS HITAM PEKAT) --- */
+/* Teks utama pembahasan */
 body.dark-mode #appSection .alert-warning,
 body.dark-mode #appSection .alert-warning p,
-body.dark-mode #appSection .alert-warning span {
-    color: #1a1a1a !important; /* Warna Abu-abu sangat gelap / nyaris hitam */
+body.dark-mode #appSection .alert-warning span,
+body.dark-mode #appSection .alert-warning div,
+body.dark-mode #appSection .pembahasan-box {
+    color: #000000 !important; /* Hitam pekat */
 }
-/* Judul dan Sumber di pembahasan dikasih warna hitam pekat */
-body.dark-mode #appSection .pembahasan-box h4,
-body.dark-mode #appSection .pembahasan-box strong,
-body.dark-mode #appSection .alert-warning strong {
-    color: #000000 !important; 
-}
-
-/* ==========================================
-   14. JURUS PAMUNGKAS: LIBAS CLASS BAWAAN (BOOTSTRAP)
-   ========================================== */
-
-/* 1. HANCURKAN BACKGROUND PUTIH DI RAGU-RAGU & SIDEBAR KANAN */
-/* Sikat semua class .bg-white atau style inline putih */
-body.dark-mode #appSection .bg-white,
-body.dark-mode #appSection .bg-light,
-body.dark-mode #appSection [style*="background-color: white"],
-body.dark-mode #appSection [style*="background: white"],
-body.dark-mode #appSection [style*="background-color:#fff"],
-body.dark-mode #appSection [style*="background-color: #fff"] {
-    background-color: transparent !important;
-    background: none !important;
-}
-
-/* 2. PAKSA TOMBOL NOMOR SOAL KELUAR WARNANYA */
-/* Ganti tombol putih bawaan jadi gelap elegan */
-body.dark-mode #appSection .btn-outline-secondary,
-body.dark-mode #appSection .btn-light,
-body.dark-mode #appSection .btn-white {
-    background-color: #2d2d2d !important;
-    border-color: #555 !important;
-    color: #ffffff !important;
-}
-/* Hover efek buat tombol nomor soal */
-body.dark-mode #appSection .btn-outline-secondary:hover,
-body.dark-mode #appSection .btn-light:hover {
-    background-color: #3d3d3d !important;
-    color: #ffffff !important;
-}
-
-/* 3. TEKS PEMBAHASAN WAJIB HITAM PEKAT */
-/* Paksa semua teks di dalam kotak kuning jadi hitam */
-body.dark-mode #appSection .alert-warning,
-body.dark-mode #appSection .alert-warning * {
+/* Judul tebal di dalam pembahasan */
+body.dark-mode #appSection .alert-warning strong,
+body.dark-mode #appSection .alert-warning h4 {
     color: #000000 !important;
 }
-/* Khusus teks hijau (jawaban benar) di atas kuning, kita bikin hijau tua biar kontras */
+/* Khusus jawaban hijau di dalam pembahasan jadi Hijau Tua biar kelihatan */
 body.dark-mode #appSection .alert-warning .text-success,
 body.dark-mode #appSection .alert-warning [style*="color: green"] {
     color: #006600 !important; 
     font-weight: bold !important;
+}
+
+/* --- 4. IKON GARIS 3 & MODE FOKUS (PUTIH BERSIH) --- */
+body.dark-mode #appSection .question-header button,
+body.dark-mode #appSection .question-header a,
+body.dark-mode #appSection .question-header i,
+body.dark-mode #appSection .question-header svg,
+body.dark-mode #appSection .question-header path {
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    stroke: #ffffff !important;
 }
 /* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
@@ -849,24 +826,4 @@ body.dark-mode #appSection .question-header path {
     fill: #ffffff !important;
     stroke: #ffffff !important;
     /* visibility & opacity dihapus biar ga bocor ke lobby */
-}
-
-/* ==========================================
-   PERBAIKAN KOTAK RAGU-RAGU (BACKGROUND HITAM, TEKS KUNING)
-   ========================================== */
-body.dark-mode #appSection .card label, /* Target label ragu-ragu */
-body.dark-mode #appSection .action-buttons div, /* Target wadah ragu-ragu */
-body.dark-mode #appSection label:has(input[type="checkbox"]),
-body.dark-mode #appSection [style*="background-color: white"], /* Antisipasi kalau ada inline style warna putih */
-body.dark-mode #appSection [style*="background: white"] {
-    background-color: transparent !important; /* Paksa background jadi transparan/nyatu sama hitamnya */
-    background: none !important;
-    border-color: #555 !important; /* Garis pinggir dibikin gelap */
-    color: #f39c12 !important; /* Paksa teks kembali kuning cerah */
-}
-
-/* Pastikan teks span/label di sebelahnya juga kuning */
-body.dark-mode #appSection input[type="checkbox"] + span,
-body.dark-mode #appSection input[type="checkbox"] + label {
-    color: #f39c12 !important;
 }
