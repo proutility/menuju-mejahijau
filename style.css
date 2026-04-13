@@ -738,6 +738,59 @@ body.dark-mode #appSection .main-content .text-success {
     text-shadow: 0 0 3px rgba(46, 204, 113, 0.6) !important;
     font-weight: bold !important; /* Ditebelin dikit biar makin jelas */
 }
+
+/* ==========================================
+   13. FIX FINAL: RAGU-RAGU, NOMOR SOAL, & PEMBAHASAN
+   ========================================== */
+
+/* 1. HANCURKAN KOTAK PUTIH RAGU-RAGU */
+/* Sikat semua class yang ngasih background putih di area tombol */
+body.dark-mode #appSection .bottom-bar .bg-white,
+body.dark-mode #appSection .d-flex.bg-white,
+body.dark-mode #appSection label.bg-white,
+body.dark-mode #appSection .question-container [class*="bg-white"] {
+    background-color: transparent !important;
+    background: none !important;
+}
+
+/* 2. SIKAT AREA NOMOR SOAL KANAN BIAR GELAP & JELAS */
+/* Bikin latar belakang area nomor jadi gelap */
+body.dark-mode #appSection .right-sidebar .card-body,
+body.dark-mode #appSection .right-sidebar .overflow-auto,
+body.dark-mode #appSection .right-sidebar [style*="background"] {
+    background-color: #1a1a1a !important;
+}
+/* Paksa tombol nomor soal jadi abu gelap dengan teks putih jelas */
+body.dark-mode #appSection .right-sidebar .q-nav-btn,
+body.dark-mode #appSection .right-sidebar .grid-btn,
+body.dark-mode #appSection .right-sidebar button {
+    background-color: #2d2d2d !important;
+    border-color: #555 !important;
+    color: #ffffff !important; 
+    font-weight: bold; /* Ditebelin dikit biar mantap */
+}
+/* Warna pas tombol nomor disorot (hover) */
+body.dark-mode #appSection .right-sidebar .q-nav-btn:hover {
+    background-color: #3d3d3d !important;
+}
+
+/* 3. PERBAIKAN TEKS KOTAK PEMBAHASAN (KUNING -> TEKS GELAP) */
+/* Paksa teks di dalem kotak pembahasan (kuning) jadi Hitam/Abu Gelap biar enak dibaca */
+body.dark-mode #appSection .pembahasan-box,
+body.dark-mode #appSection .pembahasan-box p,
+body.dark-mode #appSection .pembahasan-box span,
+body.dark-mode #appSection .pembahasan-box div,
+body.dark-mode #appSection .alert-warning,
+body.dark-mode #appSection .alert-warning p,
+body.dark-mode #appSection .alert-warning span {
+    color: #1a1a1a !important; /* Warna Abu-abu sangat gelap / nyaris hitam */
+}
+/* Judul dan Sumber di pembahasan dikasih warna hitam pekat */
+body.dark-mode #appSection .pembahasan-box h4,
+body.dark-mode #appSection .pembahasan-box strong,
+body.dark-mode #appSection .alert-warning strong {
+    color: #000000 !important; 
+}
 /* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
