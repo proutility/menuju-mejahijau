@@ -2803,3 +2803,40 @@ window.loadStatusAdmin = async () => {
         console.error(e);
     }
 };
+
+// ==========================================
+// FUNGSI DARK MODE 
+// ==========================================
+window.toggleDarkMode = () => {
+    const body = document.body;
+    const btn = document.getElementById('btnDarkModeToggle');
+    
+    // Switch class
+    body.classList.toggle('dark-mode');
+    
+    // Ganti Ikon dan Simpan ke Memory
+    if (body.classList.contains('dark-mode')) {
+        localStorage.setItem('protama_theme', 'dark');
+        btn.innerHTML = '<i class="fas fa-sun"></i>';
+        btn.style.color = '#f39c12'; // Warna oren cerah buat matahari
+        btn.title = "Matikan Mode Gelap";
+    } else {
+        localStorage.setItem('protama_theme', 'light');
+        btn.innerHTML = '<i class="fas fa-moon"></i>';
+        btn.style.color = '#f1c40f'; // Warna kuning buat bulan
+        btn.title = "Aktifkan Mode Gelap";
+    }
+};
+
+// Cek memori pas web baru dibuka
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('protama_theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        const btn = document.getElementById('btnDarkModeToggle');
+        if(btn) {
+            btn.innerHTML = '<i class="fas fa-sun"></i>';
+            btn.style.color = '#f39c12';
+        }
+    }
+});
