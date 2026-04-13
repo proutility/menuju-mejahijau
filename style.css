@@ -710,50 +710,21 @@ body:not(.dark-mode) #btnDarkModeToggle {
     color: #f1c40f !important; 
 }
 /* ========================================================================= */
-/* 12. REVISI DETAIL: TOMBOL LAPOR & HIGHLIGHT POIN INTI                     */
-/* ========================================================================= */
-
-/* 1. Kembalikan fitur "Lapor" dan ikon benderanya jadi warna Merah */
-body.dark-mode #appSection .alert-warning .text-danger,
-body.dark-mode #appSection .pembahasan-box .text-danger,
-body.dark-mode #appSection .alert-warning .fa-flag,
-body.dark-mode #appSection .pembahasan-box .fa-flag,
-body.dark-mode #appSection .alert-warning [style*="color: red"] {
-    color: #e74c3c !important; /* Merah terang khas CBT */
-}
-
-/* 2. Perbaiki Teks yang di-blok (Mark/Highlight Poin Inti) */
-/* Ubah background kuning pucat jadi transparan/gelap, teksnya jadi hijau neon */
-body.dark-mode #appSection .alert-warning mark,
-body.dark-mode #appSection .pembahasan-box mark,
-body.dark-mode #appSection .alert-warning [style*="background-color"],
-body.dark-mode #appSection .pembahasan-box [style*="background-color"] {
-    background-color: rgba(46, 204, 113, 0.1) !important; /* Background hijau sangat tipis */
-    color: #2ecc71 !important; /* Teks hijau neon biar ngejreng */
-    font-weight: bold !important;
-    padding: 2px 4px !important;
-    border-radius: 4px !important;
-}
-/* ========================================================================= */
-/* 13. PENYEMPURNAAN SIDEBAR KIRI & KANAN (WARNA KONTRAST)                   */
+/* 12. FINAL POLISH: LAPOR, HIGHLIGHT, & SIDEBAR WARNA KONTRAST              */
 /* ========================================================================= */
 
 /* --- 1. SIDEBAR KIRI (MODUL & MENU UTAMA) --- */
-/* Bikin wadah modul dan area materi jadi gelap */
 body.dark-mode #appSection .sidebar-left .modul-selector,
 body.dark-mode #appSection .sidebar-left .bg-white,
 body.dark-mode #appSection .sidebar-left .nav-tabs {
     background-color: #1a1a1a !important;
 }
-
-/* Tombol Modul biasa */
 body.dark-mode #appSection .modul-btn {
     background-color: #2d2d2d !important;
     border-color: #444 !important;
     color: #e0e0e0 !important;
 }
-
-/* Tombol Modul Aktif (Warna Hijau Botol Gelap elegan dengan garis Emas) */
+/* Warna Modul Aktif: Hijau Botol Gelap elegan + Garis Emas */
 body.dark-mode #appSection .modul-btn.active-modul {
     background-color: #1b4b27 !important; 
     border-color: #1b4b27 !important;
@@ -762,7 +733,6 @@ body.dark-mode #appSection .modul-btn.active-modul {
 }
 
 /* --- 2. SIDEBAR KANAN (LEGEND & FOOTER SELESAI UJIAN) --- */
-/* Gelapkan area "Menjawab: 2/50" dan wadah tombol "Selesai Ujian" */
 body.dark-mode #appSection .sidebar-right .sidebar-info,
 body.dark-mode #appSection .sidebar-right .finish-container,
 body.dark-mode #appSection .sidebar-right .bg-light,
@@ -771,29 +741,23 @@ body.dark-mode #appSection .sidebar-right .bg-white {
     border-color: #333 !important;
     border-top: 1px solid #333 !important;
     border-bottom: 1px solid #333 !important;
-}
-/* Pastikan teks keterangan legend jadi putih */
-body.dark-mode #appSection .sidebar-right .sidebar-info {
     color: #e0e0e0 !important;
 }
 
 /* --- 3. WARNA KOTAK NOMOR SOAL BIAR KONTRAST --- */
-/* Kotak Kosong (Belum dijawab) */
 body.dark-mode #appSection .nav-btn {
     background-color: #2d2d2d !important;
     border-color: #444 !important;
     color: #e0e0e0 !important;
 }
-
-/* Kotak Sudah Dijawab (Isi) - Diubah jadi BIRU biar stand-out dan beda */
+/* Kotak Isi: Biru Terang */
 body.dark-mode #appSection .nav-btn.filled {
     background-color: #2980b9 !important; 
     border-color: #3498db !important;
     color: #ffffff !important;
     box-shadow: 0 0 5px rgba(41, 128, 185, 0.4) !important;
 }
-
-/* Kotak Ragu-Ragu - Diubah jadi KUNING/EMAS terang teks hitam */
+/* Kotak Ragu-Ragu: Kuning/Emas Terang */
 body.dark-mode #appSection .nav-btn.ragu,
 body.dark-mode #appSection .nav-btn.ragu.filled {
     background-color: #f39c12 !important; 
@@ -802,36 +766,30 @@ body.dark-mode #appSection .nav-btn.ragu.filled {
     font-weight: bold !important;
     box-shadow: 0 0 5px rgba(243, 156, 18, 0.4) !important;
 }
-/* ========================================================================= */
-/* 14. FIX FINAL: LAPOR MERAH & HIGHLIGHT BACAAN                             */
-/* ========================================================================= */
 
-/* --- 1. PAKSA TOMBOL LAPOR JADI MERAH TERANG --- */
-/* Target spesifik ke ikon bendera dan teks di sebelahnya */
+/* --- 4. PAKSA TOMBOL LAPOR JADI MERAH TERANG --- */
+/* Jurus anti-kalah untuk ngelawan class link warna hijau */
 body.dark-mode #appSection .alert-warning .fa-flag,
 body.dark-mode #appSection .pembahasan-box .fa-flag,
-body.dark-mode #appSection .alert-warning span:has(.fa-flag),
-body.dark-mode #appSection .pembahasan-box span:has(.fa-flag),
-body.dark-mode #appSection .alert-warning a:has(.fa-flag),
 body.dark-mode #appSection .alert-warning .text-danger,
-body.dark-mode #appSection .alert-warning [style*="color: red"],
-body.dark-mode #appSection .alert-warning [style*="color:red"] {
-    color: #ff4757 !important; /* Merah neon biar kontras di dark mode */
+body.dark-mode #appSection .pembahasan-box .text-danger,
+body.dark-mode #appSection .alert-warning a:has(.fa-flag),
+body.dark-mode #appSection .pembahasan-box a:has(.fa-flag),
+body.dark-mode #appSection a[onclick*="lapor"] {
+    color: #ff4757 !important; /* Merah neon menyala */
     text-shadow: 0 0 5px rgba(255, 71, 87, 0.3) !important;
+    background: transparent !important;
 }
 
-/* --- 2. HANCURKAN BLOK KUNING PUCAT (HIGHLIGHT TEKS) --- */
-/* Target semua elemen (span, mark, strong) yang punya background warna bawaan */
-body.dark-mode #appSection .alert-warning span[style*="background"],
-body.dark-mode #appSection .pembahasan-box span[style*="background"],
+/* --- 5. HANCURKAN BLOK KUNING PUCAT (HIGHLIGHT TEKS) --- */
+/* Sapu jagat: Target SEMUA elemen di dalam pembahasan yang punya style background bawaan */
+body.dark-mode #appSection .alert-warning *[style*="background"],
+body.dark-mode #appSection .pembahasan-box *[style*="background"],
 body.dark-mode #appSection .alert-warning mark,
-body.dark-mode #appSection .pembahasan-box mark,
-body.dark-mode #appSection .alert-warning strong[style*="background"] {
-    background-color: rgba(46, 204, 113, 0.15) !important; /* Ganti jadi background hijau transparan */
-    background: rgba(46, 204, 113, 0.15) !important;
-    color: #2ecc71 !important; /* Teks hijau neon biar ngejreng */
-    border-bottom: 2px solid #2ecc71 !important; /* Garis bawah biar jelas itu poin inti */
+body.dark-mode #appSection .pembahasan-box mark {
+    background-color: rgba(46, 204, 113, 0.15) !important; 
+    background: rgba(46, 204, 113, 0.15) !important; /* Paksa timpa inline style editor */
+    color: #2ecc71 !important; /* Teks hijau neon */
+    border-bottom: 2px solid #2ecc71 !important; /* Garis bawah biar makin tegas */
     font-weight: bold !important;
-    padding: 2px 4px !important;
-    border-radius: 4px !important;
 }
