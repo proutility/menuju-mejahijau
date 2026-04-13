@@ -794,42 +794,37 @@ body.dark-mode #appSection .pembahasan-box mark {
     font-weight: bold !important;
 }
 /* ========================================================================= */
-/* 14. PENAWAR RACUN: LAPOR MERAH & HIGHLIGHT (ANTI-WILDCARD)                */
+/* 14. JURUS NUKLIR: FIX TOTAL PEMBAHASAN (ANTI-KUNING & LAPOR MERAH)        */
 /* ========================================================================= */
 
-/* 1. HANCURKAN BACKGROUND KUNING BAWAAN CMS */
-/* Kita paksa semua span/mark di dalam pembahasan jadi transparan */
+/* 1. PAKSA SEMUA HIGHLIGHT JADI HIJAU NEON (Anti-Background Kuning) */
+body.dark-mode #appSection .pembahasan-box [style*="background"],
+body.dark-mode #appSection .alert-warning [style*="background"],
 body.dark-mode #appSection .pembahasan-box span,
 body.dark-mode #appSection .alert-warning span,
 body.dark-mode #appSection .pembahasan-box mark,
 body.dark-mode #appSection .alert-warning mark {
     background-color: transparent !important;
-    background: none !important;
-}
-
-/* 2. WARNAI ULANG TEKS HIGHLIGHT JADI HIJAU NEON */
-/* Ngelawan efek abu-abu dari kodingan sebelumnya */
-body.dark-mode #appSection .pembahasan-box span[style],
-body.dark-mode #appSection .alert-warning span[style],
-body.dark-mode #appSection .pembahasan-box mark,
-body.dark-mode #appSection .alert-warning mark {
-    color: #2ecc71 !important; /* Hijau neon */
+    background: transparent !important;
+    color: #2ecc71 !important; /* Hijau Neon */
     font-weight: bold !important;
-    border-bottom: 1px dashed #2ecc71 !important; /* Kasih garis bawah putus-putus biar estetik */
+    text-shadow: 0 0 2px rgba(46, 204, 113, 0.5) !important;
 }
 
-/* 3. KEMBALIKAN TOMBOL LAPOR JADI MERAH TERANG */
-/* Kita target link (a) dan ikon bendera di dalem header pembahasan */
+/* 2. PAKSA TOMBOL LAPOR JADI MERAH (Anti-Warna Hijau Link) */
+/* Kita tembak semua elemen yang ada teks 'Lapor' atau ikon bendera */
 body.dark-mode #appSection .pembahasan-box a,
 body.dark-mode #appSection .alert-warning a,
 body.dark-mode #appSection .pembahasan-box i.fa-flag,
-body.dark-mode #appSection .alert-warning i.fa-flag {
-    color: #ff4757 !important; /* Merah menyala */
-    text-decoration: none !important;
+body.dark-mode #appSection .alert-warning i.fa-flag,
+body.dark-mode #appSection .text-danger {
+    color: #ff4757 !important; /* Merah Neon */
+    fill: #ff4757 !important;
+    opacity: 1 !important;
 }
 
-/* 4. PENGECUALIAN: IKON SPEAKER (AUDIO) TETAP PUTIH/ABU */
-body.dark-mode #appSection .pembahasan-box i.fa-volume-up,
-body.dark-mode #appSection .alert-warning i.fa-volume-up {
-    color: #e0e0e0 !important;
+/* 3. FIX TEKS SUMBER (BIAR TETAP TERLIHAT EMAS/PUTIH) */
+body.dark-mode #appSection .pembahasan-box strong,
+body.dark-mode #appSection .alert-warning strong {
+    color: var(--gold) !important;
 }
