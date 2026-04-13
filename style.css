@@ -528,3 +528,57 @@ body.mode-focus #floatingTimer { display: block !important; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes blink { 50% { opacity: 0.5; } }
+
+/* ==========================================
+   MODE GELAP (DARK MODE)
+   ========================================== */
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .sidebar-left, 
+body.dark-mode .sidebar-right, 
+body.dark-mode .main-content {
+    background-color: #1a1a1a !important;
+    border-color: #333 !important;
+}
+
+body.dark-mode .card,
+body.dark-mode .result-box,
+body.dark-mode .feedback-box,
+body.dark-mode .user-profile-card,
+body.dark-mode .modul-btn,
+body.dark-mode #lobbySidebarContent > div {
+    background-color: #242424 !important;
+    border-color: #444 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .option-label {
+    background-color: #2a2a2a !important;
+    border-color: #555 !important;
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode .option-label:hover {
+    background-color: #3a3a3a !important;
+}
+
+body.dark-mode .sidebar-header,
+body.dark-mode .right-header,
+body.dark-mode .question-header {
+    background-color: #1a1a1a !important;
+    border-bottom-color: #333 !important;
+}
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
+body.dark-mode h4, body.dark-mode h5, body.dark-mode p, 
+body.dark-mode span:not(.brand-title):not(.brand-subtitle), 
+body.dark-mode label, body.dark-mode .question-text {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode small {
+    color: #aaa !important;
+}
