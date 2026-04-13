@@ -802,3 +802,36 @@ body.dark-mode #appSection .nav-btn.ragu.filled {
     font-weight: bold !important;
     box-shadow: 0 0 5px rgba(243, 156, 18, 0.4) !important;
 }
+/* ========================================================================= */
+/* 14. FIX FINAL: LAPOR MERAH & HIGHLIGHT BACAAN                             */
+/* ========================================================================= */
+
+/* --- 1. PAKSA TOMBOL LAPOR JADI MERAH TERANG --- */
+/* Target spesifik ke ikon bendera dan teks di sebelahnya */
+body.dark-mode #appSection .alert-warning .fa-flag,
+body.dark-mode #appSection .pembahasan-box .fa-flag,
+body.dark-mode #appSection .alert-warning span:has(.fa-flag),
+body.dark-mode #appSection .pembahasan-box span:has(.fa-flag),
+body.dark-mode #appSection .alert-warning a:has(.fa-flag),
+body.dark-mode #appSection .alert-warning .text-danger,
+body.dark-mode #appSection .alert-warning [style*="color: red"],
+body.dark-mode #appSection .alert-warning [style*="color:red"] {
+    color: #ff4757 !important; /* Merah neon biar kontras di dark mode */
+    text-shadow: 0 0 5px rgba(255, 71, 87, 0.3) !important;
+}
+
+/* --- 2. HANCURKAN BLOK KUNING PUCAT (HIGHLIGHT TEKS) --- */
+/* Target semua elemen (span, mark, strong) yang punya background warna bawaan */
+body.dark-mode #appSection .alert-warning span[style*="background"],
+body.dark-mode #appSection .pembahasan-box span[style*="background"],
+body.dark-mode #appSection .alert-warning mark,
+body.dark-mode #appSection .pembahasan-box mark,
+body.dark-mode #appSection .alert-warning strong[style*="background"] {
+    background-color: rgba(46, 204, 113, 0.15) !important; /* Ganti jadi background hijau transparan */
+    background: rgba(46, 204, 113, 0.15) !important;
+    color: #2ecc71 !important; /* Teks hijau neon biar ngejreng */
+    border-bottom: 2px solid #2ecc71 !important; /* Garis bawah biar jelas itu poin inti */
+    font-weight: bold !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+}
