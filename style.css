@@ -671,6 +671,40 @@ body.dark-mode #appSection .right-sidebar {
 }
 
 /* ==========================================
+   11. PERBAIKAN WARNA HIJAU & SIDEBAR KANAN LOBBY
+   ========================================== */
+/* 1. Bikin semua teks/link hijau (Lihat Semua, Skor Pts) jadi hijau cerah/emerald */
+body.dark-mode #appSection a,
+body.dark-mode #appSection .text-success,
+body.dark-mode #appSection [style*="color: green"],
+body.dark-mode #appSection [style*="color:green"] {
+    color: #2ecc71 !important; /* Warna hijau neon terang khas Dark Mode */
+    text-shadow: 0 0 1px rgba(46, 204, 113, 0.4); /* Efek glowing dikit */
+}
+
+/* 2. Paksa teks di Sidebar Kanan (Rata-rata, Top 3, Nama User) jadi putih bersih */
+body.dark-mode #appSection .right-sidebar h1,
+body.dark-mode #appSection .right-sidebar h2,
+body.dark-mode #appSection .right-sidebar h3,
+body.dark-mode #appSection .right-sidebar h4,
+body.dark-mode #appSection .right-sidebar h5,
+body.dark-mode #appSection .right-sidebar h6,
+body.dark-mode #appSection .right-sidebar p,
+body.dark-mode #appSection .right-sidebar small,
+body.dark-mode #appSection .right-sidebar li,
+body.dark-mode #appSection .right-sidebar span {
+    color: #ffffff !important;
+}
+
+/* 3. Balikin warna hijau terang khusus untuk tulisan skor "Pts" di Top 3 & Link */
+body.dark-mode #appSection .right-sidebar span.text-success,
+body.dark-mode #appSection .right-sidebar span[style*="color: green"],
+body.dark-mode #appSection .right-sidebar span[style*="color:green"],
+body.dark-mode #appSection .right-sidebar a {
+    color: #2ecc71 !important; 
+}
+
+/* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
 body.dark-mode #appSection .question-header button,
