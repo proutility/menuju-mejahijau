@@ -791,6 +791,51 @@ body.dark-mode #appSection .pembahasan-box strong,
 body.dark-mode #appSection .alert-warning strong {
     color: #000000 !important; 
 }
+
+/* ==========================================
+   14. JURUS PAMUNGKAS: LIBAS CLASS BAWAAN (BOOTSTRAP)
+   ========================================== */
+
+/* 1. HANCURKAN BACKGROUND PUTIH DI RAGU-RAGU & SIDEBAR KANAN */
+/* Sikat semua class .bg-white atau style inline putih */
+body.dark-mode #appSection .bg-white,
+body.dark-mode #appSection .bg-light,
+body.dark-mode #appSection [style*="background-color: white"],
+body.dark-mode #appSection [style*="background: white"],
+body.dark-mode #appSection [style*="background-color:#fff"],
+body.dark-mode #appSection [style*="background-color: #fff"] {
+    background-color: transparent !important;
+    background: none !important;
+}
+
+/* 2. PAKSA TOMBOL NOMOR SOAL KELUAR WARNANYA */
+/* Ganti tombol putih bawaan jadi gelap elegan */
+body.dark-mode #appSection .btn-outline-secondary,
+body.dark-mode #appSection .btn-light,
+body.dark-mode #appSection .btn-white {
+    background-color: #2d2d2d !important;
+    border-color: #555 !important;
+    color: #ffffff !important;
+}
+/* Hover efek buat tombol nomor soal */
+body.dark-mode #appSection .btn-outline-secondary:hover,
+body.dark-mode #appSection .btn-light:hover {
+    background-color: #3d3d3d !important;
+    color: #ffffff !important;
+}
+
+/* 3. TEKS PEMBAHASAN WAJIB HITAM PEKAT */
+/* Paksa semua teks di dalam kotak kuning jadi hitam */
+body.dark-mode #appSection .alert-warning,
+body.dark-mode #appSection .alert-warning * {
+    color: #000000 !important;
+}
+/* Khusus teks hijau (jawaban benar) di atas kuning, kita bikin hijau tua biar kontras */
+body.dark-mode #appSection .alert-warning .text-success,
+body.dark-mode #appSection .alert-warning [style*="color: green"] {
+    color: #006600 !important; 
+    font-weight: bold !important;
+}
 /* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
