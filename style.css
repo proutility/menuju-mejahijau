@@ -529,109 +529,177 @@ body.mode-focus #floatingTimer { display: block !important; }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes blink { 50% { opacity: 0.5; } }
 
-/* ==========================================
-   MODE GELAP (DARK MODE) - REVISI ANTI-BOCOR
-   ========================================== */
+/* ========================================================================= */
+/* 🌙 DARK MODE (PRO-TAMA CBT) - CLEAN & AESTHETIC VERSION 🌙                */
+/* ========================================================================= */
 
-/* 1. KEMBALIKAN LANDING PAGE KE ASAL */
-/* Kita pakai #appSection agar Dark Mode HANYA jalan di dalam aplikasi ujian. 
-   Halaman depan/Lobby dijamin 100% tidak akan tersentuh (kembali normal). */
+/* 1. BACKGROUND & WADAH UTAMA (DARK ELEGANT) */
 body.dark-mode #appSection {
     background-color: #121212 !important;
 }
-
-/* 2. CONTAINER UTAMA (Sidebars, Main Content Area) */
 body.dark-mode #appSection .sidebar-left, 
 body.dark-mode #appSection .sidebar-right,
-body.dark-mode #appSection aside,
 body.dark-mode #appSection .main-content {
     background-color: #1a1a1a !important; 
     border-color: #333 !important;
 }
+body.dark-mode #appSection .card {
+    background-color: #242424 !important;
+    border-top: 4px solid var(--gold) !important;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5) !important;
+}
 
-/* 3. KOTAK SOAL, NOMOR SOAL, AREA TOMBOL BAWAH */
-body.dark-mode #appSection .card,
-body.dark-mode #appSection .question-container,
-body.dark-mode #appSection .bottom-bar,
-body.dark-mode #appSection .action-buttons,
-body.dark-mode #appSection .nav-buttons,
-body.dark-mode #appSection .q-nav-btn, 
-body.dark-mode #appSection .grid-btn,
-body.dark-mode #appSection .modul-btn { 
-    background-color: #2d2d2d !important; 
-    border-color: #444 !important;
+/* 2. TEKS GLOBAL (ABU TERANG BIAR NYAMAN DIBACA) */
+body.dark-mode #appSection h1, body.dark-mode #appSection h2, 
+body.dark-mode #appSection h3, body.dark-mode #appSection h4, 
+body.dark-mode #appSection h5, body.dark-mode #appSection p, 
+body.dark-mode #appSection label, body.dark-mode #appSection .question-text,
+body.dark-mode #appSection small, body.dark-mode #appSection .timer-display {
     color: #e0e0e0 !important;
 }
 
-body.dark-mode #appSection .q-nav-btn:hover,
-body.dark-mode #appSection .modul-btn:hover {
-    background-color: #3d3d3d !important;
-}
-
-/* 4. OPSI JAWABAN (A, B, C, D) */
-body.dark-mode #appSection .option-label {
-    background-color: transparent !important;
-    border-color: #555 !important;
-    color: #e0e0e0 !important;
-}
-
-body.dark-mode #appSection .option-label:hover {
-    background-color: #3d3d3d !important;
-}
-
-/* 5. HEADER (Sidebar header, Question header) */
+/* 3. HEADER & IKON (PUTIH BERSIH) */
 body.dark-mode #appSection .sidebar-header,
 body.dark-mode #appSection .right-header,
 body.dark-mode #appSection .question-header {
     background-color: #1a1a1a !important;
-    border-bottom-color: #333 !important;
+    border-bottom: 2px solid #333 !important;
 }
-
-/* ==========================================
-   6. PERBAIKAN VISIBILITAS IKON (Garis 3 & Otak)
-   ========================================== */
-body.dark-mode #appSection .sidebar-header i, 
 body.dark-mode #appSection .question-header i,
-body.dark-mode #appSection .header-controls i,
-body.dark-mode #appSection .fas.fa-brain, 
-body.dark-mode #appSection .fas.fa-bars,  
-body.dark-mode #appSection #menu-toggle i {
-    color: #ffffff !important; 
+body.dark-mode #appSection .question-header svg,
+body.dark-mode #appSection .question-header button,
+body.dark-mode #appSection .header-controls i {
+    color: #ffffff !important;
     fill: #ffffff !important;
 }
+/* Modul Title & Soal Num */
+body.dark-mode #appSection #modulTitle, 
+body.dark-mode #appSection #qNum {
+    color: #ffffff !important; 
+}
 
-/* 7. WARNA TEKS (Sapu Jagat yang Aman) */
-body.dark-mode #appSection h1, 
-body.dark-mode #appSection h2, 
-body.dark-mode #appSection h3, 
-body.dark-mode #appSection h4, 
-body.dark-mode #appSection h5, 
-body.dark-mode #appSection p, 
-body.dark-mode #appSection label, 
-body.dark-mode #appSection .question-text,
-body.dark-mode #appSection small,
-body.dark-mode #appSection .timer-display {
+/* 4. OPSI JAWABAN (A, B, C, D) */
+body.dark-mode #appSection .option-label {
+    background-color: #2a2a2a !important;
+    border: 1px solid #444 !important;
     color: #e0e0e0 !important;
 }
-
-/* 8. TEKS JUDUL MODUL & KETERANGAN SOAL */
-body.dark-mode #appSection #modulTitle, 
-body.dark-mode #appSection .modul-title,
-body.dark-mode #appSection #qNum,
-body.dark-mode #appSection .keterangan-modul,
-body.dark-mode #appSection .soal-keterangan,
-body.dark-mode #appSection .header-title {
-    color: #ffffff !important; 
-    text-shadow: 0 1px 2px rgba(0,0,0,0.5); 
+body.dark-mode #appSection .option-label:hover {
+    background-color: #3d3d3d !important;
+    border-color: #666 !important;
+}
+body.dark-mode #appSection .option-label.selected {
+    background-color: rgba(46, 125, 50, 0.2) !important; /* Hijau redup */
+    border-color: #2ecc71 !important;
 }
 
-/* 9. FLOATING TOGGLE BUTTON */
-#btnDarkModeToggle {
-    transition: transform 0.2s ease, background 0.3s ease;
+/* 5. MODE REVIEW (BENAR / SALAH) - RAMAH MATA */
+body.dark-mode #appSection .option-label.review-wrong {
+    background-color: rgba(231, 76, 60, 0.15) !important; /* Merah soft */
+    border-color: #e74c3c !important;
+    color: #ff7675 !important;
 }
-#btnDarkModeToggle:hover {
-    transform: scale(1.1);
+body.dark-mode #appSection .option-label.review-correct {
+    background-color: rgba(46, 204, 113, 0.15) !important; /* Hijau soft */
+    border-color: #2ecc71 !important;
+    color: #55efc4 !important;
 }
+
+/* 6. KOTAK PEMBAHASAN (ESTETIK GELAP & BORDER EMAS) */
+body.dark-mode #appSection .alert-warning,
+body.dark-mode #appSection .feedback-box,
+body.dark-mode #appSection .pembahasan-box {
+    background-color: #2c2513 !important; /* Cokelat tua elegan */
+    border: 1px solid var(--gold) !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode #appSection .alert-warning *,
+body.dark-mode #appSection .feedback-box * {
+    color: #e0e0e0 !important;
+}
+body.dark-mode #appSection .alert-warning h4,
+body.dark-mode #appSection .alert-warning strong {
+    color: var(--gold) !important; /* Judul pembahasan warna emas */
+}
+/* Jawaban benar di dalam pembahasan jadi hijau terang */
+body.dark-mode #appSection .alert-warning .text-success,
+body.dark-mode #appSection .alert-warning [style*="color: green"] {
+    color: #2ecc71 !important;
+    font-weight: bold !important;
+}
+
+/* 7. BOTTOM BAR & RAGU-RAGU (TRANSPARAN) */
+body.dark-mode #appSection .bottom-bar,
+body.dark-mode #appSection .bg-white,
+body.dark-mode #appSection .card .d-flex.align-items-center {
+    background-color: transparent !important;
+    background: none !important;
+}
+body.dark-mode #appSection .ragu-wrapper,
+body.dark-mode #appSection input[type="checkbox"] + label {
+    color: #f39c12 !important; /* Teks ragu-ragu kuning */
+    background: none !important;
+}
+
+/* 8. SIDEBAR KANAN (NAVIGASI SOAL) */
+body.dark-mode #appSection .nav-container,
+body.dark-mode #appSection .sidebar-right .card-body {
+    background-color: #1a1a1a !important;
+}
+body.dark-mode #appSection .nav-btn {
+    background-color: #2d2d2d !important;
+    border: 1px solid #444 !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode #appSection .nav-btn:hover {
+    background-color: #3d3d3d !important;
+}
+body.dark-mode #appSection .nav-btn.filled { background-color: #555 !important; color: white !important; }
+body.dark-mode #appSection .nav-btn.correct { background-color: #2e7d32 !important; color: white !important; }
+body.dark-mode #appSection .nav-btn.wrong { background-color: #c0392b !important; color: white !important; }
+body.dark-mode #appSection .nav-btn.active { border-color: var(--gold) !important; }
+
+/* 9. LOBBY & TABEL RIWAYAT */
+body.dark-mode #appSection .table-responsive,
+body.dark-mode #appSection table {
+    background-color: #242424 !important;
+}
+body.dark-mode #appSection th {
+    background-color: #1a1a1a !important;
+    color: var(--gold) !important;
+    border-color: #444 !important;
+}
+body.dark-mode #appSection td {
+    background-color: #242424 !important;
+    color: #e0e0e0 !important;
+    border-color: #444 !important;
+}
+body.dark-mode #appSection .main-content .text-success,
+body.dark-mode #appSection a {
+    color: #2ecc71 !important; /* Hijau link/lihat semua */
+}
+
+/* 10. LOBBY SIDEBAR KANAN (TOP 3 & ADMIN) */
+body.dark-mode #appSection .stat-box-small {
+    background-color: #242424 !important;
+    border-color: #333 !important;
+}
+body.dark-mode #appSection .stat-box-small span,
+body.dark-mode #appSection .rank-name {
+    color: #e0e0e0 !important;
+}
+body.dark-mode #appSection .rank-num,
+body.dark-mode #appSection .fa-crown {
+    color: #f1c40f !important; /* Mahkota emas */
+}
+body.dark-mode #appSection .rank-score {
+    color: #2ecc71 !important; /* Poin hijau */
+}
+body.dark-mode #appSection .sidebar-right .btn {
+    color: #ffffff !important; /* Teks tombol admin putih */
+}
+
+/* 11. TOMBOL FLOATING DARK MODE */
 body.dark-mode #btnDarkModeToggle {
     background: #333 !important; 
     color: #f39c12 !important; 
@@ -640,190 +708,4 @@ body.dark-mode #btnDarkModeToggle {
 body:not(.dark-mode) #btnDarkModeToggle {
     background: #2c3e50 !important; 
     color: #f1c40f !important; 
-}
-
-/* ==========================================
-   10. PERBAIKAN TABEL RIWAYAT & TEKS LOBBY
-   ========================================== */
-/* Bikin latar tabel jadi gelap nyatu sama card-nya */
-body.dark-mode #appSection table,
-body.dark-mode #appSection .table-responsive {
-    background-color: #2d2d2d !important;
-}
-
-/* Paksa teks di dalam tabel (Tanggal, Modul, Skor) jadi putih */
-body.dark-mode #appSection th,
-body.dark-mode #appSection td {
-    background-color: #2d2d2d !important;
-    border-bottom: 1px solid #444 !important;
-    color: #ffffff !important;
-}
-
-/* Bikin header tabel (paling atas) sedikit lebih gelap biar rapi */
-body.dark-mode #appSection th {
-    background-color: #1a1a1a !important;
-}
-
-/* Sapu jagat biar teks keterangan di Lobby (kayak Rata-Rata & Peringkat) ikut putih terang */
-body.dark-mode #appSection .card,
-body.dark-mode #appSection .right-sidebar {
-    color: #ffffff !important;
-}
-
-/* ==========================================
-   11. NUKLIR SIDEBAR KANAN (NAMA & WARNA HIJAU)
-   ========================================== */
-/* 1. Paksa Nama di Top 3 dan teks deskripsi jadi putih bersih */
-body.dark-mode #appSection .sidebar-right span,
-body.dark-mode #appSection .right-sidebar span,
-body.dark-mode #appSection .sidebar-right div,
-body.dark-mode #appSection .right-sidebar div,
-body.dark-mode #appSection .sidebar-right li,
-body.dark-mode #appSection .right-sidebar li,
-body.dark-mode #appSection .sidebar-right small,
-body.dark-mode #appSection .right-sidebar small {
-    color: #e0e0e0 !important; /* Putih agak abu biar ga terlalu silau */
-}
-
-/* 2. Paksa Angka 19, skor Pts, dan Link jadi Hijau Neon Terang */
-/* Kode ini bakal melibas semua warna bawaan yang bikin gelap */
-body.dark-mode #appSection .sidebar-right a,
-body.dark-mode #appSection .right-sidebar a,
-body.dark-mode #appSection .sidebar-right [style*="color"],
-body.dark-mode #appSection .right-sidebar [style*="color"],
-body.dark-mode #appSection .sidebar-right .text-success,
-body.dark-mode #appSection .right-sidebar .text-success,
-body.dark-mode #appSection .sidebar-right h1,
-body.dark-mode #appSection .right-sidebar h1,
-body.dark-mode #appSection .sidebar-right h2,
-body.dark-mode #appSection .right-sidebar h2,
-body.dark-mode #appSection .sidebar-right strong,
-body.dark-mode #appSection .right-sidebar strong {
-    color: #2ecc71 !important; /* Hijau Emerald / Neon */
-    text-shadow: 0 0 3px rgba(46, 204, 113, 0.4) !important; /* Kasih efek glowing dikit */
-}
-
-/* ==========================================
-   12. PENYESUAIAN FINAL (TOMBOL, EMAS, LIHAT SEMUA)
-   ========================================== */
-
-/* 1. Kembalikan Tombol Panel Admin & Detail Statistik jadi Putih */
-body.dark-mode #appSection .right-sidebar .btn,
-body.dark-mode #appSection .sidebar-right .btn,
-body.dark-mode #appSection .right-sidebar .btn i,
-body.dark-mode #appSection .sidebar-right .btn i {
-    color: #ffffff !important;
-    text-shadow: none !important;
-}
-
-/* 2. Bikin Tulisan "Top 3" dan Ikon Mahkota jadi Emas */
-body.dark-mode #appSection .right-sidebar h1,
-body.dark-mode #appSection .right-sidebar h2,
-body.dark-mode #appSection .right-sidebar h3,
-body.dark-mode #appSection .right-sidebar h4,
-body.dark-mode #appSection .right-sidebar h5,
-body.dark-mode #appSection .sidebar-right h3,
-body.dark-mode #appSection .right-sidebar .fa-crown,
-body.dark-mode #appSection .sidebar-right .fa-crown {
-    color: #f1c40f !important; /* Warna Emas */
-    text-shadow: 0 0 4px rgba(241, 196, 15, 0.4) !important;
-}
-
-/* 3. Paksa hijau "Lihat Semua >" di Riwayat Tes biar nyala terang */
-body.dark-mode #appSection .main-content .card-header a,
-body.dark-mode #appSection .main-content .card-header span,
-body.dark-mode #appSection .main-content a[style*="color"],
-body.dark-mode #appSection .main-content .text-success {
-    color: #2ecc71 !important; /* Hijau Neon */
-    text-shadow: 0 0 3px rgba(46, 204, 113, 0.6) !important;
-    font-weight: bold !important; /* Ditebelin dikit biar makin jelas */
-}
-
-/* ==========================================
-   13. REVISI TOTAL: RAGU-RAGU, NOMOR SOAL, PEMBAHASAN & IKON
-   ========================================== */
-
-/* --- 1. RAGU-RAGU (BACKGROUND NYATU, TEKS KUNING) --- */
-/* Paksa semua wadah di area tombol bawah jadi transparan */
-body.dark-mode #appSection .card .d-flex.align-items-center,
-body.dark-mode #appSection .bottom-bar .bg-white,
-body.dark-mode #appSection .bg-white:has(input[type="checkbox"]),
-body.dark-mode #appSection label:has(input[type="checkbox"]) {
-    background-color: transparent !important;
-    background: none !important;
-    border: none !important;
-}
-/* Paksa teks "Ragu-Ragu" jadi Kuning */
-body.dark-mode #appSection input[type="checkbox"] + label,
-body.dark-mode #appSection input[type="checkbox"] + span,
-body.dark-mode #appSection .form-check-label {
-    color: #f39c12 !important; 
-    font-weight: bold;
-}
-
-/* --- 2. NOMOR SOAL KANAN (BACKGROUND GELAP, TEKS PUTIH) --- */
-/* Wadah background kanan */
-body.dark-mode #appSection .right-sidebar .card-body,
-body.dark-mode #appSection .sidebar-right .card-body {
-    background-color: #1a1a1a !important;
-}
-/* Tombol Kotak Nomor */
-body.dark-mode #appSection .right-sidebar button,
-body.dark-mode #appSection .sidebar-right button,
-body.dark-mode #appSection .q-nav-btn,
-body.dark-mode #appSection .btn-outline-secondary,
-body.dark-mode #appSection .btn-light {
-    background-color: #2d2d2d !important;
-    border: 1px solid #555 !important;
-    color: #ffffff !important;
-}
-body.dark-mode #appSection .right-sidebar button:hover,
-body.dark-mode #appSection .sidebar-right button:hover {
-    background-color: #3d3d3d !important;
-}
-
-/* --- 3. KOTAK PEMBAHASAN (KUNING DENGAN TEKS HITAM PEKAT) --- */
-/* Teks utama pembahasan */
-body.dark-mode #appSection .alert-warning,
-body.dark-mode #appSection .alert-warning p,
-body.dark-mode #appSection .alert-warning span,
-body.dark-mode #appSection .alert-warning div,
-body.dark-mode #appSection .pembahasan-box {
-    color: #000000 !important; /* Hitam pekat */
-}
-/* Judul tebal di dalam pembahasan */
-body.dark-mode #appSection .alert-warning strong,
-body.dark-mode #appSection .alert-warning h4 {
-    color: #000000 !important;
-}
-/* Khusus jawaban hijau di dalam pembahasan jadi Hijau Tua biar kelihatan */
-body.dark-mode #appSection .alert-warning .text-success,
-body.dark-mode #appSection .alert-warning [style*="color: green"] {
-    color: #006600 !important; 
-    font-weight: bold !important;
-}
-
-/* --- 4. IKON GARIS 3 & MODE FOKUS (PUTIH BERSIH) --- */
-body.dark-mode #appSection .question-header button,
-body.dark-mode #appSection .question-header a,
-body.dark-mode #appSection .question-header i,
-body.dark-mode #appSection .question-header svg,
-body.dark-mode #appSection .question-header path {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-}
-/* ==========================================
-   TEMBAK JITU IKON GARIS 3 / FULLSCREEN
-   ========================================== */
-body.dark-mode #appSection .question-header button,
-body.dark-mode #appSection .question-header a,
-body.dark-mode #appSection .question-header .btn-icon,
-body.dark-mode #appSection .question-header [class*="fa-"], 
-body.dark-mode #appSection .question-header svg,
-body.dark-mode #appSection .question-header path {
-    color: #ffffff !important;
-    fill: #ffffff !important;
-    stroke: #ffffff !important;
-    /* visibility & opacity dihapus biar ga bocor ke lobby */
 }
