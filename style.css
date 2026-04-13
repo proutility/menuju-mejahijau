@@ -702,6 +702,42 @@ body.dark-mode #appSection .right-sidebar strong {
     color: #2ecc71 !important; /* Hijau Emerald / Neon */
     text-shadow: 0 0 3px rgba(46, 204, 113, 0.4) !important; /* Kasih efek glowing dikit */
 }
+
+/* ==========================================
+   12. PENYESUAIAN FINAL (TOMBOL, EMAS, LIHAT SEMUA)
+   ========================================== */
+
+/* 1. Kembalikan Tombol Panel Admin & Detail Statistik jadi Putih */
+body.dark-mode #appSection .right-sidebar .btn,
+body.dark-mode #appSection .sidebar-right .btn,
+body.dark-mode #appSection .right-sidebar .btn i,
+body.dark-mode #appSection .sidebar-right .btn i {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+/* 2. Bikin Tulisan "Top 3" dan Ikon Mahkota jadi Emas */
+body.dark-mode #appSection .right-sidebar h1,
+body.dark-mode #appSection .right-sidebar h2,
+body.dark-mode #appSection .right-sidebar h3,
+body.dark-mode #appSection .right-sidebar h4,
+body.dark-mode #appSection .right-sidebar h5,
+body.dark-mode #appSection .sidebar-right h3,
+body.dark-mode #appSection .right-sidebar .fa-crown,
+body.dark-mode #appSection .sidebar-right .fa-crown {
+    color: #f1c40f !important; /* Warna Emas */
+    text-shadow: 0 0 4px rgba(241, 196, 15, 0.4) !important;
+}
+
+/* 3. Paksa hijau "Lihat Semua >" di Riwayat Tes biar nyala terang */
+body.dark-mode #appSection .main-content .card-header a,
+body.dark-mode #appSection .main-content .card-header span,
+body.dark-mode #appSection .main-content a[style*="color"],
+body.dark-mode #appSection .main-content .text-success {
+    color: #2ecc71 !important; /* Hijau Neon */
+    text-shadow: 0 0 3px rgba(46, 204, 113, 0.6) !important;
+    font-weight: bold !important; /* Ditebelin dikit biar makin jelas */
+}
 /* ==========================================
    TEMBAK JITU IKON GARIS 3 / FULLSCREEN
    ========================================== */
