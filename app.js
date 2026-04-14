@@ -2760,14 +2760,24 @@ window.addEventListener('beforeunload', () => {
     if (currentUser) window.updateUserStatus(false, "Offline");
 });
 
-// 3. Fungsi Admin buat nampilin data di tabel
+// 3. Fungsi Admin buat nampilin data di tabel (Update: Ditambah Kode VIP)
 window.loadStatusAdmin = async () => {
     const container = document.getElementById('containerStatus');
     if(!container) return;
 
-    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Mendeteksi sinyal peserta...</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Mendeteksi sinyal peserta dan menarik data VIP...</div>`;
 
     try {
+        // --- 1. TARIK DATA KODE VIP DULU ---
+        const qVip = query(collection(window.db, "vip_access"));
+        const snapVip = await getDocs(qVip);
+        let vipMap = {};
+        snapVip.forEach(doc => {
+            // Kita simpan ke "kamus" dengan kunci email user
+            vipMap[doc.id] = doc.data().code; 
+        });
+
+        // --- 2. TARIK DATA STATUS ONLINE ---
         const qStatus = query(collection(window.db, "user_status"), orderBy("lastActive", "desc"));
         const snap = await getDocs(qStatus);
         
@@ -2778,9 +2788,11 @@ window.loadStatusAdmin = async () => {
             return;
         }
 
+        // --- 3. BIKIN HEADER TABEL BARU (Ada Kolom Kode VIP) ---
         let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead><tr style="background:#eee; text-align:left;">
-                <th style="padding:10px;">Nama</th>
+                <th style="padding:10px;">Nama & Email</th>
+                <th style="padding:10px; color:var(--primary);">Kode VIP</th>
                 <th style="padding:10px;">Status</th>
                 <th style="padding:10px;">Aktivitas Terakhir</th>
             </tr></thead><tbody>`;
@@ -2802,7 +2814,6 @@ window.loadStatusAdmin = async () => {
             else if (selisihJam < 24) ketWaktu = `${selisihJam} jam lalu`;
             else ketWaktu = `${selisihHari} hari lalu`;
 
-            // Trik jitu: Kalau udah lebih dari 2 jam (120 menit) gak ada aktivitas, anggap Offline (jaga-jaga error pas nutup browser)
             let isBeneranOnline = d.isOnline;
             if (selisihMenit > 120) isBeneranOnline = false;
 
@@ -2814,8 +2825,22 @@ window.loadStatusAdmin = async () => {
                 ? `<span style="color:var(--primary); font-weight:bold;">${d.currentModul || 'Lobby'}</span>`
                 : `<span style="color:#888;">${ketWaktu}</span>`;
 
+            // --- 4. COCOKAN EMAIL USER DENGAN KODE VIP ---
+            let kodeVipUser = "Belum Buat";
+            if (d.email && vipMap[d.email]) {
+                kodeVipUser = vipMap[d.email];
+            }
+
             html += `<tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px; font-weight:bold; color:#444;">${d.nama}</td>
+                <td style="padding:10px; color:#444;">
+                    <strong style="display:block;">${d.nama}</strong>
+                    <span style="font-size:0.75rem; color:#888;">${d.email || '-'}</span>
+                </td>
+                <td style="padding:10px;">
+                    <span style="background:#fff3e0; color:#d35400; padding:5px 10px; border-radius:6px; font-family:monospace; font-weight:bold; border:1px solid #ffe0b2;">
+                        ${kodeVipUser}
+                    </span>
+                </td>
                 <td style="padding:10px;">${badgeStatus}</td>
                 <td style="padding:10px;">${infoAktivitas}</td>
             </tr>`;
