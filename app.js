@@ -581,23 +581,42 @@ window.switchDatabase = async function(key) {
             return;
         }
 
-        let rawQuestions = [];
-        qSnap.forEach((doc) => {
-            rawQuestions.push(doc.data());
-        });
+        const dataLama = loadProgresLokal(key);
 
-        shuffleArray(rawQuestions); 
-        rawQuestions.forEach(q => {
-            if(q.options && q.answer < q.options.length) {
-                let correctText = q.options[q.answer]; 
-                shuffleArray(q.options); 
-                q.answer = q.options.indexOf(correctText); 
-            }
-        });
+        if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0) {
+            console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
+            // Pake data dari memori (Urutan Soal, Jawaban, Ragu-ragu)
+            currentQuestions = dataLama.soalAcak;
+            userAnswers = dataLama.jawaban;
+            raguStatus = dataLama.ragu;
+            // Set waktu sisa dari memori (kalau ada)
+            totalExamTime = currentQuestions.length * 30; // Total waktu asli
+            timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
+        } else {
+            console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
+            // MULAI BARU: Acak soal dari database
+            let rawQuestions = [];
+            qSnap.forEach((doc) => { rawQuestions.push(doc.data()); });
 
-        currentQuestions = rawQuestions;
-        userAnswers = new Array(currentQuestions.length).fill(null);
-        raguStatus = new Array(currentQuestions.length).fill(false);
+            shuffleArray(rawQuestions); 
+            rawQuestions.forEach(q => {
+                if(q.options && q.answer < q.options.length) {
+                    let correctText = q.options[q.answer]; 
+                    shuffleArray(q.options); 
+                    q.answer = q.options.indexOf(correctText); 
+                }
+            });
+
+            currentQuestions = rawQuestions;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+            raguStatus = new Array(currentQuestions.length).fill(false);
+            totalExamTime = currentQuestions.length * 30; 
+            timeRemaining = totalExamTime;
+            
+            // Simpan kondisi awal ujian baru ke memori
+            simpanProgresTotal(); 
+        }
+
         isSubmitted = false;
         isReviewMode = false;
         currentIdx = 0;
@@ -863,6 +882,7 @@ function loadQuestion(idx) {
                     userAnswers[idx] = i; 
                     raguStatus[idx] = false; 
                     loadQuestion(idx); 
+                    simpanProgresTotal();
                 } 
             };
             if(userAnswers[idx] === i) div.classList.add('selected');
@@ -885,6 +905,7 @@ window.submitQuiz = function() {
     window.speechSynthesis.cancel();
     
     const currentDB = window.currentDatabaseId || "";
+    hapusProgresModul(currentDB);
     
     const sbRight = document.querySelector('.sidebar-right');
     if (sbRight) { sbRight.classList.remove('show-mobile'); sbRight.style.display = ''; }
@@ -1286,6 +1307,7 @@ window.toggleRagu = function() {
     if (chk.checked) userAnswers[currentIdx] = null;
     updateSidebarStatus();
     loadQuestion(currentIdx);
+    simpanProgresTotal();
 };
 
 window.toggleFocusMode = function() { document.body.classList.toggle('mode-focus'); };
@@ -2841,44 +2863,43 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 /* ========================================================================= */
-/* FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN)                      */
+/* FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN & URUTAN SOAL)      */
 /* ========================================================================= */
 
-// 1. Fungsi buat simpan progres jawaban ke memori browser
-function simpanProgresLokal(idModul, indexSoal, jawabanUser) {
-    // Ambil data dari local storage, kalau kosong bikin objek baru
+// 1. Simpan Seluruh Status Ujian (Jawaban, Ragu, Sisa Waktu, & Urutan Soal)
+function simpanProgresTotal() {
+    if (!window.currentDatabaseId || isSubmitted) return; // Jangan simpan kalau udah selesai
+    
     let progres = JSON.parse(localStorage.getItem('protama_progres')) || {};
     
-    // Pastikan ada wadah buat modul yang lagi dikerjain
-    if (!progres[idModul]) {
-        progres[idModul] = {};
-    }
+    // Bikin "foto" dari keadaan ujian sekarang
+    progres[window.currentDatabaseId] = {
+        jawaban: userAnswers,
+        ragu: raguStatus,
+        waktuSisa: timeRemaining,
+        soalAcak: currentQuestions // Simpan urutan soal biar gak ke-acak ulang pas balik
+    };
     
-    // Simpan jawaban berdasarkan nomor/index soal di modul tersebut
-    progres[idModul][indexSoal] = jawabanUser;
-    
-    // Update data di local storage
     localStorage.setItem('protama_progres', JSON.stringify(progres));
-    console.log(`[Auto-Save] Modul: ${idModul}, Soal: ${indexSoal}, Jawaban: ${jawabanUser}`);
+    console.log(`💾 [Auto-Save] Progres Modul ${window.currentDatabaseId} disimpan!`);
 }
 
-// 2. Fungsi buat narik data pas user balik/refresh web
+// 2. Tarik Data Pas Modul Dibuka
 function loadProgresLokal(idModul) {
     const dataTersimpan = localStorage.getItem('protama_progres');
     if (dataTersimpan) {
         let progresSemua = JSON.parse(dataTersimpan);
-        // Balikin jawaban khusus untuk modul yang lagi dibuka
-        return progresSemua[idModul] || {}; 
+        return progresSemua[idModul] || null; 
     }
-    return {};
+    return null;
 }
 
-// 3. Fungsi hapus progres khusus modul ini (Dipanggil pas klik "Selesai Ujian")
+// 3. Hapus Progres (Dipanggil pas klik Selesai Ujian)
 function hapusProgresModul(idModul) {
     let progres = JSON.parse(localStorage.getItem('protama_progres'));
     if (progres && progres[idModul]) {
-        delete progres[idModul]; // Hapus jawaban modul ini aja
+        delete progres[idModul];
         localStorage.setItem('protama_progres', JSON.stringify(progres));
-        console.log(`[Clear] Progres modul ${idModul} dihapus karena ujian selesai.`);
+        console.log(`🧹 [Clear] Progres modul ${idModul} dihapus karena ujian selesai.`);
     }
 }
