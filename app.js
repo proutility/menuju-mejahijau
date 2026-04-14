@@ -2840,3 +2840,45 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+/* ========================================================================= */
+/* FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN)                      */
+/* ========================================================================= */
+
+// 1. Fungsi buat simpan progres jawaban ke memori browser
+function simpanProgresLokal(idModul, indexSoal, jawabanUser) {
+    // Ambil data dari local storage, kalau kosong bikin objek baru
+    let progres = JSON.parse(localStorage.getItem('protama_progres')) || {};
+    
+    // Pastikan ada wadah buat modul yang lagi dikerjain
+    if (!progres[idModul]) {
+        progres[idModul] = {};
+    }
+    
+    // Simpan jawaban berdasarkan nomor/index soal di modul tersebut
+    progres[idModul][indexSoal] = jawabanUser;
+    
+    // Update data di local storage
+    localStorage.setItem('protama_progres', JSON.stringify(progres));
+    console.log(`[Auto-Save] Modul: ${idModul}, Soal: ${indexSoal}, Jawaban: ${jawabanUser}`);
+}
+
+// 2. Fungsi buat narik data pas user balik/refresh web
+function loadProgresLokal(idModul) {
+    const dataTersimpan = localStorage.getItem('protama_progres');
+    if (dataTersimpan) {
+        let progresSemua = JSON.parse(dataTersimpan);
+        // Balikin jawaban khusus untuk modul yang lagi dibuka
+        return progresSemua[idModul] || {}; 
+    }
+    return {};
+}
+
+// 3. Fungsi hapus progres khusus modul ini (Dipanggil pas klik "Selesai Ujian")
+function hapusProgresModul(idModul) {
+    let progres = JSON.parse(localStorage.getItem('protama_progres'));
+    if (progres && progres[idModul]) {
+        delete progres[idModul]; // Hapus jawaban modul ini aja
+        localStorage.setItem('protama_progres', JSON.stringify(progres));
+        console.log(`[Clear] Progres modul ${idModul} dihapus karena ujian selesai.`);
+    }
+}
