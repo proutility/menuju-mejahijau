@@ -649,9 +649,6 @@ window.switchDatabase = async function(key) {
         }
         if(qText) qText.style.display = 'block';
         
-        totalExamTime = currentQuestions.length * 30; 
-        timeRemaining = totalExamTime;
-        
         updateTimerDisplay();
         renderSidebarGrid();
         
@@ -725,8 +722,15 @@ window.timpaModul = async function(modulKey, dataBaruJson) {
 
 function startTimer() {
     timerInterval = setInterval(() => {
-        if(timeRemaining > 0) { timeRemaining--; updateTimerDisplay(); }
-        else { clearInterval(timerInterval); finishTime(); }
+        if(timeRemaining > 0) { 
+            timeRemaining--; 
+            updateTimerDisplay(); 
+            simpanProgresTotal(); // <--- TAMBAHIN INI BIAR NGE-SAVE TIAP DETIK
+        }
+        else { 
+            clearInterval(timerInterval); 
+            finishTime(); 
+        }
     }, 1000);
 }
 
