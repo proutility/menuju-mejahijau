@@ -72,7 +72,7 @@ if(auth) {
             document.getElementById('gateLoading').style.display = 'block';
             document.getElementById('gateInputArea').style.display = 'none';
 
-            try {
+           try {
                 // Cek Database VIP
                 const accessRef = doc(db, "vip_access", user.email);
                 const accessSnap = await getDoc(accessRef);
@@ -84,6 +84,8 @@ if(auth) {
                     } else {
                         // BELUM INPUT KODE -> TAMPILKAN FORM
                         showGateInput(user.displayName, user.email);
+                        // --- TAMBAHAN: Lapor ke Radar kalau lagi nyangkut di Gatekeeper ---
+                        window.updateUserStatus(true, "VIP Gatekeeper"); 
                     }
                 } else {
                     // USER BARU (Atau Admin Baru) -> BIKIN KODE + KIRIM EMAIL
@@ -100,7 +102,6 @@ if(auth) {
                     });
 
                     // KIRIM EMAIL PAKE GOOGLE APPS SCRIPT
-                    // GANTI URL DI BAWAH DENGAN URL WEB APP GAS LO !!
                     fetch("https://script.google.com/macros/s/AKfycbwZcPxD1ZX8CgW8yhGZA9AM3S39jmpxFlti9sU_RlYP/dev", {
                         method: "POST",
                         mode: "no-cors",
@@ -111,10 +112,13 @@ if(auth) {
                         })
                     }).then(() => {
                         showGateInput(user.displayName, user.email);
+                        // --- TAMBAHAN: Lapor ke Radar ---
+                        window.updateUserStatus(true, "VIP Gatekeeper");
                     }).catch(err => {
                         console.error("Gagal fetch GAS:", err);
-                        // Tetap tampilkan input walau email gagal (fallback)
                         showGateInput(user.displayName, user.email);
+                        // --- TAMBAHAN: Lapor ke Radar walau email gagal ---
+                        window.updateUserStatus(true, "VIP Gatekeeper");
                     });
                 }
             } catch (e) {
@@ -2817,12 +2821,27 @@ window.loadStatusAdmin = async () => {
             let isBeneranOnline = d.isOnline;
             if (selisihMenit > 120) isBeneranOnline = false;
 
-            let badgeStatus = isBeneranOnline 
-                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟢 Online</span>` 
-                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🔴 Offline</span>`;
+            let aktivitasTeks = d.currentModul || 'Lobby';
+            let warnaAktivitas = 'var(--primary)';
+            let customBadge = null; // Siapin wadah buat badge custom
             
+            // Highlight khusus kalau nyangkut di VIP Gatekeeper
+            if (aktivitasTeks === "VIP Gatekeeper") {
+                warnaAktivitas = '#d35400'; // Warna oren gelap
+                aktivitasTeks = '<i class="fas fa-user-clock"></i> Pending Access'; // Teks aktivitas lebih keren
+                
+                // Timpa badge "Online" jadi "Unregistered" kalau dia belum masukin kode
+                customBadge = `<span style="background:#fff3e0; color:#e67e22; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟡 UNREGISTERED</span>`;
+            }
+
+            // Atur Badge Status
+            let badgeStatus = customBadge ? customBadge : (isBeneranOnline 
+                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟢 ONLINE</span>` 
+                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🔴 OFFLINE</span>`);
+
+            // Atur Teks Aktivitas
             let infoAktivitas = isBeneranOnline 
-                ? `<span style="color:var(--primary); font-weight:bold;">${d.currentModul || 'Lobby'}</span>`
+                ? `<span style="color:${warnaAktivitas}; font-weight:bold;">${aktivitasTeks}</span>`
                 : `<span style="color:#888;">${ketWaktu}</span>`;
 
             // --- 4. COCOKAN EMAIL USER DENGAN KODE VIP ---
