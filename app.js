@@ -13,7 +13,7 @@ const firebaseConfig = {
     measurementId: "G-NDNKMSMWV2"
 };
 
-const ADMIN_EMAIL = "ilhamnp22@gmail.com"; 
+const ADMIN_EMAILS = ["ilhamnp22@gmail.com", "inurprtma22@gmail.com"]; 
 let db, auth, provider, currentUser;
 
 // Inisialisasi Firebase
@@ -49,7 +49,7 @@ if(auth) {
             watchMaintenance(); 
 
         // B. CEK ADMIN (Fitur Copy Paste Nyala, TAPI TETAP KENA CEK VIP)
-            if (user.email === ADMIN_EMAIL) {
+            if (ADMIN_EMAILS.includes(user.email)) {
                 document.body.classList.add('is-admin'); 
                 const btnAdmin = document.getElementById('btnAdminPanel');
                 if(btnAdmin) btnAdmin.style.display = 'flex'; 
@@ -157,7 +157,7 @@ function lanjutKeAplikasi() {
         document.getElementById('userAvatar').src = currentUser.photoURL;
         
         const roleLabel = document.querySelector('.user-role-label');
-        if (currentUser.email === ADMIN_EMAIL) {
+        if (ADMIN_EMAILS.includes(currentUser.email)) {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-shield" style="color:#ffd700;"></i> Administrator';
         } else {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-tie"></i> Peserta Ujian';
@@ -251,7 +251,7 @@ function watchMaintenance() {
             }
 
             // Kunci Layar untuk User Biasa
-            if (isMaintenance && currentUser?.email !== ADMIN_EMAIL) {
+            if (isMaintenance && !ADMIN_EMAILS.includes(currentUser?.email)) {
                 if (overlay) overlay.style.display = 'block';
             } else {
                 if (overlay) overlay.style.display = 'none';
