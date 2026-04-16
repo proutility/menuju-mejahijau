@@ -1957,16 +1957,40 @@ window.loadReviewPembahasan = async () => {
             const pembahasan = data.explanation ? data.explanation : "<em style='color:gray'>- Belum ada pembahasan -</em>";
             const sumber = data.cite ? data.cite : "-";
 
+            // --- 1. SIAPIN HTML PILIHAN GANDA ---
+            let opsiHtml = `<div style="margin: 10px 0; padding-left: 10px; font-size: 0.95rem;">`;
+            if (data.options && Array.isArray(data.options)) {
+                data.options.forEach((opt, idx) => {
+                    const abjad = String.fromCharCode(65 + idx);
+                    const isBenar = (idx == data.answer);
+                    const styleBenar = isBenar ? `color: #2e7d32; font-weight: bold; background: #e8f5e9; padding: 4px 8px; border-radius: 4px; display: inline-block;` : `color: #444; padding: 4px 8px; display: inline-block;`;
+                    opsiHtml += `<div style="margin-bottom: 5px;"><span style="${styleBenar}">${abjad}. ${opt} ${isBenar ? '✅' : ''}</span></div>`;
+                });
+            }
+            opsiHtml += `</div>`;
+
+            // --- 2. SIAPIN TOMBOL AI ---
+            const btnAI = `<button onclick="window.cekValiditasAI(this, '${docSnap.id}', '${encodeURIComponent(data.q)}', '${encodeURIComponent(JSON.stringify(data.options || []))}', ${data.answer}, '${encodeURIComponent(pembahasan)}', '${encodeURIComponent(sumber)}')" style="background: #8e44ad; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; float: right;"><i class="fas fa-robot"></i> Cek AI</button>`;
+
+            // --- 3. MASUKIN SEMUANYA KE DALAM ITEM HTML LO ---
             item.innerHTML = `
-                <div style="font-weight:bold; color:var(--primary); margin-bottom:5px;">Soal No. ${index + 1}</div>
+                <div style="font-weight:bold; color:var(--primary); margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                    Soal No. ${index + 1}
+                    ${btnAI}
+                </div>
                 <p style="margin-top:0;">${data.q}</p>
-                <div style="background:#f1f8e9; padding:15px; border-radius:8px; border-left:5px solid var(--success);">
+                
+                ${opsiHtml}
+
+                <div style="background:#f1f8e9; padding:15px; border-radius:8px; border-left:5px solid var(--success); margin-top: 15px;">
                     <strong>💡 Pembahasan:</strong><br>
                     <div style="margin-top:5px; line-height:1.5;">${pembahasan}</div>
                     <div style="margin-top:10px; font-size:0.85rem; color:#666;">
                         <i class="fas fa-book"></i> Sumber: ${sumber}
                     </div>
                 </div>
+
+                <div id="ai-result-${docSnap.id}" style="display: none; margin-top: 15px; padding: 12px; background: #f3e5f5; border-left: 4px solid #9b59b6; border-radius: 6px; font-size: 0.9rem; line-height: 1.5;"></div>
             `;
             container.appendChild(item);
         });
@@ -2964,3 +2988,68 @@ function hapusProgresModul(idModul) {
         console.log(`🧹 [Clear] Progres modul ${idModul} dihapus karena ujian selesai.`);
     }
 }
+// ==========================================
+// FITUR VALIDASI AI (GEMINI 1.5 FLASH)
+// ==========================================
+window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc) => {
+    // Decode data yang dikirim dari tombol
+    const teksSoal = decodeURIComponent(qTeksEsc);
+    const opsiArr = JSON.parse(decodeURIComponent(optStrEsc));
+    const pembahasan = decodeURIComponent(expEsc);
+    const sumber = decodeURIComponent(citeEsc);
+    
+    // Siapin UI loading
+    const resultDiv = document.getElementById(`ai-result-${idSoal}`);
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mikir...`;
+    btn.disabled = true;
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
+
+    // 1. Taruh API Key lo di sini!
+    const API_KEY = "KODE_API_LO_DISINI"; 
+
+    // 2. Bikin perintah (Prompt) khusus hukum buat AI
+    const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
+
+    SOAL: "${teksSoal}"
+    PILIHAN JAWABAN: 
+    ${opsiArr.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join('\n')}
+    
+    KUNCI JAWABAN DARI ADMIN: Pilihan ${String.fromCharCode(65 + ansIdx)}
+    PEMBAHASAN ADMIN: "${pembahasan}"
+    DASAR HUKUM/SUMBER: "${sumber}"
+
+    TUGAS: 
+    1. Apakah kunci jawaban tersebut sudah BENAR secara hukum positif Indonesia saat ini?
+    2. Apakah pembahasan dan dasar hukumnya akurat?
+    3. Jika ada yang salah atau kurang tepat (misal Perma sudah dicabut), tolong koreksi!
+    
+    Berikan jawaban dengan format tebal pada kesimpulannya (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, jelas, dan profesional (maksimal 3 paragraf pendek).`;
+
+    try {
+        // 3. Tembak ke API Gemini
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        if (!response.ok) throw new Error("Gagal terhubung ke Google AI Studio.");
+
+        const data = await response.json();
+        let aiReply = data.candidates[0].content.parts[0].text;
+        
+        // Ubah format *bold* Markdown jadi HTML biar rapi
+        aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+        // 4. Tampilkan hasilnya
+        resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
+    } catch (e) {
+        resultDiv.innerHTML = `<span style="color: red;"><strong>Error:</strong> Gagal menganalisis. Pastikan API Key benar atau cek koneksi. (${e.message})</span>`;
+    } finally {
+        btn.innerHTML = `<i class="fas fa-check"></i> Selesai Dicek`;
+        btn.disabled = false;
+    }
+};
