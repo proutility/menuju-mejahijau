@@ -859,3 +859,65 @@ body.dark-mode #appSection .alert-warning strong {
     border: 1px solid #ccc;
     box-sizing: border-box;
 }
+/* ========================================================================= */
+/* ✨ UPGRADE LANDING PAGE PREMIUM (MATCHING STYLE) ✨                       */
+/* ========================================================================= */
+
+/* 1. HEADER NAVIGASI (Gaya Pilihan Menu Modern) */
+.landing-nav {
+    background: rgba(0, 77, 0, 0.9) !important; /* Pakai var(--primary) transparan */
+    backdrop-filter: blur(10px);
+    border-bottom: 3px solid var(--gold) !important;
+    padding: 10px 40px !important;
+}
+
+/* 2. HERO SECTION - WADAH KACA (ANTI-PUDAR) */
+.hero-left {
+    background: rgba(255, 255, 255, 0.15) !important; 
+    backdrop-filter: blur(15px);
+    padding: 40px !important;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3) !important;
+}
+
+/* Kutipan Teks (Biar Garang) */
+.hero-quote {
+    color: #ffffff !important;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700 !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+/* Highlight "Investasi & Bakti" pakai Gold MA */
+.highlight-text {
+    background: none !important;
+    color: var(--gold) !important;
+    border-bottom: 3px solid var(--gold);
+    padding-bottom: 2px;
+}
+
+/* 3. FITUR KANAN (GAYA KOTAK TAPI MODERN) */
+.hero-features li {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: var(--primary) !important;
+    font-weight: 700 !important;
+    border-left: 5px solid var(--gold) !important; /* Pindah Gold ke samping */
+    border-radius: 12px !important;
+    padding: 15px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+.hero-features li:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3) !important;
+}
+
+/* 4. TOMBOL UTAMA (Sesuai var Gold lo) */
+.btn-hero-cta {
+    background: linear-gradient(135deg, var(--gold) 0%, #b8860b 100%) !important;
+    border-radius: 50px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px;
+    padding: 18px 40px !important;
+}
