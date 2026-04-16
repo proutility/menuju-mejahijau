@@ -2989,7 +2989,7 @@ function hapusProgresModul(idModul) {
     }
 }
 // ==========================================
-// FITUR VALIDASI AI (GEMINI 1.5 FLASH)
+// FITUR VALIDASI AI (GEMINI)
 // ==========================================
 window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc) => {
     // Decode data yang dikirim dari tombol
@@ -3005,17 +3005,15 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
 
-    // 1. Taruh API Key lo di sini! (Wajib dipecah pakai tanda + biar lolos dari Satpam GitHub)
     // Cincang API Key biar lolos sensor GitHub
     const p1 = "AQ.Ab8RN";
     const p2 = "6LSxTRH1";
     const p3 = "qi2DJN57";
     const p4 = "oq35Gyv5";
     const p5 = "PkJrmrPiIXrrjdwbkhROQ";
-
     const API_KEY = p1 + p2 + p3 + p4 + p5;
 
-    // 2. Bikin perintah (Prompt) khusus hukum buat AI
+    // Bikin perintah (Prompt) khusus hukum buat AI
     const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
 
     SOAL: "${teksSoal}"
@@ -3034,14 +3032,13 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     Berikan jawaban dengan format tebal pada kesimpulannya (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat dan profesional.`;
 
     try {
-        // 3. Tembak ke API Gemini (KUNCI DIMASUKIN KE URL BIAR LOLOS BLOKIRAN BROWSER)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        // Tembak ke API Gemini (URL sudah diperbaiki pakai gemini-pro)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         });
 
-        // 4. Ambil respon dari Google
         const data = await response.json();
 
         // Kalau ditolak, tampilkan alasan aslinya
@@ -3049,7 +3046,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
             throw new Error(data.error?.message || "Gagal terhubung ke Google API.");
         }
 
-        // 5. Tampilkan hasilnya ke layar Admin
+        // Tampilkan hasilnya ke layar Admin
         let aiReply = data.candidates[0].content.parts[0].text;
         aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
         resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
