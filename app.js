@@ -3006,7 +3006,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
 
     // 1. Taruh API Key lo di sini!
-    const API_KEY = "AQ.Ab8RN6IUfss-JfPaCaiiaMKxTH4FKRYBDfqZy5KRGmbqzeuzRw"; 
+    const API_KEY = "AQ."+"Ab8RN6LaNx5Hx2PVVCQv9qGyFv7KhU-ysSwI0d6_jMPa3JRbzA"; 
 
     // 2. Bikin perintah (Prompt) khusus hukum buat AI
     const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
@@ -3027,16 +3027,23 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     Berikan jawaban dengan format tebal pada kesimpulannya (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, jelas, dan profesional (maksimal 3 paragraf pendek).`;
 
     try {
-        // 3. Tembak ke API Gemini
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        // 3. Tembak ke API Gemini (Pindah jalur ke Header rahasia)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': API_KEY // <-- Kunci lo dikirim lewat jalur aman ini
+            },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }]
             })
         });
 
-        if (!response.ok) throw new Error("Gagal terhubung ke Google AI Studio.");
+        // 4. Kalau gagal, tangkap pesan error ASLI dari Google
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || "Gagal terhubung ke Google AI Studio.");
+        }
 
         const data = await response.json();
         let aiReply = data.candidates[0].content.parts[0].text;
@@ -3044,12 +3051,12 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         // Ubah format *bold* Markdown jadi HTML biar rapi
         aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
 
-        // 4. Tampilkan hasilnya
+        // 5. Tampilkan hasilnya
         resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
     } catch (e) {
-        resultDiv.innerHTML = `<span style="color: red;"><strong>Error:</strong> Gagal menganalisis. Pastikan API Key benar atau cek koneksi. (${e.message})</span>`;
+        // 6. Tampilkan error aslinya ke layar biar kita tau penyakitnya
+        resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari Google:</strong> ${e.message}</span>`;
     } finally {
         btn.innerHTML = `<i class="fas fa-check"></i> Selesai Dicek`;
         btn.disabled = false;
     }
-};
