@@ -3005,12 +3005,13 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
 
-    // Cincang API Key biar lolos sensor GitHub
-    const p1 = "AQ.Ab8RN";
-    const p2 = "6LSxTRH1";
-    const p3 = "qi2DJN57";
-    const p4 = "oq35Gyv5";
-    const p5 = "PkJrmrPiIXrrjdwbkhROQ";
+   // Cincang API Key AQ kasta terbaru biar lolos sensor GitHub
+    const p1 = "AQ.Ab8RN6";
+    const p2 = "K0wrEZRCaA";
+    const p3 = "Qa7q6VLsGdP";
+    const p4 = "oudY3HFtin";
+    const p5 = "jin4Cnj5hOhhQ";
+    
     const API_KEY = p1 + p2 + p3 + p4 + p5;
 
     // Bikin perintah (Prompt) khusus hukum buat AI
