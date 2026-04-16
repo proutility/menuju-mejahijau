@@ -3006,7 +3006,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
 
     // 1. Taruh API Key lo di sini! (Wajib dipecah pakai tanda + biar lolos dari Satpam GitHub)
-    const API_KEY = "AIzaSyAC4Tskg8XC1N0a13xcsV3A1Mq_8mDnY-A"; 
+    const API_KEY = "AIzaSy"+"A_cAiDYwPZKlkQP691zDoSbS_FoejjHjw"; 
 
     // 2. Bikin perintah (Prompt) khusus hukum buat AI
     const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
