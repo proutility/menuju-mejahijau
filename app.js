@@ -860,7 +860,20 @@ function loadQuestion(idx) {
         };
 
         document.getElementById('feedbackText').innerHTML = highlightTeks(teksPembahasan, jawabanBenar);
-        document.getElementById('feedbackCite').innerText = "Sumber: " + q.cite;
+        
+        // --- FITUR KLIK SUMBER HUKUM OTOMATIS ---
+        const teksSumber = q.cite || "-";
+        if (teksSumber !== "-") {
+            // Encode teks biar aman jadi URL pencarian Google
+            const linkPencarian = `https://www.google.com/search?q=${encodeURIComponent("Isi " + teksSumber)}`;
+            
+            // Masukin tag <a> (Link) ke dalam teks sumber
+            document.getElementById('feedbackCite').innerHTML = `Sumber: <a href="${linkPencarian}" target="_blank" style="color: #2980b9; text-decoration: underline; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#d35400'" onmouseout="this.style.color='#2980b9'" title="Klik untuk baca full pasal ini">${teksSumber} <i class="fas fa-external-link-alt" style="font-size: 0.8rem; margin-left: 3px;"></i></a>`;
+        } else {
+            document.getElementById('feedbackCite').innerHTML = "Sumber: -";
+        }
+        // ----------------------------------------
+
     } else { 
         fb.style.display = 'none';
         fb.classList.remove('show'); 
