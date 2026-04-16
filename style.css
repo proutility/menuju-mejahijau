@@ -828,3 +828,34 @@ body.dark-mode #appSection .pembahasan-box strong,
 body.dark-mode #appSection .alert-warning strong {
     color: var(--gold) !important;
 }
+/* ========================================= */
+/* PERBAIKAN KENYAMANAN FORM EDIT ADMIN      */
+/* ========================================= */
+
+#editQ, #editExp, #editOpt {
+    width: 100%;
+    min-height: 120px; /* Tinggi bawaan langsung dibikin lega */
+    padding: 12px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    resize: vertical; /* KUNCI UTAMA: Biar kotaknya bisa ditarik ke bawah */
+    font-family: inherit;
+}
+
+/* Khusus Pembahasan kasih ruang ekstra karena biasanya panjang */
+#editExp {
+    min-height: 180px; 
+}
+
+/* Bikin input Indeks Jawaban & Sumber lebih rapi */
+#editAns, #editCite {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
