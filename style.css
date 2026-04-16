@@ -860,76 +860,47 @@ body.dark-mode #appSection .alert-warning strong {
     box-sizing: border-box;
 }
 /* ========================================================================= */
-/* ✨ FINISHING TOUCH: OPTIMASI KONTRAS RIWAYAT & SIDEBAR KANAN ✨           */
+/* 🔥 JURUS NUKLIR: FIX TULISAN PUDAR (SIDEBAR & RIWAYAT) 🔥                 */
 /* ========================================================================= */
 
-/* 1. TABEL RIWAYAT LOBBY (BIAR TEGAS & TIDAK PUDAR) */
-#history-table-body td {
-    color: #ffffff !important;   /* Putih solid agar tidak pudar */
-    opacity: 1 !important;       /* Hancurkan efek transparan */
-    font-weight: 500;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* 1. Paksa Sidebar Kanan (Rata-rata & Top 3) */
+.average-score-box *, 
+.top-3-container *, 
+.top-3-item *,
+.sidebar-right p, 
+.sidebar-right span, 
+.sidebar-right small {
+    color: #ffffff !important;
+    opacity: 1 !important;
+    filter: none !important; /* Takutnya ada efek blur/filter */
 }
 
-/* Kolom Tanggal & Modul pakai warna Gold MA lo */
+/* Khusus angka rata-rata 19 biar makin putih bersih */
+.score-value {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+}
+
+/* 2. Paksa Tabel Riwayat (Teks Putih & Judul Kuning) */
+#history-table-body td, 
+#history-table-body span {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Kolom Tanggal, Modul, dan link 'Lihat Semua' paksa jadi Gold */
 #history-table-body td:nth-child(1), 
-#history-table-body td:nth-child(2) {
-    color: var(--gold) !important;
-    font-weight: 600;
-}
-
-/* 2. SIDEBAR KANAN: BOX RATA-RATA NILAI */
-.average-score-box h4, 
-.average-score-box p,
-.average-score-box small,
-.average-score-box .text-muted {
-    color: #ffffff !important;
-    opacity: 1 !important;      /* Paksa teks "Dari seluruh modul..." jadi solid */
-}
-
-.average-score-box .score-value {
-    color: #ffffff !important;
-    font-weight: 800 !important;
-    font-size: 2.2rem;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
-
-/* 3. SIDEBAR KANAN: TOP 3 LEADERBOARD MINI */
-.top-3-container h4 {
-    color: var(--gold) !important;
-    font-weight: 800 !important;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.top-3-item .user-name {
-    color: #ffffff !important;
+#history-table-body td:nth-child(2),
+.top-3-container a,
+#appSection a[onclick*="viewAll"] {
+    color: #f1c40f !important; /* Kuning emas Mahkamah Agung */
     opacity: 1 !important;
 }
 
-.top-3-item .user-score {
-    color: var(--pass) !important; /* Hijau Sukses (#2ecc71) */
-    font-weight: bold;
-}
-
-/* 4. SIDEBAR KANAN: ACTION BUTTONS */
-.sidebar-right .btn-action {
-    opacity: 1 !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.5px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.sidebar-right .btn-action:hover {
-    transform: scale(1.05) translateY(-3px);
-    filter: brightness(1.2);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-}
-
-/* Override khusus Dark Mode agar Sidebar tetap konsisten */
-body.dark-mode #history-table-body td,
-body.dark-mode .average-score-box *,
-body.dark-mode .top-3-item * {
-    opacity: 1 !important;
+/* 3. Judul Section (Riwayat 5 Tes Terakhir) */
+.card-body h5, 
+.card-body i,
+.card-body span[style*="color: #ccc"] {
     color: #ffffff !important;
+    opacity: 1 !important;
 }
