@@ -16,6 +16,51 @@ const firebaseConfig = {
 const ADMIN_EMAILS = ["ilhamnp22@gmail.com", "inurprtma22@gmail.com"]; 
 let db, auth, provider, currentUser;
 
+// ==========================================
+// SISTEM NOTIFIKASI PREMIUM PRO-TAMA
+// ==========================================
+window.PROTAMA = {
+    alert: (title, text, icon = 'success') => {
+        const colors = { success: '#004d00', error: '#c0392b', warning: '#f39c12', info: '#3498db' };
+        Swal.fire({
+            title: title.toUpperCase(),
+            text: text,
+            icon: icon,
+            confirmButtonColor: colors[icon] || '#004d00',
+            confirmButtonText: 'Selesai',
+            background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
+            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333'
+        });
+    },
+
+    confirm: async (title, text) => {
+        const result = await Swal.fire({
+            title: title.toUpperCase(),
+            text: text,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#004d00',
+            cancelButtonColor: '#7f8c8d',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal',
+            background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
+            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333'
+        });
+        return result.isConfirmed;
+    },
+
+    loading: (msg = "Sedang memproses...") => {
+        Swal.fire({
+            title: 'MOHON TUNGGU',
+            html: `<strong>${msg}</strong>`,
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+    },
+
+    close: () => { Swal.close(); }
+};
+
 // Inisialisasi Firebase
 if (firebaseConfig.apiKey) {
     const app = initializeApp(firebaseConfig);
@@ -1194,17 +1239,26 @@ window.submitQuiz = function() {
     console.log("✅ Ujian Selesai. Nilai:", final);
 };
 
-window.confirmFinish = function() {
+window.confirmFinish = async function() { // <--- Ada async di sini
     const emptyCount = userAnswers.filter(a => a === null).length;
     const raguCount = raguStatus.filter(r => r === true).length;
+    
     let msg = "Yakin mau menyelesaikan ujian?";
+    
     if(emptyCount > 0 || raguCount > 0) {
-        msg = `⚠️ PERHATIAN!\n\n`;
+        msg = ""; // Kita kosongkan dulu biar rapi di SweetAlert
         if (raguCount > 0) msg += `- Ada ${raguCount} soal RAGU-RAGU\n`;
         if (emptyCount > 0) msg += `- Ada ${emptyCount} soal BELUM DIJAWAB\n`;
         msg += `\nYakin mau dikumpulkan sekarang?`;
     }
-    if(confirm(msg)) window.submitQuiz();
+
+    // Panggil Pop-up Modern lo
+    const yakin = await PROTAMA.confirm("PERHATIAN!", msg);
+    
+    if(yakin) {
+        PROTAMA.loading("Sedang menyimpan hasil ujian...");
+        window.submitQuiz();
+    }
 }
 
 window.closeResult = function() {
