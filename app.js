@@ -1237,6 +1237,7 @@ window.submitQuiz = function() {
     
     loadQuestion(currentIdx);
     console.log("✅ Ujian Selesai. Nilai:", final);
+    PROTAMA.close();
 };
 
 window.confirmFinish = async function() { // <--- Ada async di sini
