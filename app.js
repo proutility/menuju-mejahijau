@@ -1468,20 +1468,39 @@ window.saveAndShowChart = async function(finalScore, correct, wrong) {
 };
 
 window.resetStats = async function() {
-    if(!confirm("⚠️ Yakin mau menghapus SEMUA riwayat nilai untuk modul ini? Data di Cloud akan hilang permanen.")) return;
+    // 1. Ganti confirm jadul pakai PROTAMA
+    const yakin = await PROTAMA.confirm(
+        "HAPUS RIWAYAT?", 
+        "Yakin mau menghapus SEMUA riwayat nilai untuk modul ini? Data di Cloud akan hilang permanen."
+    );
+    
+    // Kalau dia pencet "Batal", langsung berhenti (return)
+    if (!yakin) return; 
+
+    // 2. Kalau yakin, munculin loading
+    PROTAMA.loading("Menghapus data dari Cloud...");
+
     try {
         const q = query(collection(db, "riwayat_belajar"), where("uid", "==", currentUser.uid), where("modul", "==", window.currentDatabaseId));
         const querySnapshot = await getDocs(q);
         const batch = writeBatch(db);
         querySnapshot.forEach((doc) => { batch.delete(doc.ref); });
+        
         await batch.commit();
-        alert("Data berhasil direset!");
-        window.openStats(); 
-    } catch (e) { console.error("Gagal reset:", e); alert("Gagal menghapus data."); }
+        
+        // 3. Ganti alert sukses (baris 1478)
+        PROTAMA.alert("TERHAPUS!", "Data berhasil direset!", "success");
+        window.openStats();
+        
+    } catch (e) { 
+        console.error("Gagal reset:", e); 
+        // 4. Ganti alert error (baris 1480)
+        PROTAMA.alert("GAGAL", "Gagal menghapus data dari server.", "error"); 
+    }
 };
 
 window.openStats = async function(mode = 'hukum') {
-    if(!currentUser) { alert("Login dulu bro!"); return; }
+    if(!currentUser) { PROTAMA.alert("Akses Ditolak", "Login dulu bro!", "error"); return; }
     
     document.getElementById('statsOverlay').style.display = 'flex';
     const wm = document.getElementById('watermark');
