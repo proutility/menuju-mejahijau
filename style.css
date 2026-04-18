@@ -859,3 +859,9 @@ body.dark-mode #appSection .alert-warning strong {
     border: 1px solid #ccc;
     box-sizing: border-box;
 }
+/* ==========================================
+   FIX SWEETALERT SELALU DI DEPAN
+   ========================================== */
+div.swal2-container {
+    z-index: 9999999 !important; /* Paksa lapisan paling atas */
+}
