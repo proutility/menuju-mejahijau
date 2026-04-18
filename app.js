@@ -1333,8 +1333,14 @@ window.changeQuestion = function(step) {
     }
 };
 
-window.backToMenu = function() {
-    if(confirm("Yakin mau kembali ke menu utama? Progres saat ini akan di-reset.")) {
+window.backToMenu = async function() {  // <--- WAJIB TAMBAH ASYNC!
+    const yakin = await PROTAMA.confirm(
+        "KEMBALI KE LOBBY", 
+        "Yakin mau kembali ke menu utama? Progres saat ini akan di-reset."
+    );
+
+    if (yakin) {
+        // --- SISA KODE LO KE BAWAH BIARIN TETEP SAMA ---
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
