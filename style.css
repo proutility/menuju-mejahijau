@@ -877,3 +877,12 @@ div.swal2-container {
         z-index: -999 !important;
     }
 }
+/* Senjata Pamungkas Hapus Logout di HP */
+@media screen and (max-width: 768px) {
+    button[onclick="logout()"].hide-on-mobile {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+}
