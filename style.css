@@ -866,3 +866,14 @@ body.dark-mode #appSection .alert-warning strong {
 div.swal2-container {
     z-index: 9999999 !important; /* Paksa lapisan paling atas */
 }
+/* ========================================================= */
+/* SEMBUNYIKAN TOMBOL LOGOUT MELAYANG DI HP                  */
+/* ========================================================= */
+@media (max-width: 768px) {
+    button.hide-on-mobile {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        z-index: -999 !important;
+    }
+}
