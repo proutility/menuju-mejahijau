@@ -380,6 +380,7 @@ body.mode-focus #floatingTimer { display: block !important; }
 
 /* === TAMPILAN HP FIXED === */
 @media (max-width: 768px) {
+    .hide-on-mobile { display: none !important; }
     body { padding-bottom: 0 !important; flex-direction: column; overflow: hidden; }
     .sidebar-left { width: 100% !important; height: 100% !important; border-right: none; z-index: 100; position: fixed; top: 0; left: 0; }
     .sidebar-left .timer-container { display: none !important; }
