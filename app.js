@@ -3169,20 +3169,20 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // 1. Simpan Seluruh Status Ujian (Jawaban, Ragu, Sisa Waktu, & Urutan Soal)
 function simpanProgresTotal() {
-    if (!window.currentDatabaseId || isSubmitted) return; // Jangan simpan kalau udah selesai
-    
+    if (!window.currentDatabaseId || isSubmitted) return; 
     let progres = JSON.parse(localStorage.getItem('protama_progres')) || {};
     
-    // Bikin "foto" dari keadaan ujian sekarang
+    // Kita tambahin catatan waktu sekarang (Timestamp)
     progres[window.currentDatabaseId] = {
         jawaban: userAnswers,
         ragu: raguStatus,
         waktuSisa: timeRemaining,
-        soalAcak: currentQuestions // Simpan urutan soal biar gak ke-acak ulang pas balik
+        soalAcak: currentQuestions,
+        terakhirDisimpan: new Date().getTime() // Simpan waktu dalam milidetik
     };
     
     localStorage.setItem('protama_progres', JSON.stringify(progres));
-    console.log(`💾 [Auto-Save] Progres Modul ${window.currentDatabaseId} disimpan!`);
+    console.log(`💾 Progres Modul ${window.currentDatabaseId} disimpan!`);
 }
 
 // 2. Tarik Data Pas Modul Dibuka
@@ -3190,7 +3190,22 @@ function loadProgresLokal(idModul) {
     const dataTersimpan = localStorage.getItem('protama_progres');
     if (dataTersimpan) {
         let progresSemua = JSON.parse(dataTersimpan);
-        return progresSemua[idModul] || null; 
+        let dataModul = progresSemua[idModul];
+
+        if (dataModul) {
+            const waktuSekarang = new Date().getTime();
+            const waktuSimpan = dataModul.terakhirDisimpan || 0;
+            const selisihJam = (waktuSekarang - waktuSimpan) / (1000 * 60 * 60);
+
+            // CEK APAKAH SUDAH LEWAT 24 JAM?
+            if (selisihJam > 24) {
+                console.log("⏰ Progres sudah lebih dari 24 jam. Otomatis Reset!");
+                hapusProgresModul(idModul); // Panggil fungsi hapus
+                return null; // Kembalikan null supaya sistem mulai ujian baru (soal ngacak lagi)
+            }
+
+            return dataModul; 
+        }
     }
     return null;
 }
