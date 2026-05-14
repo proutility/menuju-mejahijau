@@ -2052,14 +2052,54 @@ setTimeout(() => {
     if(window.loadLobbyData) window.loadLobbyData(); 
 }, 800); 
 
-// ==========================================
-// LOGIKA ADMIN PANEL (INJECTED)
-// ==========================================
-
 window.openAdminPanel = () => {
+    // 1. Munculkan overlay admin
     document.getElementById('adminOverlay').style.display = 'flex';
-};
 
+    // 2. Cek apakah user saat ini adalah Editor (Bukan Super Admin)
+    const isSuper = ADMIN_EMAILS.includes(currentUser.email);
+    const isEditUser = typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(currentUser.email);
+
+    if (isEditUser && !isSuper) {
+        console.log("Menjalankan Protokol Sensor Editor...");
+        
+        setTimeout(() => {
+            // A. Sembunyikan Tombol Navigasi yang dilarang
+            const semuaTombolNav = document.querySelectorAll('#adminOverlay button');
+            semuaTombolNav.forEach(btn => {
+                const teks = btn.innerText.toLowerCase();
+                const aksi = (btn.getAttribute('onclick') || '').toLowerCase();
+                
+                if (teks.includes('radar') || teks.includes('upload json') || 
+                    teks.includes('excel') || teks.includes('backup') || 
+                    aksi.includes('status') || aksi.includes('tambah') || aksi.includes('download')) {
+                    btn.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            // B. Sembunyikan Tombol Maintenance di pojok kanan atas
+            const btnMaintenance = document.getElementById('btnToggleMaintenance');
+            if (btnMaintenance) btnMaintenance.style.setProperty('display', 'none', 'important');
+
+            // C. Sembunyikan Area Input JSON & Target Modul
+            const idsInput = ['jsonUploadArea', 'adminModulTarget'];
+            idsInput.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.setProperty('display', 'none', 'important');
+                    if (el.previousElementSibling) el.previousElementSibling.style.setProperty('display', 'none', 'important');
+                }
+            });
+            
+            const btnUploadAksi = document.querySelector('button[onclick*="eksekusiUpload"]');
+            if (btnUploadAksi) btnUploadAksi.style.setProperty('display', 'none', 'important');
+
+            // D. Paksa pindah ke tab 'Edit / Revisi'
+            window.switchAdminTab('edit');
+            
+        }, 100); 
+    }
+};
 window.switchAdminTab = (tab) => {
     document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
     document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
