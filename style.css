@@ -892,3 +892,57 @@ div.swal2-container {
     overflow-y: auto !important;
     padding-bottom: 50px !important;
 }
+/* --- UI BARU ADMIN PANEL FULL SCREEN --- */
+/* Sembunyikan deretan tombol navigasi saat masuk mode kerja */
+.admin-mode-kerja #adminNavButtons {
+    display: none !important;
+}
+
+/* Sembunyikan informasi status di atas saat masuk mode kerja */
+.admin-mode-kerja .admin-status-bar {
+    display: none !important;
+}
+
+/* Sembunyikan semua tab (biar bersih) */
+.admin-tab-content {
+    display: none;
+    padding-top: 15px;
+}
+
+/* Tampilkan HANYA tab yang sedang aktif (animasi masuk) */
+.admin-tab-content.active-tab {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Tombol Kembali (Back to Menu) */
+.btn-back-menu {
+    display: none; /* Sembunyi dulu */
+    background: #555;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.admin-mode-kerja .btn-back-menu {
+    display: inline-block; /* Muncul pas di mode kerja */
+}
+
+/* Perlebar Modal Admin biar gak sempit */
+#adminOverlay .modal-content {
+    width: 95%; /* Hampir full screen kanan-kiri */
+    max-width: 1200px; /* Maksimal lebarnya */
+    max-height: 90vh; /* Tinggi hampir full */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Area Scroll dibikin fleksibel */
+#adminOverlay .modal-content > div {
+    flex-grow: 1;
+    overflow-y: auto;
+}
