@@ -2216,22 +2216,8 @@ window.switchAdminTab = (tab) => {
         const isSuper = ADMIN_EMAILS.includes(currentUser.email);
         if(!isSuper) window.setTambahMode('manual');
     }
-};
-    // --- AKHIR TAMBAHAN FORM MANUAL ---
-    
-    // Tab Laporan
-    const tabLaporan = document.getElementById('tabLaporan');
-    if (tabLaporan) {
-        tabLaporan.style.display = (tab === 'laporan' ? 'block' : 'none');
-    }
-    
-    // --- INI YANG KETINGGALAN: Tab Status (Radar) ---
-    const tabStatus = document.getElementById('tabStatus');
-    if (tabStatus) {
-        tabStatus.style.display = (tab === 'status' ? 'block' : 'none');
-    }
-    
-    // Auto-load data pas tabnya diklik
+
+    // 5. Auto-load data pas tab Laporan atau Status diklik (Ini sisa kodingan lo yang nyasar)
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
