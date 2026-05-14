@@ -2135,42 +2135,77 @@ window.openAdminPanel = () => {
 // FUNGSI BALIK KE MENU ADMIN (TOMBOL MUNCUL SEMUA)
 // ==========================================================
 window.resetAdminMenu = () => {
-    document.getElementById('adminOverlay').classList.remove('admin-mode-kerja');
-    
-    // Sembunyikan semua konten tab
+    // 1. Sembunyikan Tombol Kembali
+    const btnBack = document.getElementById('btnKembaliSakti');
+    if(btnBack) btnBack.style.display = 'none';
+
+    // 2. Munculkan SEMUA elemen Navigasi di atas (kecuali tab konten)
+    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    if (modalContent) {
+        Array.from(modalContent.children).forEach(el => {
+            const id = el.id || '';
+            // Kalau bukan tab dan bukan tombol kembali, TAMPILKAN!
+            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'SPAN') {
+                el.style.display = ''; // Balikin ke normal (flex/block)
+            }
+        });
+    }
+
+    // 3. Sembunyikan semua isi tab
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.classList.remove('active-tab');
-            el.style.display = 'none'; // Pastikan beneran hilang
-        }
+        if (el) el.style.display = 'none';
     });
 };
 
 // ==========================================================
-// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN
+// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (ANTI CACHE)
 // ==========================================================
 window.switchAdminTab = (tab) => {
-    // 1. Ubah layar jadi mode kerja (Full Screen)
-    document.getElementById('adminOverlay').classList.add('admin-mode-kerja');
+    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    
+    // 1. Paksa Lebarin Layar via JS (Biar lega ngetik soalnya)
+    if (modalContent) {
+        modalContent.style.width = '95%';
+        modalContent.style.maxWidth = '1200px';
+    }
 
-    // 2. Sembunyikan semua tab dulu, baru munculin yang diklik
+    // 2. Sembunyikan SEMUA elemen Navigasi (Biar layar bersih)
+    if (modalContent) {
+        Array.from(modalContent.children).forEach(el => {
+            const id = el.id || '';
+            // Sembunyikan semuanya kecuali Judul (H2), Close (SPAN), dan Tab Konten
+            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'H3' && el.tagName !== 'SPAN') {
+                el.style.display = 'none';
+            }
+        });
+    }
+
+    // 3. Bikin Tombol Kembali Sakti (Kalau belum ada)
+    let btnBack = document.getElementById('btnKembaliSakti');
+    if (!btnBack) {
+        btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliSakti';
+        btnBack.innerHTML = '⬅️ KEMBALI KE MENU ADMIN';
+        btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; width: 100%; text-align: left; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+        btnBack.onclick = () => window.resetAdminMenu();
+        
+        // Taruh tepat di bawah judul
+        if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
+    }
+    btnBack.style.display = 'block';
+
+    // 4. Munculkan hanya tab yang dipilih
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            if (id.toLowerCase().includes(tab)) {
-                el.classList.add('active-tab');
-                el.style.display = 'block';
-            } else {
-                el.classList.remove('active-tab');
-                el.style.display = 'none';
-            }
+            el.style.display = (id.toLowerCase().includes(tab)) ? 'block' : 'none';
         }
     });
 
-    // 3. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
+    // 5. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2182,7 +2217,7 @@ window.switchAdminTab = (tab) => {
         `;
         areaTambah.insertBefore(switcher, areaTambah.firstChild);
 
-        // Bikin Container Form Manual (Default Sembunyi)
+        // Bikin Container Form Manual
         const formManual = document.createElement('div');
         formManual.id = 'formTambahManual';
         formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
@@ -2211,13 +2246,13 @@ window.switchAdminTab = (tab) => {
         areaTambah.appendChild(formManual);
     }
 
-    // 4. Khusus kalau buka "Tambah", langsung aktifin mode manual buat asisten
+    // 6. Khusus asisten, aktifin form manual
     if (tab === 'tambah' && typeof window.setTambahMode === 'function') {
-        const isSuper = ADMIN_EMAILS.includes(currentUser.email);
+        const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
         if(!isSuper) window.setTambahMode('manual');
     }
 
-    // 5. Auto-load data pas tab Laporan atau Status diklik (Ini sisa kodingan lo yang nyasar)
+    // 7. Auto-load data 
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
