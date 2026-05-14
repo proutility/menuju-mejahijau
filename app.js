@@ -2065,14 +2065,15 @@ window.openAdminPanel = () => {
         
         setTimeout(() => {
             // A. Sembunyikan Tombol Navigasi yang dilarang
+            // (Kata 'upload json' dan 'tambah' sudah DIHAPUS dari daftar blokir di bawah ini)
             const semuaTombolNav = document.querySelectorAll('#adminOverlay button');
             semuaTombolNav.forEach(btn => {
                 const teks = btn.innerText.toLowerCase();
                 const aksi = (btn.getAttribute('onclick') || '').toLowerCase();
                 
-                if (teks.includes('radar') || teks.includes('upload json') || 
+                if (teks.includes('radar') || 
                     teks.includes('excel') || teks.includes('backup') || 
-                    aksi.includes('status') || aksi.includes('tambah') || aksi.includes('download')) {
+                    aksi.includes('status') || aksi.includes('download')) {
                     btn.style.setProperty('display', 'none', 'important');
                 }
             });
@@ -2081,7 +2082,7 @@ window.openAdminPanel = () => {
             const btnMaintenance = document.getElementById('btnToggleMaintenance');
             if (btnMaintenance) btnMaintenance.style.setProperty('display', 'none', 'important');
 
-            // C. Sembunyikan Area Input JSON & Target Modul
+            // C. Sembunyikan Area Input JSON (Textarea aslinya)
             const idsInput = ['jsonUploadArea', 'adminModulTarget'];
             idsInput.forEach(id => {
                 const el = document.getElementById(id);
@@ -2091,11 +2092,20 @@ window.openAdminPanel = () => {
                 }
             });
             
+            // Sembunyikan tombol eksekusi JSON aslinya
             const btnUploadAksi = document.querySelector('button[onclick*="eksekusiUpload"]');
             if (btnUploadAksi) btnUploadAksi.style.setProperty('display', 'none', 'important');
 
-            // D. Paksa pindah ke tab 'Edit / Revisi'
-            window.switchAdminTab('edit');
+            // D. BUKA TAB TAMBAH & PAKSA KE MODE MANUAL
+            window.switchAdminTab('tambah'); // Langsung arahin ke tab tambah
+            
+            if (typeof window.setTambahMode === 'function') {
+                window.setTambahMode('manual'); // Otomatis aktifkan form manual
+            }
+            
+            // Sembunyikan tombol switch ke JSON biar asisten ga iseng ngeklik
+            const btnModeJson = document.getElementById('btnModeJson');
+            if (btnModeJson) btnModeJson.style.setProperty('display', 'none', 'important');
             
         }, 100); 
     }
@@ -2104,6 +2114,53 @@ window.switchAdminTab = (tab) => {
     document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
     document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
     document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
+    // --- TAMBAHAN FORM MANUAL ---
+    const areaTambah = document.getElementById('tabTambah');
+    if (areaTambah && !document.getElementById('switchTambahMode')) {
+        const switcher = document.createElement('div');
+        switcher.id = 'switchTambahMode';
+        switcher.style = "margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 8px; display: flex; gap: 10px;";
+        switcher.innerHTML = `
+            <button onclick="window.setTambahMode('json')" id="btnModeJson" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:var(--primary); color:white;">Mode JSON (Massal)</button>
+            <button onclick="window.setTambahMode('manual')" id="btnModeManual" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:#ddd;">Mode Manual (Satu Soal)</button>
+        `;
+        areaTambah.insertBefore(switcher, areaTambah.firstChild);
+
+        // Bikin Container Form Manual (Default Sembunyi)
+        const formManual = document.createElement('div');
+        formManual.id = 'formTambahManual';
+        formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
+        formManual.innerHTML = `
+    <div style="margin-bottom:15px; padding:10px; background:#fff3e0; border-radius:6px; border:1px solid #ffe0b2;">
+        <label style="font-weight:bold; color:#e67e22;">Pilih Target Modul:</label>
+        <select id="manModulSelect" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px;">
+            <option value="modul1">Modul 1: Kekuasaan Kehakiman</option>
+            <option value="modul2">Modul 2: Mahkamah Agung</option>
+            <option value="modul3">Modul 3: Peradilan Agama</option>
+            <option value="modul19.3">Modul 19.3: Psikotes Hafalan</option>
+            <option value="modul_papi">Modul: PAPI Kostick</option>
+            <!-- Tambahin lagi daftar modul lo di sini bro -->
+        </select>
+    </div>
+    <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
+        <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
+        <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
+        <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
+    </div>
+    <label>Kunci Jawaban:</label>
+    <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
+        <option value="0">Opsi A</option><option value="1">Opsi B</option>
+        <option value="2">Opsi C</option><option value="3">Opsi D</option>
+    </select>
+    <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+    <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
+    <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
+`;
+        areaTambah.appendChild(formManual);
+    }
+    // --- AKHIR TAMBAHAN FORM MANUAL ---
     
     // Tab Laporan
     const tabLaporan = document.getElementById('tabLaporan');
@@ -3163,6 +3220,56 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+// Fungsi ganti tampilan antara JSON dan Manual
+window.setTambahMode = (mode) => {
+    const isManual = mode === 'manual';
+    document.getElementById('formTambahManual').style.display = isManual ? 'block' : 'none';
+    document.getElementById('jsonUploadArea').style.display = isManual ? 'none' : 'block';
+    document.querySelector('button[onclick="window.eksekusiUpload()"]').style.display = isManual ? 'none' : 'block';
+    
+    document.getElementById('btnModeManual').style.background = isManual ? 'var(--primary)' : '#ddd';
+    document.getElementById('btnModeManual').style.color = isManual ? 'white' : '#333';
+    document.getElementById('btnModeJson').style.background = isManual ? '#ddd' : 'var(--primary)';
+    document.getElementById('btnModeJson').style.color = isManual ? '#333' : 'white';
+};
+
+window.simpanSoalManual = async () => {
+    // Ambil ID Modul dari Dropdown
+    const modulId = document.getElementById('manModulSelect').value;
+    
+    const q = document.getElementById('manQ').value.trim();
+    const optA = document.getElementById('manOptA').value.trim();
+    const optB = document.getElementById('manOptB').value.trim();
+    const optC = document.getElementById('manOptC').value.trim();
+    const optD = document.getElementById('manOptD').value.trim();
+    const ans = parseInt(document.getElementById('manAns').value);
+    const exp = document.getElementById('manExp').value.trim();
+    const cite = document.getElementById('manCite').value.trim();
+
+    if (!q || !optA || !optB) return alert("Pertanyaan dan minimal 2 opsi pertama wajib diisi!");
+
+    PROTAMA.loading("Sedang memasukkan soal ke modul " + modulId);
+    try {
+        await addDoc(collection(db, "bank_soal", modulId, "daftar_soal"), {
+            q: q,
+            options: [optA, optB, optC, optD],
+            answer: ans,
+            explanation: exp || "-",
+            cite: cite || "Modul Hakim",
+            createdAt: new Date()
+        });
+        PROTAMA.close();
+        PROTAMA.alert("MANTAP!", "Soal berhasil nambah di " + modulId.toUpperCase(), "success");
+        
+        // Reset kolom isian (kecuali pilihan modul biar mereka bisa input soal lain di modul yg sama)
+        ['manQ', 'manOptA', 'manOptB', 'manOptC', 'manOptD', 'manExp', 'manCite'].forEach(id => {
+            document.getElementById(id).value = "";
+        });
+    } catch (e) {
+        PROTAMA.close();
+        alert("Waduh, gagal simpan ke Firebase: " + e.message);
+    }
+};
 /* ========================================================================= */
 /* FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN & URUTAN SOAL)      */
 /* ========================================================================= */
