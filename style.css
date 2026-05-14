@@ -865,3 +865,30 @@ body.dark-mode #appSection .alert-warning strong {
 div.swal2-container {
     z-index: 9999999 !important; /* Paksa lapisan paling atas */
 }
+/* ==========================================
+   ADMIN PANEL FULL SCREEN MODE
+   ========================================== */
+#adminOverlay {
+    padding: 0 !important; /* Hilangkan jarak pinggir layar */
+    background-color: #f4f7f6 !important; /* Ubah background hitam transparan jadi warna solid */
+}
+
+/* Mengubah kotak putih pop-up admin menjadi selebar layar */
+#adminOverlay > div {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border-radius: 0 !important; /* Hilangkan lengkungan ujung pop-up */
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Memastikan area dalam admin bisa di-scroll dengan lega */
+#adminOverlay > div > div:nth-child(2) {
+    flex-grow: 1 !important;
+    overflow-y: auto !important;
+    padding-bottom: 50px !important;
+}
