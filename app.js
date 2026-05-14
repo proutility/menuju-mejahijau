@@ -14,6 +14,7 @@ const firebaseConfig = {
 };
 
 const ADMIN_EMAILS = ["ilhamnp22@gmail.com", "inurprtma22@gmail.com"]; 
+const EDITOR_EMAILS = ["glorifikalaw@gmail.com", "amifaveiro9@gmail.com"];
 let db, auth, provider, currentUser;
 
 // ==========================================
@@ -93,18 +94,48 @@ if(auth) {
             // A. PANGGIL MAINTENACE (Supaya User Terpantau)
             watchMaintenance(); 
 
-        // B. CEK ADMIN (Fitur Copy Paste Nyala, TAPI TETAP KENA CEK VIP)
-            if (ADMIN_EMAILS.includes(user.email)) {
+        // B. CEK ADMIN & ASISTEN ADMIN (Fitur Copy Paste Nyala)
+            const isSuperAdmin = ADMIN_EMAILS.includes(user.email);
+            const isEditor = typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(user.email);
+
+            if (isSuperAdmin || isEditor) {
                 document.body.classList.add('is-admin'); 
                 const btnAdmin = document.getElementById('btnAdminPanel');
                 if(btnAdmin) btnAdmin.style.display = 'flex'; 
                 
-                // --- TAMBAHAN BIAR TOMBOL ADMIN MUNCUL DI LOBBY ---
                 const btnAdminLobby = document.getElementById('btnAdminLobby');
                 if(btnAdminLobby) btnAdminLobby.style.display = 'block';
-                // --------------------------------------------------
 
-                console.log("Admin Login: Anti-Cheat OFF, tapi wajib verifikasi kode.");
+                // --- SENSOR FITUR KHUSUS ASISTEN ADMIN ---
+                if (isEditor && !isSuperAdmin) {
+                    setTimeout(() => {
+                        // 1. Sembunyikan Tombol Maintenance
+                        const btnMaintenance = document.getElementById('btnToggleMaintenance');
+                        if (btnMaintenance) btnMaintenance.style.display = 'none';
+
+                        // 2. Sembunyikan Tab Radar Peserta
+                        const tabRadar = document.querySelector('button[onclick="window.switchAdminTab(\'status\')"]');
+                        if (tabRadar) tabRadar.style.display = 'none';
+
+                        // 3. Sembunyikan Export Excel & Backup JSON
+                        const btnExcel = document.querySelector('button[onclick="window.downloadSoalExcel()"]');
+                        if (btnExcel) btnExcel.style.display = 'none';
+                        const btnJsonDb = document.querySelector('button[onclick="window.downloadSoalJSON()"]');
+                        if (btnJsonDb) btnJsonDb.style.display = 'none';
+
+                        // 4. Sembunyikan Fitur Upload JSON
+                        const tabUpload = document.querySelector('button[onclick="window.switchAdminTab(\'tambah\')"]');
+                        if (tabUpload) tabUpload.style.display = 'none';
+                        const btnUploadAksi = document.querySelector('button[onclick="window.eksekusiUpload()"]');
+                        if (btnUploadAksi) btnUploadAksi.style.display = 'none';
+                        
+                    }, 500); 
+                    
+                    console.log("Asisten Admin Login: Hanya bisa Edit, Review, dan Laporan.");
+                } else {
+                    console.log("Super Admin Login: Akses Penuh.");
+                }
+
             } else {
                 document.body.classList.remove('is-admin');
             }
