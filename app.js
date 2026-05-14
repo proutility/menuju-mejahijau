@@ -2131,17 +2131,11 @@ window.switchAdminTab = (tab) => {
         formManual.id = 'formTambahManual';
         formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
         formManual.innerHTML = `
-    <div style="margin-bottom:15px; padding:10px; background:#fff3e0; border-radius:6px; border:1px solid #ffe0b2;">
-        <label style="font-weight:bold; color:#e67e22;">Pilih Target Modul:</label>
-        <select id="manModulSelect" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px;">
-            <option value="modul1">Modul 1: Kekuasaan Kehakiman</option>
-            <option value="modul2">Modul 2: Mahkamah Agung</option>
-            <option value="modul3">Modul 3: Peradilan Agama</option>
-            <option value="modul19.3">Modul 19.3: Psikotes Hafalan</option>
-            <option value="modul_papi">Modul: PAPI Kostick</option>
-            <!-- Tambahin lagi daftar modul lo di sini bro -->
-        </select>
-    </div>
+    <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
+                <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
+                <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
+                <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
+            </div>
     <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
@@ -3220,22 +3214,51 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-// Fungsi ganti tampilan antara JSON dan Manual
+// =======================================================
+// FUNGSI LOGIKA TAB TAMBAH (MANUAL VS JSON)
+// =======================================================
 window.setTambahMode = (mode) => {
     const isManual = mode === 'manual';
-    document.getElementById('formTambahManual').style.display = isManual ? 'block' : 'none';
-    document.getElementById('jsonUploadArea').style.display = isManual ? 'none' : 'block';
-    document.querySelector('button[onclick="window.eksekusiUpload()"]').style.display = isManual ? 'none' : 'block';
-    
-    document.getElementById('btnModeManual').style.background = isManual ? 'var(--primary)' : '#ddd';
-    document.getElementById('btnModeManual').style.color = isManual ? 'white' : '#333';
-    document.getElementById('btnModeJson').style.background = isManual ? '#ddd' : 'var(--primary)';
-    document.getElementById('btnModeJson').style.color = isManual ? '#333' : 'white';
+
+    // 1. Tampilkan/Sembunyikan Form Manual
+    const formManual = document.getElementById('formTambahManual');
+    if (formManual) formManual.style.display = isManual ? 'block' : 'none';
+
+    // 2. Sembunyikan Kotak JSON & Labelnya
+    const jsonArea = document.getElementById('jsonUploadArea');
+    if (jsonArea) {
+        jsonArea.style.display = isManual ? 'none' : 'block';
+        if (jsonArea.previousElementSibling) jsonArea.previousElementSibling.style.display = isManual ? 'none' : 'block';
+    }
+
+    // 3. Sembunyikan Target Modul Bawaan & Labelnya
+    const targetInput = document.getElementById('adminModulTarget');
+    if (targetInput) {
+        targetInput.style.display = isManual ? 'none' : 'block';
+        if (targetInput.previousElementSibling) targetInput.previousElementSibling.style.display = isManual ? 'none' : 'block';
+    }
+
+    // 4. Sembunyikan Tombol "Upload ke Firebase" yang asli
+    const btnUpload = document.querySelector('button[onclick*="eksekusiUpload"]');
+    if (btnUpload) btnUpload.style.display = isManual ? 'none' : 'block';
+
+    // 5. Ubah Warna Tombol Switch (Pakai warna Ijo Langsung)
+    const btnManual = document.getElementById('btnModeManual');
+    const btnJson = document.getElementById('btnModeJson');
+    if (btnManual && btnJson) {
+        btnManual.style.background = isManual ? '#27ae60' : '#ddd'; // Ijo keren
+        btnManual.style.color = isManual ? 'white' : '#333';
+        btnJson.style.background = isManual ? '#ddd' : '#27ae60'; 
+        btnJson.style.color = isManual ? '#333' : 'white';
+    }
 };
 
 window.simpanSoalManual = async () => {
-    // Ambil ID Modul dari Dropdown
-    const modulId = document.getElementById('manModulSelect').value;
+    // Ambil input dari ID yang baru (dan paksa huruf kecil + hapus spasi biar ga error)
+    const modulIdRaw = document.getElementById('manModulInput').value;
+    const modulId = modulIdRaw.trim().toLowerCase().replace(/\s+/g, '');
+    
+    if (!modulId) return alert("Ketikin dulu nama Modulnya bro!");
     
     const q = document.getElementById('manQ').value.trim();
     const optA = document.getElementById('manOptA').value.trim();
@@ -3248,26 +3271,26 @@ window.simpanSoalManual = async () => {
 
     if (!q || !optA || !optB) return alert("Pertanyaan dan minimal 2 opsi pertama wajib diisi!");
 
-    PROTAMA.loading("Sedang memasukkan soal ke modul " + modulId);
+    PROTAMA.loading("Sedang memasukkan soal ke " + modulId + "...");
     try {
         await addDoc(collection(db, "bank_soal", modulId, "daftar_soal"), {
             q: q,
             options: [optA, optB, optC, optD],
             answer: ans,
             explanation: exp || "-",
-            cite: cite || "Modul Hakim",
+            cite: cite || "-",
             createdAt: new Date()
         });
         PROTAMA.close();
-        PROTAMA.alert("MANTAP!", "Soal berhasil nambah di " + modulId.toUpperCase(), "success");
+        PROTAMA.alert("MANTAP!", "Soal berhasil masuk ke " + modulId, "success");
         
-        // Reset kolom isian (kecuali pilihan modul biar mereka bisa input soal lain di modul yg sama)
+        // Reset form isian aja, kolom modul tetep utuh biar ga capek ngetik ulang
         ['manQ', 'manOptA', 'manOptB', 'manOptC', 'manOptD', 'manExp', 'manCite'].forEach(id => {
             document.getElementById(id).value = "";
         });
     } catch (e) {
         PROTAMA.close();
-        alert("Waduh, gagal simpan ke Firebase: " + e.message);
+        alert("Gagal simpan ke Firebase: " + e.message);
     }
 };
 /* ========================================================================= */
