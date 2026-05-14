@@ -211,6 +211,46 @@ if(auth) {
         }
     });
 }
+// Fungsi Sakti: Auto-Cari & Auto-Klik Soal dari Laporan
+window.editSoalDariLaporan = async (modulId, encSnippet) => {
+    // Decode teks penggalan dan buang titik-titiknya biar gampang dicari
+    const snippet = decodeURIComponent(encSnippet).replace("...", "").trim();
+    
+    // 1. Pindah tab ke "Edit" dan isi target modul
+    document.getElementById('editModulTarget').value = modulId;
+    window.switchAdminTab('edit');
+    
+    // 2. Load daftar soal (wajib pakai await biar datanya kelar ditarik dulu)
+    PROTAMA.loading("Mencari soal yang dilaporkan...");
+    await window.loadSoalAdmin();
+    
+    // 3. Otomatis ketik di kolom pencarian & filter daftarnya
+    const searchInput = document.getElementById('searchSoalAdmin');
+    if (searchInput) {
+        searchInput.value = snippet;
+        window.filterSoalAdmin(); // Panggil fungsi filter lo
+    }
+    
+    // 4. Auto-Klik soal yang cocok biar Form Edit langsung keisi!
+    const listContainer = document.getElementById("listSoalAdmin");
+    const items = listContainer.getElementsByTagName("div");
+    let ketemu = false;
+    
+    for (let i = 0; i < items.length; i++) {
+        // Cari elemen div yang nggak ke-hide (hasil filter)
+        if (items[i].style.display !== "none") {
+            items[i].click(); // Simulasikan klik
+            ketemu = true;
+            break;
+        }
+    }
+
+    PROTAMA.close();
+    
+    if (!ketemu) {
+        PROTAMA.alert("Oops!", "Soalnya nggak ketemu. Mungkin udah pernah dihapus/diedit sebelumnya.", "warning");
+    }
+};
 
 // --- 4. FUNGSI PEMBANTU (WAJIB ADA) ---
 
@@ -2859,8 +2899,8 @@ window.loadLaporanAdmin = async () => {
                     <button onclick="hapusLaporan('${idDoc}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
                         <i class="fas fa-trash"></i> Hapus Laporan
                     </button>
-                    <button onclick="document.getElementById('editModulTarget').value = '${d.modul_id}'; window.switchAdminTab('edit'); window.loadSoalAdmin();" style="background:var(--gold); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
-                        <i class="fas fa-pencil-alt"></i> Menuju Form Edit
+                    <button onclick="window.editSoalDariLaporan('${d.modul_id}', '${encodeURIComponent(d.teks_soal_penggalan || "")}')" style="background:var(--gold); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
+                        <i class="fas fa-magic"></i> Auto-Edit Soal
                     </button>
                 </div>
             `;
