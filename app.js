@@ -714,10 +714,8 @@ window.switchDatabase = async function(key) {
             timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
         } else {
             console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
-            // MULAI BARU: Acak soal dari database
-            let rawQuestions = [];
-            qSnap.forEach((doc) => { rawQuestions.push(doc.data()); });
-
+            let rawQuestions = []; 
+            qSnap.forEach((doc) => { let d = doc.data(); d.id = doc.id; rawQuestions.push(d); });
             shuffleArray(rawQuestions); 
             rawQuestions.forEach(q => {
                 if(q.options && q.answer < q.options.length) {
@@ -964,37 +962,37 @@ function loadQuestion(idx) {
 
     const fb = document.getElementById('feedbackBox');
     if (isSubmitted) {
-        fb.style.display = 'block';
-        fb.classList.add('show');
-        const teksPembahasan = q.explanation || "";
-        const jawabanBenar = q.options[q.answer]; 
+        if(fb) { fb.style.display = 'block'; fb.classList.add('show'); }
+        const teksPembahasan = q.explanation || ""; 
+        const jawabanBenar = q.options && q.answer !== undefined ? q.options[q.answer] : ""; 
+        const highlightTeks = (teks, keyword) => { if (!keyword) return teks; const regex = new RegExp(`(${keyword})`, 'gi'); return teks.replace(regex, `<span style="background-color: #fff9c4; color: #004d00; font-weight: bold; padding: 0 2px; border-bottom: 2px solid #d4af37;">$1</span>`); };
+        const fText = document.getElementById('feedbackText'); if(fText) fText.innerHTML = highlightTeks(teksPembahasan, jawabanBenar);
         
-        const highlightTeks = (teks, keyword) => {
-            if (!keyword) return teks;
-            const regex = new RegExp(`(${keyword})`, 'gi');
-            return teks.replace(regex, `<span style="background-color: #fff9c4; color: #004d00; font-weight: bold; padding: 0 2px; border-bottom: 2px solid #d4af37;">$1</span>`);
-        };
+        const teksSumber = q.cite || "-"; const fCite = document.getElementById('feedbackCite');
+        if(fCite) {
+            if (teksSumber !== "-") { const linkPencarian = `https://www.google.com/search?q=${encodeURIComponent("Isi " + teksSumber)}`; fCite.innerHTML = `Sumber: <a href="${linkPencarian}" target="_blank" style="color: #2980b9; text-decoration: underline; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#d35400'" onmouseout="this.style.color='#2980b9'" title="Klik untuk baca full pasal ini">${teksSumber} <i class="fas fa-external-link-alt" style="font-size: 0.8rem; margin-left: 3px;"></i></a>`; } 
+            else { fCite.innerHTML = "Sumber: -"; }
+        }
 
-        document.getElementById('feedbackText').innerHTML = highlightTeks(teksPembahasan, jawabanBenar);
-        
-        // --- FITUR KLIK SUMBER HUKUM OTOMATIS ---
-        const teksSumber = q.cite || "-";
-        if (teksSumber !== "-") {
-            // Encode teks biar aman jadi URL pencarian Google
-            const linkPencarian = `https://www.google.com/search?q=${encodeURIComponent("Isi " + teksSumber)}`;
-            
-            // Masukin tag <a> (Link) ke dalam teks sumber
-            document.getElementById('feedbackCite').innerHTML = `Sumber: <a href="${linkPencarian}" target="_blank" style="color: #2980b9; text-decoration: underline; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.color='#d35400'" onmouseout="this.style.color='#2980b9'" title="Klik untuk baca full pasal ini">${teksSumber} <i class="fas fa-external-link-alt" style="font-size: 0.8rem; margin-left: 3px;"></i></a>`;
-        } else {
-            document.getElementById('feedbackCite').innerHTML = "Sumber: -";
+        // --- INJEKSI TOMBOL EDIT KHUSUS ADMIN ---
+        let adminDiv = document.getElementById('adminQuickEditDiv');
+        if (!adminDiv && fb) {
+            adminDiv = document.createElement('div');
+            adminDiv.id = 'adminQuickEditDiv';
+            adminDiv.style.cssText = "margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc; text-align: right;";
+            adminDiv.innerHTML = `<button onclick="window.editSoalSekarang()" style="background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.2s;"><i class="fas fa-pencil-alt"></i> Edit Soal Ini (Admin)</button>`;
+            fb.appendChild(adminDiv);
+        }
+        if (adminDiv) {
+            // Kalau dia admin/editor, tampilin. Kalau peserta biasa, sembunyiin.
+            adminDiv.style.display = document.body.classList.contains('is-admin') ? 'block' : 'none';
         }
         // ----------------------------------------
 
     } else { 
-        fb.style.display = 'none';
-        fb.classList.remove('show'); 
+        if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
     }
-
+    
     const cont = document.getElementById('optionsContainer');
     cont.innerHTML = '';
     q.options.forEach((opt, i) => {
@@ -2310,6 +2308,33 @@ window.filterSoalAdmin = () => {
             itemSoal[i].style.display = "none";
         }
     }
+};
+// ==========================================
+// FUNGSI SHORTCUT EDIT DARI HALAMAN UJIAN
+// ==========================================
+window.editSoalSekarang = function() {
+    const q = currentQuestions[currentIdx];
+    
+    if (!q || !q.id) {
+        PROTAMA.alert("Gagal", "ID Soal tidak ditemukan! Kemungkinan Anda mereview dari riwayat cache lama. Silakan mulai ulang modul baru untuk mengedit.", "error");
+        return;
+    }
+    
+    // 1. Isi semua form edit secara otomatis!
+    document.getElementById('editDocId').value = q.id;
+    document.getElementById('editQ').value = q.q || q.pertanyaan || "";
+    document.getElementById('editOpt').value = (q.options || []).join(", ");
+    document.getElementById('editAns').value = q.answer;
+    document.getElementById('editExp').value = q.explanation || "";
+    document.getElementById('editCite').value = q.cite || "";
+    
+    // 2. Set target modulnya biar gak salah save
+    document.getElementById('editModulTarget').value = window.currentDatabaseId;
+    currentAdminModul = window.currentDatabaseId; // Wajib diset biar fungsi save nya tau
+    
+    // 3. Buka Pop-up & Pindah Tab Edit
+    window.openAdminPanel();
+    window.switchAdminTab('edit');
 };
 
 function showMemorizationPhase() {
