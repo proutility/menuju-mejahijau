@@ -2055,6 +2055,27 @@ setTimeout(() => {
 window.openAdminPanel = () => {
     // 1. Munculkan overlay admin
     document.getElementById('adminOverlay').style.display = 'flex';
+    // --- Bikin Tombol Kembali (Injeksi) ---
+    const adminBox = document.querySelector('#adminOverlay .modal-content');
+    if (adminBox && !document.getElementById('btnKembaliMenuAdmin')) {
+        // Bungkus tombol Navigasi dan Status ke dalam grup biar gampang disembunyiin
+        const navDiv = document.querySelector('#adminOverlay button[onclick*="tambah"]').parentNode;
+        navDiv.id = 'adminNavButtons';
+        const statusDiv = document.querySelector('#adminOverlay').querySelectorAll('div')[1]; // asumsi teks status
+        statusDiv.classList.add('admin-status-bar');
+
+        const btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliMenuAdmin';
+        btnBack.className = 'btn-back-menu';
+        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> Kembali ke Menu Admin';
+        btnBack.onclick = () => window.resetAdminMenu();
+        
+        // Taruh di bawah judul "Panel Admin CBT"
+        adminBox.insertBefore(btnBack, adminBox.children[1]); 
+    }
+    
+    // Pastikan pas baru buka, tampilannya adalah "Menu"
+    window.resetAdminMenu();
 
     // 2. Cek apakah user saat ini adalah Editor (Bukan Super Admin)
     const isSuper = ADMIN_EMAILS.includes(currentUser.email);
@@ -2110,11 +2131,46 @@ window.openAdminPanel = () => {
         }, 100); 
     }
 };
+// ==========================================================
+// FUNGSI BALIK KE MENU ADMIN (TOMBOL MUNCUL SEMUA)
+// ==========================================================
+window.resetAdminMenu = () => {
+    document.getElementById('adminOverlay').classList.remove('admin-mode-kerja');
+    
+    // Sembunyikan semua konten tab
+    const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
+    tabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.remove('active-tab');
+            el.style.display = 'none'; // Pastikan beneran hilang
+        }
+    });
+};
+
+// ==========================================================
+// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN
+// ==========================================================
 window.switchAdminTab = (tab) => {
-    document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
-    document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
-    document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
-    // --- TAMBAHAN FORM MANUAL ---
+    // 1. Ubah layar jadi mode kerja (Full Screen)
+    document.getElementById('adminOverlay').classList.add('admin-mode-kerja');
+
+    // 2. Sembunyikan semua tab dulu, baru munculin yang diklik
+    const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
+    tabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (id.toLowerCase().includes(tab)) {
+                el.classList.add('active-tab');
+                el.style.display = 'block';
+            } else {
+                el.classList.remove('active-tab');
+                el.style.display = 'none';
+            }
+        }
+    });
+
+    // 3. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2131,29 +2187,36 @@ window.switchAdminTab = (tab) => {
         formManual.id = 'formTambahManual';
         formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
         formManual.innerHTML = `
-    <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
+            <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
                 <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
                 <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
                 <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
             </div>
-    <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
-    </div>
-    <label>Kunci Jawaban:</label>
-    <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
-        <option value="0">Opsi A</option><option value="1">Opsi B</option>
-        <option value="2">Opsi C</option><option value="3">Opsi D</option>
-    </select>
-    <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-    <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
-    <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
-`;
+            <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
+            </div>
+            <label>Kunci Jawaban:</label>
+            <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
+                <option value="0">Opsi A</option><option value="1">Opsi B</option>
+                <option value="2">Opsi C</option><option value="3">Opsi D</option>
+            </select>
+            <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+            <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
+            <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
+        `;
         areaTambah.appendChild(formManual);
     }
+
+    // 4. Khusus kalau buka "Tambah", langsung aktifin mode manual buat asisten
+    if (tab === 'tambah' && typeof window.setTambahMode === 'function') {
+        const isSuper = ADMIN_EMAILS.includes(currentUser.email);
+        if(!isSuper) window.setTambahMode('manual');
+    }
+};
     // --- AKHIR TAMBAHAN FORM MANUAL ---
     
     // Tab Laporan
