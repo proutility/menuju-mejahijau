@@ -2140,77 +2140,100 @@ window.openAdminPanel = () => {
 // FUNGSI BALIK KE MENU ADMIN (TOMBOL MUNCUL SEMUA)
 // ==========================================================
 window.resetAdminMenu = () => {
-    // 1. Sembunyikan Tombol Kembali
+    // 1. Sembunyikan Tombol Kembali Floating
     const btnBack = document.getElementById('btnKembaliSakti');
     if(btnBack) btnBack.style.display = 'none';
 
-    // 2. Munculkan SEMUA elemen Navigasi di atas (kecuali tab konten)
+    // 2. Balikin elemen Menu Navigasi utama
     const modalContent = document.querySelector('#adminOverlay .modal-content');
     if (modalContent) {
         Array.from(modalContent.children).forEach(el => {
-            const id = el.id || '';
-            // Kalau bukan tab dan bukan tombol kembali, TAMPILKAN!
-            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'SPAN') {
-                el.style.display = ''; // Balikin ke normal (flex/block)
+            if (el.tagName !== 'SPAN') {
+                el.style.display = ''; // Balikin ke normal
             }
         });
     }
 
-    // 3. Sembunyikan semua isi tab
+    // 3. Sembunyikan semua isi tab dan kembalikan posisinya ke awal
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+        if (el) {
+            el.style.display = 'none';
+            el.style.position = '';
+            el.style.top = '';
+            el.style.left = '';
+            el.style.width = '';
+            el.style.height = '';
+            el.style.background = '';
+            el.style.zIndex = '';
+            el.style.padding = '';
+            el.style.overflowY = '';
+        }
     });
 };
 
 // ==========================================================
-// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (ANTI CACHE)
+// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN KAYA PINDAH HALAMAN
 // ==========================================================
 window.switchAdminTab = (tab) => {
-    const modalContent = document.querySelector('#adminOverlay .modal-content');
-    
-    // 1. Paksa Lebarin Layar via JS (Biar lega ngetik soalnya)
-    if (modalContent) {
-        modalContent.style.width = '95%';
-        modalContent.style.maxWidth = '1200px';
-    }
+    // Bersihin dulu sebelum pindah
+    window.resetAdminMenu();
 
-    // 2. Sembunyikan SEMUA elemen Navigasi (Biar layar bersih)
+    const modalContent = document.querySelector('#adminOverlay .modal-content');
+
+    // 1. Sembunyikan SEMUA elemen Menu Navigasi di belakang
     if (modalContent) {
         Array.from(modalContent.children).forEach(el => {
             const id = el.id || '';
-            // Sembunyikan semuanya kecuali Judul (H2), Close (SPAN), dan Tab Konten
-            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'H3' && el.tagName !== 'SPAN') {
+            // Sembunyikan semuanya kecuali tab konten dan tombol close
+            if (!id.includes('tab') && el.tagName !== 'SPAN') {
                 el.style.display = 'none';
             }
         });
     }
 
-    // 3. Bikin Tombol Kembali Sakti (Kalau belum ada)
-    let btnBack = document.getElementById('btnKembaliSakti');
-    if (!btnBack) {
-        btnBack = document.createElement('button');
-        btnBack.id = 'btnKembaliSakti';
-        btnBack.innerHTML = '⬅️ KEMBALI KE MENU ADMIN';
-        btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; width: 100%; text-align: left; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
-        btnBack.onclick = () => window.resetAdminMenu();
-        
-        // Taruh tepat di bawah judul
-        if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
-    }
-    btnBack.style.display = 'block';
-
-    // 4. Munculkan hanya tab yang dipilih
+    // 2. Munculkan tab yang dipilih & jadikan FULL SCREEN
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.style.display = (id.toLowerCase().includes(tab)) ? 'block' : 'none';
+            if (id.toLowerCase().includes(tab)) {
+                el.style.display = 'block';
+                // Trik Sakti: Bikin jadi layer baru numpuk nutupin layar
+                el.style.position = 'fixed';
+                el.style.top = '0';
+                el.style.left = '0';
+                el.style.width = '100vw';
+                el.style.height = '100vh';
+                // Warna background otomatis ikutin dark mode / light mode
+                el.style.background = document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#f4f7f6';
+                el.style.zIndex = '999998';
+                el.style.padding = '30px 20px 100px 20px'; // Padding bawah digedein biar gak ketutup tombol kembali
+                el.style.overflowY = 'auto';
+                el.style.boxSizing = 'border-box';
+            } else {
+                el.style.display = 'none';
+            }
         }
     });
 
-    // 5. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
+    // 3. Bikin Tombol Kembali Sakti (Floating di Kanan Bawah)
+    let btnBack = document.getElementById('btnKembaliSakti');
+    if (!btnBack) {
+        btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliSakti';
+        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> KEMBALI';
+        btnBack.style.cssText = "position: fixed; bottom: 30px; right: 30px; background: #c0392b; color: #fff; padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 999999; transition: transform 0.2s;";
+        btnBack.onmouseover = () => btnBack.style.transform = 'scale(1.05)';
+        btnBack.onmouseout = () => btnBack.style.transform = 'scale(1)';
+        btnBack.onclick = () => window.resetAdminMenu();
+        // Pasang langsung di body biar ngambang absolut
+        document.body.appendChild(btnBack); 
+    }
+    btnBack.style.display = 'block';
+
+    // 4. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2222,7 +2245,6 @@ window.switchAdminTab = (tab) => {
         `;
         areaTambah.insertBefore(switcher, areaTambah.firstChild);
 
-        // Bikin Container Form Manual
         const formManual = document.createElement('div');
         formManual.id = 'formTambahManual';
         formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
@@ -2251,13 +2273,13 @@ window.switchAdminTab = (tab) => {
         areaTambah.appendChild(formManual);
     }
 
-    // 6. Khusus asisten, aktifin form manual
+    // 5. Khusus asisten, aktifin form manual
     if (tab === 'tambah' && typeof window.setTambahMode === 'function') {
         const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
         if(!isSuper) window.setTambahMode('manual');
     }
 
-    // 7. Auto-load data 
+    // 6. Auto-load data 
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
