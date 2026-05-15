@@ -2137,63 +2137,51 @@ window.openAdminPanel = () => {
     }
 };
 // ==========================================================
-// FUNGSI BALIK KE MENU ADMIN (CLEAN RESET)
+// FUNGSI BALIK KE MENU ADMIN (PASTI BERSIH!)
 // ==========================================================
 window.resetAdminMenu = () => {
-    // 1. Hapus tombol kembali floating jika ada
-    const oldBtn = document.getElementById('btnKembaliSakti');
-    if(oldBtn) oldBtn.remove();
+    const btnBack = document.getElementById('btnKembaliSakti');
+    if(btnBack) btnBack.style.display = 'none';
 
-    // 2. Reset Container Utama (.result-box)
     const adminBox = document.querySelector('#adminOverlay .result-box');
+    
     if (adminBox) {
-        adminBox.style = ""; // Hapus semua inline style biar balik ke CSS asli
+        // 1. Balikin ke kotak 800px (Bukan Fullscreen)
+        adminBox.style.position = 'relative'; 
         adminBox.style.width = '800px';
+        adminBox.style.height = 'auto';
+        adminBox.style.maxWidth = '95%';
         adminBox.style.maxHeight = '90vh';
-        adminBox.style.display = 'block';
-        
-        // Munculkan kembali semua anak elemennya (Header & Menu Navigasi)
-        Array.from(adminBox.children).forEach(el => {
-            el.style.display = ''; 
-        });
-    }
+        adminBox.style.borderRadius = '12px';
+        adminBox.style.padding = '20px';
+        adminBox.style.margin = '';
 
-    // 3. Sembunyikan SEMUA tab konten dengan paksa
-    const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
-    tabs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.style.display = 'none';
-            el.style.position = ''; // Reset posisi biar gak fullscreen lagi
-        }
-    });
+        // 2. MATIKAN SEMUA ISINYA DULU BIA GAK BOCOR!
+        Array.from(adminBox.children).forEach(el => {
+            el.style.display = 'none'; 
+        });
+
+        // 3. NYALAKAN HANYA HEADER & MENU NAVIGASI
+        // adminBox.children[0] = Judul "Panel Admin CBT"
+        // adminBox.children[1] = Menu tombol-tombol
+        if (adminBox.children[0]) adminBox.children[0].style.display = 'flex';
+        if (adminBox.children[1]) adminBox.children[1].style.display = 'block';
+    }
 };
 
 // ==========================================================
 // FUNGSI SWITCH TAB (FULLSCREEN TAKEOVER)
 // ==========================================================
 window.switchAdminTab = (tabName) => {
-    // Reset dulu biar bersih
-    window.resetAdminMenu();
-
-    // 1. Identifikasi ID Tab (Pastikan ID di HTML lo bener: tabTambah, tabEdit, dll)
-    let targetId = "";
-    if (tabName === 'tambah') targetId = 'tabTambah';
-    else if (tabName === 'edit') targetId = 'tabEdit';
-    else if (tabName === 'review') targetId = 'tabReview';
-    else if (tabName === 'laporan') targetId = 'tabLaporan';
-    else if (tabName === 'status') targetId = 'tabStatus';
-
-    const targetEl = document.getElementById(targetId);
     const adminBox = document.querySelector('#adminOverlay .result-box');
-
-    if (targetEl && adminBox) {
-        // 2. SEMBUNYIKAN semua isi .result-box (Menu & Header ilang semua)
+    
+    if (adminBox) {
+        // 1. MATIKAN SEMUA ANAKNYA TERMASUK MENU NAVIGASI
         Array.from(adminBox.children).forEach(el => {
             el.style.display = 'none';
         });
 
-        // 3. PAKSA .result-box JADI LAYAR PENUH
+        // 2. JADIKAN WADAH MELAR 100% LAYAR
         adminBox.style.position = 'fixed';
         adminBox.style.top = '0';
         adminBox.style.left = '0';
@@ -2201,42 +2189,46 @@ window.switchAdminTab = (tabName) => {
         adminBox.style.height = '100vh';
         adminBox.style.maxWidth = '100vw';
         adminBox.style.maxHeight = '100vh';
-        adminBox.style.margin = '0';
         adminBox.style.borderRadius = '0';
-        adminBox.style.zIndex = '9999';
-        adminBox.style.overflowY = 'auto';
-        adminBox.style.background = document.body.classList.contains('dark-mode') ? '#1a1a1a' : '#fff';
+        adminBox.style.padding = '40px 20px 100px 20px'; 
+        adminBox.style.margin = '0';
+        adminBox.style.zIndex = '999999';
+        adminBox.style.background = document.body.classList.contains('dark-mode') ? '#1a1a1a' : '#f4f7f6';
 
-        // 4. TAMPILKAN TAB TUJUAN
-        targetEl.style.display = 'block';
-        targetEl.style.padding = '30px';
+        // 3. NYALAKAN HANYA TAB YANG DIKLIK
+        let targetId = "";
+        if (tabName.includes('tambah')) targetId = 'tabTambah';
+        else if (tabName.includes('edit')) targetId = 'tabEdit';
+        else if (tabName.includes('review')) targetId = 'tabReview';
+        else if (tabName.includes('laporan')) targetId = 'tabLaporan';
+        else if (tabName.includes('status')) targetId = 'tabStatus';
 
-        // 5. BIKIN TOMBOL KEMBALI (Floating di Kanan Bawah)
-        const btnBack = document.createElement('button');
-        btnBack.id = 'btnKembaliSakti';
-        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU';
-        btnBack.style.cssText = `
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            z-index: 10000; 
-            background: #c0392b; 
-            color: white; 
-            border: none; 
-            padding: 15px 25px; 
-            border-radius: 50px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            font-family: 'Poppins', sans-serif;
-        `;
-        btnBack.onclick = window.resetAdminMenu;
-        document.body.appendChild(btnBack);
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+            targetEl.style.display = 'block';
+            targetEl.style.height = '100%';
+        }
     }
 
-    // Trigger auto-load data
-    if (tabName === 'laporan') window.loadLaporanAdmin();
-    if (tabName === 'status') window.loadStatusAdmin();
+    // 4. TOMBOL KEMBALI
+    let btnBack = document.getElementById('btnKembaliSakti');
+    if (!btnBack) {
+        btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliSakti';
+        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU';
+        btnBack.style.cssText = "position: fixed; bottom: 30px; right: 30px; background: #c0392b; color: #fff; padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 1000000;";
+        btnBack.onclick = window.resetAdminMenu;
+        document.body.appendChild(btnBack); 
+    }
+    btnBack.style.display = 'block';
+
+    // 5. EKSEKUSI BAWAAN (Auto load, Form Manual, dll)
+    if (tabName.includes('tambah') && typeof window.setTambahMode === 'function') {
+        const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+        if(!isSuper) window.setTambahMode('manual');
+    }
+    if (tabName.includes('laporan') && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
+    if (tabName.includes('status') && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
     
 window.loadReviewPembahasan = async () => {
