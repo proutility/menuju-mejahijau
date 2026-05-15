@@ -2137,60 +2137,74 @@ window.openAdminPanel = () => {
     }
 };
 window.resetAdminMenu = () => {
-    // 1. Hapus tombol kembali melayang (karena udah nggak butuh lagi, menu selalu ada di kiri)
     const btnBack = document.getElementById('btnKembaliSakti');
     if (btnBack) btnBack.remove();
+
+    // Hilangkan padding/margin dari overlay pembungkusnya
+    const adminOverlay = document.getElementById('adminOverlay');
+    if (adminOverlay) {
+        adminOverlay.style.padding = '0';
+    }
 
     const adminBox = document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
     if (!adminBox) return;
 
-    // 2. Setel Box Utama jadi Flexbox (Kiri-Kanan) dan Bikin Lebar
-    adminBox.style.cssText = "display: flex; flex-direction: row; width: 90vw !important; max-width: 1200px !important; height: 85vh !important; background: var(--bg-color, #f8f9fa); border-radius: 12px; margin: auto; position: relative; overflow: hidden; padding: 0;";
+    // 1. UBAH JADI FULLSCREEN 100% LAYAR (Mentok Kiri-Kanan-Atas-Bawah)
+    adminBox.style.cssText = "display: flex; flex-direction: row; width: 100vw !important; max-width: 100vw !important; height: 100vh !important; max-height: 100vh !important; background: var(--bg-color, #f4f7f6); border-radius: 0; margin: 0; position: fixed; top: 0; left: 0; overflow: hidden; padding: 0; z-index: 999999;";
 
-    // 3. Setup Wrapper Sidebar Kiri (Jika belum dibuat)
+    // 2. SETUP SIDEBAR KIRI (Full Height)
     if (!document.getElementById('sidebarAdminKiri')) {
         const sidebar = document.createElement('div');
         sidebar.id = 'sidebarAdminKiri';
-        // Desain Sidebar Kiri
-        sidebar.style.cssText = "width: 260px; min-width: 260px; padding: 20px; border-right: 2px solid #ddd; background: #fff; display: flex; flex-direction: column; overflow-y: auto; z-index: 10;";
         
-        // Taruh sidebar di urutan paling atas di dalam adminBox
+        // Lebarin dikit jadi 300px, padding dirapihin, height 100vh
+        sidebar.style.cssText = "width: 300px; min-width: 300px; height: 100vh; padding: 25px; border-right: 1px solid #ddd; background: #fff; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10; box-sizing: border-box;";
+        
         adminBox.insertBefore(sidebar, adminBox.firstChild);
         
-        // Pindahkan elemen asli Header (index 1) & Menu Navigasi (index 2) ke dalam Sidebar
+        // Pindahkan Header & Menu Navigasi ke dalam Sidebar
         const headerAsli = adminBox.children[1];
         const menuAsli = adminBox.children[2];
-        if (headerAsli) sidebar.appendChild(headerAsli);
-        if (menuAsli) sidebar.appendChild(menuAsli);
+        
+        if (headerAsli) {
+            headerAsli.style.width = "100%";
+            headerAsli.style.marginBottom = "20px";
+            sidebar.appendChild(headerAsli);
+        }
+        if (menuAsli) {
+            menuAsli.style.width = "100%";
+            // Rapiin tombol: dibikin display flex column biar jarak antar tombolnya seragam
+            menuAsli.style.display = "flex";
+            menuAsli.style.flexDirection = "column";
+            menuAsli.style.gap = "12px"; 
+            sidebar.appendChild(menuAsli);
+        }
     }
 
-    // 4. Matikan semua tab di awal, biar area Kanan kosong
+    // 3. Matikan tab fitur biar area kanan kosong pas awal buka
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.style.setProperty('display', 'none', 'important');
-        }
+        if (el) el.style.setProperty('display', 'none', 'important');
     });
 
-    // 5. Bikin "Layar Sambutan" di area Kanan pas pertama dibuka
+    // 4. SETUP AREA KANAN (Placeholder Layar Kosong)
     let placeholder = document.getElementById('adminPlaceholderKanan');
     if (!placeholder) {
         placeholder = document.createElement('div');
         placeholder.id = 'adminPlaceholderKanan';
-        // Desain Area Kanan (Layar Kosong)
-        placeholder.style.cssText = "flex-grow: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #f4f7f6; color: #aaa;";
+        // Ambil sisa layar (flex: 1) dan full height (100vh)
+        placeholder.style.cssText = "flex: 1; height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #f8f9fa; color: #aaa;";
         placeholder.innerHTML = `
-            <i class="fas fa-hand-point-left" style="font-size: 4rem; margin-bottom: 20px; color: #ccc;"></i>
-            <h2 style="margin:0; color:#888;">Panel Admin Siap</h2>
-            <p>Silahkan klik menu di sebelah kiri untuk memuat fitur.</p>
+            <i class="fas fa-desktop" style="font-size: 5rem; margin-bottom: 25px; color: #ddd;"></i>
+            <h2 style="margin:0; color:#555; font-size: 1.8rem;">Dashboard Admin CBT</h2>
+            <p style="font-size: 1.1rem; margin-top: 10px;">Pilih menu di sidebar sebelah kiri untuk memuat fitur.</p>
         `;
         adminBox.appendChild(placeholder);
     }
     placeholder.style.display = 'flex';
 };
 window.switchAdminTab = (tabName) => {
-    // 1. Tentukan target ID
     let targetId = "";
     if (tabName === 'tambah') targetId = 'tabTambah';
     else if (tabName === 'edit') targetId = 'tabEdit';
@@ -2201,29 +2215,29 @@ window.switchAdminTab = (tabName) => {
     const targetEl = document.getElementById(targetId);
     if (!targetEl) return;
 
-    // 2. Hilangkan Layar Sambutan (Placeholder)
+    // Hilangkan Layar Sambutan (Placeholder)
     const placeholder = document.getElementById('adminPlaceholderKanan');
     if (placeholder) placeholder.style.display = 'none';
 
-    // 3. Sembunyikan semua tab fitur yang lagi terbuka di area kanan
+    // Sembunyikan semua tab fitur yang lagi terbuka
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.setProperty('display', 'none', 'important');
     });
 
-    // 4. TAMPILKAN TAB YANG DIPILIH DI AREA KANAN
+    // TAMPILKAN TAB TARGET DI SISA LAYAR KANAN FULLSCREEN
     targetEl.style.setProperty('display', 'block', 'important');
     targetEl.style.cssText += `
-        flex-grow: 1; 
-        padding: 30px; 
+        flex: 1; 
+        height: 100vh; 
+        padding: 40px; 
         overflow-y: auto; 
         background: #fff; 
-        height: 100%;
         box-sizing: border-box;
     `;
 
-    // 5. INJEKSI FORM TAMBAH MANUAL (Bawaan kodingan lama lo)
+    // INJEKSI FORM TAMBAH MANUAL (Bawaan kodingan lo)
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2234,8 +2248,6 @@ window.switchAdminTab = (tabName) => {
             <button onclick="window.setTambahMode('manual')" id="btnModeManual" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:#ddd;">Mode Manual (Satu Soal)</button>
         `;
         areaTambah.insertBefore(switcher, areaTambah.firstChild);
-        
-        // (Form manual tetep jalan pakai fungsi setTambahMode bawaan lo)
     }
 
     if (tabName === 'tambah' && typeof window.setTambahMode === 'function') {
@@ -2243,7 +2255,7 @@ window.switchAdminTab = (tabName) => {
         if(!isSuper) window.setTambahMode('manual');
     }
 
-    // 6. Auto-load Data Saat Tab Dibuka
+    // Auto-load Data
     if (tabName === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tabName === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
