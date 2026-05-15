@@ -2055,6 +2055,27 @@ setTimeout(() => {
 window.openAdminPanel = () => {
     // 1. Munculkan overlay admin
     document.getElementById('adminOverlay').style.display = 'flex';
+    // --- Bikin Tombol Kembali (Injeksi) ---
+    const adminBox = document.querySelector('#adminOverlay .modal-content');
+    if (adminBox && !document.getElementById('btnKembaliMenuAdmin')) {
+        // Bungkus tombol Navigasi dan Status ke dalam grup biar gampang disembunyiin
+        const navDiv = document.querySelector('#adminOverlay button[onclick*="tambah"]').parentNode;
+        navDiv.id = 'adminNavButtons';
+        const statusDiv = document.querySelector('#adminOverlay').querySelectorAll('div')[1]; // asumsi teks status
+        statusDiv.classList.add('admin-status-bar');
+
+        const btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliMenuAdmin';
+        btnBack.className = 'btn-back-menu';
+        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> Kembali ke Menu Admin';
+        btnBack.onclick = () => window.resetAdminMenu();
+        
+        // Taruh di bawah judul "Panel Admin CBT"
+        adminBox.insertBefore(btnBack, adminBox.children[1]); 
+    }
+    
+    // Pastikan pas baru buka, tampilannya adalah "Menu"
+    window.resetAdminMenu();
 
     // 2. Cek apakah user saat ini adalah Editor (Bukan Super Admin)
     const isSuper = ADMIN_EMAILS.includes(currentUser.email);
@@ -2110,11 +2131,81 @@ window.openAdminPanel = () => {
         }, 100); 
     }
 };
+// ==========================================================
+// FUNGSI BALIK KE MENU ADMIN (TOMBOL MUNCUL SEMUA)
+// ==========================================================
+window.resetAdminMenu = () => {
+    // 1. Sembunyikan Tombol Kembali
+    const btnBack = document.getElementById('btnKembaliSakti');
+    if(btnBack) btnBack.style.display = 'none';
+
+    // 2. Munculkan SEMUA elemen Navigasi di atas (kecuali tab konten)
+    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    if (modalContent) {
+        Array.from(modalContent.children).forEach(el => {
+            const id = el.id || '';
+            // Kalau bukan tab dan bukan tombol kembali, TAMPILKAN!
+            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'SPAN') {
+                el.style.display = ''; // Balikin ke normal (flex/block)
+            }
+        });
+    }
+
+    // 3. Sembunyikan semua isi tab
+    const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
+    tabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+};
+
+// ==========================================================
+// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (ANTI CACHE)
+// ==========================================================
 window.switchAdminTab = (tab) => {
-    document.getElementById('tabTambah').style.display = (tab === 'tambah' ? 'block' : 'none');
-    document.getElementById('tabEdit').style.display = (tab === 'edit' ? 'block' : 'none');
-    document.getElementById('tabReview').style.display = (tab === 'review' ? 'block' : 'none');
-    // --- TAMBAHAN FORM MANUAL ---
+    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    
+    // 1. Paksa Lebarin Layar via JS (Biar lega ngetik soalnya)
+    if (modalContent) {
+        modalContent.style.width = '95%';
+        modalContent.style.maxWidth = '1200px';
+    }
+
+    // 2. Sembunyikan SEMUA elemen Navigasi (Biar layar bersih)
+    if (modalContent) {
+        Array.from(modalContent.children).forEach(el => {
+            const id = el.id || '';
+            // Sembunyikan semuanya kecuali Judul (H2), Close (SPAN), dan Tab Konten
+            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'H3' && el.tagName !== 'SPAN') {
+                el.style.display = 'none';
+            }
+        });
+    }
+
+    // 3. Bikin Tombol Kembali Sakti (Kalau belum ada)
+    let btnBack = document.getElementById('btnKembaliSakti');
+    if (!btnBack) {
+        btnBack = document.createElement('button');
+        btnBack.id = 'btnKembaliSakti';
+        btnBack.innerHTML = '⬅️ KEMBALI KE MENU ADMIN';
+        btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; width: 100%; text-align: left; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+        btnBack.onclick = () => window.resetAdminMenu();
+        
+        // Taruh tepat di bawah judul
+        if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
+    }
+    btnBack.style.display = 'block';
+
+    // 4. Munculkan hanya tab yang dipilih
+    const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
+    tabs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.style.display = (id.toLowerCase().includes(tab)) ? 'block' : 'none';
+        }
+    });
+
+    // 5. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2126,55 +2217,42 @@ window.switchAdminTab = (tab) => {
         `;
         areaTambah.insertBefore(switcher, areaTambah.firstChild);
 
-        // Bikin Container Form Manual (Default Sembunyi)
+        // Bikin Container Form Manual
         const formManual = document.createElement('div');
         formManual.id = 'formTambahManual';
         formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
         formManual.innerHTML = `
-    <div style="margin-bottom:15px; padding:10px; background:#fff3e0; border-radius:6px; border:1px solid #ffe0b2;">
-        <label style="font-weight:bold; color:#e67e22;">Pilih Target Modul:</label>
-        <select id="manModulSelect" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px;">
-            <option value="modul1">Modul 1: Kekuasaan Kehakiman</option>
-            <option value="modul2">Modul 2: Mahkamah Agung</option>
-            <option value="modul3">Modul 3: Peradilan Agama</option>
-            <option value="modul19.3">Modul 19.3: Psikotes Hafalan</option>
-            <option value="modul_papi">Modul: PAPI Kostick</option>
-            <!-- Tambahin lagi daftar modul lo di sini bro -->
-        </select>
-    </div>
-    <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
-        <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
-    </div>
-    <label>Kunci Jawaban:</label>
-    <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
-        <option value="0">Opsi A</option><option value="1">Opsi B</option>
-        <option value="2">Opsi C</option><option value="3">Opsi D</option>
-    </select>
-    <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-    <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
-    <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
-`;
+            <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
+                <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
+                <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
+                <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
+            </div>
+            <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
+                <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
+            </div>
+            <label>Kunci Jawaban:</label>
+            <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
+                <option value="0">Opsi A</option><option value="1">Opsi B</option>
+                <option value="2">Opsi C</option><option value="3">Opsi D</option>
+            </select>
+            <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+            <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
+            <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
+        `;
         areaTambah.appendChild(formManual);
     }
-    // --- AKHIR TAMBAHAN FORM MANUAL ---
-    
-    // Tab Laporan
-    const tabLaporan = document.getElementById('tabLaporan');
-    if (tabLaporan) {
-        tabLaporan.style.display = (tab === 'laporan' ? 'block' : 'none');
+
+    // 6. Khusus asisten, aktifin form manual
+    if (tab === 'tambah' && typeof window.setTambahMode === 'function') {
+        const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+        if(!isSuper) window.setTambahMode('manual');
     }
-    
-    // --- INI YANG KETINGGALAN: Tab Status (Radar) ---
-    const tabStatus = document.getElementById('tabStatus');
-    if (tabStatus) {
-        tabStatus.style.display = (tab === 'status' ? 'block' : 'none');
-    }
-    
-    // Auto-load data pas tabnya diklik
+
+    // 7. Auto-load data 
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
@@ -3092,7 +3170,11 @@ window.loadStatusAdmin = async () => {
         });
 
         // --- 2. TARIK DATA STATUS ONLINE ---
-        const qStatus = query(collection(window.db, "user_status"), orderBy("lastActive", "desc"));
+        const qStatus = query(
+            collection(window.db, "user_status"), 
+            orderBy("lastActive", "desc"), 
+            limit(10)
+        );
         const snap = await getDocs(qStatus);
         
         container.innerHTML = "";
@@ -3220,22 +3302,51 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-// Fungsi ganti tampilan antara JSON dan Manual
+// =======================================================
+// FUNGSI LOGIKA TAB TAMBAH (MANUAL VS JSON)
+// =======================================================
 window.setTambahMode = (mode) => {
     const isManual = mode === 'manual';
-    document.getElementById('formTambahManual').style.display = isManual ? 'block' : 'none';
-    document.getElementById('jsonUploadArea').style.display = isManual ? 'none' : 'block';
-    document.querySelector('button[onclick="window.eksekusiUpload()"]').style.display = isManual ? 'none' : 'block';
-    
-    document.getElementById('btnModeManual').style.background = isManual ? 'var(--primary)' : '#ddd';
-    document.getElementById('btnModeManual').style.color = isManual ? 'white' : '#333';
-    document.getElementById('btnModeJson').style.background = isManual ? '#ddd' : 'var(--primary)';
-    document.getElementById('btnModeJson').style.color = isManual ? '#333' : 'white';
+
+    // 1. Tampilkan/Sembunyikan Form Manual
+    const formManual = document.getElementById('formTambahManual');
+    if (formManual) formManual.style.display = isManual ? 'block' : 'none';
+
+    // 2. Sembunyikan Kotak JSON & Labelnya
+    const jsonArea = document.getElementById('jsonUploadArea');
+    if (jsonArea) {
+        jsonArea.style.display = isManual ? 'none' : 'block';
+        if (jsonArea.previousElementSibling) jsonArea.previousElementSibling.style.display = isManual ? 'none' : 'block';
+    }
+
+    // 3. Sembunyikan Target Modul Bawaan & Labelnya
+    const targetInput = document.getElementById('adminModulTarget');
+    if (targetInput) {
+        targetInput.style.display = isManual ? 'none' : 'block';
+        if (targetInput.previousElementSibling) targetInput.previousElementSibling.style.display = isManual ? 'none' : 'block';
+    }
+
+    // 4. Sembunyikan Tombol "Upload ke Firebase" yang asli
+    const btnUpload = document.querySelector('button[onclick*="eksekusiUpload"]');
+    if (btnUpload) btnUpload.style.display = isManual ? 'none' : 'block';
+
+    // 5. Ubah Warna Tombol Switch (Pakai warna Ijo Langsung)
+    const btnManual = document.getElementById('btnModeManual');
+    const btnJson = document.getElementById('btnModeJson');
+    if (btnManual && btnJson) {
+        btnManual.style.background = isManual ? '#27ae60' : '#ddd'; // Ijo keren
+        btnManual.style.color = isManual ? 'white' : '#333';
+        btnJson.style.background = isManual ? '#ddd' : '#27ae60'; 
+        btnJson.style.color = isManual ? '#333' : 'white';
+    }
 };
 
 window.simpanSoalManual = async () => {
-    // Ambil ID Modul dari Dropdown
-    const modulId = document.getElementById('manModulSelect').value;
+    // Ambil input dari ID yang baru (dan paksa huruf kecil + hapus spasi biar ga error)
+    const modulIdRaw = document.getElementById('manModulInput').value;
+    const modulId = modulIdRaw.trim().toLowerCase().replace(/\s+/g, '');
+    
+    if (!modulId) return alert("Ketikin dulu nama Modulnya bro!");
     
     const q = document.getElementById('manQ').value.trim();
     const optA = document.getElementById('manOptA').value.trim();
@@ -3248,26 +3359,26 @@ window.simpanSoalManual = async () => {
 
     if (!q || !optA || !optB) return alert("Pertanyaan dan minimal 2 opsi pertama wajib diisi!");
 
-    PROTAMA.loading("Sedang memasukkan soal ke modul " + modulId);
+    PROTAMA.loading("Sedang memasukkan soal ke " + modulId + "...");
     try {
         await addDoc(collection(db, "bank_soal", modulId, "daftar_soal"), {
             q: q,
             options: [optA, optB, optC, optD],
             answer: ans,
             explanation: exp || "-",
-            cite: cite || "Modul Hakim",
+            cite: cite || "-",
             createdAt: new Date()
         });
         PROTAMA.close();
-        PROTAMA.alert("MANTAP!", "Soal berhasil nambah di " + modulId.toUpperCase(), "success");
+        PROTAMA.alert("MANTAP!", "Soal berhasil masuk ke " + modulId, "success");
         
-        // Reset kolom isian (kecuali pilihan modul biar mereka bisa input soal lain di modul yg sama)
+        // Reset form isian aja, kolom modul tetep utuh biar ga capek ngetik ulang
         ['manQ', 'manOptA', 'manOptB', 'manOptC', 'manOptD', 'manExp', 'manCite'].forEach(id => {
             document.getElementById(id).value = "";
         });
     } catch (e) {
         PROTAMA.close();
-        alert("Waduh, gagal simpan ke Firebase: " + e.message);
+        alert("Gagal simpan ke Firebase: " + e.message);
     }
 };
 /* ========================================================================= */
@@ -3371,8 +3482,8 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     Berikan jawaban dengan format tebal pada kesimpulannya (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat dan profesional.`;
 
     try {
-        // Tembak ke API Gemini (URL sudah diperbaiki pakai gemini-pro)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
+        // Tembak ke API Gemini pakai model 1.5 Flash
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
@@ -3395,5 +3506,49 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     } finally {
         btn.innerHTML = `<i class="fas fa-check"></i> Selesai Dicek`;
         btn.disabled = false;
+    }
+};
+
+// ==========================================
+// SCRIPT MIGRASI HEMAT READ FIREBASE
+// ==========================================
+window.migrasiModulBiarHemat = async function(modulId) {
+    if (!window.db) return console.error("Database belum siap, bro!");
+    
+    console.log(`🚀 Mulai narik semua soal dari ${modulId} (Format Lama)...`);
+    
+    try {
+        // 1. Tarik semua soal dari format lama (Sub-collection)
+        const qRef = collection(window.db, "bank_soal", modulId, "daftar_soal");
+        const snapshot = await getDocs(qRef);
+        
+        if (snapshot.empty) {
+            return console.log(`❌ Zonk! Modul ${modulId} kosong atau nggak ketemu.`);
+        }
+
+        let arraySoal = [];
+        snapshot.forEach(docSnap => {
+            let d = docSnap.data();
+            // Opsional: Buang createdAt biar data lebih enteng
+            delete d.createdAt; 
+            arraySoal.push(d);
+        });
+
+        console.log(`✅ Berhasil narik ${arraySoal.length} soal. Sekarang nyimpen ke format Array...`);
+
+        // 2. Simpan ke koleksi baru "bank_soal_v2"
+        const docBaruRef = doc(window.db, "bank_soal_v2", modulId);
+        await setDoc(docBaruRef, {
+            title: modulId.toUpperCase(),
+            total_soal: arraySoal.length,
+            daftar_soal_array: arraySoal,
+            migratedAt: new Date()
+        });
+
+        console.log(`🎉 MANTAP! Modul ${modulId} sukses dimigrasi ke format baru.`);
+        console.log(`Cek di Firestore lo: bank_soal_v2 -> ${modulId} -> daftar_soal_array`);
+        
+    } catch (e) {
+        console.error("Gagal migrasi:", e);
     }
 };
