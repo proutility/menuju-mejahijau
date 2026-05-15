@@ -2137,78 +2137,73 @@ window.openAdminPanel = () => {
     }
 };
 // ==========================================================
-// FUNGSI BALIK KE MENU ADMIN (HANYA MENU YANG TAMPIL)
+// FUNGSI BALIK KE MENU ADMIN (KEMBALI KOTAK 800px)
 // ==========================================================
 window.resetAdminMenu = () => {
     // 1. Sembunyikan Tombol Kembali Floating
     const btnBack = document.getElementById('btnKembaliSakti');
     if(btnBack) btnBack.style.display = 'none';
 
-    const modalContent = document.querySelector('#adminOverlay .modal-content');
-    if (modalContent) {
-        // 2. Munculkan semuanya dulu (untuk nampilin menu navigasi)
-        Array.from(modalContent.children).forEach(el => {
+    // PENTING: Ganti selector ke .result-box sesuai HTML lo
+    const adminBox = document.querySelector('#adminOverlay .result-box');
+    
+    if (adminBox) {
+        // 2. Balikin ukuran kotak Admin ke aslinya (800px)
+        adminBox.style.width = '800px';
+        adminBox.style.height = '';
+        adminBox.style.maxWidth = '';
+        adminBox.style.maxHeight = '90vh';
+        adminBox.style.borderRadius = '12px'; // Balikin melengkung
+        adminBox.style.padding = '';
+
+        // 3. Munculkan semua elemen (Header, Status, Menu Navigasi)
+        Array.from(adminBox.children).forEach(el => {
             el.style.display = ''; 
         });
 
-        // 3. TAPI, PAKSA SEMBUNYI untuk semua area Tab Konten
+        // 4. PAKSA SEMBUNYI untuk semua isi Tab Konten
         const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
         tabs.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
-                el.style.display = 'none'; // Wajib disembunyikan saat di menu utama
-                
-                // Bersihkan efek full screen dari riwayat sebelumnya
-                el.style.position = '';
-                el.style.top = '';
-                el.style.left = '';
-                el.style.width = '';
+                el.style.display = 'none';
                 el.style.height = '';
-                el.style.background = '';
-                el.style.zIndex = '';
-                el.style.padding = '';
-                el.style.overflowY = '';
             }
         });
     }
 };
 
 // ==========================================================
-// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (PINDAH HALAMAN)
+// FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (LAYAR PENUH 100%)
 // ==========================================================
 window.switchAdminTab = (tab) => {
-    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    // PENTING: Ganti selector ke .result-box sesuai HTML lo
+    const adminBox = document.querySelector('#adminOverlay .result-box');
     
-    if (modalContent) {
-        // 1. SEMBUNYIKAN SEMUA ELEMEN (Termasuk Menu Navigasi)
-        // Biar layarnya bener-bener bersih sebelum tab dibuka
-        Array.from(modalContent.children).forEach(el => {
+    if (adminBox) {
+        // 1. SEMBUNYIKAN SEMUA ELEMEN (Termasuk Menu Navigasi & Judul)
+        Array.from(adminBox.children).forEach(el => {
             el.style.display = 'none';
         });
 
-        // 2. Tampilkan HANYA Tab yang dipilih dan Jadikan Full Screen
+        // 2. JURUS SAKTI: Bikin wadah Admin melar 100% nutupin layar
+        adminBox.style.width = '100vw';
+        adminBox.style.height = '100vh';
+        adminBox.style.maxWidth = '100vw';
+        adminBox.style.maxHeight = '100vh';
+        adminBox.style.borderRadius = '0'; // Sudut lancip biar nempel layar
+        adminBox.style.padding = '40px'; 
+        
+        // 3. Tampilkan HANYA Tab yang dipilih
         const tabs = ['tambah', 'edit', 'review', 'laporan', 'status'];
         tabs.forEach(key => {
-            // Konversi nama parameter ke ID HTML (cth: 'edit' -> 'tabEdit')
             const idTab = 'tab' + key.charAt(0).toUpperCase() + key.slice(1); 
             const el = document.getElementById(idTab);
             
             if (el) {
                 if (tab.includes(key)) {
                     el.style.display = 'block'; 
-                    
-                    // JURUS SAKTI: BIKIN FULL SCREEN MENUTUPI LAYAR 100%
-                    el.style.position = 'fixed';
-                    el.style.top = '0';
-                    el.style.left = '0';
-                    el.style.width = '100vw';
-                    el.style.height = '100vh';
-                    // Background otomatis nyesuaiin tema Dark Mode / Light Mode
-                    el.style.background = document.body.classList.contains('dark-mode') ? '#1e1e1e' : '#f4f7f6';
-                    el.style.zIndex = '999999'; // Pastikan layernya paling atas
-                    el.style.padding = '40px 20px 100px 20px'; // Jarak bawah digedein buat ruang tombol kembali
-                    el.style.overflowY = 'auto'; // Biar konten panjang tetep bisa di-scroll
-                    el.style.boxSizing = 'border-box';
+                    el.style.height = '100%'; // Isi penuh layar
                 } else {
                     el.style.display = 'none';
                 }
@@ -2216,23 +2211,21 @@ window.switchAdminTab = (tab) => {
         });
     }
 
-    // 3. Munculkan Tombol Kembali di Pojok Kanan Bawah
+    // 4. Munculkan Tombol Kembali di Pojok Kanan Bawah
     let btnBack = document.getElementById('btnKembaliSakti');
     if (!btnBack) {
         btnBack = document.createElement('button');
         btnBack.id = 'btnKembaliSakti';
         btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> KEMBALI KELUAR';
-        // Desain tombol melayang (Floating Action Button)
         btnBack.style.cssText = "position: fixed; bottom: 30px; right: 30px; background: #c0392b; color: #fff; padding: 15px 30px; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 1.1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 1000000; transition: transform 0.2s;";
         btnBack.onmouseover = () => btnBack.style.transform = 'scale(1.05)';
         btnBack.onmouseout = () => btnBack.style.transform = 'scale(1)';
         btnBack.onclick = () => window.resetAdminMenu();
-        // Tempel langsung ke body biar bener-bener lepas dari belenggu modal
         document.body.appendChild(btnBack); 
     }
     btnBack.style.display = 'block';
 
-    // 4. --- PEMBUATAN FORM MANUAL ---
+    // 5. --- PEMBUATAN FORM MANUAL (Tetap ada di sini) ---
     const areaTambah = document.getElementById('tabTambah');
     if (areaTambah && !document.getElementById('switchTambahMode')) {
         const switcher = document.createElement('div');
@@ -2251,7 +2244,6 @@ window.switchAdminTab = (tab) => {
             <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
                 <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
                 <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
-                <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
             </div>
             <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -2267,7 +2259,7 @@ window.switchAdminTab = (tab) => {
             </select>
             <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
             <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
-            <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
+            <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">🚀 SIMPAN SOAL</button>
         `;
         areaTambah.appendChild(formManual);
     }
@@ -2277,7 +2269,7 @@ window.switchAdminTab = (tab) => {
         if(!isSuper) window.setTambahMode('manual');
     }
 
-    // Eksekusi auto-load saat buka tab
+    // Auto-load data 
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
