@@ -2136,32 +2136,32 @@ window.openAdminPanel = () => {
         }, 100); 
     }
 };
-// ==========================================================
-// FUNGSI BALIK KE MENU ADMIN (CLEAN MENU)
-// ==========================================================
 window.resetAdminMenu = () => {
-    // 1. Hapus tombol kembali floating
+    // 1. Hapus tombol kembali melayang kalau ada
     const btnBack = document.getElementById('btnKembaliSakti');
     if (btnBack) btnBack.remove();
 
-    const adminBox = document.querySelector('#adminOverlay .result-box');
+    // 2. Ambil wadah utama Admin Panel
+    const adminBox = document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
+    
     if (adminBox) {
-        // 2. Balikin ukuran kotak Admin ke pop-up standar dengan menimpa semua style
-        adminBox.style.cssText = "width: 800px; max-width: 95%; max-height: 90vh; background: var(--bg-color, #fff); border-radius: 12px; padding: 20px; margin: auto; position: relative; overflow-y: auto;";
+        // --- KUNCI UTAMA (UBAH WIDTH JADI KECIL) ---
+        // Kita paksa lebarnya cuma 380px biar layar sebelahnya hilang, dan kasih overflow-x: hidden
+        adminBox.style.cssText = "width: 380px !important; max-width: 95%; max-height: 90vh; background: var(--bg-color, #fff); border-radius: 12px; padding: 25px; margin: auto; position: relative; overflow-y: auto; overflow-x: hidden;";
 
-        // 3. NYALAKAN HANYA Header & Menu Navigasi
+        // 3. Tampilkan Header & Grid Tombol Navigasi
         if (adminBox.children[0]) adminBox.children[0].style.display = 'flex';
         if (adminBox.children[1]) adminBox.children[1].style.display = 'block';
 
-        // 4. MATIKAN SEMUA FITUR SECARA PAKSA (Ini yang ngilangin error berjejer di samping!)
+        // 4. MATIKAN SEMUA TAB FITUR SECARA PAKSA
+        // Pastikan ID ini sesuai dengan yang ada di HTML lo
         const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
         tabs.forEach(id => {
             const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
+            if (el) el.style.setProperty('display', 'none', 'important'); // Paksa hidden
         });
     }
 };
-
 // ==========================================================
 // FUNGSI SWITCH TAB (FULLSCREEN TAKEOVER)
 // ==========================================================
