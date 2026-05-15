@@ -3170,7 +3170,11 @@ window.loadStatusAdmin = async () => {
         });
 
         // --- 2. TARIK DATA STATUS ONLINE ---
-        const qStatus = query(collection(window.db, "user_status"), orderBy("lastActive", "desc"));
+        const qStatus = query(
+            collection(window.db, "user_status"), 
+            orderBy("lastActive", "desc"), 
+            limit(10)
+        );
         const snap = await getDocs(qStatus);
         
         container.innerHTML = "";
@@ -3479,7 +3483,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
 
     try {
         // Tembak ke API Gemini (URL sudah diperbaiki pakai gemini-pro)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, ...
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
