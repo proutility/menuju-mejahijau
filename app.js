@@ -3508,3 +3508,47 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         btn.disabled = false;
     }
 };
+
+// ==========================================
+// SCRIPT MIGRASI HEMAT READ FIREBASE
+// ==========================================
+window.migrasiModulBiarHemat = async function(modulId) {
+    if (!window.db) return console.error("Database belum siap, bro!");
+    
+    console.log(`🚀 Mulai narik semua soal dari ${modulId} (Format Lama)...`);
+    
+    try {
+        // 1. Tarik semua soal dari format lama (Sub-collection)
+        const qRef = collection(window.db, "bank_soal", modulId, "daftar_soal");
+        const snapshot = await getDocs(qRef);
+        
+        if (snapshot.empty) {
+            return console.log(`❌ Zonk! Modul ${modulId} kosong atau nggak ketemu.`);
+        }
+
+        let arraySoal = [];
+        snapshot.forEach(docSnap => {
+            let d = docSnap.data();
+            // Opsional: Buang createdAt biar data lebih enteng
+            delete d.createdAt; 
+            arraySoal.push(d);
+        });
+
+        console.log(`✅ Berhasil narik ${arraySoal.length} soal. Sekarang nyimpen ke format Array...`);
+
+        // 2. Simpan ke koleksi baru "bank_soal_v2"
+        const docBaruRef = doc(window.db, "bank_soal_v2", modulId);
+        await setDoc(docBaruRef, {
+            title: modulId.toUpperCase(),
+            total_soal: arraySoal.length,
+            daftar_soal_array: arraySoal,
+            migratedAt: new Date()
+        });
+
+        console.log(`🎉 MANTAP! Modul ${modulId} sukses dimigrasi ke format baru.`);
+        console.log(`Cek di Firestore lo: bank_soal_v2 -> ${modulId} -> daftar_soal_array`);
+        
+    } catch (e) {
+        console.error("Gagal migrasi:", e);
+    }
+};
