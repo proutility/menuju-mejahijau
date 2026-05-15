@@ -3557,3 +3557,20 @@ window.migrasiModulBiarHemat = async function(modulId) {
         console.error("Gagal migrasi:", e);
     }
 };
+window.publishKeV2 = async () => {
+    const modulId = document.getElementById('editModulTarget').value.trim();
+    if(!modulId) return alert("Pilih modul dulu yang mau di-sync!");
+
+    const yakin = await PROTAMA.confirm(
+        "SINKRONISASI DATA",
+        `Yakin mau memajang perubahan terbaru Modul ${modulId} ke peserta? Ini akan memperbarui data di Etalase V2.`
+    );
+
+    if(yakin) {
+        PROTAMA.loading("Sedang menyinkronkan data...");
+        // Panggil fungsi migrasi yang udah kita buat tadi
+        await window.migrasiModulBiarHemat(modulId);
+        PROTAMA.close();
+        PROTAMA.alert("BERHASIL!", `Modul ${modulId} sekarang sudah update di sisi peserta.`, "success");
+    }
+};
