@@ -692,14 +692,15 @@ window.switchDatabase = async function(key) {
             judulModul = docSnap.data().title;
         }
 
-        const qRef = collection(db, "bank_soal", key, "daftar_soal");
-        const qSnap = await getDocs(qRef);
-
-        if (qSnap.empty) {
-            alert("⚠️ Soal untuk modul ini belum di-upload ke server!");
+        // Narik 1 Dokumen aja (Hemat 99% Read!)
+        const docModulRef = doc(db, "bank_soal_v2", key);
+        const docModulSnap = await getDoc(docModulRef);
+        
+        if (!docModulSnap.exists() || !docModulSnap.data().daftar_soal_array) {
+            alert("⚠️ Soal untuk modul ini belum di-upload ke server (v2)!");
             if(qText) qText.innerText = "Belum ada soal.";
             return;
-        }
+}
 
         const dataLama = loadProgresLokal(key);
 
@@ -714,8 +715,12 @@ window.switchDatabase = async function(key) {
             timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
         } else {
             console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
-            let rawQuestions = []; 
-            qSnap.forEach((doc) => { let d = doc.data(); d.id = doc.id; rawQuestions.push(d); });
+            let rawQuestions = docModulSnap.data().daftar_soal_array;
+
+            // Kasih ID bayangan biar fitur Edit Soal Admin tetep jalan dan ga error
+            rawQuestions.forEach((q, idx) => { 
+                q.id = key + "_soal_" + idx; 
+            });
             shuffleArray(rawQuestions); 
             rawQuestions.forEach(q => {
                 if(q.options && q.answer < q.options.length) {
