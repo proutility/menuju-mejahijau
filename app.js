@@ -991,10 +991,26 @@ window.skipTrainingCountdown = function() {
     const badge = document.getElementById('trainingCountdownBadge');
     if (badge) badge.style.display = 'none';
 
-    if (currentIdx < currentQuestions.length - 1) {
-        window.changeQuestion(1);
+    if (currentAppMode === 'room') {
+        if (isHost) {
+            // Host yang ngasih komando pindah soal ke Firestore
+            if (currentIdx < currentQuestions.length - 1) {
+                updateDoc(doc(window.db, "rooms", currentRoomCode), {
+                    status: 'soal',
+                    currentIdx: currentIdx + 1
+                });
+            } else {
+                updateDoc(doc(window.db, "rooms", currentRoomCode), { status: 'selesai' });
+            }
+        }
+        // Peserta diem aja, nunggu Firestore ngubah layar mereka otomatis
     } else {
-        window.submitQuiz();
+        // Latihan Mandiri biasa
+        if (currentIdx < currentQuestions.length - 1) {
+            window.changeQuestion(1);
+        } else {
+            window.submitQuiz();
+        }
     }
 };
 
@@ -1102,11 +1118,30 @@ function loadQuestion(idx) {
             }
         } else {
            div.innerHTML = opt;
-            div.onclick = () => { 
-                if(!isSubmitted) { 
-                    if (currentAppMode === 'latihan' || currentAppMode === 'room') {
+            div.onclick = async () => { 
+                if(!isSubmitted && !isAnswerLocked) { 
+                    
+                    if (currentAppMode === 'room') {
+                        // 1. Kunci klik sementara biar ga spam
+                        isAnswerLocked = true; 
+                        div.style.background = "#fff9c4"; // Kasih efek loading kuning
+                        
+                        // 2. Tembak jawaban peserta ke Firestore
+                        await updateDoc(doc(window.db, "rooms", currentRoomCode), {
+                            [`players.${currentUser.uid}.jawabanSekarang`]: i
+                        });
+                        
+                        // 3. Kalo Host yang jawab, otomatis trigger Pembahasan buat SEISI ROOM
+                        if (isHost) {
+                            await updateDoc(doc(window.db, "rooms", currentRoomCode), { status: 'pembahasan' });
+                        } else {
+                            div.innerHTML += ' ⏳ Menunggu Host...';
+                        }
+                    } 
+                    else if (currentAppMode === 'latihan') {
                         triggerPembahasanLatihan(i); 
-                    } else {
+                    } 
+                    else {
                         userAnswers[idx] = i; 
                         raguStatus[idx] = false; 
                         loadQuestion(idx); 
@@ -2031,33 +2066,29 @@ window.bikinRoomLatihan = async () => {
     const modul = prompt("Masukkan ID Modul buat Latihan Bareng (misal: modul1):");
     if(!modul) return;
 
-    // Bikin 5 digit kode unik (contoh: 84921)
     const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
-    PROTAMA.loading("Membuat Room " + kodeRoom + "...");
+    PROTAMA.loading("Membangun Room...");
 
     try {
         await setDoc(doc(window.db, "rooms", kodeRoom), {
             hostUid: currentUser.uid,
             hostName: currentUser.displayName,
-            modulId: modul,
-            status: 'waiting', // status: 'waiting', 'soal', 'pembahasan', 'selesai'
+            modulId: modul.toLowerCase().replace(/\s+/g, ''),
+            status: 'waiting', 
             currentIdx: 0,
             players: {
-                [currentUser.uid]: {
-                    nama: currentUser.displayName,
-                    skor: 0,
-                    jawabanSekarang: null
-                }
+                [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
             },
             createdAt: new Date()
         });
 
-        PROTAMA.close();
         isHost = true;
         currentRoomCode = kodeRoom;
+        currentAppMode = 'room'; // Set state jadi mode room
         
-        alert(`✅ Room Dibuat!\nKODE ROOM LU: ${kodeRoom}\n\n(Tunggu temen lu join sebelum klik mulai)`);
-        window.pantauRoom(kodeRoom); // Mulai pantau perubahan database
+        PROTAMA.close();
+        window.tampilkanWaitingRoom(kodeRoom, isHost); // Alihkan layar ke Waiting Room
+        window.pantauRoom(kodeRoom);
 
     } catch(e) {
         PROTAMA.close();
@@ -2073,35 +2104,29 @@ window.gabungRoomLatihan = async () => {
     if(!kodeRoom) return;
 
     PROTAMA.loading("Mencari Room...");
-    
     try {
         const roomRef = doc(window.db, "rooms", kodeRoom);
         const roomSnap = await getDoc(roomRef);
 
         if (!roomSnap.exists()) {
             PROTAMA.close();
-            return PROTAMA.alert("Gagal", "Room tidak ditemukan atau sudah ditutup.", "error");
+            return PROTAMA.alert("Gagal", "Room tidak ditemukan!", "error");
         }
-
         if (roomSnap.data().status !== 'waiting') {
             PROTAMA.close();
             return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai!", "warning");
         }
 
-        // Masukin data user ke map 'players' di Firestore
         await updateDoc(roomRef, {
-            [`players.${currentUser.uid}`]: {
-                nama: currentUser.displayName,
-                skor: 0,
-                jawabanSekarang: null
-            }
+            [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
         });
 
-        PROTAMA.close();
         isHost = false;
         currentRoomCode = kodeRoom;
+        currentAppMode = 'room';
         
-        alert("✅ Berhasil Gabung! Tunggu Host memulai ujian.");
+        PROTAMA.close();
+        window.tampilkanWaitingRoom(kodeRoom, isHost); // Alihkan layar ke Waiting Room
         window.pantauRoom(kodeRoom);
 
     } catch(e) {
@@ -2111,15 +2136,60 @@ window.gabungRoomLatihan = async () => {
 };
 
 // ==========================================================
-// 3. MESIN SINKRONISASI REAL-TIME (KUNCI MULTIPLAYER)
+// 2.5. UI WAITING ROOM & TOMBOL MULAI
+// ==========================================================
+window.tampilkanWaitingRoom = function(kode, isHost) {
+    // Sembunyikan elemen lobby & aktifkan area ujian
+    document.getElementById('lobbySidebarContent').style.display = 'none';
+    document.getElementById('examSidebarContent').style.display = 'flex';
+    document.querySelector('.question-header').style.visibility = 'hidden';
+    document.querySelector('.footer-nav').style.visibility = 'hidden';
+    
+    const qText = document.getElementById('questionText');
+    qText.style.display = 'block';
+    document.getElementById('optionsContainer').innerHTML = '';
+    document.getElementById('feedbackBox').style.display = 'none';
+    
+    // Bikin tombol beda buat Host dan Peserta
+    let btnMulai = isHost ? 
+        `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:20px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI LATIHAN BARENG</button>` : 
+        `<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:15px; border-radius:8px; margin-top:20px; color:#e67e22; font-weight:bold; font-size:1.1rem;"><i class="fas fa-spinner fa-spin"></i> Menunggu Host Memulai Ujian...</div>`;
+
+    qText.innerHTML = `
+        <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:500px; margin:0 auto; border-top:8px solid var(--primary);">
+            <i class="fas fa-users" style="font-size:4rem; color:var(--primary); margin-bottom:15px;"></i>
+            <h2 style="color:var(--primary); margin-bottom:5px;">WAITING ROOM</h2>
+            <p style="color:#666; font-size:1rem; margin-bottom:20px;">Berikan kode ini ke teman lu untuk bergabung:</p>
+            
+            <div style="background:#f1f8e9; border:2px dashed var(--success); padding:15px; border-radius:10px; font-size:3.5rem; font-weight:900; color:var(--success); letter-spacing:8px; margin-bottom:20px;">
+                ${kode}
+            </div>
+            
+            ${btnMulai}
+            
+            <br><br>
+            <button onclick="window.keluarDariRoom()" style="background:none; border:none; color:var(--danger); text-decoration:underline; cursor:pointer; font-weight:bold;"><i class="fas fa-sign-out-alt"></i> Keluar Room</button>
+        </div>
+    `;
+};
+
+// Eksekusi saat Host klik "Mulai Ujian"
+window.mulaiUjianRoom = async (kode) => {
+    if (!confirm("Pastikan semua temen lu udah join. Mulai sekarang?")) return;
+    try {
+        await updateDoc(doc(window.db, "rooms", kode), { status: 'soal', currentIdx: 0 });
+    } catch(e) {
+        alert("Gagal mulai: " + e.message);
+    }
+};
+
+// ==========================================================
+// 3. MESIN SINKRONISASI REAL-TIME
 // ==========================================================
 window.pantauRoom = (kodeRoom) => {
-    // Kalau udah ada pantauan sebelumnya, matiin dulu biar ga dobel
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-
     const roomRef = doc(window.db, "rooms", kodeRoom);
     
-    // Listener ini bakal jalan OTOMATIS setiap kali ada perubahan data di Firestore
     roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
             alert("Room telah dibubarkan oleh Host.");
@@ -2128,30 +2198,31 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         
-        // SINKRONISASI LAYAR BERDASARKAN STATUS DARI HOST
         if (data.status === 'soal') {
-            // Jika modul belum di-load di HP peserta, load dulu datanya
             if (window.currentDatabaseId !== data.modulId) {
-                await window.switchDatabase(data.modulId);
+                await window.switchDatabase(data.modulId); // Tarik data soal
             }
             
-            // Pindah ke nomor soal yang diperintahkan Host
-            if (currentIdx !== data.currentIdx) {
+            document.querySelector('.footer-nav').style.visibility = 'visible';
+            document.querySelector('.question-header').style.visibility = 'visible';
+            
+            // Pindah soal jika index berubah ATAU jika masih nyangkut di Waiting Room
+            if (currentIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 isAnswerLocked = false; 
                 window.loadQuestion(data.currentIdx);
             }
         } 
         else if (data.status === 'pembahasan') {
-            // Paksa semua layar nampilin pembahasan barengan
             if (!isAnswerLocked) {
-                const jawabanGue = data.players[currentUser.uid].jawabanSekarang;
-                triggerPembahasanLatihan(jawabanGue); // Panggil fungsi warna hijau/merah dari Tahap 2
+                // Tarik jawaban peserta dari Firestore dan tampilkan kunci
+                const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
+                triggerPembahasanLatihan(jawabanGue !== undefined ? jawabanGue : null); 
             }
         }
         else if (data.status === 'selesai') {
-            alert("Ujian Selesai! Mari lihat hasilnya.");
+            alert("Latihan Bareng Selesai! Mari lihat hasilnya.");
             window.submitQuiz();
-            window.keluarDariRoom();
+            window.keluarDariRoom(); 
         }
     });
 };
@@ -2160,6 +2231,7 @@ window.keluarDariRoom = () => {
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
     currentRoomCode = null;
     isHost = false;
+    currentAppMode = 'ujian'; // Balikin ke mode normal
     window.backToMenu();
 };
 
