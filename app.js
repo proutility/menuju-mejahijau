@@ -2276,7 +2276,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- B. MENJAWAB SOAL (TIMER 30s) ---
+       // --- B. MENJAWAB SOAL (TIMER 30s) ---
         else if (data.status === 'soal') {
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 PROTAMA.loading("Menyiapkan Ruang Ujian...");
@@ -2294,13 +2294,12 @@ window.pantauRoom = (kodeRoom) => {
             document.querySelector('.footer-nav').style.visibility = 'visible';
             document.querySelector('.question-header').style.visibility = 'visible';
             
-            // CEK APAKAH INI PINDAH SOAL BARU?
+            // Muat ulang soal jika indeks berubah atau masih di halaman Waiting Room
             if (currentIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
-                
                 isAnswerLocked = false; 
                 window.loadQuestion(data.currentIdx);
                 
-                // SEMBUNYIKAN TOMBOL MANUAL KHUSUS MODE ROOM
+                // Sembunyikan tombol manual khusus mode room
                 const prevBtn = document.getElementById('prevBtn');
                 const nextBtn = document.getElementById('nextBtn');
                 const raguWrap = document.querySelector('.ragu-wrapper');
@@ -2308,15 +2307,19 @@ window.pantauRoom = (kodeRoom) => {
                 if (nextBtn) nextBtn.style.display = 'none';
                 if (raguWrap) raguWrap.style.display = 'none';
                 
-                // NONAKTIFKAN KLIK DI SIDEBAR
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.6';
                 });
 
-                // RESET JAWABAN PESERTA DI FIREBASE
+                // Reset jawaban peserta di Firebase untuk soal ini
                 await updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null });
+            }
+
+            // --- PASTIKAN TIMER 30 DETIK SELALU JALAN DI TIAP PERUBAHAN SOAL ---
+            if (window.activeRoomIdx !== data.currentIdx) {
+                window.activeRoomIdx = data.currentIdx;
                 
-                // --- MULAI TIMER 30 DETIK (Hanya saat pindah soal) ---
                 if (roomSyncTimer) clearInterval(roomSyncTimer);
                 waktuSoalRoom = 30; 
                 
@@ -2333,15 +2336,14 @@ window.pantauRoom = (kodeRoom) => {
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // HOST JADI WASIT: KALO 30 DETIK ABIS, PAKSA KE PEMBAHASAN
+                    // Host jadi wasit: kalau 30 detik habis, paksa pindah ke pembahasan
                     if (waktuSoalRoom <= 0 && isHost) {
                         clearInterval(roomSyncTimer);
                         updateDoc(roomRef, { status: 'pembahasan' });
                     }
                 }, 1000);
             }
-        } 
-        
+        }
         // --- C. PEMBAHASAN BARENG (TIMER 10s) ---
         else if (data.status === 'pembahasan') {
             if (roomSyncTimer) clearInterval(roomSyncTimer); // Stop timer 30s
