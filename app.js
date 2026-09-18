@@ -2021,6 +2021,149 @@ window.closeStats = function() {
     if(wm) wm.style.display = 'block';
 };
 
+let currentRoomCode = null;
+let roomListenerUnsubscribe = null;
+let isHost = false;
+
+// ==========================================================
+// 1. HOST: BIKIN ROOM BARU
+// ==========================================================
+window.bikinRoomLatihan = async () => {
+    const modul = prompt("Masukkan ID Modul buat Latihan Bareng (misal: modul1):");
+    if(!modul) return;
+
+    // Bikin 5 digit kode unik (contoh: 84921)
+    const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
+    PROTAMA.loading("Membuat Room " + kodeRoom + "...");
+
+    try {
+        await setDoc(doc(window.db, "rooms", kodeRoom), {
+            hostUid: currentUser.uid,
+            hostName: currentUser.displayName,
+            modulId: modul,
+            status: 'waiting', // status: 'waiting', 'soal', 'pembahasan', 'selesai'
+            currentIdx: 0,
+            players: {
+                [currentUser.uid]: {
+                    nama: currentUser.displayName,
+                    skor: 0,
+                    jawabanSekarang: null
+                }
+            },
+            createdAt: new Date()
+        });
+
+        PROTAMA.close();
+        isHost = true;
+        currentRoomCode = kodeRoom;
+        
+        alert(`✅ Room Dibuat!\nKODE ROOM LU: ${kodeRoom}\n\n(Tunggu temen lu join sebelum klik mulai)`);
+        window.pantauRoom(kodeRoom); // Mulai pantau perubahan database
+
+    } catch(e) {
+        PROTAMA.close();
+        PROTAMA.alert("Error", "Gagal bikin room: " + e.message, "error");
+    }
+};
+
+// ==========================================================
+// 2. PESERTA: GABUNG KE ROOM
+// ==========================================================
+window.gabungRoomLatihan = async () => {
+    const kodeRoom = prompt("Masukkan 5 Digit Kode Room:");
+    if(!kodeRoom) return;
+
+    PROTAMA.loading("Mencari Room...");
+    
+    try {
+        const roomRef = doc(window.db, "rooms", kodeRoom);
+        const roomSnap = await getDoc(roomRef);
+
+        if (!roomSnap.exists()) {
+            PROTAMA.close();
+            return PROTAMA.alert("Gagal", "Room tidak ditemukan atau sudah ditutup.", "error");
+        }
+
+        if (roomSnap.data().status !== 'waiting') {
+            PROTAMA.close();
+            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai!", "warning");
+        }
+
+        // Masukin data user ke map 'players' di Firestore
+        await updateDoc(roomRef, {
+            [`players.${currentUser.uid}`]: {
+                nama: currentUser.displayName,
+                skor: 0,
+                jawabanSekarang: null
+            }
+        });
+
+        PROTAMA.close();
+        isHost = false;
+        currentRoomCode = kodeRoom;
+        
+        alert("✅ Berhasil Gabung! Tunggu Host memulai ujian.");
+        window.pantauRoom(kodeRoom);
+
+    } catch(e) {
+        PROTAMA.close();
+        alert("Gagal join: " + e.message);
+    }
+};
+
+// ==========================================================
+// 3. MESIN SINKRONISASI REAL-TIME (KUNCI MULTIPLAYER)
+// ==========================================================
+window.pantauRoom = (kodeRoom) => {
+    // Kalau udah ada pantauan sebelumnya, matiin dulu biar ga dobel
+    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
+
+    const roomRef = doc(window.db, "rooms", kodeRoom);
+    
+    // Listener ini bakal jalan OTOMATIS setiap kali ada perubahan data di Firestore
+    roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
+        if (!snap.exists()) {
+            alert("Room telah dibubarkan oleh Host.");
+            return window.keluarDariRoom();
+        }
+
+        const data = snap.data();
+        
+        // SINKRONISASI LAYAR BERDASARKAN STATUS DARI HOST
+        if (data.status === 'soal') {
+            // Jika modul belum di-load di HP peserta, load dulu datanya
+            if (window.currentDatabaseId !== data.modulId) {
+                await window.switchDatabase(data.modulId);
+            }
+            
+            // Pindah ke nomor soal yang diperintahkan Host
+            if (currentIdx !== data.currentIdx) {
+                isAnswerLocked = false; 
+                window.loadQuestion(data.currentIdx);
+            }
+        } 
+        else if (data.status === 'pembahasan') {
+            // Paksa semua layar nampilin pembahasan barengan
+            if (!isAnswerLocked) {
+                const jawabanGue = data.players[currentUser.uid].jawabanSekarang;
+                triggerPembahasanLatihan(jawabanGue); // Panggil fungsi warna hijau/merah dari Tahap 2
+            }
+        }
+        else if (data.status === 'selesai') {
+            alert("Ujian Selesai! Mari lihat hasilnya.");
+            window.submitQuiz();
+            window.keluarDariRoom();
+        }
+    });
+};
+
+window.keluarDariRoom = () => {
+    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
+    currentRoomCode = null;
+    isHost = false;
+    window.backToMenu();
+};
+
 window.tampilkanLobby = function() {
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
