@@ -706,31 +706,34 @@ window.switchDatabase = async function(key) {
             return;
         }
 
-        const dataLama = loadProgresLokal(key);
+      const dataLama = loadProgresLokal(key);
 
-        if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0) {
+        // ABAIKAN CACHE LOKAL KALO MODE ROOM BIAR SOAL SINKRON SEMUA
+        if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room') {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
-            // Pake data dari memori (Urutan Soal, Jawaban, Ragu-ragu)
             currentQuestions = dataLama.soalAcak;
             userAnswers = dataLama.jawaban;
             raguStatus = dataLama.ragu;
-            // Set waktu sisa dari memori (kalau ada)
-            totalExamTime = currentQuestions.length * 30; // Total waktu asli
+            totalExamTime = currentQuestions.length * 30; 
             timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
         } else {
             console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
             let rawQuestions = []; 
             qSnap.forEach((doc) => { let d = doc.data(); d.id = doc.id; rawQuestions.push(d); });
-            // JANGAN NGACAK KALO LAGI MODE ROOM BIAR SOALNYA SAMA SEMUA
+            
+            // JANGAN DIACAK KALO MODE ROOM!
             if (currentAppMode !== 'room') {
                 shuffleArray(rawQuestions); 
             }
+            
             rawQuestions.forEach(q => {
                 if(q.options && q.answer < q.options.length) {
                     let correctText = q.options[q.answer]; 
+                    
                     if (currentAppMode !== 'room') {
                         shuffleArray(q.options); // Jangan ngacak opsi juga
                     }
+                    
                     q.answer = q.options.indexOf(correctText); 
                 }
             });
@@ -780,11 +783,12 @@ window.switchDatabase = async function(key) {
         updateTimerDisplay();
         renderSidebarGrid();
         
+// --- LOGIKA KHUSUS DAYA INGAT (MODUL 19.3) ---
         if (key === 'modul19.3') {
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             showMemorizationPhase(); 
         } else {
-            // MATIKAN TIMER GLOBAL KALO MODE ROOM
+            // MATIKAN TIMER GLOBAL KALO LAGI MODE ROOM
             if (currentAppMode !== 'room') {
                 startTimer();
             }
@@ -851,11 +855,14 @@ window.timpaModul = async function(modulKey, dataBaruJson) {
 };
 
 function startTimer() {
+    // 🛑 PENANGKAL: Bersihin dulu timer lama biar gak jalan dobel/numpuk!
+    if (timerInterval) clearInterval(timerInterval);
+
     timerInterval = setInterval(() => {
-        if(timeRemaining > 0) { 
+        if (timeRemaining > 0) { 
             timeRemaining--; 
             updateTimerDisplay(); 
-            simpanProgresTotal(); // <--- TAMBAHIN INI BIAR NGE-SAVE TIAP DETIK
+            simpanProgresTotal(); // Nge-save progres tiap detik
         }
         else { 
             clearInterval(timerInterval); 
@@ -933,8 +940,6 @@ function triggerPembahasanLatihan(idxPilihan) {
     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
     opsiElements.forEach((el, i) => {
         el.style.pointerEvents = 'none'; 
-        
-        // Hapus teks "menunggu waktu habis" kalo ada
         el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu waktu habis...', '');
         
         if (i === q.answer) {
@@ -963,41 +968,37 @@ function triggerPembahasanLatihan(idxPilihan) {
         if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
     }
 
-    // Countdown 10 Detik Pembahasan
+    // Countdown 10 Detik Pembahasan (Tanpa Tombol)
     trainingCountdown = 10;
     let countdownBadge = document.getElementById('trainingCountdownBadge');
     if (!countdownBadge) {
         countdownBadge = document.createElement('div');
         countdownBadge.id = 'trainingCountdownBadge';
-        countdownBadge.style.cssText = "margin-top:15px; padding:8px 12px; background:#fff3cd; color:#856404; font-weight:bold; border-radius:6px; display:flex; justify-content:space-between; align-items:center;";
+        countdownBadge.style.cssText = "margin-top:15px; padding:8px 12px; background:#e3f2fd; color:#1565c0; font-weight:bold; border-radius:6px; display:flex; justify-content:center; align-items:center;";
         if (fb) fb.appendChild(countdownBadge);
     }
     countdownBadge.style.display = 'flex';
+    countdownBadge.innerHTML = `<span>⏳ Lanjut soal otomatis dalam: <b id="textDetikPembahasan">${trainingCountdown}</b> detik</span>`;
 
     if (trainingTimerInterval) clearInterval(trainingTimerInterval);
     
-    const updateCountdownText = () => {
-        countdownBadge.innerHTML = `
-            <span>⏳ Lanjut soal berikutnya dalam: <b>${trainingCountdown} detik</b></span>
-            ${isHost ? `<button onclick="window.skipTrainingCountdown()" style="background:#27ae60; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold;">Lewati ❯</button>` : ''}
-        `;
-    };
-
-    updateCountdownText();
-
     trainingTimerInterval = setInterval(() => {
         trainingCountdown--;
-        if (trainingCountdown > 0) {
-            updateCountdownText();
-        } else {
+        const txt = document.getElementById('textDetikPembahasan');
+        if (txt) txt.innerText = trainingCountdown;
+
+        // Kalo 10 Detik Abis, Eksekusi Auto Next!
+        if (trainingCountdown <= 0) {
             clearInterval(trainingTimerInterval);
-            if (isHost) window.skipTrainingCountdown(); // Cuma host yang berhak auto-next
+            if (isHost || currentAppMode !== 'room') {
+                window.skipTrainingCountdown(); 
+            }
         }
     }, 1000);
 }
 
-// Fungsi Pindah Soal
-window.skipTrainingCountdown = function() {
+// Fungsi Auto-Next Pindah Soal
+window.skipTrainingCountdown = async function() {
     if (trainingTimerInterval) clearInterval(trainingTimerInterval);
     isAnswerLocked = false;
     
@@ -1006,18 +1007,20 @@ window.skipTrainingCountdown = function() {
 
     if (currentAppMode === 'room') {
         if (isHost) {
-            // Host yang ngasih komando pindah soal ke Firestore
-            if (currentIdx < currentQuestions.length - 1) {
-                updateDoc(doc(window.db, "rooms", currentRoomCode), {
-                    status: 'soal',
-                    currentIdx: currentIdx + 1
-                });
-            } else {
-                updateDoc(doc(window.db, "rooms", currentRoomCode), { status: 'selesai' });
-            }
+            try {
+                // Host otomatis kasih komando pindah soal ke Firebase
+                if (currentIdx < currentQuestions.length - 1) {
+                    await updateDoc(doc(window.db, "rooms", currentRoomCode), {
+                        status: 'soal',
+                        currentIdx: currentIdx + 1
+                    });
+                } else {
+                    await updateDoc(doc(window.db, "rooms", currentRoomCode), { status: 'selesai' });
+                }
+            } catch(e) { console.error("Error auto-next: ", e); }
         }
     } else {
-        // Latihan Mandiri biasa
+        // Latihan Mandiri Biasa
         if (currentIdx < currentQuestions.length - 1) {
             window.changeQuestion(1);
         } else {
@@ -3845,16 +3848,17 @@ window.simpanSoalManual = async () => {
         alert("Gagal simpan ke Firebase: " + e.message);
     }
 };
-/* ========================================================================= */
-/* FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN & URUTAN SOAL)      */
-/* ========================================================================= */
+// =========================================================================
+// FUNGSI AUTO-SAVE PROGRES LOKAL (ANTI-HILANG JAWABAN & URUTAN SOAL)      
+// =========================================================================
 
 // 1. Simpan Seluruh Status Ujian (Jawaban, Ragu, Sisa Waktu, & Urutan Soal)
 function simpanProgresTotal() {
-    if (!window.currentDatabaseId || isSubmitted) return; 
+    // 🛑 PENGECUALIAN: Jangan auto-save ke lokal kalau lagi Mode Room!
+    if (!window.currentDatabaseId || isSubmitted || currentAppMode === 'room') return; 
+    
     let progres = JSON.parse(localStorage.getItem('protama_progres')) || {};
     
-    // Kita tambahin catatan waktu sekarang (Timestamp)
     progres[window.currentDatabaseId] = {
         jawaban: userAnswers,
         ragu: raguStatus,
