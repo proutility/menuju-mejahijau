@@ -2136,10 +2136,9 @@ window.gabungRoomLatihan = async () => {
 };
 
 // ==========================================================
-// 2.5. UI WAITING ROOM & TOMBOL MULAI
+// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED)
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost) {
-    // Sembunyikan elemen lobby & aktifkan area ujian
     document.getElementById('lobbySidebarContent').style.display = 'none';
     document.getElementById('examSidebarContent').style.display = 'flex';
     document.querySelector('.question-header').style.visibility = 'hidden';
@@ -2150,13 +2149,12 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
     document.getElementById('optionsContainer').innerHTML = '';
     document.getElementById('feedbackBox').style.display = 'none';
     
-    // Bikin tombol beda buat Host dan Peserta
     let btnMulai = isHost ? 
-        `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:20px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI LATIHAN BARENG</button>` : 
-        `<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:15px; border-radius:8px; margin-top:20px; color:#e67e22; font-weight:bold; font-size:1.1rem;"><i class="fas fa-spinner fa-spin"></i> Menunggu Host Memulai Ujian...</div>`;
+        `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI LATIHAN BARENG</button>` : 
+        `<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:15px; border-radius:8px; margin-top:10px; color:#e67e22; font-weight:bold; font-size:1.1rem;"><i class="fas fa-spinner fa-spin"></i> Menunggu Host Memulai Ujian...</div>`;
 
     qText.innerHTML = `
-        <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:500px; margin:0 auto; border-top:8px solid var(--primary);">
+        <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:600px; margin:0 auto; border-top:8px solid var(--primary);">
             <i class="fas fa-users" style="font-size:4rem; color:var(--primary); margin-bottom:15px;"></i>
             <h2 style="color:var(--primary); margin-bottom:5px;">WAITING ROOM</h2>
             <p style="color:#666; font-size:1rem; margin-bottom:20px;">Berikan kode ini ke teman lu untuk bergabung:</p>
@@ -2165,6 +2163,14 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
                 ${kode}
             </div>
             
+            <!-- LIST PESERTA YANG JOIN BARENG -->
+            <div style="text-align:left; background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #eee;">
+                <h4 style="margin-top:0; color:#555; border-bottom:2px solid #ddd; padding-bottom:5px;">Peserta Terhubung: <span id="countPeserta">1</span></h4>
+                <ul id="listPesertaRoom" style="list-style:none; padding:0; margin:0; max-height:150px; overflow-y:auto;">
+                    <li style="padding:10px 0; color:#888;"><i class="fas fa-circle-notch fa-spin"></i> Memuat peserta...</li>
+                </ul>
+            </div>
+
             ${btnMulai}
             
             <br><br>
@@ -2173,18 +2179,9 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
     `;
 };
 
-// Eksekusi saat Host klik "Mulai Ujian"
-window.mulaiUjianRoom = async (kode) => {
-    if (!confirm("Pastikan semua temen lu udah join. Mulai sekarang?")) return;
-    try {
-        await updateDoc(doc(window.db, "rooms", kode), { status: 'soal', currentIdx: 0 });
-    } catch(e) {
-        alert("Gagal mulai: " + e.message);
-    }
-};
 
 // ==========================================================
-// 3. MESIN SINKRONISASI REAL-TIME
+// 3. MESIN SINKRONISASI REAL-TIME (UPDATED)
 // ==========================================================
 window.pantauRoom = (kodeRoom) => {
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
@@ -2198,27 +2195,62 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         
-        if (data.status === 'soal') {
-            if (window.currentDatabaseId !== data.modulId) {
-                await window.switchDatabase(data.modulId); // Tarik data soal
+        // --- A. UPDATE LIST PESERTA DI WAITING ROOM ---
+        if (data.status === 'waiting') {
+            const listEl = document.getElementById('listPesertaRoom');
+            const countEl = document.getElementById('countPeserta');
+            
+            if (listEl && data.players) {
+                listEl.innerHTML = '';
+                let count = 0;
+                for (let uid in data.players) {
+                    count++;
+                    let p = data.players[uid];
+                    let icon = uid === data.hostUid ? '👑' : '👤'; // Kalo dia Host, ikonnya Mahkota
+                    listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333;">${icon} ${p.nama}</li>`;
+                }
+                if (countEl) countEl.innerText = count;
+            }
+        }
+        
+        // --- B. SINKRONISASI SOAL SAAT HOST MULAI ---
+        else if (data.status === 'soal') {
+            
+            // FIX NYANGKUT: Paksa load soal dari Firebase kalo array kosong
+            if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
+                PROTAMA.loading("Menyiapkan Ruang Ujian...");
+                await window.switchDatabase(data.modulId);
+                PROTAMA.close();
             }
             
+            // Ubah Indikator Mode di Pojok Kanan Atas
+            const modeInd = document.getElementById('modeIndicator');
+            if (modeInd) {
+                modeInd.innerText = "Mode: Room Multiplayer";
+                modeInd.style.background = "#e3f2fd";
+                modeInd.style.color = "#1565c0";
+                modeInd.style.border = "1px solid #bbdefb";
+            }
+
             document.querySelector('.footer-nav').style.visibility = 'visible';
             document.querySelector('.question-header').style.visibility = 'visible';
             
-            // Pindah soal jika index berubah ATAU jika masih nyangkut di Waiting Room
+            // Pindah soal jika index berubah ATAU jika layar masih nyangkut di HTML Waiting Room
             if (currentIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 isAnswerLocked = false; 
                 window.loadQuestion(data.currentIdx);
             }
         } 
+        
+        // --- C. SINKRONISASI PEMBAHASAN BARENG ---
         else if (data.status === 'pembahasan') {
             if (!isAnswerLocked) {
-                // Tarik jawaban peserta dari Firestore dan tampilkan kunci
                 const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
                 triggerPembahasanLatihan(jawabanGue !== undefined ? jawabanGue : null); 
             }
         }
+        
+        // --- D. UJIAN SELESAI ---
         else if (data.status === 'selesai') {
             alert("Latihan Bareng Selesai! Mari lihat hasilnya.");
             window.submitQuiz();
