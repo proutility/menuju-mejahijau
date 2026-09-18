@@ -2179,6 +2179,30 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
     `;
 };
 
+// ==========================================================
+// FUNGSI MULAI UJIAN (YANG TADI HILANG)
+// ==========================================================
+window.mulaiUjianRoom = async (kode) => {
+    // Pake PROTAMA.confirm biar popup modern dan gak diblokir browser
+    const yakin = await PROTAMA.confirm(
+        "MULAI LATIHAN?", 
+        "Pastikan semua peserta udah masuk room. Gas mulai sekarang?"
+    );
+    
+    if (!yakin) return;
+
+    PROTAMA.loading("Menyiapkan sinkronisasi soal...");
+    try {
+        await updateDoc(doc(window.db, "rooms", kode), { 
+            status: 'soal', 
+            currentIdx: 0 
+        });
+        PROTAMA.close();
+    } catch(e) {
+        PROTAMA.close();
+        PROTAMA.alert("Gagal Mulai", "Error: " + e.message, "error");
+    }
+};
 
 // ==========================================================
 // 3. MESIN SINKRONISASI REAL-TIME (UPDATED)
@@ -2206,7 +2230,7 @@ window.pantauRoom = (kodeRoom) => {
                 for (let uid in data.players) {
                     count++;
                     let p = data.players[uid];
-                    let icon = uid === data.hostUid ? '👑' : '👤'; // Kalo dia Host, ikonnya Mahkota
+                    let icon = uid === data.hostUid ? '👑' : '👤'; 
                     listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333;">${icon} ${p.nama}</li>`;
                 }
                 if (countEl) countEl.innerText = count;
@@ -2266,7 +2290,6 @@ window.keluarDariRoom = () => {
     currentAppMode = 'ujian'; // Balikin ke mode normal
     window.backToMenu();
 };
-
 window.tampilkanLobby = function() {
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
