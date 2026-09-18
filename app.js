@@ -585,6 +585,11 @@ let timeRemaining;
 let totalExamTime = 0;
 let isReviewMode = false;
 let wrongIndices = [];
+let currentAppMode = 'ujian'; // Pilihan: 'ujian', 'latihan', 'room'
+let trainingTimerInterval = null;
+let trainingCountdown = 10;
+let isAnswerLocked = false;
+let roomListenerUnsubscribe = null;
 
 window.currentDatabaseId = 'modul1';
 
@@ -908,6 +913,91 @@ function updateSidebarStatus() {
     });
 }
 
+// ==========================================================
+// FUNGSI EKSEKUSI PEMBAHASAN OTOMATIS (MODE LATIHAN)
+// ==========================================================
+function triggerPembahasanLatihan(idxPilihan) {
+    if (isAnswerLocked) return;
+    isAnswerLocked = true;
+
+    const q = currentQuestions[currentIdx];
+    userAnswers[currentIdx] = idxPilihan;
+    
+    // 1. Matikan event klik di semua opsi & beri warna Benar/Salah
+    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+    opsiElements.forEach((el, i) => {
+        el.style.pointerEvents = 'none'; 
+        
+        if (i === q.answer) {
+            el.classList.add('review-correct');
+            el.innerHTML += ' ✅ (Jawaban Benar)';
+        } else if (i === idxPilihan && idxPilihan !== q.answer) {
+            el.classList.add('review-wrong');
+            el.innerHTML += ' ❌';
+        }
+    });
+
+    // 2. Munculkan Kotak Pembahasan
+    const fb = document.getElementById('feedbackBox');
+    if (fb) {
+        fb.style.display = 'block';
+        fb.classList.add('show');
+        
+        const fText = document.getElementById('feedbackText');
+        if (fText) fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
+        
+        const fCite = document.getElementById('feedbackCite');
+        if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
+    }
+
+    // 3. Countdown 10 Detik & Tombol "Lewati"
+    trainingCountdown = 10;
+    
+    let countdownBadge = document.getElementById('trainingCountdownBadge');
+    if (!countdownBadge) {
+        countdownBadge = document.createElement('div');
+        countdownBadge.id = 'trainingCountdownBadge';
+        countdownBadge.style.cssText = "margin-top:15px; padding:8px 12px; background:#fff3cd; color:#856404; font-weight:bold; border-radius:6px; display:flex; justify-content:space-between; align-items:center;";
+        if (fb) fb.appendChild(countdownBadge);
+    }
+    countdownBadge.style.display = 'flex';
+
+    if (trainingTimerInterval) clearInterval(trainingTimerInterval);
+    
+    const updateCountdownText = () => {
+        countdownBadge.innerHTML = `
+            <span>⏳ Lanjut soal berikutnya dalam: <b>${trainingCountdown} detik</b></span>
+            <button onclick="window.skipTrainingCountdown()" style="background:#27ae60; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.8rem;">Lewati ❯</button>
+        `;
+    };
+
+    updateCountdownText();
+
+    trainingTimerInterval = setInterval(() => {
+        trainingCountdown--;
+        if (trainingCountdown > 0) {
+            updateCountdownText();
+        } else {
+            clearInterval(trainingTimerInterval);
+            window.skipTrainingCountdown();
+        }
+    }, 1000);
+}
+
+window.skipTrainingCountdown = function() {
+    if (trainingTimerInterval) clearInterval(trainingTimerInterval);
+    isAnswerLocked = false;
+    
+    const badge = document.getElementById('trainingCountdownBadge');
+    if (badge) badge.style.display = 'none';
+
+    if (currentIdx < currentQuestions.length - 1) {
+        window.changeQuestion(1);
+    } else {
+        window.submitQuiz();
+    }
+};
+
 function loadQuestion(idx) {
     window.speechSynthesis.cancel();
     const btnSpeakIcon = document.querySelector('#btnSpeak i');
@@ -1011,13 +1101,17 @@ function loadQuestion(idx) {
                 div.innerHTML = opt;
             }
         } else {
-            div.innerHTML = opt;
+           div.innerHTML = opt;
             div.onclick = () => { 
                 if(!isSubmitted) { 
-                    userAnswers[idx] = i; 
-                    raguStatus[idx] = false; 
-                    loadQuestion(idx); 
-                    simpanProgresTotal();
+                    if (currentAppMode === 'latihan' || currentAppMode === 'room') {
+                        triggerPembahasanLatihan(i); 
+                    } else {
+                        userAnswers[idx] = i; 
+                        raguStatus[idx] = false; 
+                        loadQuestion(idx); 
+                        simpanProgresTotal();
+                    }
                 } 
             };
             if(userAnswers[idx] === i) div.classList.add('selected');
@@ -2788,6 +2882,73 @@ window.downloadSoalJSON = async () => {
     }
 };
 
+// ==========================================================
+// DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL
+// ==========================================================
+window.downloadEvaluasiPesertaExcel = function() {
+    if (!currentQuestions || currentQuestions.length === 0) {
+        return alert("Data evaluasi tidak tersedia.");
+    }
+
+    const namaPeserta = currentUser ? currentUser.displayName : "Peserta";
+    const modul = (window.currentDatabaseId || "Latihan").toUpperCase();
+    
+    let tableHTML = `
+        <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8"></head>
+        <body>
+            <h3>LEMBAR HASIL EVALUASI UJIAN - PRO-TAMA</h3>
+            <p><b>Nama Peserta:</b> ${namaPeserta}<br>
+            <b>Modul:</b> ${modul}<br>
+            <b>Tanggal:</b> ${new Date().toLocaleString('id-ID')}</p>
+            <table border="1">
+                <thead>
+                    <tr style="background-color: #004d00; color: white;">
+                        <th>No</th>
+                        <th>Pertanyaan</th>
+                        <th>Jawaban Anda</th>
+                        <th>Kunci Jawaban</th>
+                        <th>Status</th>
+                        <th>Pembahasan</th>
+                        <th>Dasar Hukum</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    currentQuestions.forEach((q, i) => {
+        const ansUserIdx = userAnswers[i];
+        const ansKunciIdx = q.answer;
+        
+        const teksUser = (ansUserIdx !== null && ansUserIdx !== undefined && q.options) ? q.options[ansUserIdx] : "(Tidak Dijawab)";
+        const teksKunci = (q.options && q.options[ansKunciIdx]) ? q.options[ansKunciIdx] : "-";
+        
+        const isBenar = ansUserIdx === ansKunciIdx;
+        const status = isBenar ? "BENAR" : "SALAH";
+        const warnaRow = isBenar ? "#e8f5e9" : "#ffebee";
+
+        tableHTML += `
+            <tr style="background-color: ${warnaRow};">
+                <td style="text-align:center;">${i + 1}</td>
+                <td>${q.q || ""}</td>
+                <td>${teksUser}</td>
+                <td>${teksKunci}</td>
+                <td style="text-align:center; font-weight:bold; color:${isBenar ? 'green' : 'red'};">${status}</td>
+                <td>${q.explanation || "-"}</td>
+                <td>${q.cite || "-"}</td>
+            </tr>`;
+    });
+
+    tableHTML += `</tbody></table></body></html>`;
+
+    const blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Hasil_Evaluasi_${modul}_${namaPeserta.replace(/\s+/g, '_')}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
 // ==========================================
 // ANTI CHEAT & FUNGSI DETAIL (GABUNG DARI SCRIPT KEDUA)
 // ==========================================
