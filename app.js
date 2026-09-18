@@ -872,6 +872,7 @@ function startTimer() {
 }
 
 function updateTimerDisplay() {
+    if (currentAppMode === 'room') return;
     const m = Math.floor(timeRemaining / 60);
     const s = timeRemaining % 60;
     const textWaktu = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
@@ -1165,11 +1166,34 @@ function loadQuestion(idx) {
     });
 
     const chk = document.getElementById('checkRagu');
-    if(chk) {
-        chk.checked = raguStatus[idx] || false;
-        chk.disabled = isSubmitted;
-    }
-}
+        if(chk) {
+            chk.checked = raguStatus[idx] || false;
+            chk.disabled = isSubmitted;
+        }
+
+        // ==========================================================
+        // 🛑 KUNCI UI KHUSUS MODE ROOM (JANGAN DIHAPUS)
+        // ==========================================================
+        if (currentAppMode === 'room') {
+            const pBtn = document.getElementById('prevBtn');
+            const nBtn = document.getElementById('nextBtn');
+            const rWrap = document.querySelector('.ragu-wrapper');
+            
+            if(pBtn) pBtn.style.display = 'none';
+            if(nBtn) nBtn.style.display = 'none';
+            if(rWrap) rWrap.style.display = 'none';
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.6';
+            });
+        } else {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+        }
+} // <--- INI KURUNG KURAWAL YANG BARIS 1173 TADI
 
 // ==========================================
 // FUNGSI SUBMIT FINAL
@@ -2149,6 +2173,9 @@ window.gabungRoomLatihan = async () => {
 // 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED)
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost) {
+    if (typeof timerInterval !== 'undefined' && timerInterval) {
+        clearInterval(timerInterval);
+    }
     document.getElementById('lobbySidebarContent').style.display = 'none';
     document.getElementById('examSidebarContent').style.display = 'flex';
     document.querySelector('.question-header').style.visibility = 'hidden';
