@@ -2022,7 +2022,6 @@ window.closeStats = function() {
 };
 
 let currentRoomCode = null;
-let roomListenerUnsubscribe = null;
 let isHost = false;
 
 // ==========================================================
