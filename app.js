@@ -2342,27 +2342,44 @@ window.pantauRoom = (kodeRoom) => {
                 window.loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                // 🛑 EKSEKUSI TIMER MENGGUNAKAN VARIABEL BAWAAN APLIKASI LU!
+// ==========================================
+                // 🛑 TIMER ROOM 30 DETIK (LANGSUNG TEMBAK HTML)
+                // ==========================================
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
-                window.timeRemaining = 30; // Inject angka 30 langsung ke memori app lu
-                if (typeof updateTimerDisplay === 'function') updateTimerDisplay(); // Paksa layar update!
+                let sisaWaktuRoom = 30; 
+                
+                const setLayarTimer = (detik) => {
+                    let txt = "00:00:" + String(detik).padStart(2, '0');
+                    let t1 = document.getElementById('timerDisplay');
+                    let t2 = document.getElementById('floatingTimer');
+                    if (t1) t1.innerText = txt;
+                    if (t2) t2.innerText = txt;
+                };
+                
+                setLayarTimer(sisaWaktuRoom); // Tampilkan 00:00:30 pertama kali
                 
                 window.roomSyncTimer = setInterval(() => {
-                    window.timeRemaining--;
+                    sisaWaktuRoom--;
                     
-                    if (window.timeRemaining >= 0) {
-                        if (typeof updateTimerDisplay === 'function') updateTimerDisplay();
+                    if (sisaWaktuRoom >= 0) {
+                        setLayarTimer(sisaWaktuRoom);
                     }
                     
-                    // PAS WAKTU HABIS, TEMBAK KE PEMBAHASAN
-                    if (window.timeRemaining <= 0) {
+                    // PAS WAKTU HABIS, HOST YANG NEMBAK KE PEMBAHASAN
+                    if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        } else {
+                            let t1 = document.getElementById('timerDisplay');
+                            let t2 = document.getElementById('floatingTimer');
+                            if(t1) t1.innerText = "NUNGGU HOST...";
+                            if(t2) t2.innerText = "NUNGGU HOST...";
                         }
                     }
                 }, 1000);
+                // ==========================================
 
                 // Kunci Navigasi Default
                 const pBtn = document.getElementById('prevBtn');
