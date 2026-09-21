@@ -2266,17 +2266,16 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL FIX: NATIVE MODULE SCOPE + HOST NEXT)
+// MESIN SINKRONISASI REAL-TIME (FINAL: AUTO-SKIP + HOST NEXT)
 // ==========================================================
 window.roomSyncTimer = null; 
 
 window.pantauRoom = (kodeRoom) => {
-    // 🛑 PERBAIKAN FATAL: Langsung panggil variabel bawaan aplikasi lu, JANGAN pakai window.
     currentAppMode = 'room'; 
     if (timerInterval) clearInterval(timerInterval);
 
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    const roomRef = doc(db, "rooms", kodeRoom); // Panggil db langsung
+    const roomRef = doc(db, "rooms", kodeRoom); 
     
     roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
@@ -2331,22 +2330,20 @@ window.pantauRoom = (kodeRoom) => {
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
 
+            // 1. EKSEKUSI SAAT SOAL BARU MUNCUL
             if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
+                window.sedangAutoSkip = false; // Reset Gembok Auto-Skip
                 
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
                 const fbBox = document.getElementById('feedbackBox');
                 if (fbBox) { fbBox.style.display = 'none'; fbBox.classList.remove('show'); }
                 
-                // Render Soal. (Fungsi Opsi klik kuning dll otomatis diurus loadQuestion asli lu!)
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                // =======================================================
-                // 🛑 TIMER ROOM 30 DETIK (DOM DIRECT AMAN)
-                // =======================================================
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
                 let sisaWaktuRoom = 30; 
@@ -2364,13 +2361,13 @@ window.pantauRoom = (kodeRoom) => {
                     if (t2) { t2.innerText = txt; t2.className = colorClass; }
                 };
                 
-                setLayarTimer(sisaWaktuRoom); // Paksa layar berubah jadi 00:00:30
+                setLayarTimer(sisaWaktuRoom); 
                 
                 window.roomSyncTimer = setInterval(() => {
                     sisaWaktuRoom--;
                     if (sisaWaktuRoom >= 0) setLayarTimer(sisaWaktuRoom);
                     
-                    // PAS WAKTU HABIS, HOST NEMBAK KE PEMBAHASAN
+                    // JIKA WAKTU HABIS MURNI
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
@@ -2383,7 +2380,6 @@ window.pantauRoom = (kodeRoom) => {
                         }
                     }
                 }, 1000);
-                // =======================================================
 
                 const pBtn = document.getElementById('prevBtn');
                 const nBtn = document.getElementById('nextBtn');
@@ -2397,11 +2393,59 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // Reset jawaban peserta di database
+                // Reset jawaban peserta di DB
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e=>console.log(e));
                 }
             }
+
+            // 2. LOGIKA AUTO-SKIP (Berjalan tiap ada yang klik jawaban)
+            if (data.players) {
+                let totalPeserta = 0;
+                let yangSudahJawab = 0;
+                
+                for (let uid in data.players) {
+                    totalPeserta++;
+                    if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
+                        yangSudahJawab++;
+                    }
+                }
+
+                // Bonus: Update teks "Menjawab: X / Y" biar kerasa Live!
+                let txtProgress = document.getElementById('progressText');
+                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
+
+                // Jika SEMUA PESERTA sudah jawab, Host tembak langsung ke Pembahasan!
+                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
+                    if (!window.sedangAutoSkip) {
+                        window.sedangAutoSkip = true; // Kunci biar ga nembak berkali-kali
+                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); // Matikan timer segera
+
+                        // Kasih jeda 1 detik biar penjawab terakhir sempet ngeliat layar kuningnya
+                        setTimeout(() => {
+                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        }, 1000);
+                    }
+                }
+            }
+
+            // 3. EFEK KLIK OPSI
+            setTimeout(() => {
+                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                opsiElements.forEach((el, i) => {
+                    el.onclick = (e) => {
+                        e.preventDefault();
+                        if (isAnswerLocked) return;
+                        isAnswerLocked = true;
+                        
+                        el.style.background = "#fff9c4"; 
+                        el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                        
+                        userAnswers[currentIdx] = i;
+                        updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
+                    };
+                });
+            }, 300); 
         } 
         
         // --- C. PEMBAHASAN BARENG (TOMBOL NEXT KHUSUS HOST) ---
