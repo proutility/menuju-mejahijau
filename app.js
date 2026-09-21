@@ -108,7 +108,7 @@ if(auth) {
 
                 // --- SENSOR FITUR KHUSUS ASISTEN ADMIN ---
                 if (isEditor && !isSuperAdmin) {
-                    setTimeout(() => {
+                    setout(() => {
                         // 1. Sembunyikan Tombol Maintenance
                         const btnMaintenance = document.getElementById('btnToggleMaintenance');
                         if (btnMaintenance) btnMaintenance.style.display = 'none';
@@ -281,7 +281,7 @@ function lanjutKeAplikasi() {
     }
 
     // Sembunyikan elemen ujian saat di lobby
-    document.getElementById('floatingTimer').style.display = 'none';
+    document.getElementById('floatingr').style.display = 'none';
     document.getElementById('mobileFooter').style.display = 'none'; 
 
     // Load Data Statistik Lobby
@@ -2263,7 +2263,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: NATIVE TIMER + HOST NEXT)
+// MESIN SINKRONISASI REAL-TIME (FINAL: TIMER TEMBAK DOM + HOST NEXT)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2342,9 +2342,9 @@ window.pantauRoom = (kodeRoom) => {
                 window.loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-// ==========================================
-                // 🛑 TIMER ROOM 30 DETIK (LANGSUNG TEMBAK HTML)
-                // ==========================================
+                // =======================================================
+                // 🛑 TIMER ROOM 30 DETIK (LANGSUNG TEMBAK DOM TANPA UPDATE-TIMER)
+                // =======================================================
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
                 let sisaWaktuRoom = 30; 
@@ -2353,11 +2353,22 @@ window.pantauRoom = (kodeRoom) => {
                     let txt = "00:00:" + String(detik).padStart(2, '0');
                     let t1 = document.getElementById('timerDisplay');
                     let t2 = document.getElementById('floatingTimer');
-                    if (t1) t1.innerText = txt;
-                    if (t2) t2.innerText = txt;
+                    
+                    if (t1) {
+                        t1.innerText = txt;
+                        if(detik <= 10) t1.className = 'timer-container timer-panic';
+                        else if(detik <= 20) t1.className = 'timer-container timer-yellow';
+                        else t1.className = 'timer-container timer-green';
+                    }
+                    if (t2) {
+                        t2.innerText = txt;
+                        if(detik <= 10) t2.className = 'timer-panic';
+                        else if(detik <= 20) t2.className = 'timer-yellow';
+                        else t2.className = 'timer-green';
+                    }
                 };
                 
-                setLayarTimer(sisaWaktuRoom); // Tampilkan 00:00:30 pertama kali
+                setLayarTimer(sisaWaktuRoom); // Paksa layar berubah jadi 00:00:30
                 
                 window.roomSyncTimer = setInterval(() => {
                     sisaWaktuRoom--;
@@ -2366,7 +2377,7 @@ window.pantauRoom = (kodeRoom) => {
                         setLayarTimer(sisaWaktuRoom);
                     }
                     
-                    // PAS WAKTU HABIS, HOST YANG NEMBAK KE PEMBAHASAN
+                    // PAS WAKTU HABIS, HOST NEMBAK KE PEMBAHASAN
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
@@ -2379,7 +2390,7 @@ window.pantauRoom = (kodeRoom) => {
                         }
                     }
                 }, 1000);
-                // ==========================================
+                // =======================================================
 
                 // Kunci Navigasi Default
                 const pBtn = document.getElementById('prevBtn');
