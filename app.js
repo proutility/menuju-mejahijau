@@ -2259,7 +2259,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (SUPER ROBUST & ANTI-MACET)
+// MESIN SINKRONISASI REAL-TIME (FINAL FIX: ANTI NYANGKUT)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2274,6 +2274,8 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         const data = snap.data();
+        // Deteksi Host anti-refresh
+        const amIHost = (typeof currentUser !== 'undefined' && currentUser && data.hostUid === currentUser.uid);
         
         // --- A. WAITING ROOM ---
         if (data.status === 'waiting') {
@@ -2292,19 +2294,19 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-// --- B. MENJAWAB SOAL (30 DETIK) ---
+        // --- B. MENJAWAB SOAL (30 DETIK) ---
         else if (data.status === 'soal') {
-            window.activePembahasanIdx = -1; // Buka gembok pembahasan
+            window.activePembahasanIdx = -1; 
             
-            // 🛑 BUNUH PAKSA TIMER MANDIRI BIAR GA NIMPA JADI 00:00:00
             if (typeof timerInterval !== 'undefined' && timerInterval) {
                 clearInterval(timerInterval);
             }
             
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
-                PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                // Note: switchDatabase tetap pakai await karena butuh narik array soal dulu
-                window.switchDatabase(data.modulId).then(() => PROTAMA.close());
+                if(typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
+                window.switchDatabase(data.modulId).then(() => {
+                    if(typeof PROTAMA !== 'undefined') PROTAMA.close();
+                });
             }
             
             const modeInd = document.getElementById('modeIndicator');
@@ -2314,15 +2316,37 @@ window.pantauRoom = (kodeRoom) => {
                 modeInd.style.color = "#1565c0";
             }
 
-            document.querySelector('.footer-nav').style.visibility = 'visible';
-            document.querySelector('.question-header').style.visibility = 'visible';
+            const fNav = document.querySelector('.footer-nav');
+            const qHead = document.querySelector('.question-header');
+            if(fNav) fNav.style.visibility = 'visible';
+            if(qHead) qHead.style.visibility = 'visible';
             
             // JIKA INDEX SOAL BERUBAH ATAU BARU MULAI
             if (window.activeRoomIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 window.activeRoomIdx = data.currentIdx;
+                
+                // 🛑 1. BUKA KUNCI JAWABAN DULUAN (PALING PENTING!)
+                // Wajib di atas biar loadQuestion nggak nolak ngerender layar
                 isAnswerLocked = false; 
                 
-                // 1. Eksekusi Timer Detik Ini Juga
+                // 🛑 2. BERSIHKAN TOTAL LAYAR LAMA
+                const oldBadge = document.getElementById('roomBadgeKhusus');
+                if (oldBadge) oldBadge.remove();
+
+                const fbBox = document.getElementById('feedbackBox');
+                if (fbBox) {
+                    fbBox.style.display = 'none';
+                    fbBox.classList.remove('show');
+                }
+                
+                const optCont = document.getElementById('optionsContainer');
+                if (optCont) optCont.innerHTML = ''; // Hapus sisa opsi lama paksa biar bersih total
+
+                // 🛑 3. LOAD SOAL BARU
+                currentIdx = parseInt(data.currentIdx);
+                window.loadQuestion(currentIdx);
+                
+                // 4. JALANKAN TIMER
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 window.waktuSoalRoom = 30; 
                 
@@ -2339,29 +2363,15 @@ window.pantauRoom = (kodeRoom) => {
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // Host jadi komandan buat tembak ke Pembahasan
-                    if (window.waktuSoalRoom <= 0 && isHost) {
+                    if (window.waktuSoalRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
-                        updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        if (amIHost) {
+                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        }
                     }
                 }, 1000);
 
-                // 2. BERSIHKAN LAYAR SEBELUM RENDER SOAL BARU
-                const oldBadge = document.getElementById('roomBadgeKhusus');
-                if (oldBadge) oldBadge.remove();
-
-                const fbBox = document.getElementById('feedbackBox');
-                if (fbBox) {
-                    fbBox.style.display = 'none';
-                    fbBox.classList.remove('show');
-                }
-
-               // 🛑 BUKA KUNCI JAWABAN DULU, BARU LOAD SOAL
-                isAnswerLocked = false;
-                window.loadQuestion(data.currentIdx);
-                currentIdx = data.currentIdx;
-                
-                // 3. Kunci UI Navigasi Total
+                // 5. KUNCI UI NAVIGASI
                 const pBtn = document.getElementById('prevBtn');
                 const nBtn = document.getElementById('nextBtn');
                 const rWrap = document.querySelector('.ragu-wrapper');
@@ -2374,20 +2384,7 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // 🛑 BERSIHIN TOTAL SEMUA OPSI JAWABAN
-                const bersihinOpsi = document.querySelectorAll('#optionsContainer .option-label');
-                bersihinOpsi.forEach(el => {
-                    el.style.pointerEvents = 'auto'; // Buka gembok opsi
-                    el.style.background = ''; // Balikin warna default
-                    // Hapus semua teks sisa
-                    el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '')
-                                               .replace(' ⏳ Menunggu waktu habis...', '')
-                                               .replace(' ✅ (Jawaban Benar)', '')
-                                               .replace(' ❌', '');
-                    el.classList.remove('review-correct', 'review-wrong');
-                });
-
-                // 4. BAJAK TOMBOL OPSI (Jeda 200ms biar HTML soal baru beneran selesai dibuat)
+                // 6. BAJAK TOMBOL OPSI (Jeda 300ms biar HTML beneran siap dirender)
                 setTimeout(() => {
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
@@ -2399,32 +2396,30 @@ window.pantauRoom = (kodeRoom) => {
                             el.style.background = "#fff9c4"; 
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
-                            userAnswers[data.currentIdx] = i;
+                            userAnswers[currentIdx] = i;
                             updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i }).catch(e => console.log(e));
                         };
                     });
-                }, 200); 
+                }, 300); 
 
-                // 5. Reset jawaban peserta
+                // 7. RESET JAWABAN PESERTA DI DB LOKAL
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
             }
-        }
+        } 
         
         // --- C. PEMBAHASAN BARENG (10 DETIK) ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // PASTIKAN PROSES INI CUMA JALAN 1X PER SOAL (TAMENG ANTI-SPAM)
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
                 
-                const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
+                const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 const q = currentQuestions[data.currentIdx];
                 
-                // 1. RENDER UI PEMBAHASAN MURNI KHUSUS ROOM
                 isAnswerLocked = true;
                 
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
@@ -2432,12 +2427,13 @@ window.pantauRoom = (kodeRoom) => {
                     el.style.pointerEvents = 'none'; 
                     el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '');
                     
+                    // Cegah centang dobel pakai .includes()
                     if (i === q.answer) {
                         el.classList.add('review-correct');
-                        el.innerHTML += ' ✅ (Jawaban Benar)';
+                        if (!el.innerHTML.includes('✅')) el.innerHTML += ' ✅ (Jawaban Benar)';
                     } else if (jawabanGue !== undefined && jawabanGue !== null && i === jawabanGue) {
                         el.classList.add('review-wrong');
-                        el.innerHTML += ' ❌';
+                        if (!el.innerHTML.includes('❌')) el.innerHTML += ' ❌';
                     }
                 });
 
@@ -2457,7 +2453,6 @@ window.pantauRoom = (kodeRoom) => {
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                // 2. INJEKSI KOTAK DETIKAN 10s LANGSUNG KE BAWAH OPSI
                 let oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2471,7 +2466,6 @@ window.pantauRoom = (kodeRoom) => {
                     optContainer.parentNode.appendChild(badgeHtml);
                 }
 
-                // 3. JALANKAN TIMER 10 DETIK
                 window.waktuBahasRoom = 10;
                 
                 window.roomSyncTimer = setInterval(() => {
@@ -2482,7 +2476,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (window.waktuBahasRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         
-                        if (isHost) {
+                        if (amIHost) {
                             let nextIndex = parseInt(data.currentIdx) + 1; 
                             if (nextIndex < currentQuestions.length) {
                                 updateDoc(roomRef, { status: 'soal', currentIdx: nextIndex }).catch(e=>console.log(e));
@@ -2502,7 +2496,6 @@ window.pantauRoom = (kodeRoom) => {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // Buka kunci UI kembali
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
