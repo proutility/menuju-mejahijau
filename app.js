@@ -2259,7 +2259,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (SUPER ROBUST & ANTI-MACET)
+// MESIN SINKRONISASI REAL-TIME (FINAL: FIX LAYAR STUCK)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2291,18 +2291,18 @@ window.pantauRoom = (kodeRoom) => {
                 if (countEl) countEl.innerText = count;
             }
         }
+        
         // --- B. MENJAWAB SOAL (30 DETIK) ---
         else if (data.status === 'soal') {
-            window.activePembahasanIdx = -1; // Buka gembok pembahasan
+            window.activePembahasanIdx = -1; 
             
-            // 🛑 BUNUH PAKSA TIMER MANDIRI BIAR GA NIMPA JADI 00:00:00
+            // Bunuh timer latihan mandiri
             if (typeof timerInterval !== 'undefined' && timerInterval) {
                 clearInterval(timerInterval);
             }
             
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                // Note: switchDatabase tetap pakai await karena butuh narik array soal dulu
                 window.switchDatabase(data.modulId).then(() => PROTAMA.close());
             }
             
@@ -2316,12 +2316,26 @@ window.pantauRoom = (kodeRoom) => {
             document.querySelector('.footer-nav').style.visibility = 'visible';
             document.querySelector('.question-header').style.visibility = 'visible';
             
-            // JIKA INDEX SOAL BERUBAH ATAU BARU MULAI
+            // JIKA PINDAH SOAL BARU
             if (window.activeRoomIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 
-                // 1. Eksekusi Timer Detik Ini Juga (TANPA AWAIT)
+                // 1. Bersihkan Layar dari Pembahasan Lama
+                const oldBadge = document.getElementById('roomBadgeKhusus');
+                if (oldBadge) oldBadge.remove();
+
+                const fbBox = document.getElementById('feedbackBox');
+                if (fbBox) {
+                    fbBox.style.display = 'none';
+                    fbBox.classList.remove('show');
+                }
+
+                // 🛑 INI BIANG KEROKNYA KEMARIN: Jangan set currentIdx manual!
+                // Biarkan loadQuestion asli lu yang bekerja dan mengganti teks layarnya
+                window.loadQuestion(data.currentIdx);
+                
+                // 2. Eksekusi Timer 30 Detik
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 window.waktuSoalRoom = 30; 
                 
@@ -2338,72 +2352,70 @@ window.pantauRoom = (kodeRoom) => {
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // Host jadi komandan buat tembak ke Pembahasan
+                    // HOST PAKSA PINDAH KE PEMBAHASAN PAS 30 DETIK HABIS
                     if (window.waktuSoalRoom <= 0 && isHost) {
                         clearInterval(window.roomSyncTimer);
                         updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                     }
                 }, 1000);
 
-                // 2. BERSIHKAN LAYAR & RENDER SOAL BARU
-                const oldBadge = document.getElementById('roomBadgeKhusus');
-                if (oldBadge) oldBadge.remove();
+                // 3. BAJAK TOMBOL: Kunci Navigasi & Ubah Fungsi Klik Ala Kahoot
+                setTimeout(() => {
+                    const pBtn = document.getElementById('prevBtn');
+                    const nBtn = document.getElementById('nextBtn');
+                    const rWrap = document.querySelector('.ragu-wrapper');
+                    if (pBtn) pBtn.style.display = 'none';
+                    if (nBtn) nBtn.style.display = 'none';
+                    if (rWrap) rWrap.style.display = 'none';
+                    
+                    document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = '0.4';
+                    });
 
-                // PENTING: Tutup paksa kotak pembahasan lama biar soal baru muncul!
-                const fbBox = document.getElementById('feedbackBox');
-                if (fbBox) {
-                    fbBox.style.display = 'none';
-                    fbBox.classList.remove('show');
-                }
+                    // INI YANG BIKIN JADI KAHOOT (Cuma muncul kuning Nunggu, ga langsung bahas)
+                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                    opsiElements.forEach((el, i) => {
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            if (isAnswerLocked) return;
+                            isAnswerLocked = true;
+                            
+                            el.style.background = "#fff9c4"; // Warna kuning nunggu
+                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                            
+                            userAnswers[data.currentIdx] = i;
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i }).catch(err=>console.log(err));
+                        };
+                    });
+                }, 200); // Kasih jeda 200ms biar loadQuestion selesai nge-render opsi baru
 
-                // Buka kunci opsi jawaban sebelum load soal baru
-                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
-                opsiElements.forEach(el => el.style.pointerEvents = 'auto');
-
-                // Sinkronkan currentIdx global agar update UI berjalan benar
-                currentIdx = data.currentIdx;
-                
-                window.loadQuestion(data.currentIdx);
-                
-                // 3. Kunci UI Navigasi Total
-                const pBtn = document.getElementById('prevBtn');
-                const nBtn = document.getElementById('nextBtn');
-                const rWrap = document.querySelector('.ragu-wrapper');
-                if (pBtn) pBtn.style.display = 'none';
-                if (nBtn) nBtn.style.display = 'none';
-                if (rWrap) rWrap.style.display = 'none';
-                
-                document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                    btn.style.pointerEvents = 'none';
-                    btn.style.opacity = '0.4';
-                });
-
-                // 4. Reset jawaban peserta
+                // 4. Reset jawaban peserta di DB
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
             }
-        }
+        } 
         
         // --- C. PEMBAHASAN BARENG (10 DETIK) ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // PASTIKAN PROSES INI CUMA JALAN 1X PER SOAL (TAMENG ANTI-SPAM)
+            // JALAN 1X SAJA PER SOAL
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
                 
                 const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
                 const q = currentQuestions[data.currentIdx];
                 
-                // 1. RENDER UI PEMBAHASAN MURNI KHUSUS ROOM
+                // 1. RENDER WARNA BENAR/SALAH BARENGAN
                 isAnswerLocked = true;
                 
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
                     el.style.pointerEvents = 'none'; 
-                    el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu waktu habis...', '');
+                    el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '');
                     
                     if (i === q.answer) {
                         el.classList.add('review-correct');
@@ -2414,6 +2426,7 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 });
 
+                // 2. BUKA KOTAK PEMBAHASAN
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
                     fb.style.display = 'block';
@@ -2430,7 +2443,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                // 2. INJEKSI KOTAK DETIKAN 10s LANGSUNG KE BAWAH OPSI
+                // 3. INJEKSI KOTAK DETIKAN 10 DETIK DI BAWAH OPSI
                 let oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2444,7 +2457,7 @@ window.pantauRoom = (kodeRoom) => {
                     optContainer.parentNode.appendChild(badgeHtml);
                 }
 
-                // 3. JALANKAN TIMER 10 DETIK
+                // 4. JALANKAN TIMER 10 DETIK PINDAH SOAL
                 window.waktuBahasRoom = 10;
                 
                 window.roomSyncTimer = setInterval(() => {
@@ -2475,7 +2488,6 @@ window.pantauRoom = (kodeRoom) => {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // Buka kunci UI kembali
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
