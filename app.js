@@ -88,7 +88,7 @@ const legalTerms = [
 if(auth) {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-             = user;
+            currentUser = user;
             const gateOverlay = document.getElementById('gatekeeperOverlay');
 
             // A. PANGGIL MAINTENACE (Supaya User Terpantau)
