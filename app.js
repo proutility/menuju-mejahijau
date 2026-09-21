@@ -967,45 +967,41 @@ function triggerPembahasanLatihan(idxPilihan) {
         
         const fCite = document.getElementById('feedbackCite');
         if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
-    }
 
-    // BIKIN BADGE COUNTDOWN YANG ANTI-NYANGKUT
-    let countdownBadge = document.getElementById('trainingCountdownBadge');
-    if (!countdownBadge) {
-        countdownBadge = document.createElement('div');
-        countdownBadge.id = 'trainingCountdownBadge';
-        countdownBadge.style.cssText = "margin-top:20px; padding:15px; background:#e3f2fd; color:#1565c0; font-weight:bold; border-radius:8px; text-align:center; font-size:1.1rem; border:2px dashed #90caf9;";
+        // BIKIN BADGE COUNTDOWN DI DALAM KOTAK PEMBAHASAN BIAR PASTI MUNCUL
+        let countdownBadge = document.getElementById('trainingCountdownBadge');
+        if (!countdownBadge) {
+            countdownBadge = document.createElement('div');
+            countdownBadge.id = 'trainingCountdownBadge';
+            countdownBadge.style.cssText = "margin-top:20px; padding:12px; background:#e3f2fd; color:#1565c0; font-weight:bold; border-radius:8px; text-align:center; font-size:1.1rem; border:2px dashed #90caf9;";
+            fb.appendChild(countdownBadge);
+        }
+        countdownBadge.style.display = 'block';
+
+        if (trainingTimerInterval) clearInterval(trainingTimerInterval);
         
-        // Sisipkan tepat di bawah kotak pembahasan
-        if (fb && fb.parentNode) {
-            fb.parentNode.insertBefore(countdownBadge, fb.nextSibling);
-        }
-    }
-    countdownBadge.style.display = 'block';
+        trainingCountdown = 10;
+        
+        const renderBadge = () => {
+            countdownBadge.innerHTML = `⏳ Lanjut otomatis dalam: <b style="font-size:1.3rem;">${trainingCountdown}</b> detik`;
+        };
+        renderBadge();
 
-    if (trainingTimerInterval) clearInterval(trainingTimerInterval);
-    
-    trainingCountdown = 10;
-    
-    const renderBadge = () => {
-        countdownBadge.innerHTML = `⏳ Lanjut otomatis dalam: <b style="font-size:1.3rem;">${trainingCountdown}</b> detik`;
-    };
-    renderBadge();
+        trainingTimerInterval = setInterval(() => {
+            trainingCountdown--;
+            if (trainingCountdown >= 0) renderBadge();
 
-    trainingTimerInterval = setInterval(() => {
-        trainingCountdown--;
-        if (trainingCountdown >= 0) renderBadge();
-
-        // JIKA 10 DETIK HABIS
-        if (trainingCountdown <= 0) {
-            clearInterval(trainingTimerInterval);
-            if (isHost || currentAppMode !== 'room') {
-                window.skipTrainingCountdown(); 
-            } else {
-                countdownBadge.innerHTML = `⏳ Menunggu Host memuat soal berikutnya...`;
+            // JIKA 10 DETIK HABIS
+            if (trainingCountdown <= 0) {
+                clearInterval(trainingTimerInterval);
+                if (isHost || currentAppMode !== 'room') {
+                    window.skipTrainingCountdown(); 
+                } else {
+                    countdownBadge.innerHTML = `⏳ Menunggu Host memuat soal berikutnya...`;
+                }
             }
-        }
-    }, 1000);
+        }, 1000);
+    }
 }
 
 // ==========================================================
@@ -2298,8 +2294,10 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-     // --- B. MENJAWAB SOAL (TIMER 30s) ---
+        // --- B. MENJAWAB SOAL (TIMER 30s) ---
         else if (data.status === 'soal') {
+            window.activePembahasanIdx = -1; // 🛑 RESET TAMENG PEMBAHASAN BIAR BISA JALAN LAGI
+            
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 PROTAMA.loading("Menyiapkan Ruang Ujian...");
                 await window.switchDatabase(data.modulId);
@@ -2316,34 +2314,30 @@ window.pantauRoom = (kodeRoom) => {
             document.querySelector('.footer-nav').style.visibility = 'visible';
             document.querySelector('.question-header').style.visibility = 'visible';
             
-            // Muat ulang soal jika indeks berubah atau masih di halaman Waiting Room
             if (currentIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 isAnswerLocked = false; 
                 
-                // 🛑 BERSIHKAN BADGE DETIKAN 10s SEBELUMNYA BIAR GA NYANGKUT
                 const badge = document.getElementById('trainingCountdownBadge');
                 if (badge) badge.style.display = 'none';
 
                 window.loadQuestion(data.currentIdx);
                 
-                // Sembunyikan tombol manual khusus mode room
-                const prevBtn = document.getElementById('prevBtn');
-                const nextBtn = document.getElementById('nextBtn');
-                const raguWrap = document.querySelector('.ragu-wrapper');
-                if (prevBtn) prevBtn.style.display = 'none';
-                if (nextBtn) nextBtn.style.display = 'none';
-                if (raguWrap) raguWrap.style.display = 'none';
+                // Sembunyikan tombol manual
+                const pBtn = document.getElementById('prevBtn');
+                const nBtn = document.getElementById('nextBtn');
+                const rWrap = document.querySelector('.ragu-wrapper');
+                if (pBtn) pBtn.style.display = 'none';
+                if (nBtn) nBtn.style.display = 'none';
+                if (rWrap) rWrap.style.display = 'none';
                 
                 document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.4';
                 });
 
-                // Reset jawaban peserta di Firebase untuk soal ini
                 await updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null });
             }
 
-            // --- PASTIKAN TIMER 30 DETIK SELALU JALAN DI TIAP PERUBAHAN SOAL ---
             if (window.activeRoomIdx !== data.currentIdx) {
                 window.activeRoomIdx = data.currentIdx;
                 
@@ -2363,46 +2357,45 @@ window.pantauRoom = (kodeRoom) => {
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // Host jadi wasit: kalau 30 detik habis, paksa pindah ke pembahasan
                     if (waktuSoalRoom <= 0 && isHost) {
                         clearInterval(roomSyncTimer);
                         updateDoc(roomRef, { status: 'pembahasan' });
                     }
                 }, 1000);
             }
-        }
+        } 
+        
         // --- C. PEMBAHASAN BARENG (TIMER 10s) ---
         else if (data.status === 'pembahasan') {
-            if (roomSyncTimer) clearInterval(roomSyncTimer); // Stop timer 30s
+            if (roomSyncTimer) clearInterval(roomSyncTimer); 
             
-            // Cek Firebase: Apakah user ini ngejawab? Kalau null, artinya waktu habis.
-            const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
-            triggerPembahasanLatihan(jawabanGue !== undefined ? jawabanGue : null); 
+            // 🛑 TAMENG ANTI-SPAM: CEGAH FIREBASE NGE-RESET TIMER 10 DETIK
+            if (window.activePembahasanIdx !== data.currentIdx) {
+                window.activePembahasanIdx = data.currentIdx;
+                
+                const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
+                triggerPembahasanLatihan(jawabanGue !== undefined ? jawabanGue : null); 
+            }
         }
         
-      // --- D. SELESAI ---
+        // --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (roomSyncTimer) clearInterval(roomSyncTimer);
             if (trainingTimerInterval) clearInterval(trainingTimerInterval);
             
-            // BALIKIN SEMUA FUNGSI TOMBOL (Unlock UI)
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
             });
             
-            // Matiin radar sinkronisasi room (karena ujian udah kelar)
             if (roomListenerUnsubscribe) roomListenerUnsubscribe();
             
             alert("Latihan Bareng Selesai! Mari lihat hasilnya.");
-            window.submitQuiz(); // Nampilin skor akhir
-            
-            // Tambahin Tombol Keluar Room secara dinamis di pop-up Hasil Ujian
+            window.submitQuiz(); 
             window.tampilkanTombolKeluarRoom();
         }
     });
 };
-
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
