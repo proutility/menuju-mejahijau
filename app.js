@@ -2291,7 +2291,6 @@ window.pantauRoom = (kodeRoom) => {
                 if (countEl) countEl.innerText = count;
             }
         }
-        
         // --- B. MENJAWAB SOAL (30 DETIK) ---
         else if (data.status === 'soal') {
             window.activePembahasanIdx = -1; // Buka gembok pembahasan
@@ -2346,10 +2345,24 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 }, 1000);
 
-                // 2. Render UI Soal
+                // 2. BERSIHKAN LAYAR & RENDER SOAL BARU
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
+                // PENTING: Tutup paksa kotak pembahasan lama biar soal baru muncul!
+                const fbBox = document.getElementById('feedbackBox');
+                if (fbBox) {
+                    fbBox.style.display = 'none';
+                    fbBox.classList.remove('show');
+                }
+
+                // Buka kunci opsi jawaban sebelum load soal baru
+                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                opsiElements.forEach(el => el.style.pointerEvents = 'auto');
+
+                // Sinkronkan currentIdx global agar update UI berjalan benar
+                currentIdx = data.currentIdx;
+                
                 window.loadQuestion(data.currentIdx);
                 
                 // 3. Kunci UI Navigasi Total
@@ -2365,12 +2378,12 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // 4. Reset jawaban peserta (Pake .catch biar jalan di background tanpa blocking)
+                // 4. Reset jawaban peserta
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
             }
-        } 
+        }
         
         // --- C. PEMBAHASAN BARENG (10 DETIK) ---
         else if (data.status === 'pembahasan') {
