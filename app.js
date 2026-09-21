@@ -2259,15 +2259,15 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (VERSI FINAL - INDEPENDEN)
+// MESIN SINKRONISASI REAL-TIME (SUPER ROBUST & ANTI-MACET)
 // ==========================================================
-let roomSyncTimer = null;
+window.roomSyncTimer = null; 
 
 window.pantauRoom = (kodeRoom) => {
-    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    if (window.roomListenerUnsubscribe) window.roomListenerUnsubscribe();
     const roomRef = doc(window.db, "rooms", kodeRoom);
     
-    roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
+    window.roomListenerUnsubscribe = onSnapshot(roomRef, (snap) => {
         if (!snap.exists()) {
             alert("Room telah dibubarkan oleh Host.");
             return window.keluarDariRoom();
@@ -2294,12 +2294,17 @@ window.pantauRoom = (kodeRoom) => {
         
         // --- B. MENJAWAB SOAL (30 DETIK) ---
         else if (data.status === 'soal') {
-            window.activePembahasanIdx = -1; // Reset tameng pembahasan
+            window.activePembahasanIdx = -1; // Buka gembok pembahasan
+            
+            // 🛑 BUNUH PAKSA TIMER MANDIRI BIAR GA NIMPA JADI 00:00:00
+            if (typeof timerInterval !== 'undefined' && timerInterval) {
+                clearInterval(timerInterval);
+            }
             
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                await window.switchDatabase(data.modulId);
-                PROTAMA.close();
+                // Note: switchDatabase tetap pakai await karena butuh narik array soal dulu
+                window.switchDatabase(data.modulId).then(() => PROTAMA.close());
             }
             
             const modeInd = document.getElementById('modeIndicator');
@@ -2317,14 +2322,37 @@ window.pantauRoom = (kodeRoom) => {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 
-                // Hapus kotak detik pembahasan sebelumnya (jika ada)
+                // 1. Eksekusi Timer Detik Ini Juga (TANPA AWAIT)
+                if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+                window.waktuSoalRoom = 30; 
+                
+                const t1 = document.getElementById('timerDisplay');
+                const t2 = document.getElementById('floatingTimer');
+                if(t1) t1.innerText = "00:00:30";
+                if(t2) t2.innerText = "00:00:30";
+                
+                window.roomSyncTimer = setInterval(() => {
+                    window.waktuSoalRoom--;
+                    if(window.waktuSoalRoom >= 0) {
+                        let textWaktu = "00:00:" + String(window.waktuSoalRoom).padStart(2, '0');
+                        if(t1) t1.innerText = textWaktu;
+                        if(t2) t2.innerText = textWaktu;
+                    }
+                    
+                    // Host jadi komandan buat tembak ke Pembahasan
+                    if (window.waktuSoalRoom <= 0 && isHost) {
+                        clearInterval(window.roomSyncTimer);
+                        updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                    }
+                }, 1000);
+
+                // 2. Render UI Soal
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
-                // Muat Soal
                 window.loadQuestion(data.currentIdx);
                 
-                // Kunci UI Navigasi
+                // 3. Kunci UI Navigasi Total
                 const pBtn = document.getElementById('prevBtn');
                 const nBtn = document.getElementById('nextBtn');
                 const rWrap = document.querySelector('.ragu-wrapper');
@@ -2337,40 +2365,17 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // Reset jawaban Firebase peserta
+                // 4. Reset jawaban peserta (Pake .catch biar jalan di background tanpa blocking)
                 if (data.players && data.players[currentUser.uid]) {
-                     await updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null });
+                     updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
-
-                // --- JALANKAN TIMER 30 DETIK ---
-                if (roomSyncTimer) clearInterval(roomSyncTimer);
-                let waktuSoalRoom = 30; 
-                
-                const t1 = document.getElementById('timerDisplay');
-                const t2 = document.getElementById('floatingTimer');
-                if(t1) t1.innerText = "00:00:30";
-                if(t2) t2.innerText = "00:00:30";
-                
-                roomSyncTimer = setInterval(() => {
-                    waktuSoalRoom--;
-                    if(waktuSoalRoom >= 0) {
-                        let textWaktu = "00:00:" + String(waktuSoalRoom).padStart(2, '0');
-                        if(t1) t1.innerText = textWaktu;
-                        if(t2) t2.innerText = textWaktu;
-                    }
-                    
-                    // Eksekusi Pindah ke Pembahasan oleh Host
-                    if (waktuSoalRoom <= 0 && isHost) {
-                        clearInterval(roomSyncTimer);
-                        updateDoc(roomRef, { status: 'pembahasan' });
-                    }
-                }, 1000);
             }
         } 
         
         // --- C. PEMBAHASAN BARENG (10 DETIK) ---
         else if (data.status === 'pembahasan') {
-            if (roomSyncTimer) clearInterval(roomSyncTimer); 
+            if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
             // PASTIKAN PROSES INI CUMA JALAN 1X PER SOAL (TAMENG ANTI-SPAM)
             if (window.activePembahasanIdx !== data.currentIdx) {
@@ -2379,7 +2384,7 @@ window.pantauRoom = (kodeRoom) => {
                 const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
                 const q = currentQuestions[data.currentIdx];
                 
-                // --- 1. RENDER UI PEMBAHASAN MURNI KHUSUS ROOM ---
+                // 1. RENDER UI PEMBAHASAN MURNI KHUSUS ROOM
                 isAnswerLocked = true;
                 
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
@@ -2412,7 +2417,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                // INJEKSI KOTAK DETIKAN LANGSUNG KE BAWAH OPSI (Pasti Muncul)
+                // 2. INJEKSI KOTAK DETIKAN 10s LANGSUNG KE BAWAH OPSI
                 let oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2426,26 +2431,24 @@ window.pantauRoom = (kodeRoom) => {
                     optContainer.parentNode.appendChild(badgeHtml);
                 }
 
-                // --- 2. JALANKAN TIMER 10 DETIK ---
-                let waktuBahas = 10;
+                // 3. JALANKAN TIMER 10 DETIK
+                window.waktuBahasRoom = 10;
                 
-                roomSyncTimer = setInterval(async () => {
-                    waktuBahas--;
+                window.roomSyncTimer = setInterval(() => {
+                    window.waktuBahasRoom--;
                     const textBadge = document.getElementById('angkaBahasRoom');
-                    if (textBadge) textBadge.innerText = waktuBahas;
+                    if (textBadge) textBadge.innerText = window.waktuBahasRoom;
 
-                    if (waktuBahas <= 0) {
-                        clearInterval(roomSyncTimer);
+                    if (window.waktuBahasRoom <= 0) {
+                        clearInterval(window.roomSyncTimer);
                         
                         if (isHost) {
-                            try {
-                                let nextIndex = parseInt(data.currentIdx) + 1; 
-                                if (nextIndex < currentQuestions.length) {
-                                    await updateDoc(roomRef, { status: 'soal', currentIdx: nextIndex });
-                                } else {
-                                    await updateDoc(roomRef, { status: 'selesai' });
-                                }
-                            } catch(e) { console.error("Gagal next soal:", e); }
+                            let nextIndex = parseInt(data.currentIdx) + 1; 
+                            if (nextIndex < currentQuestions.length) {
+                                updateDoc(roomRef, { status: 'soal', currentIdx: nextIndex }).catch(e=>console.log(e));
+                            } else {
+                                updateDoc(roomRef, { status: 'selesai' }).catch(e=>console.log(e));
+                            }
                         } else {
                             if (badgeHtml) badgeHtml.innerHTML = `⏳ Menunggu Host memuat soal berikutnya...`;
                         }
@@ -2456,7 +2459,8 @@ window.pantauRoom = (kodeRoom) => {
         
         // --- D. SELESAI ---
         else if (data.status === 'selesai') {
-            if (roomSyncTimer) clearInterval(roomSyncTimer);
+            if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
             // Buka kunci UI kembali
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
@@ -2464,7 +2468,7 @@ window.pantauRoom = (kodeRoom) => {
                 btn.style.opacity = '1';
             });
             
-            if (roomListenerUnsubscribe) roomListenerUnsubscribe();
+            if (window.roomListenerUnsubscribe) window.roomListenerUnsubscribe();
             
             alert("Latihan Bareng Selesai! Mari lihat hasilnya.");
             window.submitQuiz(); 
