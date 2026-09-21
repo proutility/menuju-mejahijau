@@ -2263,7 +2263,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: KAHOOT STYLE - HOST CONTROL)
+// MESIN SINKRONISASI REAL-TIME (FULL HOST CONTROL - KAHOOT STYLE)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2271,6 +2271,11 @@ window.pantauRoom = (kodeRoom) => {
     if (window.roomListenerUnsubscribe) window.roomListenerUnsubscribe();
     const roomRef = doc(window.db, "rooms", kodeRoom);
     
+    // 🛑 BUNUH TOTAL TIMER LOKAL (BIAR GAK BALAPAN SAMA ROOM)
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    // Bajak fungsi startTimer bawaan biar gak bisa dipanggil lagi selama di Room
+    window.startTimer = () => { console.log("Timer lokal diblokir paksa oleh mode Room"); };
+
     window.roomListenerUnsubscribe = onSnapshot(roomRef, (snap) => {
         if (!snap.exists()) {
             alert("Room telah dibubarkan oleh Host.");
@@ -2278,8 +2283,6 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         const data = snap.data();
-        
-        // 👑 DETEKSI HOST DARI DATABASE (Anti-Refresh)
         const amIHost = (typeof currentUser !== 'undefined' && currentUser && data.hostUid === currentUser.uid);
         
         // --- A. WAITING ROOM ---
@@ -2301,12 +2304,7 @@ window.pantauRoom = (kodeRoom) => {
         
         // --- B. MENJAWAB SOAL (30 DETIK) ---
         else if (data.status === 'soal') {
-            window.activePembahasanIdx = -1; // Buka gembok pembahasan
-            
-            // 🛑 BUNUH PAKSA TIMER MANDIRI BIAR GA NIMPA JADI 00:00:00
-            if (typeof timerInterval !== 'undefined' && timerInterval) {
-                clearInterval(timerInterval);
-            }
+            window.activePembahasanIdx = -1; 
             
             if (currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
@@ -2325,14 +2323,12 @@ window.pantauRoom = (kodeRoom) => {
             document.querySelector('.footer-nav').style.visibility = 'visible';
             document.querySelector('.question-header').style.visibility = 'visible';
             
-            // JIKA INDEX SOAL BERUBAH ATAU BARU MULAI
             if (window.activeRoomIdx !== data.currentIdx || document.getElementById('questionText').innerHTML.includes('WAITING ROOM')) {
                 window.activeRoomIdx = data.currentIdx;
                 
-                // PENTING: Buka kunci jawaban sebelum load soal baru
                 isAnswerLocked = false; 
                 
-                // 1. BERSIHKAN LAYAR SEBELUM RENDER SOAL BARU
+                // BERSIHKAN LAYAR LAMA
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2341,12 +2337,11 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.style.display = 'none';
                     fbBox.classList.remove('show');
                 }
-
-                // 2. LOAD SOAL (Berdasarkan kodingan lu yang udah bener)
-                window.loadQuestion(data.currentIdx);
-                currentIdx = parseInt(data.currentIdx); // Update global index SETELAH dirender
                 
-                // 3. EKSEKUSI TIMER 30 DETIK
+                window.loadQuestion(data.currentIdx);
+                currentIdx = parseInt(data.currentIdx);
+                
+                // EKSEKUSI TIMER 30 DETIK
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 window.waktuSoalRoom = 30; 
                 
@@ -2363,7 +2358,6 @@ window.pantauRoom = (kodeRoom) => {
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // Host paksa pindah ke pembahasan pas 30 detik habis
                     if (window.waktuSoalRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
@@ -2375,7 +2369,6 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 }, 1000);
 
-                // 4. KUNCI UI NAVIGASI TOTAL
                 const pBtn = document.getElementById('prevBtn');
                 const nBtn = document.getElementById('nextBtn');
                 const rWrap = document.querySelector('.ragu-wrapper');
@@ -2388,7 +2381,32 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // 5. BAJAK TOMBOL OPSI (Jeda 200ms biar HTML soal baru siap)
+                // 🛑 INJEKSI TOMBOL PAKSA BAHAS KHUSUS HOST
+                if (amIHost) {
+                    const hostBadge = document.createElement('div');
+                    hostBadge.id = 'roomBadgeKhusus';
+                    hostBadge.style.cssText = "margin-top:20px; padding:15px; background:#fff3e0; border-radius:8px; text-align:center; border:2px dashed #ffb74d;";
+                    hostBadge.innerHTML = `
+                        <div style="margin-bottom:10px; font-weight:bold; color:#e65100;">Kendali Host: Waktu kelamaan atau timer macet?</div>
+                        <button style="background:#e65100; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            Buka Pembahasan Sekarang ➔
+                        </button>
+                    `;
+                    
+                    const btnForce = hostBadge.querySelector('button');
+                    btnForce.onclick = function() {
+                        this.innerText = "Memuat Pembahasan...";
+                        this.disabled = true;
+                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+                        updateDoc(roomRef, { status: 'pembahasan' });
+                    };
+
+                    const optContainer = document.getElementById('optionsContainer');
+                    if (optContainer && optContainer.parentNode) {
+                        optContainer.parentNode.appendChild(hostBadge);
+                    }
+                }
+
                 setTimeout(() => {
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
@@ -2400,23 +2418,21 @@ window.pantauRoom = (kodeRoom) => {
                             el.style.background = "#fff9c4"; 
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
-                            userAnswers[data.currentIdx] = i;
+                            userAnswers[currentIdx] = i;
                             updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i }).catch(e => console.log(e));
                         };
                     });
-                }, 200); 
+                }, 300); 
 
-                // 6. Reset jawaban peserta
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
             }
         } 
         
-        // --- C. PEMBAHASAN BARENG (KENDALI HOST MANUAL) ---
+        // --- C. PEMBAHASAN BARENG ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
@@ -2424,9 +2440,10 @@ window.pantauRoom = (kodeRoom) => {
                 const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 const q = currentQuestions[data.currentIdx];
                 
+                if (!q) return; 
+                
                 isAnswerLocked = true;
                 
-                // 1. RENDER UI BENAR/SALAH
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
                     el.style.pointerEvents = 'none'; 
@@ -2441,24 +2458,24 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 });
 
-                // 2. MUNCULKAN KOTAK PEMBAHASAN
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
                     fb.style.display = 'block';
                     fb.classList.add('show');
                     
                     let fText = document.getElementById('feedbackText');
-                    if (jawabanGue === null || jawabanGue === undefined) {
-                        fText.innerHTML = "<b style='color:red;'>WAKTU HABIS! Anda tidak menjawab.</b><br><br>" + (q.explanation || "-");
-                    } else {
-                        fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
+                    if (fText) {
+                        if (jawabanGue === null || jawabanGue === undefined) {
+                            fText.innerHTML = "<b style='color:red;'>WAKTU HABIS! Anda tidak menjawab.</b><br><br>" + (q.explanation || "-");
+                        } else {
+                            fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
+                        }
                     }
                     
                     const fCite = document.getElementById('feedbackCite');
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                // 3. INJEKSI TOMBOL NEXT KHUSUS HOST
                 let oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2467,26 +2484,15 @@ window.pantauRoom = (kodeRoom) => {
                 badgeHtml.style.cssText = "margin-top:20px; padding:15px; background:#e3f2fd; border-radius:8px; text-align:center; border:2px dashed #90caf9;";
                 
                 if (amIHost) {
-                    // TAMPILAN HOST: Tombol Biru Lanjut
                     badgeHtml.innerHTML = `
                         <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Anda yang menentukan kapan pindah soal.</div>
-                        <button id="btnNextHost" style="background:#1565c0; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <button style="background:#1565c0; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             Lanjut Soal Berikutnya ➔
                         </button>
                     `;
-                } else {
-                    // TAMPILAN PESERTA: Cuma disuruh nunggu
-                    badgeHtml.innerHTML = `<b style="color:#1565c0; font-size:1.2rem;">⏳ Menunggu Host melanjutkan ujian...</b>`;
-                }
-                
-                const optContainer = document.getElementById('optionsContainer');
-                if (optContainer && optContainer.parentNode) {
-                    optContainer.parentNode.appendChild(badgeHtml);
-                }
-
-                // 4. FUNGSI KLIK TOMBOL HOST KE FIREBASE
-                if (amIHost) {
-                    document.getElementById('btnNextHost').onclick = function() {
+                    
+                    const btnNext = badgeHtml.querySelector('button');
+                    btnNext.onclick = function() {
                         this.innerText = "Memuat soal berikutnya...";
                         this.disabled = true;
                         this.style.background = "#9e9e9e";
@@ -2498,6 +2504,13 @@ window.pantauRoom = (kodeRoom) => {
                             updateDoc(roomRef, { status: 'selesai' }).catch(e=>console.log(e));
                         }
                     };
+                } else {
+                    badgeHtml.innerHTML = `<b style="color:#1565c0; font-size:1.2rem;">⏳ Menunggu Host melanjutkan ujian...</b>`;
+                }
+                
+                const optContainer = document.getElementById('optionsContainer');
+                if (optContainer && optContainer.parentNode) {
+                    optContainer.parentNode.appendChild(badgeHtml);
                 }
             }
         }
@@ -2505,9 +2518,7 @@ window.pantauRoom = (kodeRoom) => {
         // --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
-            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // Buka kunci UI kembali
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
@@ -2517,7 +2528,7 @@ window.pantauRoom = (kodeRoom) => {
             
             alert("Latihan Bareng Selesai! Mari lihat hasilnya.");
             window.submitQuiz(); 
-            window.tampilkanTombolKeluarRoom();
+            if(window.tampilkanTombolKeluarRoom) window.tampilkanTombolKeluarRoom();
         }
     });
 };
