@@ -2357,9 +2357,8 @@ window.pantauRoom = (kodeRoom) => {
                 }
 
                 // 🛑 PERBAIKAN KRUSIAL: 
-                // Hapus sinkronisasi manual currentIdx di sini!
-                // Langsung panggil loadQuestion biar fungsi bawaan lu jalan normal merender HTML.
                 window.loadQuestion(data.currentIdx);
+                currentIdx = data.currentIdx;
                 
                 // 3. Kunci UI Navigasi Total
                 const pBtn = document.getElementById('prevBtn');
@@ -2417,7 +2416,7 @@ window.pantauRoom = (kodeRoom) => {
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
                     el.style.pointerEvents = 'none'; 
-                    el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu waktu habis...', '');
+                    el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '');
                     
                     if (i === q.answer) {
                         el.classList.add('review-correct');
