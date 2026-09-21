@@ -280,9 +280,12 @@ function lanjutKeAplikasi() {
         }
     }
 
-    // Sembunyikan elemen ujian saat di lobby
-    document.getElementById('floatingr').style.display = 'none';
-    document.getElementById('mobileFooter').style.display = 'none'; 
+// Sembunyikan elemen ujian saat di lobby (VERSI AMAN ANTI CRASH)
+    const fTimer = document.getElementById('floatingTimer');
+    if (fTimer) fTimer.style.display = 'none';
+    
+    const mFooter = document.getElementById('mobileFooter');
+    if (mFooter) mFooter.style.display = 'none'; 
 
     // Load Data Statistik Lobby
     setTimeout(() => { 
