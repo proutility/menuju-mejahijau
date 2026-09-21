@@ -2259,7 +2259,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: FIX LAYAR STUCK)
+// MESIN SINKRONISASI REAL-TIME (FINAL: ANTI-MACET & ANTI-REFRESH)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2275,6 +2275,9 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         
+        // 🔥 KUNCI UTAMA: Tentukan siapa Host aslinya langsung dari Database!
+        const amIHost = (currentUser && data.hostUid === currentUser.uid);
+        
         // --- A. WAITING ROOM ---
         if (data.status === 'waiting') {
             const listEl = document.getElementById('listPesertaRoom');
@@ -2285,7 +2288,7 @@ window.pantauRoom = (kodeRoom) => {
                 for (let uid in data.players) {
                     count++;
                     let p = data.players[uid];
-                    let icon = uid === data.hostUid ? '👑' : '👤'; 
+                    let icon = (uid === data.hostUid) ? '👑' : '👤'; 
                     listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333;">${icon} ${p.nama}</li>`;
                 }
                 if (countEl) countEl.innerText = count;
@@ -2296,7 +2299,6 @@ window.pantauRoom = (kodeRoom) => {
         else if (data.status === 'soal') {
             window.activePembahasanIdx = -1; 
             
-            // Bunuh timer latihan mandiri
             if (typeof timerInterval !== 'undefined' && timerInterval) {
                 clearInterval(timerInterval);
             }
@@ -2321,7 +2323,6 @@ window.pantauRoom = (kodeRoom) => {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 
-                // 1. Bersihkan Layar dari Pembahasan Lama
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2331,11 +2332,11 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.classList.remove('show');
                 }
 
-                // 🛑 INI BIANG KEROKNYA KEMARIN: Jangan set currentIdx manual!
-                // Biarkan loadQuestion asli lu yang bekerja dan mengganti teks layarnya
+                // Sinkronkan urutan soal global
+                currentIdx = data.currentIdx;
                 window.loadQuestion(data.currentIdx);
                 
-                // 2. Eksekusi Timer 30 Detik
+                // EKSEKUSI TIMER 30 DETIK
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 window.waktuSoalRoom = 30; 
                 
@@ -2346,20 +2347,29 @@ window.pantauRoom = (kodeRoom) => {
                 
                 window.roomSyncTimer = setInterval(() => {
                     window.waktuSoalRoom--;
-                    if(window.waktuSoalRoom >= 0) {
+                    
+                    if (window.waktuSoalRoom >= 0) {
                         let textWaktu = "00:00:" + String(window.waktuSoalRoom).padStart(2, '0');
                         if(t1) t1.innerText = textWaktu;
                         if(t2) t2.innerText = textWaktu;
                     }
                     
-                    // HOST PAKSA PINDAH KE PEMBAHASAN PAS 30 DETIK HABIS
-                    if (window.waktuSoalRoom <= 0 && isHost) {
+                    // JIKA WAKTU HABIS
+                    if (window.waktuSoalRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
-                        updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        
+                        if (amIHost) {
+                            // Host yang tembak ke Firebase
+                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        } else {
+                            // Peserta cuma nunggu layar digantiin Host
+                            if(t1) t1.innerText = "NUNGGU HOST";
+                            if(t2) t2.innerText = "NUNGGU HOST";
+                        }
                     }
                 }, 1000);
 
-                // 3. BAJAK TOMBOL: Kunci Navigasi & Ubah Fungsi Klik Ala Kahoot
+                // BAJAK TOMBOL ALA KAHOOT
                 setTimeout(() => {
                     const pBtn = document.getElementById('prevBtn');
                     const nBtn = document.getElementById('nextBtn');
@@ -2373,7 +2383,6 @@ window.pantauRoom = (kodeRoom) => {
                         btn.style.opacity = '0.4';
                     });
 
-                    // INI YANG BIKIN JADI KAHOOT (Cuma muncul kuning Nunggu, ga langsung bahas)
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
                         el.onclick = (e) => {
@@ -2381,16 +2390,15 @@ window.pantauRoom = (kodeRoom) => {
                             if (isAnswerLocked) return;
                             isAnswerLocked = true;
                             
-                            el.style.background = "#fff9c4"; // Warna kuning nunggu
+                            el.style.background = "#fff9c4"; 
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[data.currentIdx] = i;
                             updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i }).catch(err=>console.log(err));
                         };
                     });
-                }, 200); // Kasih jeda 200ms biar loadQuestion selesai nge-render opsi baru
+                }, 200);
 
-                // 4. Reset jawaban peserta di DB
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
@@ -2402,14 +2410,12 @@ window.pantauRoom = (kodeRoom) => {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // JALAN 1X SAJA PER SOAL
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
                 
                 const jawabanGue = data.players[currentUser.uid]?.jawabanSekarang;
                 const q = currentQuestions[data.currentIdx];
                 
-                // 1. RENDER WARNA BENAR/SALAH BARENGAN
                 isAnswerLocked = true;
                 
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
@@ -2426,7 +2432,6 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 });
 
-                // 2. BUKA KOTAK PEMBAHASAN
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
                     fb.style.display = 'block';
@@ -2443,7 +2448,6 @@ window.pantauRoom = (kodeRoom) => {
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                // 3. INJEKSI KOTAK DETIKAN 10 DETIK DI BAWAH OPSI
                 let oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
@@ -2457,7 +2461,6 @@ window.pantauRoom = (kodeRoom) => {
                     optContainer.parentNode.appendChild(badgeHtml);
                 }
 
-                // 4. JALANKAN TIMER 10 DETIK PINDAH SOAL
                 window.waktuBahasRoom = 10;
                 
                 window.roomSyncTimer = setInterval(() => {
@@ -2465,10 +2468,11 @@ window.pantauRoom = (kodeRoom) => {
                     const textBadge = document.getElementById('angkaBahasRoom');
                     if (textBadge) textBadge.innerText = window.waktuBahasRoom;
 
+                    // JIKA WAKTU PEMBAHASAN HABIS
                     if (window.waktuBahasRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         
-                        if (isHost) {
+                        if (amIHost) {
                             let nextIndex = parseInt(data.currentIdx) + 1; 
                             if (nextIndex < currentQuestions.length) {
                                 updateDoc(roomRef, { status: 'soal', currentIdx: nextIndex }).catch(e=>console.log(e));
