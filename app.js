@@ -2322,7 +2322,7 @@ window.pantauRoom = (kodeRoom) => {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 
-                // 1. Eksekusi Timer Detik Ini Juga (TANPA AWAIT)
+                // 1. Eksekusi Timer Detik Ini Juga
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 window.waktuSoalRoom = 30; 
                 
@@ -2346,24 +2346,19 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 }, 1000);
 
-                // 2. BERSIHKAN LAYAR & RENDER SOAL BARU
+                // 2. BERSIHKAN LAYAR SEBELUM RENDER SOAL BARU
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
 
-                // PENTING: Tutup paksa kotak pembahasan lama biar soal baru muncul!
                 const fbBox = document.getElementById('feedbackBox');
                 if (fbBox) {
                     fbBox.style.display = 'none';
                     fbBox.classList.remove('show');
                 }
 
-                // Buka kunci opsi jawaban sebelum load soal baru
-                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
-                opsiElements.forEach(el => el.style.pointerEvents = 'auto');
-
-                // Sinkronkan currentIdx global agar update UI berjalan benar
-                currentIdx = data.currentIdx;
-                
+                // 🛑 PERBAIKAN KRUSIAL: 
+                // Hapus sinkronisasi manual currentIdx di sini!
+                // Langsung panggil loadQuestion biar fungsi bawaan lu jalan normal merender HTML.
                 window.loadQuestion(data.currentIdx);
                 
                 // 3. Kunci UI Navigasi Total
@@ -2379,7 +2374,25 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.opacity = '0.4';
                 });
 
-                // 4. Reset jawaban peserta
+                // 4. BAJAK TOMBOL OPSI (Jeda 200ms biar HTML soal baru beneran selesai dibuat)
+                setTimeout(() => {
+                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                    opsiElements.forEach((el, i) => {
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            if (isAnswerLocked) return;
+                            isAnswerLocked = true;
+                            
+                            el.style.background = "#fff9c4"; 
+                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                            
+                            userAnswers[data.currentIdx] = i;
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i }).catch(e => console.log(e));
+                        };
+                    });
+                }, 200); 
+
+                // 5. Reset jawaban peserta
                 if (data.players && data.players[currentUser.uid]) {
                      updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e => console.log(e));
                 }
