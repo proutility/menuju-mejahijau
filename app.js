@@ -2551,7 +2551,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- D. SELESAI ---
+// --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (timerInterval) clearInterval(timerInterval);
@@ -2563,36 +2563,30 @@ window.pantauRoom = (kodeRoom) => {
             
             if (roomListenerUnsubscribe) roomListenerUnsubscribe();
             
-            // 🛑 FIX BUG 2: MATIKAN POP-UP INDIVIDU, LANGSUNG BUKA PERINGKAT (LEADERBOARD)
-            if (typeof window.submitQuiz === 'function') {
-                window.submitQuiz(); // Biarkan sistem ngitung dan nyimpen skor ke database
-                
-                // Sabotase layarnya: Tutup pop-up individu secara paksa!
-                const popUpBiasa = document.getElementById('resultOverlay');
-                if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
-                
-                // Langsung buka layar peringkat!
-                setTimeout(() => {
-                    if (typeof window.openLeaderboard === 'function') {
-                        window.openLeaderboard('local');
-                        
-                        // Injeksi tombol Keluar Room di layar Peringkat
-                        const lbBody = document.getElementById('leaderboardOverlay');
-                        if (lbBody && !document.getElementById('btnKeluarRoomLB')) {
-                            const btnOut = document.createElement('button');
-                            btnOut.id = 'btnKeluarRoomLB';
-                            btnOut.innerHTML = '<i class="fas fa-sign-out-alt"></i> Selesai & Keluar Mode Multiplayer';
-                            btnOut.style.cssText = 'width:90%; background:#d32f2f; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem; margin: 15px auto; display:block;';
-                            btnOut.onclick = () => window.keluarDariRoom();
-                            
-                            const box = lbBody.querySelector('.modal-content') || lbBody.querySelector('div');
-                            if(box) box.appendChild(btnOut);
-                        }
-                    } else {
-                        alert("Latihan Bareng Selesai!");
-                    }
-                }, 500); // Jeda setengah detik biar databasenya nyimpen nilai dulu
-            } 
+            // Sabotase layarnya: Tutup pop-up individu secara paksa!
+            const popUpBiasa = document.getElementById('resultOverlay');
+            if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
+            
+            // Hitung nilai dan simpan ke riwayat global (Dijalankan diam-diam di background)
+            if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
+            
+            // 🛑 HITUNG SKOR LOKAL KHUSUS ROOM INI SAJA
+            let scoreRoom = 0;
+            userAnswers.forEach((a, i) => {
+                if (currentQuestions[i] && a === currentQuestions[i].answer) {
+                    scoreRoom++;
+                }
+            });
+            const finalScoreRoom = Math.round((scoreRoom / currentQuestions.length) * 100);
+
+            // 🛑 SETOR SKOR KE ROOM FIREBASE, LALU PANGGIL UI MULTIPLAYER
+            updateDoc(roomRef, {
+                [`players.${currentUser.uid}.skor`]: finalScoreRoom
+            }).then(() => {
+                if (typeof window.tampilkanHasilMultiplayer === 'function') {
+                    window.tampilkanHasilMultiplayer(kodeRoom);
+                }
+            }).catch(e => console.log(e));
         }
     });
 };
@@ -2687,6 +2681,95 @@ window.tampilkanLobby = function() {
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
+// ==========================================
+// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER
+// ==========================================
+window.tampilkanHasilMultiplayer = async (kodeRoom) => {
+    // Tampilkan loading bentar sambil nunggu device lain setor nilai
+    PROTAMA.loading("Merekap skor semua peserta...");
+
+    setTimeout(async () => {
+        try {
+            const roomSnap = await getDoc(doc(window.db, "rooms", kodeRoom));
+            if (!roomSnap.exists()) return PROTAMA.close();
+
+            const data = roomSnap.data();
+            let playersArray = [];
+
+            for (let uid in data.players) {
+                playersArray.push(data.players[uid]);
+            }
+
+            // Urutkan dari nilai tertinggi
+            playersArray.sort((a, b) => b.skor - a.skor);
+
+            PROTAMA.close();
+
+            // Hapus overlay lama kalau ada
+            const oldOverlay = document.getElementById('roomResultOverlay');
+            if (oldOverlay) oldOverlay.remove();
+
+            // Bikin UI Popup Dinamis (Tanpa nyentuh index.html)
+            const overlay = document.createElement('div');
+            overlay.id = 'roomResultOverlay';
+            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2147483647; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(5px);";
+
+            let listHTML = '';
+            playersArray.forEach((p, i) => {
+                let medal = '';
+                let bg = 'white';
+                let txtColor = '#333';
+                
+                if (i === 0) { medal = '🥇'; bg = '#fff9c4'; }
+                else if (i === 1) { medal = '🥈'; bg = '#f5f5f5'; }
+                else if (i === 2) { medal = '🥉'; bg = '#fff'; }
+                else { medal = `<span style="font-size:1rem; color:#888;">#${i+1}</span>`; }
+
+                // Highlight nama sendiri
+                if (p.nama === currentUser.displayName) {
+                    bg = '#e3f2fd';
+                    txtColor = '#1565c0';
+                }
+
+                listHTML += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1.1rem; font-weight:bold; color:${txtColor};">
+                        <div><span style="display:inline-block; width:35px; text-align:center;">${medal}</span> ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}</div>
+                        <div style="color:var(--primary); font-size:1.3rem;">${p.skor} <small style="font-size:0.8rem; color:#666;">Pts</small></div>
+                    </div>
+                `;
+            });
+
+            overlay.innerHTML = `
+                <div style="background:white; width:90%; max-width:500px; border-radius:15px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease;">
+                    <div style="background:var(--primary); padding:25px 20px; text-align:center; color:white;">
+                        <i class="fas fa-trophy" style="font-size:3rem; color:var(--gold); margin-bottom:10px;"></i>
+                        <h2 style="margin:0; font-size:1.8rem; font-weight:900;">HASIL MULTIPLAYER</h2>
+                        <p style="margin:5px 0 0 0; opacity:0.9; font-size:1rem;">Modul: ${data.modulId.toUpperCase()} | Room: ${kodeRoom}</p>
+                    </div>
+                    <div style="max-height:50vh; overflow-y:auto; background:#f9f9f9;">
+                        ${listHTML}
+                    </div>
+                    <div style="padding:20px; text-align:center; background:white; border-top:2px solid #eee;">
+                        <button onclick="window.tutupHasilMultiplayer()" style="background:#d32f2f; color:white; padding:15px 25px; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+                            <i class="fas fa-sign-out-alt"></i> Selesai & Keluar Room
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+        } catch (e) {
+            console.error("Gagal load hasil multiplayer", e);
+            PROTAMA.alert("Gagal", "Gagal memuat hasil akhir.", "error");
+        }
+    }, 2500); // Tunggu 2.5 detik biar semua hp selesai setor nilai ke Firebase
+};
+
+window.tutupHasilMultiplayer = () => {
+    const overlay = document.getElementById('roomResultOverlay');
+    if (overlay) overlay.remove();
+    window.keluarDariRoom();
+};
 
 window.loadRiwayatLobby = async () => {
     const container = document.getElementById('tableLobbyContainer');
