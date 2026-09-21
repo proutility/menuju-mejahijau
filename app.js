@@ -2356,7 +2356,8 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.classList.remove('show');
                 }
 
-                // 🛑 PERBAIKAN KRUSIAL: 
+               // 🛑 BUKA KUNCI JAWABAN DULU, BARU LOAD SOAL
+                isAnswerLocked = false;
                 window.loadQuestion(data.currentIdx);
                 currentIdx = data.currentIdx;
                 
@@ -2371,6 +2372,19 @@ window.pantauRoom = (kodeRoom) => {
                 document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.4';
+                });
+
+                // 🛑 BERSIHIN TOTAL SEMUA OPSI JAWABAN
+                const bersihinOpsi = document.querySelectorAll('#optionsContainer .option-label');
+                bersihinOpsi.forEach(el => {
+                    el.style.pointerEvents = 'auto'; // Buka gembok opsi
+                    el.style.background = ''; // Balikin warna default
+                    // Hapus semua teks sisa
+                    el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '')
+                                               .replace(' ⏳ Menunggu waktu habis...', '')
+                                               .replace(' ✅ (Jawaban Benar)', '')
+                                               .replace(' ❌', '');
+                    el.classList.remove('review-correct', 'review-wrong');
                 });
 
                 // 4. BAJAK TOMBOL OPSI (Jeda 200ms biar HTML soal baru beneran selesai dibuat)
