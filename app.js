@@ -2266,7 +2266,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: AUTO-SKIP + HOST NEXT)
+// MESIN SINKRONISASI REAL-TIME (FINAL: FIX AUTO-SKIP & LEADERBOARD ENDING)
 // ==========================================================
 window.roomSyncTimer = null; 
 
@@ -2330,7 +2330,6 @@ window.pantauRoom = (kodeRoom) => {
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
 
-            // 1. EKSEKUSI SAAT SOAL BARU MUNCUL
             if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
@@ -2367,7 +2366,6 @@ window.pantauRoom = (kodeRoom) => {
                     sisaWaktuRoom--;
                     if (sisaWaktuRoom >= 0) setLayarTimer(sisaWaktuRoom);
                     
-                    // JIKA WAKTU HABIS MURNI
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
@@ -2392,14 +2390,9 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.4';
                 });
-
-                // Reset jawaban peserta di DB
-                if (data.players && data.players[currentUser.uid]) {
-                     updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e=>console.log(e));
-                }
             }
 
-            // 2. LOGIKA AUTO-SKIP (Berjalan tiap ada yang klik jawaban)
+            // 2. LOGIKA AUTO-SKIP (Berjalan real-time)
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
@@ -2411,17 +2404,14 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 }
 
-                // Bonus: Update teks "Menjawab: X / Y" biar kerasa Live!
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                // Jika SEMUA PESERTA sudah jawab, Host tembak langsung ke Pembahasan!
                 if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
                     if (!window.sedangAutoSkip) {
-                        window.sedangAutoSkip = true; // Kunci biar ga nembak berkali-kali
-                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); // Matikan timer segera
+                        window.sedangAutoSkip = true; 
+                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
 
-                        // Kasih jeda 1 detik biar penjawab terakhir sempet ngeliat layar kuningnya
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         }, 1000);
@@ -2463,6 +2453,10 @@ window.pantauRoom = (kodeRoom) => {
 
                 const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 
+                if (jawabanGue === null || jawabanGue === undefined) {
+                    userAnswers[data.currentIdx] = -1; 
+                }
+
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
                     el.style.pointerEvents = 'none'; 
@@ -2470,10 +2464,12 @@ window.pantauRoom = (kodeRoom) => {
                     
                     if (i === q.answer) {
                         el.classList.add('review-correct');
-                        if (!el.innerHTML.includes('✅')) el.innerHTML += ' ✅ (Jawaban Benar)';
-                    } else if (jawabanGue !== undefined && jawabanGue !== null && i === jawabanGue) {
+                        if (!el.innerHTML.includes('✅')) el.innerHTML += ' ✅ (Kunci Jawaban)';
+                    } else if (jawabanGue !== null && i === jawabanGue) {
                         el.classList.add('review-wrong');
-                        if (!el.innerHTML.includes('❌')) el.innerHTML += ' ❌';
+                        if (!el.innerHTML.includes('❌')) el.innerHTML += ' ❌ (Jawabanmu Salah)';
+                    } else if (jawabanGue === null) {
+                        el.style.opacity = '0.5';
                     }
                 });
 
@@ -2485,14 +2481,24 @@ window.pantauRoom = (kodeRoom) => {
                     let fText = document.getElementById('feedbackText');
                     if (fText) {
                         if (jawabanGue === null || jawabanGue === undefined) {
-                            fText.innerHTML = "<b style='color:red;'>WAKTU HABIS! Anda tidak menjawab.</b><br><br>" + (q.explanation || "-");
+                            fText.innerHTML = "<b style='color:red; font-size:1.1rem;'>❌ WAKTU HABIS! ANDA TIDAK MENJAWAB (DIANGGAP SALAH)</b><br><br>" + (q.explanation || "-");
                         } else {
                             fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
                         }
                     }
-                    
                     const fCite = document.getElementById('feedbackCite');
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
+                }
+
+                if (jawabanGue === null || jawabanGue === undefined) {
+                    const optContainer = document.getElementById('optionsContainer');
+                    if (optContainer && !document.getElementById('warningTidakJawab')) {
+                        const warningBox = document.createElement('div');
+                        warningBox.id = 'warningTidakJawab';
+                        warningBox.style.cssText = "background:#ffebee; color:#c62828; padding:10px; border-radius:6px; font-weight:bold; text-align:center; margin-bottom:15px; border:2px dashed #ef9a9a;";
+                        warningBox.innerHTML = "❌ KAMU TIDAK MENJAWAB (JAWABAN DIANGGAP SALAH)";
+                        optContainer.prepend(warningBox);
+                    }
                 }
 
                 let oldBadge = document.getElementById('roomBadgeKhusus');
@@ -2513,9 +2519,9 @@ window.pantauRoom = (kodeRoom) => {
                     badgeHtml.innerHTML = `<b style="color:#1565c0; font-size:1.2rem;">⏳ Menunggu Host melanjutkan ujian...</b>`;
                 }
                 
-                const optContainer = document.getElementById('optionsContainer');
-                if (optContainer && optContainer.parentNode) {
-                    optContainer.parentNode.appendChild(badgeHtml);
+                const optContForBadge = document.getElementById('optionsContainer');
+                if (optContForBadge && optContForBadge.parentNode) {
+                    optContForBadge.parentNode.appendChild(badgeHtml);
                 }
 
                 if (amIHost) {
@@ -2528,7 +2534,14 @@ window.pantauRoom = (kodeRoom) => {
                             
                             let nextIndex = parseInt(data.currentIdx) + 1; 
                             if (nextIndex < currentQuestions.length) {
-                                updateDoc(roomRef, { status: 'soal', currentIdx: nextIndex }).catch(e=>console.log(e));
+                                // 🛑 FIX BUG 1: HAPUS SEMUA JAWABAN SISAAN PESERTA SEBELUM GANTI SOAL!
+                                let updates = { status: 'soal', currentIdx: nextIndex };
+                                if (data.players) {
+                                    for (let uid in data.players) {
+                                        updates[`players.${uid}.jawabanSekarang`] = null;
+                                    }
+                                }
+                                updateDoc(roomRef, updates).catch(e=>console.log(e));
                             } else {
                                 updateDoc(roomRef, { status: 'selesai' }).catch(e=>console.log(e));
                             }
@@ -2549,9 +2562,37 @@ window.pantauRoom = (kodeRoom) => {
             });
             
             if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-            alert("Latihan Bareng Selesai!");
-            if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
-            if (typeof window.tampilkanTombolKeluarRoom === 'function') window.tampilkanTombolKeluarRoom();
+            
+            // 🛑 FIX BUG 2: MATIKAN POP-UP INDIVIDU, LANGSUNG BUKA PERINGKAT (LEADERBOARD)
+            if (typeof window.submitQuiz === 'function') {
+                window.submitQuiz(); // Biarkan sistem ngitung dan nyimpen skor ke database
+                
+                // Sabotase layarnya: Tutup pop-up individu secara paksa!
+                const popUpBiasa = document.getElementById('resultOverlay');
+                if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
+                
+                // Langsung buka layar peringkat!
+                setTimeout(() => {
+                    if (typeof window.openLeaderboard === 'function') {
+                        window.openLeaderboard('local');
+                        
+                        // Injeksi tombol Keluar Room di layar Peringkat
+                        const lbBody = document.getElementById('leaderboardOverlay');
+                        if (lbBody && !document.getElementById('btnKeluarRoomLB')) {
+                            const btnOut = document.createElement('button');
+                            btnOut.id = 'btnKeluarRoomLB';
+                            btnOut.innerHTML = '<i class="fas fa-sign-out-alt"></i> Selesai & Keluar Mode Multiplayer';
+                            btnOut.style.cssText = 'width:90%; background:#d32f2f; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:1rem; margin: 15px auto; display:block;';
+                            btnOut.onclick = () => window.keluarDariRoom();
+                            
+                            const box = lbBody.querySelector('.modal-content') || lbBody.querySelector('div');
+                            if(box) box.appendChild(btnOut);
+                        }
+                    } else {
+                        alert("Latihan Bareng Selesai!");
+                    }
+                }, 500); // Jeda setengah detik biar databasenya nyimpen nilai dulu
+            } 
         }
     });
 };
