@@ -88,7 +88,7 @@ const legalTerms = [
 if(auth) {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
-            currentUser = user;
+             = user;
             const gateOverlay = document.getElementById('gatekeeperOverlay');
 
             // A. PANGGIL MAINTENACE (Supaya User Terpantau)
@@ -855,8 +855,11 @@ window.timpaModul = async function(modulKey, dataBaruJson) {
 };
 
 function startTimer() {
+    // 🛑 SATPAM ROOM: Matikan mesin timer mandiri jika sedang di Mode Room!
+    if (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') return;
+
     // 🛑 PENANGKAL: Bersihin dulu timer lama biar gak jalan dobel/numpuk!
-    if (timerInterval) clearInterval(timerInterval);
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
 
     timerInterval = setInterval(() => {
         if (timeRemaining > 0) { 
@@ -1155,7 +1158,8 @@ function loadQuestion(idx) {
                         // Kunci klik sementara & kasih efek nunggu
                         isAnswerLocked = true; 
                         div.style.background = "#fff9c4"; 
-                        div.innerHTML += ' ⏳ Menunggu waktu habis...';
+                        // 🛑 TEKS HARUS SAMA PERSIS BIAR BISA DIHAPUS OLEH ROOM
+                        div.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                         
                         userAnswers[idx] = i; // Simpan ke array lokal
                         
