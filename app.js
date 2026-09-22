@@ -1543,11 +1543,25 @@ window.closeResult = function() {
     }
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
-    
-    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
-    currentAppMode = 'ujian'; 
-    
-    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
+
+    // 🛑 1. KUNCI SIDEBAR KIRI (Modul)
+    document.querySelectorAll('.modul-btn').forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    });
+
+    // 🛑 2. HANYA BUKA GRID NOMOR SOAL (.nav-btn) 
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
+
+    // 🛑 3. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.4';
+    });
+
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
     const rWrap = document.querySelector('.ragu-wrapper');
@@ -1567,7 +1581,6 @@ window.closeResult = function() {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
     
-    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(currentIdx);
 };
 
@@ -1584,11 +1597,25 @@ window.startReviewWrong = function() {
     }
     
     isReviewMode = true;
-    
-    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
-    currentAppMode = 'ujian';
 
-    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
+    // 🛑 1. KUNCI SIDEBAR KIRI (Modul)
+    document.querySelectorAll('.modul-btn').forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    });
+
+    // 🛑 2. HANYA BUKA GRID NOMOR SOAL (.nav-btn)
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
+
+    // 🛑 3. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.4';
+    });
+
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
     const rWrap = document.querySelector('.ragu-wrapper');
@@ -1605,7 +1632,6 @@ window.startReviewWrong = function() {
     ind.style.color = "#c62828";
     ind.style.border = "1px solid #ffcdd2";
     
-    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(wrongIndices[0]);
 };
 
