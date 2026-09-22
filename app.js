@@ -1634,7 +1634,7 @@ window.changeQuestion = function(step) {
 window.backToMenu = async function() {  // <--- WAJIB TAMBAH ASYNC!
     const yakin = await PROTAMA.confirm(
         "KEMBALI KE LOBBY", 
-        "Yakin mau kembali ke menu utama? Progres saat ini akan di-reset."
+        "Yakin mau kembali ke menu utama?"
     );
 
     if (yakin) {
