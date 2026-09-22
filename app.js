@@ -1805,11 +1805,17 @@ window.keluarDariRoom = () => {
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
 
-    // 🛑 SEMBUNYIKAN DAN BERSIHKAN KOTAK CHAT
-    const chatContainer = document.getElementById('roomChatContainer');
-    if (chatContainer) chatContainer.style.display = 'none';
-    const chatBox = document.getElementById('chatMessages');
-    if (chatBox) chatBox.innerHTML = '';
+// 🛑 SEMBUNYIKAN, BERSIHKAN, DAN RESET POSISI KOTAK CHAT
+const chatContainer = document.getElementById('roomChatContainer');
+if (chatContainer) {
+    chatContainer.style.display = 'none';
+    chatContainer.style.transform = 'translate3d(0px, 0px, 0px)'; // Reset posisi ke pojok kanan bawah
+}
+
+const chatBox = document.getElementById('chatMessages');
+if (chatBox) {
+    chatBox.innerHTML = ''; // Bersihkan riwayat chat di layar
+}
     
     window.backToMenu(); 
 };
@@ -4856,15 +4862,77 @@ window.renderChatMessages = (messages) => {
     chatBox.scrollTop = chatBox.scrollHeight;
 };
 
+// ==========================================
+// LOGIKA UI CHAT: MINIMIZE & DRAG
+// ==========================================
+
+// Fungsi Buka Tutup Chat
 window.toggleChatBody = () => {
     const body = document.getElementById('chatBody');
+    const chevron = document.getElementById('chatChevron');
     const badge = document.getElementById('chatNotifBadge');
+
     if (body.style.display === 'none') {
         body.style.display = 'flex';
-        if (badge) badge.style.display = 'none';
+        chevron.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        // Sembunyikan notif "Baru!" karena pesan udah dilihat
+        if (badge) badge.style.display = 'none'; 
+        
+        // Auto scroll pas dibuka
         const chatBox = document.getElementById('chatMessages');
-        setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 100);
+        if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
     } else {
         body.style.display = 'none';
+        chevron.classList.replace('fa-chevron-down', 'fa-chevron-up');
     }
 };
+
+// Fungsi Bikin Chat Melayang (Draggable)
+const initDraggableChat = () => {
+    const chatContainer = document.getElementById('roomChatContainer');
+    const chatHeader = document.getElementById('chatHeader');
+
+    if (!chatContainer || !chatHeader) return;
+
+    let isDragging = false;
+    let initialX, initialY, currentX, currentY;
+    let xOffset = 0, yOffset = 0;
+
+    chatHeader.addEventListener('mousedown', (e) => {
+        // Jangan di-drag kalau yg diklik tombol minimize-nya
+        if (e.target.tagName.toLowerCase() === 'i' || e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'span') {
+             // Biarkan klik jalan (bisa di klik buka/tutup)
+        } else {
+             initialX = e.clientX - xOffset;
+             initialY = e.clientY - yOffset;
+             isDragging = true;
+             chatHeader.style.cursor = 'grabbing';
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if(isDragging) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            chatHeader.style.cursor = 'grab';
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            xOffset = currentX;
+            yOffset = currentY;
+            // Geser kotaknya
+            chatContainer.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
+        }
+    });
+};
+
+// Jalankan fungsi drag saat halaman siap
+document.addEventListener("DOMContentLoaded", () => {
+    initDraggableChat();
+});
