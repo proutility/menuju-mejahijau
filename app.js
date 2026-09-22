@@ -682,6 +682,19 @@ function selectKey(idx) {
 }
 
 window.switchDatabase = async function(key) {
+    // 🛑 FIX NO 4: Cegat keras kalau user masih ada di dalam Mode Room / Review Room
+    if (typeof currentAppMode !== 'undefined' && (currentAppMode === 'room' || currentAppMode === 'room-review')) {
+        const yakin = await PROTAMA.confirm(
+            "MASIH DALAM ROOM!", 
+            "Kamu belum keluar dari mode Multiplayer. Yakin mau keluar room sekarang untuk pindah ke latihan mandiri?"
+        );
+        if (yakin) {
+            window.keluarDariRoom();
+        } else {
+            return; // Batalkan perpindahan modul, paksa tetep di dalem room!
+        }
+    }
+
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     window.speechSynthesis.cancel();
     
@@ -830,7 +843,6 @@ window.switchDatabase = async function(key) {
         alert("Gagal memuat soal: " + e.message);
     }
 };
-
 window.downloadSoal = async function(modulKey) {
     console.log(`Sedang mendownload soal ${modulKey}...`);
     const qRef = collection(db, "bank_soal", modulKey, "daftar_soal");
@@ -1209,9 +1221,7 @@ function loadQuestion(idx) {
             chk.disabled = isSubmitted;
         }
 
-// ==========================================================
-        // 🛑 KUNCI UI KHUSUS MODE ROOM (JANGAN DIHAPUS)
-        // ==========================================================
+// 🛑 ATURAN GEMBOK SIDEBAR TERBARU
         if (currentAppMode === 'room') {
             const pBtn = document.getElementById('prevBtn');
             const nBtn = document.getElementById('nextBtn');
@@ -1221,19 +1231,29 @@ function loadQuestion(idx) {
             if(nBtn) nBtn.style.display = 'none';
             if(rWrap) rWrap.style.display = 'none';
 
-            // KUNCI MATI SEMUA: Nomor Soal, Modul Kiri, Tombol Kanan (Admin/Keluar), & Tombol Selesai
+            // Kunci semua (Kiri dan Kanan)
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.4'; // Bikin kusam biar kelihatan ga bisa diklik
+                btn.style.opacity = '0.4';
+            });
+        } else if (currentAppMode === 'room-review') {
+            // 🛑 MODE REVIEW MULTIPLAYER: Kanan Buka, Kiri Tetap Gembok!
+            document.querySelectorAll('.modul-btn, .btn-finish').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.4';
+            });
+            document.querySelectorAll('.nav-btn, .btn-action').forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
             });
         } else {
-            // Balikin ke normal kalo balik ke mode latihan mandiri
+            // Mode Normal (Singleplayer): Buka Semua
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
             });
         }
-} // <--- PASTIKAN KURUNG KURAWAL INI TETAP ADA SEBAGAI PENUTUP
+} // <--- PASTIKAN KURUNG PENUTUP loadQuestion INI TETAP ADA
 
 // ==========================================
 // FUNGSI SUBMIT FINAL
@@ -1544,10 +1564,9 @@ window.closeResult = function() {
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
     
-    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
-    currentAppMode = 'ujian'; 
+    // 🛑 FIX: Kalau lagi di Room jadikan 'room-review', kalau Singleplayer jadikan 'ujian'
+    currentAppMode = typeof currentRoomCode !== 'undefined' && currentRoomCode ? 'room-review' : 'ujian'; 
     
-    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
     const rWrap = document.querySelector('.ragu-wrapper');
@@ -1567,8 +1586,43 @@ window.closeResult = function() {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
     
-    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(currentIdx);
+};
+
+window.startReviewWrong = function() {
+    if (!wrongIndices || wrongIndices.length === 0) {
+        alert("Tidak ada jawaban salah untuk direview.");
+        return;
+    }
+    if (window.innerWidth <= 768) {
+        const sb = document.querySelector('.sidebar-right');
+        if (sb && sb.classList.contains('show-mobile')) {
+            window.toggleMobileSidebar();
+        }
+    }
+    
+    isReviewMode = true;
+    
+    // 🛑 FIX: Kalau lagi di Room jadikan 'room-review', kalau Singleplayer jadikan 'ujian'
+    currentAppMode = typeof currentRoomCode !== 'undefined' && currentRoomCode ? 'room-review' : 'ujian';
+
+    const pBtn = document.getElementById('prevBtn');
+    const nBtn = document.getElementById('nextBtn');
+    const rWrap = document.querySelector('.ragu-wrapper');
+    if(pBtn) pBtn.style.display = '';
+    if(nBtn) nBtn.style.display = '';
+    if(rWrap) rWrap.style.display = '';
+
+    const overlay = document.getElementById('resultOverlay');
+    if(overlay) overlay.style.setProperty('display', 'none', 'important');
+    
+    const ind = document.getElementById('modeIndicator');
+    ind.innerText = "MODE: REVIEW SALAH";
+    ind.style.background = "#ffebee";
+    ind.style.color = "#c62828";
+    ind.style.border = "1px solid #ffcdd2";
+    
+    loadQuestion(wrongIndices[0]);
 };
 
 window.startReviewWrong = function() {
@@ -2309,27 +2363,27 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 // ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: FIX AUTO-SKIP & LEADERBOARD ENDING)
+// MESIN SINKRONISASI REAL-TIME (FINAL: +SPEED TRACKER & ROOM-REVIEW)
 // ==========================================================
 window.roomSyncTimer = null; 
+window.waktuJawabPeserta = []; // Array nyimpen kecepatan tangan lu
 
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room'; 
-    if (timerInterval) clearInterval(timerInterval);
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
 
-    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    const roomRef = doc(db, "rooms", kodeRoom); 
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    const roomRef = doc(window.db, "rooms", kodeRoom); 
     
-    roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
+    window.roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
             alert("Room telah dibubarkan oleh Host.");
             return window.keluarDariRoom();
         }
 
         const data = snap.data();
-        const amIHost = (currentUser && data.hostUid === currentUser.uid);
+        const amIHost = (typeof currentUser !== 'undefined' && currentUser && data.hostUid === currentUser.uid);
         
-        // --- A. WAITING ROOM ---
         if (data.status === 'waiting') {
             const listEl = document.getElementById('listPesertaRoom');
             const countEl = document.getElementById('countPeserta');
@@ -2346,13 +2400,12 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
-            if (timerInterval) clearInterval(timerInterval);
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             window.activePembahasanIdx = -1; 
             
-            if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
+            if (typeof currentQuestions === 'undefined' || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
                 if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
@@ -2376,40 +2429,31 @@ window.pantauRoom = (kodeRoom) => {
             if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
-                window.sedangAutoSkip = false; // Reset Gembok Auto-Skip
+                window.sedangAutoSkip = false; 
                 
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
                 const fbBox = document.getElementById('feedbackBox');
                 if (fbBox) { fbBox.style.display = 'none'; fbBox.classList.remove('show'); }
                 
-                loadQuestion(data.currentIdx);
+                window.loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+                window.timeRemaining = 30; 
                 
-                let sisaWaktuRoom = 30; 
-                
-                const setLayarTimer = (detik) => {
-                    let txt = "00:00:" + String(detik).padStart(2, '0');
-                    let t1 = document.getElementById('timerDisplay');
-                    let t2 = document.getElementById('floatingTimer');
-                    
-                    let colorClass = 'timer-green';
-                    if(detik <= 10) colorClass = 'timer-panic';
-                    else if(detik <= 20) colorClass = 'timer-yellow';
-
-                    if (t1) { t1.innerText = txt; t1.className = 'timer-container ' + colorClass; }
-                    if (t2) { t2.innerText = txt; t2.className = colorClass; }
-                };
-                
-                setLayarTimer(sisaWaktuRoom); 
+                window.currentAppMode = 'ujian';
+                if (typeof updateTimerDisplay === 'function') updateTimerDisplay();
+                window.currentAppMode = 'room';
                 
                 window.roomSyncTimer = setInterval(() => {
-                    sisaWaktuRoom--;
-                    if (sisaWaktuRoom >= 0) setLayarTimer(sisaWaktuRoom);
-                    
-                    if (sisaWaktuRoom <= 0) {
+                    window.timeRemaining--;
+                    if (window.timeRemaining >= 0) {
+                        window.currentAppMode = 'ujian';
+                        if (typeof updateTimerDisplay === 'function') updateTimerDisplay();
+                        window.currentAppMode = 'room';
+                    }
+                    if (window.timeRemaining <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
@@ -2433,20 +2477,41 @@ window.pantauRoom = (kodeRoom) => {
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.4';
                 });
+
+                setTimeout(() => {
+                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                    opsiElements.forEach((el, i) => {
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            if (isAnswerLocked) return;
+                            isAnswerLocked = true;
+                            
+                            el.style.background = "#fff9c4"; 
+                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                            
+                            userAnswers[currentIdx] = i;
+                            // 🛑 REKAM KECEPATAN: Simpan sisa detik
+                            window.waktuJawabPeserta[currentIdx] = window.timeRemaining || 0;
+                            
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
+                        };
+                    });
+                }, 300); 
+
+                if (data.players && data.players[currentUser.uid] && data.players[currentUser.uid].jawabanSekarang !== null) {
+                     updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: null }).catch(e=>console.log(e));
+                }
             }
 
-            // 2. LOGIKA AUTO-SKIP (Berjalan real-time)
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
-                
                 for (let uid in data.players) {
                     totalPeserta++;
                     if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
                         yangSudahJawab++;
                     }
                 }
-
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
@@ -2454,43 +2519,21 @@ window.pantauRoom = (kodeRoom) => {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-
-                        setTimeout(() => {
-                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
-                        }, 1000);
+                        setTimeout(() => { updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e)); }, 1000);
                     }
                 }
             }
-
-            // 3. EFEK KLIK OPSI
-            setTimeout(() => {
-                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
-                opsiElements.forEach((el, i) => {
-                    el.onclick = (e) => {
-                        e.preventDefault();
-                        if (isAnswerLocked) return;
-                        isAnswerLocked = true;
-                        
-                        el.style.background = "#fff9c4"; 
-                        el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
-                        
-                        userAnswers[currentIdx] = i;
-                        updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
-                    };
-                });
-            }, 300); 
         } 
         
-        // --- C. PEMBAHASAN BARENG (TOMBOL NEXT KHUSUS HOST) ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-            if (timerInterval) clearInterval(timerInterval);
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
                 isAnswerLocked = true;
                 
-                if (!currentQuestions || currentQuestions.length === 0) return;
+                if (typeof currentQuestions === 'undefined' || currentQuestions.length === 0) return;
                 const q = currentQuestions[data.currentIdx];
                 if (!q) return;
 
@@ -2498,13 +2541,13 @@ window.pantauRoom = (kodeRoom) => {
                 
                 if (jawabanGue === null || jawabanGue === undefined) {
                     userAnswers[data.currentIdx] = -1; 
+                    window.waktuJawabPeserta[data.currentIdx] = 0; // Kalo ga jawab berarti speed 0
                 }
 
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
                     el.style.pointerEvents = 'none'; 
                     el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '');
-                    
                     if (i === q.answer) {
                         el.classList.add('review-correct');
                         if (!el.innerHTML.includes('✅')) el.innerHTML += ' ✅ (Kunci Jawaban)';
@@ -2520,14 +2563,10 @@ window.pantauRoom = (kodeRoom) => {
                 if (fb) {
                     fb.style.display = 'block';
                     fb.classList.add('show');
-                    
                     let fText = document.getElementById('feedbackText');
                     if (fText) {
-                        if (jawabanGue === null || jawabanGue === undefined) {
-                            fText.innerHTML = "<b style='color:red; font-size:1.1rem;'>❌ WAKTU HABIS! ANDA TIDAK MENJAWAB (DIANGGAP SALAH)</b><br><br>" + (q.explanation || "-");
-                        } else {
-                            fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
-                        }
+                        if (jawabanGue === null || jawabanGue === undefined) fText.innerHTML = "<b style='color:red; font-size:1.1rem;'>❌ WAKTU HABIS! ANDA TIDAK MENJAWAB (DIANGGAP SALAH)</b><br><br>" + (q.explanation || "-");
+                        else fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
                     }
                     const fCite = document.getElementById('feedbackCite');
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
@@ -2577,12 +2616,9 @@ window.pantauRoom = (kodeRoom) => {
                             
                             let nextIndex = parseInt(data.currentIdx) + 1; 
                             if (nextIndex < currentQuestions.length) {
-                                // 🛑 FIX BUG 1: HAPUS SEMUA JAWABAN SISAAN PESERTA SEBELUM GANTI SOAL!
                                 let updates = { status: 'soal', currentIdx: nextIndex };
                                 if (data.players) {
-                                    for (let uid in data.players) {
-                                        updates[`players.${uid}.jawabanSekarang`] = null;
-                                    }
+                                    for (let uid in data.players) { updates[`players.${uid}.jawabanSekarang`] = null; }
                                 }
                                 updateDoc(roomRef, updates).catch(e=>console.log(e));
                             } else {
@@ -2594,44 +2630,39 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-// --- D. SELESAI ---
+        // --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
-            if (timerInterval) clearInterval(timerInterval);
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
-            // 🛑 FIX BUG 1: Lepas gembok Mode Room biar navigasi & sidebar kanan bisa diklik pas Review!
-            window.currentAppMode = 'ujian'; 
-
-            // 🛑 FIX BUG 2: Hapus kotak biru "Kendali Host" karena ujian udah kelar
+            // 🛑 FIX MODE REVIEW-ROOM: Buka kendali kanan, tapi gembok daftar modul di kiri!
+            window.currentAppMode = 'room-review'; 
+            
             let oldBadge = document.getElementById('roomBadgeKhusus');
             if (oldBadge) oldBadge.remove();
 
-            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
+            if (window.roomListenerUnsubscribe) window.roomListenerUnsubscribe();
             
-            if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-            
-            // Sabotase layarnya: Tutup pop-up individu secara paksa!
             const popUpBiasa = document.getElementById('resultOverlay');
             if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
             
-            // Hitung nilai dan simpan ke riwayat global (Dijalankan diam-diam di background)
             if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
             
-            // 🛑 HITUNG SKOR LOKAL KHUSUS ROOM INI SAJA
+            // 🛑 HITUNG SKOR & BONUS KECEPATAN
             let scoreRoom = 0;
+            let totalSpeedBonus = 0;
             userAnswers.forEach((a, i) => {
                 if (currentQuestions[i] && a === currentQuestions[i].answer) {
                     scoreRoom++;
+                    totalSpeedBonus += (window.waktuJawabPeserta[i] || 0); // Kumpulin detik sisanya
                 }
             });
             const finalScoreRoom = Math.round((scoreRoom / currentQuestions.length) * 100);
 
-            // 🛑 SETOR SKOR KE ROOM FIREBASE, LALU PANGGIL UI MULTIPLAYER
+            // SETOR NILAI + SPEED KE FIREBASE LALU PANGGIL LEADERBOARD
             updateDoc(roomRef, {
-                [`players.${currentUser.uid}.skor`]: finalScoreRoom
+                [`players.${currentUser.uid}.skor`]: finalScoreRoom,
+                [`players.${currentUser.uid}.speed`]: totalSpeedBonus
             }).then(() => {
                 if (typeof window.tampilkanHasilMultiplayer === 'function') {
                     window.tampilkanHasilMultiplayer(kodeRoom);
@@ -2732,10 +2763,10 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
 // ==========================================
-// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED)
+// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED: +TIE BREAKER WAKTU)
 // ==========================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
-    PROTAMA.loading("Merekap skor semua peserta...");
+    PROTAMA.loading("Merekap skor dan kecepatan semua peserta...");
 
     setTimeout(async () => {
         try {
@@ -2749,7 +2780,13 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 playersArray.push(data.players[uid]);
             }
 
-            playersArray.sort((a, b) => b.skor - a.skor);
+            // 🛑 LOGIKA TIE-BREAKER: Urutkan Skor dulu, kalau skornya SAMA, urutkan dari Kecepatan!
+            playersArray.sort((a, b) => {
+                if (b.skor === a.skor) {
+                    return (b.speed || 0) - (a.speed || 0); // Sisa detik banyakan yang menang
+                }
+                return b.skor - a.skor;
+            });
 
             PROTAMA.close();
 
@@ -2776,9 +2813,16 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     txtColor = '#1565c0';
                 }
 
+                // 🛑 TAMPILAN KECEPATAN: Munculin bonus detik di bawah nama
+                let speedText = p.speed !== undefined ? `<br><small style="color:#27ae60; font-size:0.75rem;"><i class="fas fa-bolt"></i> Bonus Waktu: ${p.speed} dtk</small>` : '';
+
                 listHTML += `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1.1rem; font-weight:bold; color:${txtColor};">
-                        <div><span style="display:inline-block; width:35px; text-align:center;">${medal}</span> ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}</div>
+                        <div>
+                            <span style="display:inline-block; width:35px; text-align:center;">${medal}</span> 
+                            ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}
+                            ${speedText}
+                        </div>
                         <div style="color:var(--primary); font-size:1.3rem;">${p.skor} <small style="font-size:0.8rem; color:#666;">Pts</small></div>
                     </div>
                 `;
