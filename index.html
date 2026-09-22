@@ -511,15 +511,24 @@
 
     <script type="module" src="app.js"></script>
 
-    <!-- KOTAK LIVE CHAT MULTIPLAYER -->
-<div id="roomChatContainer" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:450px; background:white; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.2); z-index:9999; flex-direction:column; overflow:hidden; font-family:'Poppins', sans-serif; border: 1px solid #ddd;">
-    <div style="background:var(--primary); color:white; padding:12px 15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="window.toggleChatBody()">
-        <span><i class="fas fa-comments"></i> Live Chat Mabar</span>
-        <span id="chatNotifBadge" style="background:#e74c3c; color:white; font-size:0.7rem; padding:3px 7px; border-radius:10px; display:none; animation: pulse 1s infinite;">Baru!</span>
+<!-- KOTAK LIVE CHAT MULTIPLAYER (Bisa Di-Drag & Minimize) -->
+<div id="roomChatContainer" style="display:none; position:fixed; bottom:20px; right:20px; width:300px; max-height:450px; background:white; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.2); z-index:99999; flex-direction:column; overflow:hidden; font-family:'Poppins', sans-serif; border: 1px solid #ddd;">
+    
+    <!-- HEADER DRAGGABLE -->
+    <div id="chatHeader" style="background:var(--primary); color:white; padding:12px 15px; font-weight:bold; display:flex; justify-content:space-between; align-items:center; cursor:grab; user-select:none;">
+        <span onclick="window.toggleChatBody()" style="cursor:pointer; flex: 1; display:flex; align-items:center; gap: 8px;">
+            <i class="fas fa-comments"></i> <span>Live Chat Mabar</span>
+            <span id="chatNotifBadge" style="background:#e74c3c; color:white; font-size:0.7rem; padding:3px 7px; border-radius:10px; display:none;">Baru!</span>
+        </span>
+        <button onclick="window.toggleChatBody()" style="background:none; border:none; color:white; font-size:1.1rem; cursor:pointer;">
+            <i id="chatChevron" class="fas fa-chevron-down"></i>
+        </button>
     </div>
+
+    <!-- BODY CHAT -->
     <div id="chatBody" style="display:flex; flex-direction:column; height:320px;">
         <div id="chatMessages" style="flex:1; overflow-y:auto; padding:15px; background:#f0f2f5; display:flex; flex-direction:column; gap:10px;">
-            <!-- Pesan dari JS bakal numpuk di sini -->
+            <!-- Pesan masuk sini -->
         </div>
         <div style="padding:10px; border-top:1px solid #eee; display:flex; gap:8px; background:white;">
             <input type="text" id="chatInput" autocomplete="off" placeholder="Ketik pesan..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:20px; outline:none; font-size:0.85rem;" onkeypress="if(event.key==='Enter') window.kirimPesanChat()">
