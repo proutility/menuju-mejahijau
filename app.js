@@ -1708,18 +1708,18 @@ window.backToMenu = async function() {
     if (yakin) {
         // 🛑 1. DEEP CLEAN DOM (Hapus Sisa HTML Soal Lama Secara Paksa)
         const navGrid = document.getElementById('navGrid');
-        if (navGrid) navGrid.innerHTML = ''; // Hancurkan sisa kotak nomor di kanan!
+        if (navGrid) navGrid.innerHTML = ''; 
 
         const optContainer = document.getElementById('optionsContainer');
-        if (optContainer) optContainer.innerHTML = ''; // Hancurkan sisa pilihan ganda!
+        if (optContainer) optContainer.innerHTML = ''; 
 
         const fbBox = document.getElementById('feedbackBox');
-        if (fbBox) fbBox.style.display = 'none'; // Sembunyikan sisa pembahasan!
+        if (fbBox) fbBox.style.display = 'none'; 
 
         const progText = document.getElementById('progressText');
-        if (progText) progText.innerText = "Menjawab: 0/0"; // Reset teks progress
+        if (progText) progText.innerText = "Menjawab: 0/0"; 
 
-        // 🛑 2. DEEP CLEAN JS (Reset Variabel Pakai Try-Catch)
+        // 🛑 2. DEEP CLEAN JS (Sapu Jagat + Matikan isSubmitted)
         try {
             if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
             if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
@@ -1728,6 +1728,7 @@ window.backToMenu = async function() {
             }
             isAnswerLocked = false;
             isReviewMode = false;
+            isSubmitted = false; // <--- INI BIANG KEROKNYA!
         } catch(e) { console.log("Aman, reset internal berhasil."); }
 
         window.userAnswers = [];
@@ -1735,8 +1736,8 @@ window.backToMenu = async function() {
         window.currentIdx = 0;
         window.isAnswerLocked = false;
         window.isReviewMode = false;
+        window.isSubmitted = false; // <--- TEMBAK MATI DI WINDOW JUGA
 
-        // --- SISA KODE BAWAAN LU ---
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
@@ -2469,11 +2470,6 @@ window.mulaiUjianRoom = async (kode) => {
     }
 };
 
-// ==========================================================
-// MESIN SINKRONISASI REAL-TIME (FINAL: FIX AUTO-SKIP & LEADERBOARD ENDING)
-// ==========================================================
-window.roomSyncTimer = null; 
-
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room'; 
     if (timerInterval) clearInterval(timerInterval);
@@ -2512,6 +2508,10 @@ window.pantauRoom = (kodeRoom) => {
             currentAppMode = 'room'; 
             if (timerInterval) clearInterval(timerInterval);
             window.activePembahasanIdx = -1; 
+            
+            // 🛑 PENGAMAN UTAMA: PAKSA STATUS UJIAN JADI BELUM SELESAI!
+            isSubmitted = false;
+            window.isSubmitted = false;
             
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
@@ -2596,7 +2596,6 @@ window.pantauRoom = (kodeRoom) => {
                 });
             }
 
-            // 2. LOGIKA AUTO-SKIP (Berjalan real-time)
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
@@ -2623,7 +2622,6 @@ window.pantauRoom = (kodeRoom) => {
                 }
             }
 
-            // 3. EFEK KLIK OPSI
             setTimeout(() => {
                 const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                 opsiElements.forEach((el, i) => {
@@ -2738,7 +2736,6 @@ window.pantauRoom = (kodeRoom) => {
                             
                             let nextIndex = parseInt(data.currentIdx) + 1; 
                             if (nextIndex < currentQuestions.length) {
-                                // 🛑 FIX BUG 1: HAPUS SEMUA JAWABAN SISAAN PESERTA SEBELUM GANTI SOAL!
                                 let updates = { status: 'soal', currentIdx: nextIndex };
                                 if (data.players) {
                                     for (let uid in data.players) {
@@ -2760,10 +2757,8 @@ window.pantauRoom = (kodeRoom) => {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (timerInterval) clearInterval(timerInterval);
             
-            // 🛑 FIX BUG 1: Lepas gembok Mode Room biar navigasi & sidebar kanan bisa diklik pas Review!
             window.currentAppMode = 'ujian'; 
 
-            // 🛑 FIX BUG 2: Hapus kotak biru "Kendali Host" karena ujian udah kelar
             let oldBadge = document.getElementById('roomBadgeKhusus');
             if (oldBadge) oldBadge.remove();
 
@@ -2774,14 +2769,11 @@ window.pantauRoom = (kodeRoom) => {
             
             if (roomListenerUnsubscribe) roomListenerUnsubscribe();
             
-            // Sabotase layarnya: Tutup pop-up individu secara paksa!
             const popUpBiasa = document.getElementById('resultOverlay');
             if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
             
-            // Hitung nilai dan simpan ke riwayat global (Dijalankan diam-diam di background)
             if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
             
-            // 🛑 HITUNG SKOR LOKAL KHUSUS ROOM INI SAJA
             let scoreRoom = 0;
             userAnswers.forEach((a, i) => {
                 if (currentQuestions[i] && a === currentQuestions[i].answer) {
@@ -2790,7 +2782,6 @@ window.pantauRoom = (kodeRoom) => {
             });
             const finalScoreRoom = Math.round((scoreRoom / currentQuestions.length) * 100);
 
-            // 🛑 SETOR SKOR KE ROOM FIREBASE, LALU PANGGIL UI MULTIPLAYER
             updateDoc(roomRef, {
                 [`players.${currentUser.uid}.skor`]: finalScoreRoom
             }).then(() => {
@@ -2801,7 +2792,6 @@ window.pantauRoom = (kodeRoom) => {
         }
     });
 };
-
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
@@ -2828,7 +2818,7 @@ window.keluarDariRoom = () => {
     window.isHost = false;
     window.currentAppMode = 'ujian'; 
     
-    // 🛑 DEEP CLEAN MULTIPLAYER
+    // 🛑 DEEP CLEAN MULTIPLAYER + isSubmitted
     try {
         if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
         if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
@@ -2837,8 +2827,11 @@ window.keluarDariRoom = () => {
         }
         isAnswerLocked = false;
         isReviewMode = false;
+        isSubmitted = false; // <--- TEMBAK MATI
+        
         window.isAnswerLocked = false;
         window.isReviewMode = false;
+        window.isSubmitted = false; // <--- TEMBAK MATI
     } catch(e) { console.log("Aman."); }
 
     const unfreezeStyle = document.getElementById('review-unfreeze');
