@@ -1775,9 +1775,16 @@ window.backToMenu = async function() {
 
 window.keluarDariRoom = () => {
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    
+    // 🛑 RESET VARIABEL GLOBAL & LOKAL (OBAT ANTI FREEZE)
     window.currentRoomCode = null;
+    if (typeof currentRoomCode !== 'undefined') currentRoomCode = null;
+    
     window.isHost = false;
+    if (typeof isHost !== 'undefined') isHost = false;
+    
     window.currentAppMode = 'ujian'; 
+    if (typeof currentAppMode !== 'undefined') currentAppMode = 'ujian'; 
     
     // 🛑 DEEP CLEAN MULTIPLAYER
     try {
@@ -1794,6 +1801,7 @@ window.keluarDariRoom = () => {
         window.isSubmitted = false; 
         
         window.currentDatabaseId = null; // <--- Hapus ingatan ID Modul
+        if (typeof currentDatabaseId !== 'undefined') currentDatabaseId = null;
     } catch(e) { console.log("Aman."); }
 
     const unfreezeStyle = document.getElementById('review-unfreeze');
@@ -1822,6 +1830,9 @@ window.keluarDariRoom = () => {
     // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN (Single Player)
     const finishContainer = document.querySelector('.finish-container');
     if (finishContainer) finishContainer.style.display = 'block';
+    
+    // 🛑 BERSIHKAN CLASS BODY (Biar gak nyangkut UI Room)
+    document.body.classList.remove('ujian-berjalan', 'room-mode');
     
     window.backToMenu(); 
 };
