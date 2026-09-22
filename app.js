@@ -737,7 +737,13 @@ window.switchDatabase = async function(key) {
         } else {
             console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
             let rawQuestions = []; 
-            qSnap.forEach((doc) => { let d = doc.data(); d.id = doc.id; rawQuestions.push(d); });
+            
+            // 🛑 CUCI CETAKAN SOAL: Bikin salinan mentah (Deep Clone) biar 100% perawan!
+            qSnap.forEach((doc) => { 
+                let d = JSON.parse(JSON.stringify(doc.data())); // Menghilangkan semua jejak properti gaib
+                d.id = doc.id; 
+                rawQuestions.push(d); 
+            });
             
             // JANGAN DIACAK KALO MODE ROOM!
             if (currentAppMode !== 'room') {
@@ -757,8 +763,11 @@ window.switchDatabase = async function(key) {
             });
 
             currentQuestions = rawQuestions;
+            
+            // 🛑 RESET ARRAY JAWABAN DARI NOL
             userAnswers = new Array(currentQuestions.length).fill(null);
             raguStatus = new Array(currentQuestions.length).fill(false);
+            
             totalExamTime = currentQuestions.length * 30; 
             timeRemaining = totalExamTime;
             
