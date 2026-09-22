@@ -4875,7 +4875,8 @@ window.renderChatMessages = (messages) => {
     let html = '';
     
     messages.forEach(m => {
-        const isMe = m.uid === currentUser.uid;
+        // 🛑 PROTEKSI 1: Pakai window.currentUser biar nggak error 'undefined'
+        const isMe = (window.currentUser && m.uid === window.currentUser.uid);
         const align = isMe ? 'flex-end' : 'flex-start';
         const bg = isMe ? '#dcf8c6' : '#ffffff';
         const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0';
@@ -4896,14 +4897,17 @@ window.renderChatMessages = (messages) => {
     // Munculin notifikasi tulisan "Baru!" kalau chat lagi ditutup
     const body = document.getElementById('chatBody');
     const badge = document.getElementById('chatNotifBadge');
-    if (messages.length > prevCount && body.style.display === 'none') {
+    if (messages.length > prevCount && body && body.style.display === 'none') {
         if (badge) badge.style.display = 'inline-block';
     }
 
-    // Auto scroll ke chat paling bawah tiap ada pesan baru
-    chatBox.scrollTop = chatBox.scrollHeight;
+    // 🛑 PROTEKSI 2: Gunakan setTimeout untuk Auto-Scroll
+    // Kadang browser butuh waktu sepersekian detik buat menggambar HTML baru
+    // Kalau nggak pakai setTimeout, scroll-nya bakal nyangkut di atas pesan baru
+    setTimeout(() => {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }, 50);
 };
-
 // ==========================================
 // LOGIKA UI CHAT: MINIMIZE & DRAG
 // ==========================================
