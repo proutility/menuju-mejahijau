@@ -2344,7 +2344,7 @@ window.mulaiUjianRoom = async (kode) => {
     // Pake PROTAMA.confirm biar popup modern dan gak diblokir browser
     const yakin = await PROTAMA.confirm(
         "MULAI LATIHAN?", 
-        "Pastikan semua peserta udah masuk room. Gas mulai sekarang?"
+        "Pastikan semua peserta sudah masuk room. Mulai sekarang?"
     );
     
     if (!yakin) return;
