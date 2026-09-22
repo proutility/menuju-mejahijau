@@ -1551,12 +1551,21 @@ window.closeResult = function() {
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 2. KUNCI SIDEBAR KIRI & KANAN ATAS
-    document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
+    // 2. KUNCI SIDEBAR KIRI AJA (Daftar Modul)
+    document.querySelectorAll('.modul-btn').forEach(btn => {
         btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.4';
+        btn.style.opacity = '0.5';
         btn.disabled = true;
     });
+
+    // 🛑 KUNCI KANAN ATAS KHUSUS MULTIPLAYER AJA!
+    if (window.currentRoomCode || window.currentAppMode === 'room') {
+        document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.4';
+            btn.disabled = true;
+        });
+    }
 
     // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
@@ -1610,6 +1619,15 @@ window.closeResult = function() {
             opt.style.pointerEvents = 'auto';
             opt.style.opacity = '1';
         });
+
+        // 🛑 BUKA KUNCI KANAN ATAS UNTUK SINGLEPLAYER (Biar lu bisa Keluar)
+        if (!window.currentRoomCode && window.currentAppMode !== 'room') {
+            document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+                btn.disabled = false;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+        }
     }, 100); // Jeda 100ms nunggu loadQuestion selesai render
 };
 
@@ -1634,12 +1652,21 @@ window.startReviewWrong = function() {
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 2. KUNCI SIDEBAR KIRI & KANAN ATAS
-    document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
+    // 2. KUNCI SIDEBAR KIRI AJA (Daftar Modul)
+    document.querySelectorAll('.modul-btn').forEach(btn => {
         btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.4';
+        btn.style.opacity = '0.5';
         btn.disabled = true;
     });
+
+    // 🛑 KUNCI KANAN ATAS KHUSUS MULTIPLAYER AJA!
+    if (window.currentRoomCode || window.currentAppMode === 'room') {
+        document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.4';
+            btn.disabled = true;
+        });
+    }
 
     // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
@@ -1696,6 +1723,15 @@ window.startReviewWrong = function() {
             opt.style.pointerEvents = 'auto';
             opt.style.opacity = '1';
         });
+
+        // 🛑 BUKA KUNCI KANAN ATAS UNTUK SINGLEPLAYER (Biar lu bisa Keluar)
+        if (!window.currentRoomCode && window.currentAppMode !== 'room') {
+            document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+                btn.disabled = false;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+        }
     }, 100); 
 };
 
