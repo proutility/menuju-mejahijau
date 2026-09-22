@@ -92,6 +92,8 @@
     
     <div id="appSection" style="display:none;">
         <div class="watermark" id="watermark">Developed by Ilham Nur Pratama - APP 23 - PA Serang</div>
+        
+        <!-- SIDEBAR KIRI (DAFTAR MODUL) -->
         <div class="sidebar-left">
             <div class="sidebar-header">
                 <img src="PRO-TAMA.png" alt="Logo" style="height: 55px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
@@ -109,84 +111,77 @@
                 <div class="timer-pill" id="timerDisplay">00:00:00</div>
             </div>
             
-            <div style="display: flex; gap: 5px; padding: 10px; background: #eee; border-bottom: 1px solid #ddd;">
-                <button onclick="window.switchCategory('hukum')" id="btnTabHukum" style="flex:1; padding:10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; background:var(--primary); color:white; transition: 0.3s;">
-                    <i class="fas fa-gavel"></i> HUKUM
-                </button>
-                <button onclick="window.switchCategory('psikotes')" id="btnTabPsikotes" style="flex:1; padding:10px; border:none; border-radius:5px; cursor:pointer; font-weight:bold; background:#ccc; color:#333; transition: 0.3s;">
-                    <i class="fas fa-brain"></i> PSIKOTES
-                </button>
+            <div class="modul-selector" style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
+                
+                <!-- GRUP 1: HUKUM DASAR -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="window.toggleAccordion('group-dasar', this)" style="width: 100%; text-align: left; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <span><i class="fas fa-book"></i> Hukum Dasar (Substansi)</span>
+                        <i class="fas fa-chevron-down icon-panah"></i>
+                    </button>
+                    <div id="group-dasar" class="accordion-content" style="display: block; padding-top: 8px; margin-left: 10px; border-left: 2px solid var(--primary); padding-left: 10px;">
+                        <button class="modul-btn" id="btn-modul_ilmuhukum" onclick="window.switchDatabase('modul_ilmuhukum')">Ilmu Hukum</button>
+                        <button class="modul-btn" id="btn-modul1" onclick="window.switchDatabase('modul1')">Modul 1: Kekuasaan Kehakiman</button>
+                        <button class="modul-btn" id="btn-modul2" onclick="window.switchDatabase('modul2')">Modul 2: Mahkamah Agung</button>
+                        <button class="modul-btn" id="btn-modul3" onclick="window.switchDatabase('modul3')">Modul 3: Peradilan Agama</button>
+                        <button class="modul-btn" id="btn-modul6" onclick="window.switchDatabase('modul6')">Modul 6: PMH & Wanprestasi</button>
+                        <button class="modul-btn" id="btn-modul8" onclick="window.switchDatabase('modul8')">Modul 8: Perkawinan (KHI)</button>
+                        <button class="modul-btn" id="btn-modul8.1" onclick="window.switchDatabase('modul8.1')">Modul 8.1: Perkawinan (Lanjutan)</button>
+                        <button class="modul-btn" id="btn-modul8.2" onclick="window.switchDatabase('modul8.2')">Modul 8.2: Perkawinan (Akhir)</button>
+                        <button class="modul-btn" id="btn-modul8.3" onclick="window.switchDatabase('modul8.3')">Modul 8.3: Perkawinan (UU 1/1974)</button>
+                        <button class="modul-btn" id="btn-modul8.4" onclick="window.switchDatabase('modul8.4')">Modul 8.4: Pelaksana (PP 9/1975)</button>
+                        <button class="modul-btn" id="btn-modul9" onclick="window.switchDatabase('modul9')">Modul 9: Perwalian & Pengangkatan</button>
+                        <button class="modul-btn" id="btn-modul10" onclick="window.switchDatabase('modul10')">Modul 10: Waris Islam (Dasar)</button>
+                        <button class="modul-btn" id="btn-modul10.1" onclick="window.switchDatabase('modul10.1')">Modul 10.1: Waris (KHI)</button>
+                        <button class="modul-btn" id="btn-modul10.2" onclick="window.switchDatabase('modul10.2')">Modul 10.2: Waris (BW)</button>
+                        <button class="modul-btn" id="btn-modul10.3" onclick="window.switchDatabase('modul10.3')">Modul 10.3: Studi Kasus Waris</button>
+                        <button class="modul-btn" id="btn-modul11" onclick="window.switchDatabase('modul11')">Modul 11: Wasiat & Hibah</button>
+                        <button class="modul-btn" id="btn-modul13" onclick="window.switchDatabase('modul13')">Modul 13: Ekonomi Syariah A</button>
+                        <button class="modul-btn" id="btn-modul13.1" onclick="window.switchDatabase('modul13.1')">Modul 13.1: Akad Syariah</button>
+                        <button class="modul-btn" id="btn-modul13.2" onclick="window.switchDatabase('modul13.2')">Modul 13.2: Ekonomi Syariah B</button>
+                        <button class="modul-btn" id="btn-modul14" onclick="window.switchDatabase('modul14')">Modul 14: Perwakafan</button>
+                        <button class="modul-btn" id="btn-modul15" onclick="window.switchDatabase('modul15')">Modul 15: Buku Saku PA A</button>
+                        <button class="modul-btn" id="btn-modul15.1" onclick="window.switchDatabase('modul15.1')">Modul 15.1: Buku Saku PA B</button>
+                        <button class="modul-btn" id="btn-modul15.2" onclick="window.switchDatabase('modul15.2')">Modul 15.2: Buku Saku PA C</button>
+                    </div>
+                </div>
+
+                <!-- GRUP 2: HUKUM ACARA -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="window.toggleAccordion('group-acara', this)" style="width: 100%; text-align: left; padding: 12px; background: #d35400; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <span><i class="fas fa-gavel"></i> Hukum Acara (Formil)</span>
+                        <i class="fas fa-chevron-right icon-panah"></i>
+                    </button>
+                    <div id="group-acara" class="accordion-content" style="display: none; padding-top: 8px; margin-left: 10px; border-left: 2px solid #d35400; padding-left: 10px;">
+                        <button class="modul-btn" id="btn-modul4" onclick="window.switchDatabase('modul4')">Modul 4: Pendaftaran & Relaas</button>
+                        <button class="modul-btn" id="btn-modul5" onclick="window.switchDatabase('modul5')">Modul 5: Gugatan & Permohonan</button>
+                        <button class="modul-btn" id="btn-modul7" onclick="window.switchDatabase('modul7')">Modul 7: Mediasi</button>
+                        <button class="modul-btn" id="btn-modul12" onclick="window.switchDatabase('modul12')">Modul 12: Sita Jaminan</button> 
+                        <button class="modul-btn" id="btn-modul16" onclick="window.switchDatabase('modul16')">Modul 16: Prodeo & Posbakum</button>
+                        <button class="modul-btn" id="btn-modul17" onclick="window.switchDatabase('modul17')">Modul 17: E-Court & Tercatat</button>
+                    </div>
+                </div>
+
+                <!-- GRUP 3: PSIKOTES & TPA -->
+                <div class="accordion-item">
+                    <button class="accordion-header" onclick="window.toggleAccordion('group-psikotes', this)" style="width: 100%; text-align: left; padding: 12px; background: #8e44ad; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <span><i class="fas fa-brain"></i> Psikotes & TPA</span>
+                        <i class="fas fa-chevron-right icon-panah"></i>
+                    </button>
+                    <div id="group-psikotes" class="accordion-content" style="display: none; padding-top: 8px; margin-left: 10px; border-left: 2px solid #8e44ad; padding-left: 10px;">
+                        <button class="modul-btn" id="btn-modul18" onclick="window.switchDatabase('modul18')">Modul 18: PAPI Kostick</button>
+                        <button class="modul-btn" id="btn-modul19" onclick="window.switchDatabase('modul19')">Modul 19: TPA Verbal</button>
+                        <button class="modul-btn" id="btn-modul19.1" onclick="window.switchDatabase('modul19.1')">Modul 19.1: TPA Numerik</button>
+                        <button class="modul-btn" id="btn-modul19.2" onclick="window.switchDatabase('modul19.2')">Modul 19.2: TPA Kuant&Tekn</button>
+                        <button class="modul-btn" id="btn-modul19.3" onclick="window.switchDatabase('modul19.3')">Modul 19.3: TPA Daya Ingat</button>
+                        <button class="modul-btn" id="btn-modul19.4" onclick="window.switchDatabase('modul19.4')">Modul 19.4: TPA Figural</button>
+                    </div>
+                </div>
             </div>
-            
-<!-- TAB TOMBOL LAMA DIHAPUS, LANGSUNG MASUK KE ACCORDION MODUL -->
-<div class="modul-selector" style="padding: 10px; display: flex; flex-direction: column; gap: 10px;">
-    
-    <!-- GRUP 1: HUKUM DASAR -->
-    <div class="accordion-item">
-        <button class="accordion-header" onclick="window.toggleAccordion('group-dasar', this)" style="width: 100%; text-align: left; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <span><i class="fas fa-book"></i> Hukum Dasar (Substansi)</span>
-            <i class="fas fa-chevron-down icon-panah"></i>
-        </button>
-        <div id="group-dasar" class="accordion-content" style="display: block; padding-top: 8px; margin-left: 10px; border-left: 2px solid var(--primary); padding-left: 10px;">
-            <button class="modul-btn" id="btn-modul_ilmuhukum" onclick="window.switchDatabase('modul_ilmuhukum')">Ilmu Hukum</button>
-            <button class="modul-btn" id="btn-modul1" onclick="window.switchDatabase('modul1')">Modul 1: Kekuasaan Kehakiman</button>
-            <button class="modul-btn" id="btn-modul2" onclick="window.switchDatabase('modul2')">Modul 2: Mahkamah Agung</button>
-            <button class="modul-btn" id="btn-modul3" onclick="window.switchDatabase('modul3')">Modul 3: Peradilan Agama</button>
-            <button class="modul-btn" id="btn-modul6" onclick="window.switchDatabase('modul6')">Modul 6: PMH & Wanprestasi</button>
-            <button class="modul-btn" id="btn-modul8" onclick="window.switchDatabase('modul8')">Modul 8: Perkawinan (KHI)</button>
-            <button class="modul-btn" id="btn-modul8.1" onclick="window.switchDatabase('modul8.1')">Modul 8.1: Perkawinan (Lanjutan)</button>
-            <button class="modul-btn" id="btn-modul8.2" onclick="window.switchDatabase('modul8.2')">Modul 8.2: Perkawinan (Akhir)</button>
-            <button class="modul-btn" id="btn-modul8.3" onclick="window.switchDatabase('modul8.3')">Modul 8.3: Perkawinan (UU 1/1974)</button>
-            <button class="modul-btn" id="btn-modul8.4" onclick="window.switchDatabase('modul8.4')">Modul 8.4: Pelaksana (PP 9/1975)</button>
-            <button class="modul-btn" id="btn-modul9" onclick="window.switchDatabase('modul9')">Modul 9: Perwalian & Pengangkatan</button>
-            <button class="modul-btn" id="btn-modul10" onclick="window.switchDatabase('modul10')">Modul 10: Waris Islam (Dasar)</button>
-            <button class="modul-btn" id="btn-modul10.1" onclick="window.switchDatabase('modul10.1')">Modul 10.1: Waris (KHI)</button>
-            <button class="modul-btn" id="btn-modul10.2" onclick="window.switchDatabase('modul10.2')">Modul 10.2: Waris (BW)</button>
-            <button class="modul-btn" id="btn-modul10.3" onclick="window.switchDatabase('modul10.3')">Modul 10.3: Studi Kasus Waris</button>
-            <button class="modul-btn" id="btn-modul11" onclick="window.switchDatabase('modul11')">Modul 11: Wasiat & Hibah</button>
-            <button class="modul-btn" id="btn-modul13" onclick="window.switchDatabase('modul13')">Modul 13: Ekonomi Syariah A</button>
-            <button class="modul-btn" id="btn-modul13.1" onclick="window.switchDatabase('modul13.1')">Modul 13.1: Akad Syariah</button>
-            <button class="modul-btn" id="btn-modul13.2" onclick="window.switchDatabase('modul13.2')">Modul 13.2: Ekonomi Syariah B</button>
-            <button class="modul-btn" id="btn-modul14" onclick="window.switchDatabase('modul14')">Modul 14: Perwakafan</button>
-            <button class="modul-btn" id="btn-modul15" onclick="window.switchDatabase('modul15')">Modul 15: Buku Saku PA A</button>
-            <button class="modul-btn" id="btn-modul15.1" onclick="window.switchDatabase('modul15.1')">Modul 15.1: Buku Saku PA B</button>
-            <button class="modul-btn" id="btn-modul15.2" onclick="window.switchDatabase('modul15.2')">Modul 15.2: Buku Saku PA C</button>
         </div>
-    </div>
+        <!-- AKHIR SIDEBAR KIRI -->
 
-    <!-- GRUP 2: HUKUM ACARA -->
-    <div class="accordion-item">
-        <button class="accordion-header" onclick="window.toggleAccordion('group-acara', this)" style="width: 100%; text-align: left; padding: 12px; background: #d35400; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <span><i class="fas fa-gavel"></i> Hukum Acara (Formil)</span>
-            <i class="fas fa-chevron-right icon-panah"></i>
-        </button>
-        <div id="group-acara" class="accordion-content" style="display: none; padding-top: 8px; margin-left: 10px; border-left: 2px solid #d35400; padding-left: 10px;">
-            <button class="modul-btn" id="btn-modul4" onclick="window.switchDatabase('modul4')">Modul 4: Pendaftaran & Relaas</button>
-            <button class="modul-btn" id="btn-modul5" onclick="window.switchDatabase('modul5')">Modul 5: Gugatan & Permohonan</button>
-            <button class="modul-btn" id="btn-modul7" onclick="window.switchDatabase('modul7')">Modul 7: Mediasi</button>
-            <button class="modul-btn" id="btn-modul12" onclick="window.switchDatabase('modul12')">Modul 12: Sita Jaminan</button> 
-            <button class="modul-btn" id="btn-modul16" onclick="window.switchDatabase('modul16')">Modul 16: Prodeo & Posbakum</button>
-            <button class="modul-btn" id="btn-modul17" onclick="window.switchDatabase('modul17')">Modul 17: E-Court & Tercatat</button>
-        </div>
-    </div>
-
-    <!-- GRUP 3: PSIKOTES & TPA -->
-    <div class="accordion-item">
-        <button class="accordion-header" onclick="window.toggleAccordion('group-psikotes', this)" style="width: 100%; text-align: left; padding: 12px; background: #8e44ad; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <span><i class="fas fa-brain"></i> Psikotes & TPA</span>
-            <i class="fas fa-chevron-right icon-panah"></i>
-        </button>
-        <div id="group-psikotes" class="accordion-content" style="display: none; padding-top: 8px; margin-left: 10px; border-left: 2px solid #8e44ad; padding-left: 10px;">
-            <button class="modul-btn" id="btn-modul18" onclick="window.switchDatabase('modul18')">Modul 18: PAPI Kostick</button>
-            <button class="modul-btn" id="btn-modul19" onclick="window.switchDatabase('modul19')">Modul 19: TPA Verbal</button>
-            <button class="modul-btn" id="btn-modul19.1" onclick="window.switchDatabase('modul19.1')">Modul 19.1: TPA Numerik</button>
-            <button class="modul-btn" id="btn-modul19.2" onclick="window.switchDatabase('modul19.2')">Modul 19.2: TPA Kuant&Tekn</button>
-            <button class="modul-btn" id="btn-modul19.3" onclick="window.switchDatabase('modul19.3')">Modul 19.3: TPA Daya Ingat</button>
-            <button class="modul-btn" id="btn-modul19.4" onclick="window.switchDatabase('modul19.4')">Modul 19.4: TPA Figural</button>
-        </div>
-    </div>
-</div>
-
+        <!-- MAIN CONTENT (SOAL UJIAN) -->
         <div class="main-content">
             <div class="card">
                 <div class="question-header">
@@ -235,7 +230,9 @@
                 </div>
             </div>
         </div>
+        <!-- AKHIR MAIN CONTENT -->
 
+        <!-- SIDEBAR KANAN (STATISTIK & TOMBOL) -->
         <div class="sidebar-right">
             <div id="lobbySidebarContent" style="padding: 20px; display: flex; flex-direction: column; height: 100%; gap: 15px; overflow-y: auto;">
                 <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative;">
@@ -256,6 +253,7 @@
                     </div>
                     <button onclick="window.openLeaderboard('global')" style="width:100%; margin-top:10px; background:none; border:none; color:var(--primary); font-size:0.75rem; cursor:pointer; font-weight:bold;">Lihat Selengkapnya ></button>
                 </div>
+                
                 <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                     <h5 style="margin: 0 0 10px 0; color: #555; font-size: 0.9rem; border-bottom: 2px solid #f0f0f0; padding-bottom: 5px;">
                         <i class="fas fa-users" style="color: var(--primary);"></i> Latihan Bareng (Room)
@@ -320,8 +318,10 @@
                 </div>
             </div>
         </div>
+        <!-- AKHIR SIDEBAR KANAN -->
     </div>
 
+    <!-- OVERLAYS (TETAP SAMA) -->
     <div id="resultOverlay" class="result-overlay">
         <div class="result-box" style="width:400px;">
             <h2>Hasil Ujian</h2>
