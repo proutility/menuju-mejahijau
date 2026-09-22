@@ -93,7 +93,7 @@
     <div id="appSection" style="display:none;">
         <div class="watermark" id="watermark">Developed by Ilham Nur Pratama - APP 23 - PA Serang</div>
         
-        <!-- SIDEBAR KIRI (DAFTAR MODUL) -->
+      <!-- SIDEBAR KIRI (DAFTAR MODUL) -->
         <div class="sidebar-left">
             <div class="sidebar-header">
                 <img src="PRO-TAMA.png" alt="Logo" style="height: 55px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">
@@ -111,7 +111,8 @@
                 <div class="timer-pill" id="timerDisplay">00:00:00</div>
             </div>
             
-            <div class="modul-selector" style="padding: 10px; padding-bottom: 100px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
+            <!-- WADAH MODUL (Punya ID modulSidebarContainer) -->
+            <div id="modulSidebarContainer" class="modul-selector" style="padding: 10px; padding-bottom: 100px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1;">
                 
                 <!-- GRUP 1: HUKUM DASAR -->
                 <div class="accordion-item">
@@ -178,6 +179,31 @@
                     </div>
                 </div>
             </div>
+
+            <!-- WADAH LIVE CHAT (Menggantikan posisi modul saat Multiplayer) -->
+            <div id="roomChatContainer" style="display: none; flex-direction: column; flex: 1; background: white; border-top: 2px solid var(--gold); overflow: hidden;">
+                <!-- Header Chat -->
+                <div style="background: var(--primary); color: white; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #003300;">
+                    <span><i class="fas fa-comments"></i> Live Chat Mabar</span>
+                    <span id="chatNotifBadge" style="background: #e74c3c; color: white; font-size: 0.7rem; padding: 3px 7px; border-radius: 10px; display: none;">Baru!</span>
+                </div>
+
+                <!-- Body Chat -->
+                <div id="chatBody" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                    <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 15px; background: #f0f2f5; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Pesan masuk sini -->
+                    </div>
+                    
+                    <!-- Input Chat -->
+                    <div style="padding: 10px; border-top: 1px solid #eee; display: flex; gap: 8px; background: white;">
+                        <input type="text" id="chatInput" autocomplete="off" placeholder="Ketik pesan..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 0.85rem;" onkeypress="if(event.key === 'Enter') window.kirimPesanChat()">
+                        <button onclick="window.kirimPesanChat()" style="background: var(--primary); color: white; border: none; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <!-- AKHIR SIDEBAR KIRI -->
 
