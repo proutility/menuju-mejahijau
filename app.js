@@ -3928,6 +3928,38 @@ document.addEventListener('keydown', function(e) {
         return false;
     }
 });
+// ==========================================================
+// PENGAWAS ANTI-FREEZE SAAT PINDAH SOAL DI MODE REVIEW
+// ==========================================================
+document.addEventListener('click', function(e) {
+    // Hanya bereaksi kalau aplikasi sedang dalam mode review (jawaban terkunci)
+    if (window.isAnswerLocked) {
+        
+        // Cek apakah user ngeklik tombol Selanjutnya, Sebelumnya, atau Nomor Soal
+        const isNavigasi = e.target.closest('#nextBtn') || 
+                           e.target.closest('#prevBtn') || 
+                           e.target.closest('.nav-btn') || 
+                           e.target.closest('.nomor-btn');
+
+        if (isNavigasi) {
+            // Jeda 0.1 detik menunggu sistem lu ngegembok soal baru, lalu kita bongkar paksa lagi!
+            setTimeout(() => {
+                const pBtn = document.getElementById('prevBtn');
+                const nBtn = document.getElementById('nextBtn');
+                
+                if (pBtn) { pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
+                if (nBtn) { nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
+
+                // Bebaskan kembali nomor urut dan pilihan jawaban
+                document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn, #optionsContainer button, #optionsContainer input, .option-item').forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
+                });
+            }, 100); 
+        }
+    }
+});
 
 window.bukaDetailPapi = async (docId) => {
     try {
