@@ -2556,6 +2556,13 @@ window.pantauRoom = (kodeRoom) => {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (timerInterval) clearInterval(timerInterval);
             
+            // 🛑 FIX BUG 1: Lepas gembok Mode Room biar navigasi & sidebar kanan bisa diklik pas Review!
+            window.currentAppMode = 'ujian'; 
+
+            // 🛑 FIX BUG 2: Hapus kotak biru "Kendali Host" karena ujian udah kelar
+            let oldBadge = document.getElementById('roomBadgeKhusus');
+            if (oldBadge) oldBadge.remove();
+
             document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                 btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
