@@ -2803,8 +2803,22 @@ window.tampilkanLobby = function() {
     
     document.getElementById('optionsContainer').innerHTML = '';
     document.getElementById('feedbackBox').style.display = 'none';
-    document.querySelectorAll('.modul-btn').forEach(el => el.classList.remove('active-modul'));
     document.getElementById('timerDisplay').innerText = "00:00:00";
+
+    // 🛑 BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
+    document.querySelectorAll('.modul-btn').forEach(el => {
+        el.classList.remove('active-modul');
+        el.disabled = false;             // Hancurkan gembok HTML
+        el.style.pointerEvents = 'auto'; // Buka akses klik
+        el.style.opacity = '1';          // Kembalikan warna terang
+    });
+
+    // 🛑 BONGKAR GEMBOK TOMBOL KANAN ATAS (Jaga-jaga kalau nyangkut)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+        btn.disabled = false;
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
