@@ -1805,16 +1805,18 @@ window.keluarDariRoom = () => {
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
 
-// 🛑 SEMBUNYIKAN, BERSIHKAN, DAN RESET POSISI KOTAK CHAT
+// 🛑 RESET TAMPILAN SIDEBAR KIRI
 const chatContainer = document.getElementById('roomChatContainer');
-if (chatContainer) {
-    chatContainer.style.display = 'none';
-    chatContainer.style.transform = 'translate3d(0px, 0px, 0px)'; // Reset posisi ke pojok kanan bawah
+const modulContainer = document.getElementById('modulSidebarContainer');
+const chatBox = document.getElementById('chatMessages');
+
+if (chatContainer && modulContainer) {
+    chatContainer.style.display = 'none';   // Tutup obrolan
+    modulContainer.style.display = 'flex';  // Munculkan daftar modul lagi
 }
 
-const chatBox = document.getElementById('chatMessages');
 if (chatBox) {
-    chatBox.innerHTML = ''; // Bersihkan riwayat chat di layar
+    chatBox.innerHTML = ''; // Bersihkan riwayat teks
 }
     
     window.backToMenu(); 
@@ -2534,12 +2536,18 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
-
-        // --- RENDER LIVE CHAT ---
+        
+               // --- RENDER LIVE CHAT DI SIDEBAR KIRI ---
         const chatContainer = document.getElementById('roomChatContainer');
-        if (chatContainer) {
-            chatContainer.style.display = 'flex'; // Munculkan UI chat
-            if (data.messages) window.renderChatMessages(data.messages);
+        const modulContainer = document.getElementById('modulSidebarContainer');
+        
+        if (chatContainer && modulContainer) {
+            modulContainer.style.display = 'none'; // Sembunyikan daftar modul
+            chatContainer.style.display = 'flex';  // Munculkan chat penuhi layar kiri
+            
+            if (data.messages) {
+                window.renderChatMessages(data.messages);
+            }
         }
         
         // --- A. WAITING ROOM ---
