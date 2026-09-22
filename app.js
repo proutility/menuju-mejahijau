@@ -2291,11 +2291,43 @@ let currentRoomCode = null;
 let isHost = false;
 
 // ==========================================================
-// 1. HOST: BIKIN ROOM BARU
+// 1. HOST: BIKIN ROOM BARU (VERSI DROPDOWN MODERN)
 // ==========================================================
 window.bikinRoomLatihan = async () => {
-    const modul = prompt("Masukkan ID Modul buat Latihan Bareng (misal: modul1):");
-    if(!modul) return;
+    // 🛑 Menggunakan SweetAlert2 Dropdown biar gak usah ngetik manual
+    const { value: modulId } = await Swal.fire({
+        title: 'Bikin Room Mabar 🎮',
+        text: 'Pilih modul materi yang mau dikerjakan bareng:',
+        input: 'select',
+        inputOptions: {
+            'ilmuhukum': 'Ilmu Hukum',
+            'modul1': 'Modul 1: Kekuasaan Kehakiman',
+            'modul2': 'Modul 2: Mahkamah Agung',
+            'modul3': 'Modul 3: Peradilan Agama',
+            'modul6': 'Modul 6: PMH & Wanprestasi',
+            'modul8': 'Modul 8: Perkawinan (KHI)',
+            'modul8.1': 'Modul 8.1: Perkawinan (Lanjutan)',
+            'modul8.2': 'Modul 8.2: Perkawinan (Akhir)'
+        },
+        inputPlaceholder: '--- Silahkan Pilih Modul ---',
+        showCancelButton: true,
+        confirmButtonColor: '#2e7d32', // Hijau MA
+        cancelButtonColor: '#d32f2f',  // Merah
+        confirmButtonText: '<i class="fas fa-check"></i> Buat Room',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Pilih modulnya dulu bro! 😅';
+            }
+        },
+        customClass: {
+            popup: 'swal2-modal-modern',
+            input: 'swal2-input-modern'
+        }
+    });
+
+    // Kalau user klik batal atau close popup-nya
+    if (!modulId) return;
 
     const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
     PROTAMA.loading("Membangun Room...");
@@ -2304,7 +2336,7 @@ window.bikinRoomLatihan = async () => {
         await setDoc(doc(window.db, "rooms", kodeRoom), {
             hostUid: currentUser.uid,
             hostName: currentUser.displayName,
-            modulId: modul.toLowerCase().replace(/\s+/g, ''),
+            modulId: modulId, // Langsung tembak ID dari pilihan dropdown
             status: 'waiting', 
             currentIdx: 0,
             players: {
