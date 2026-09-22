@@ -2291,23 +2291,56 @@ let currentRoomCode = null;
 let isHost = false;
 
 // ==========================================================
-// 1. HOST: BIKIN ROOM BARU (VERSI DROPDOWN MODERN)
+// 1. HOST: BIKIN ROOM BARU (VERSI DROPDOWN MODERN - FULL LIST)
 // ==========================================================
 window.bikinRoomLatihan = async () => {
-    // 🛑 Menggunakan SweetAlert2 Dropdown biar gak usah ngetik manual
+    // 🛑 Menggunakan SweetAlert2 Dropdown dengan Optgroup
     const { value: modulId } = await Swal.fire({
         title: 'Bikin Room Mabar 🎮',
         text: 'Pilih modul materi yang mau dikerjakan bareng:',
         input: 'select',
         inputOptions: {
-            'ilmuhukum': 'Ilmu Hukum',
-            'modul1': 'Modul 1: Kekuasaan Kehakiman',
-            'modul2': 'Modul 2: Mahkamah Agung',
-            'modul3': 'Modul 3: Peradilan Agama',
-            'modul6': 'Modul 6: PMH & Wanprestasi',
-            'modul8': 'Modul 8: Perkawinan (KHI)',
-            'modul8.1': 'Modul 8.1: Perkawinan (Lanjutan)',
-            'modul8.2': 'Modul 8.2: Perkawinan (Akhir)'
+            'Hukum Dasar (Substansi)': {
+                'modul_ilmuhukum': 'Ilmu Hukum',
+                'modul1': 'Modul 1: Kekuasaan Kehakiman',
+                'modul2': 'Modul 2: Mahkamah Agung',
+                'modul3': 'Modul 3: Peradilan Agama',
+                'modul6': 'Modul 6: PMH & Wanprestasi',
+                'modul8': 'Modul 8: Perkawinan (KHI)',
+                'modul8.1': 'Modul 8.1: Perkawinan (Lanjutan)',
+                'modul8.2': 'Modul 8.2: Perkawinan (Akhir)',
+                'modul8.3': 'Modul 8.3: Perkawinan (UU 1/1974)',
+                'modul8.4': 'Modul 8.4: Pelaksana (PP 9/1975)',
+                'modul9': 'Modul 9: Perwalian & Pengangkatan',
+                'modul10': 'Modul 10: Waris Islam (Dasar)',
+                'modul10.1': 'Modul 10.1: Waris (KHI)',
+                'modul10.2': 'Modul 10.2: Waris (BW)',
+                'modul10.3': 'Modul 10.3: Studi Kasus Waris',
+                'modul11': 'Modul 11: Wasiat & Hibah',
+                'modul13': 'Modul 13: Ekonomi Syariah A',
+                'modul13.1': 'Modul 13.1: Akad Syariah',
+                'modul13.2': 'Modul 13.2: Ekonomi Syariah B',
+                'modul14': 'Modul 14: Perwakafan',
+                'modul15': 'Modul 15: Buku Saku PA A',
+                'modul15.1': 'Modul 15.1: Buku Saku PA B',
+                'modul15.2': 'Modul 15.2: Buku Saku PA C'
+            },
+            'Hukum Acara (Formil)': {
+                'modul4': 'Modul 4: Pendaftaran & Relaas',
+                'modul5': 'Modul 5: Gugatan & Permohonan',
+                'modul7': 'Modul 7: Mediasi',
+                'modul12': 'Modul 12: Sita Jaminan',
+                'modul16': 'Modul 16: Prodeo & Posbakum',
+                'modul17': 'Modul 17: E-Court & Tercatat'
+            },
+            'Psikotes & TPA': {
+                'modul18': 'Modul 18: PAPI Kostick',
+                'modul19': 'Modul 19: TPA Verbal',
+                'modul19.1': 'Modul 19.1: TPA Numerik',
+                'modul19.2': 'Modul 19.2: TPA Kuant & Tekn',
+                'modul19.3': 'Modul 19.3: TPA Daya Ingat',
+                'modul19.4': 'Modul 19.4: TPA Figural'
+            }
         },
         inputPlaceholder: '--- Silahkan Pilih Modul ---',
         showCancelButton: true,
@@ -2358,7 +2391,6 @@ window.bikinRoomLatihan = async () => {
         PROTAMA.alert("Error", "Gagal bikin room: " + e.message, "error");
     }
 };
-
 // ==========================================================
 // 2. PESERTA: GABUNG KE ROOM
 // ==========================================================
