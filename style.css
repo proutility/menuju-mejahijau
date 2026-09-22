@@ -946,3 +946,15 @@ div.swal2-container {
     flex-grow: 1;
     overflow-y: auto;
 }
+
+/* --- PERCANTIK DROPDOWN SWEETALERT --- */
+.swal2-input-modern {
+    font-size: 1rem !important;
+    padding: 10px !important;
+    border-radius: 8px !important;
+    border: 2px solid #2e7d32 !important;
+}
+.swal2-modal-modern {
+    border-top: 5px solid #2e7d32 !important;
+    border-radius: 12px !important;
+}
