@@ -2550,25 +2550,32 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         const data = snap.data();
+        
         // Atur visibilitas tombol Selesai Ujian
         const finishContainer = document.querySelector('.finish-container');
         if (finishContainer) {
             if (data.status === 'waiting' || data.status === 'pembahasan') {
-                finishContainer.style.display = 'none'; // Hilang pas nunggu / review
+                finishContainer.style.display = 'none'; 
             } else if (data.status === 'ujian') {
-        finishContainer.style.display = 'block'; // Muncul pas ujian jalan
-    }
-}
+                finishContainer.style.display = 'block'; 
+            }
+        }
+        
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
         
-               // --- RENDER LIVE CHAT DI SIDEBAR KIRI ---
+        // --- RENDER LIVE CHAT DI SIDEBAR KIRI ---
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
         if (chatContainer && modulContainer) {
-            modulContainer.style.display = 'none'; // Sembunyikan daftar modul
-            chatContainer.style.display = 'flex';  // Munculkan chat penuhi layar kiri
+            modulContainer.style.display = 'none'; 
+            chatContainer.style.display = 'flex';  
             
+            // JURUS ANTI-FREEZE KHUSUS KOTAK CHAT
+            chatContainer.style.pointerEvents = 'auto';
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) chatInput.style.pointerEvents = 'auto';
+
             if (data.messages) {
                 window.renderChatMessages(data.messages);
             }
@@ -2597,7 +2604,6 @@ window.pantauRoom = (kodeRoom) => {
             if (timerInterval) clearInterval(timerInterval);
             window.activePembahasanIdx = -1; 
             
-            // 🛑 PENGAMAN UTAMA: PAKSA STATUS UJIAN JADI BELUM SELESAI!
             isSubmitted = false;
             window.isSubmitted = false;
             
@@ -2625,7 +2631,7 @@ window.pantauRoom = (kodeRoom) => {
             if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
-                window.sedangAutoSkip = false; // Reset Gembok Auto-Skip
+                window.sedangAutoSkip = false; 
                 
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
@@ -2678,14 +2684,15 @@ window.pantauRoom = (kodeRoom) => {
                 if (nBtn) nBtn.style.display = 'none';
                 if (rWrap) rWrap.style.display = 'none';
                 
-                            // Freeze navigasi, KECUALI bagian dalam Live Chat
-            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                // Abaikan elemen jika dia berada di dalam roomChatContainer
-                if (!btn.closest('#roomChatContainer')) {
-                    btn.style.pointerEvents = 'none';
-                    btn.style.opacity = '0.4';
-                }
-            });
+                // Freeze navigasi, KECUALI bagian dalam Live Chat
+                document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+                    if (!btn.closest('#roomChatContainer')) {
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = '0.4';
+                    }
+                });
+
+            }
 
             if (data.players) {
                 let totalPeserta = 0;
@@ -2735,16 +2742,6 @@ window.pantauRoom = (kodeRoom) => {
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (timerInterval) clearInterval(timerInterval);
-
-            // 🛑 PASTIKAN LIVE CHAT TETAP BISA DIKETIK SAAT REVIEW BARENG
-            const chatWadah = document.getElementById('roomChatContainer');
-            if (chatWadah) {
-                chatWadah.style.pointerEvents = 'auto';
-                const chatInput = document.getElementById('chatInput');
-                const chatBtn = chatWadah.querySelector('button');
-                if (chatInput) chatInput.style.pointerEvents = 'auto';
-                if (chatBtn) chatBtn.style.pointerEvents = 'auto';
-            }
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
@@ -2853,7 +2850,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-// --- D. SELESAI ---
+        // --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (timerInterval) clearInterval(timerInterval);
@@ -2891,8 +2888,8 @@ window.pantauRoom = (kodeRoom) => {
                 }
             }).catch(e => console.log(e));
         }
-    });
-};
+    }); // Tutup dari onSnapshot
+}; // Tutup dari window.pantauRoom
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
