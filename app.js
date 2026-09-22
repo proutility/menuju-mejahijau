@@ -3513,27 +3513,26 @@ function stopHafalanAndStartQuiz() {
     startTimer();
 }
 
-window.toggleAccordion = function(groupId, btnElement) {
-    const contentDiv = document.getElementById(groupId);
-    const iconPanah = btnElement.querySelector('.icon-panah');
+window.switchCategory = function(cat) {
+    const groupHukum = document.getElementById('group-hukum');
+    const groupPsikotes = document.getElementById('group-psikotes');
+    const btnHukum = document.getElementById('btnTabHukum');
+    const btnPsikotes = document.getElementById('btnTabPsikotes');
 
-    // Cek apakah konten lagi ditutup
-    if (contentDiv.style.display === 'none') {
-        // Buka konten
-        contentDiv.style.display = 'block';
-        // Ubah ikon panah ke bawah
-        if (iconPanah) {
-            iconPanah.classList.remove('fa-chevron-right');
-            iconPanah.classList.add('fa-chevron-down');
-        }
+    if (cat === 'hukum') {
+        groupHukum.style.display = 'block';
+        groupPsikotes.style.display = 'none';
+        btnHukum.style.background = 'var(--primary)';
+        btnHukum.style.color = 'white';
+        btnPsikotes.style.background = '#ccc';
+        btnPsikotes.style.color = '#333';
     } else {
-        // Tutup konten
-        contentDiv.style.display = 'none';
-        // Ubah ikon panah ke kanan
-        if (iconPanah) {
-            iconPanah.classList.remove('fa-chevron-down');
-            iconPanah.classList.add('fa-chevron-right');
-        }
+        groupHukum.style.display = 'none';
+        groupPsikotes.style.display = 'block';
+        btnPsikotes.style.background = '#8e44ad'; 
+        btnPsikotes.style.color = 'white';
+        btnHukum.style.background = '#ccc';
+        btnHukum.style.color = '#333';
     }
 }
 
