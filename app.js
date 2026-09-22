@@ -2682,10 +2682,9 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
 // ==========================================
-// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER
+// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED)
 // ==========================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
-    // Tampilkan loading bentar sambil nunggu device lain setor nilai
     PROTAMA.loading("Merekap skor semua peserta...");
 
     setTimeout(async () => {
@@ -2700,16 +2699,13 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 playersArray.push(data.players[uid]);
             }
 
-            // Urutkan dari nilai tertinggi
             playersArray.sort((a, b) => b.skor - a.skor);
 
             PROTAMA.close();
 
-            // Hapus overlay lama kalau ada
             const oldOverlay = document.getElementById('roomResultOverlay');
             if (oldOverlay) oldOverlay.remove();
 
-            // Bikin UI Popup Dinamis (Tanpa nyentuh index.html)
             const overlay = document.createElement('div');
             overlay.id = 'roomResultOverlay';
             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2147483647; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(5px);";
@@ -2725,7 +2721,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 else if (i === 2) { medal = '🥉'; bg = '#fff'; }
                 else { medal = `<span style="font-size:1rem; color:#888;">#${i+1}</span>`; }
 
-                // Highlight nama sendiri
                 if (p.nama === currentUser.displayName) {
                     bg = '#e3f2fd';
                     txtColor = '#1565c0';
@@ -2740,17 +2735,33 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             });
 
             overlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:500px; border-radius:15px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease;">
+                <div style="background:white; width:90%; max-width:500px; border-radius:15px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
+                    
+                    <!-- TANDA SILANG (X) BUAT TUTUP POPUP -->
+                    <button onclick="document.getElementById('roomResultOverlay').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:white; font-size:2rem; cursor:pointer; z-index:10; line-height:1;">&times;</button>
+
                     <div style="background:var(--primary); padding:25px 20px; text-align:center; color:white;">
                         <i class="fas fa-trophy" style="font-size:3rem; color:var(--gold); margin-bottom:10px;"></i>
                         <h2 style="margin:0; font-size:1.8rem; font-weight:900;">HASIL MULTIPLAYER</h2>
                         <p style="margin:5px 0 0 0; opacity:0.9; font-size:1rem;">Modul: ${data.modulId.toUpperCase()} | Room: ${kodeRoom}</p>
                     </div>
-                    <div style="max-height:50vh; overflow-y:auto; background:#f9f9f9;">
+                    <div style="max-height:40vh; overflow-y:auto; background:#f9f9f9;">
                         ${listHTML}
                     </div>
-                    <div style="padding:20px; text-align:center; background:white; border-top:2px solid #eee;">
-                        <button onclick="window.tutupHasilMultiplayer()" style="background:#d32f2f; color:white; padding:15px 25px; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+                    
+                    <!-- TOMBOL REVIEW DAN DOWNLOAD -->
+                    <div style="padding:15px 20px; background:#fff; display:flex; flex-direction:column; gap:10px; border-top:2px solid #eee;">
+                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="background:#d32f2f; color:white; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:1rem;">
+                            <i class="fas fa-search-minus"></i> Review Jawaban Salah
+                        </button>
+                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="background:#27ae60; color:white; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:1rem;">
+                            <i class="fas fa-file-excel"></i> Download Rekap CSV/Excel
+                        </button>
+                    </div>
+
+                    <!-- TOMBOL KELUAR DENGAN KONFIRMASI -->
+                    <div style="padding:15px 20px; text-align:center; background:white; border-top:1px dashed #ccc;">
+                        <button onclick="window.konfirmasiKeluarRoom()" style="background:#2c3e50; color:white; padding:12px 20px; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
                             <i class="fas fa-sign-out-alt"></i> Selesai & Keluar Room
                         </button>
                     </div>
@@ -2758,11 +2769,45 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             `;
 
             document.body.appendChild(overlay);
+
+            // BUKA KUNCI UI BIAR BISA BACA PEMBAHASAN SETELAH DI-CLOSE
+            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+            });
+            window.isAnswerLocked = true; // Tetap kunci biar ga bisa ganti jawaban
+
+            // BIKIN TOMBOL APUNG BUAT MANGGIL RANKING LAGI
+            if (!document.getElementById('btnPanggilRanking')) {
+                const btnRankBack = document.createElement('button');
+                btnRankBack.id = 'btnPanggilRanking';
+                btnRankBack.innerHTML = '<i class="fas fa-trophy"></i> Lihat Peringkat';
+                btnRankBack.style.cssText = "position:fixed; bottom:20px; right:20px; background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; z-index:1000;";
+                btnRankBack.onclick = () => { 
+                    const resO = document.getElementById('roomResultOverlay');
+                    if(resO) resO.style.display = 'flex'; 
+                };
+                document.body.appendChild(btnRankBack);
+            }
+
         } catch (e) {
             console.error("Gagal load hasil multiplayer", e);
             PROTAMA.alert("Gagal", "Gagal memuat hasil akhir.", "error");
         }
-    }, 2500); // Tunggu 2.5 detik biar semua hp selesai setor nilai ke Firebase
+    }, 2500); 
+};
+
+window.konfirmasiKeluarRoom = async () => {
+    const yakin = await PROTAMA.confirm(
+        "KELUAR ROOM?", 
+        "Yakin mau keluar? Kamu tidak bisa melihat pembahasan lagi setelah keluar ke menu utama."
+    );
+    if (yakin) {
+        const btnRankBack = document.getElementById('btnPanggilRanking');
+        if (btnRankBack) btnRankBack.remove();
+        
+        window.tutupHasilMultiplayer();
+    }
 };
 
 window.tutupHasilMultiplayer = () => {
