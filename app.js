@@ -481,7 +481,7 @@ window.openLeaderboard = async (mode = 'local') => {
                 
                 // --- 🔥 FILTER SAKTI: BUANG PAPI KOSTICK 🔥 ---
                 const namaModul = d.modul ? d.modul.toString().toLowerCase() : "";
-                if (namaModul.includes('papi') || namaModul === 'modul18') {
+                if (namaModul.includes('papi') || namaModul === 'modul19') {
                     return; // SKIP DATA INI (Gak dihitung)
                 }
 
@@ -802,8 +802,8 @@ window.switchDatabase = async function(key) {
         updateTimerDisplay();
         renderSidebarGrid();
         
-// --- LOGIKA KHUSUS DAYA INGAT (MODUL 19.3) ---
-        if (key === 'modul19.3') {
+// --- LOGIKA KHUSUS DAYA INGAT (MODUL 20.3) ---
+        if (key === 'modul20.3') {
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             showMemorizationPhase(); 
         } else {
@@ -1251,7 +1251,7 @@ window.submitQuiz = function() {
     const floatTimer = document.getElementById('floatingTimer');
     if(floatTimer) floatTimer.style.setProperty('display', 'none', 'important');
 
-    if (currentDB === 'modul18' || currentDB.includes('papi') || currentDB === 'modul_papi') {
+    if (currentDB === 'modul19' || currentDB.includes('papi') || currentDB === 'modul_papi') {
         document.body.classList.remove('mode-focus');
         isSubmitted = true;
 
