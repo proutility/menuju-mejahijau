@@ -684,11 +684,8 @@ function selectKey(idx) {
 window.switchDatabase = async function(key) {
     // 🛑 FIX NO 4: Cegat keras kalau user masih ada di dalam Mode Room / Review Room
     if (typeof currentAppMode !== 'undefined' && (currentAppMode === 'room' || currentAppMode === 'room-review')) {
-        const yakin = await PROTAMA.confirm(
-            "MASIH DALAM ROOM!", 
-            "Kamu belum keluar dari mode Multiplayer. Yakin mau keluar room sekarang untuk pindah ke latihan mandiri?"
-        );
-        if (yakin) {
+        const yakinKeluar = confirm("MASIH DALAM ROOM!\nKamu belum keluar dari mode Multiplayer. Yakin mau keluar room sekarang untuk pindah ke latihan mandiri?");
+        if (yakinKeluar) {
             window.keluarDariRoom();
         } else {
             return; // Batalkan perpindahan modul, paksa tetep di dalem room!
@@ -737,7 +734,7 @@ window.switchDatabase = async function(key) {
             return;
         }
 
-      const dataLama = loadProgresLokal(key);
+        const dataLama = loadProgresLokal(key);
 
         // ABAIKAN CACHE LOKAL KALO MODE ROOM BIAR SOAL SINKRON SEMUA
         if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room') {
