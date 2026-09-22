@@ -4781,30 +4781,41 @@ window.migrasiModulBiarHemat = async function(modulId) {
         console.error("Gagal migrasi:", e);
     }
 };
-// ==========================================================
-// FITUR LIVE CHAT MULTIPLAYER
-// ==========================================================
 window.kirimPesanChat = async () => {
-    if (!window.currentRoomCode) return;
+    // 🛑 Cari kode room secara global biar ngga meleset
+    const roomCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
+    
+    if (!roomCode) {
+        console.log("Kode Room tidak terdeteksi!");
+        return;
+    }
     
     const input = document.getElementById('chatInput');
     const teks = input.value.trim();
     if (!teks) return;
 
-    input.value = ''; // Kosongkan kotak ketik langsung biar kerasa responsif
+    input.value = ''; // Kosongkan input langsung
+    input.focus();    // Kembalikan kursor ke kotak ketik
 
-    const roomRef = doc(window.db, "rooms", window.currentRoomCode);
+    // 🛑 Cari database dan user
+    const database = window.db || (typeof db !== 'undefined' ? db : null);
+    const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+
+    if (!database || !userSkrg) return;
+
+    const roomRef = doc(database, "rooms", roomCode);
     try {
         await updateDoc(roomRef, {
             messages: arrayUnion({
-                uid: currentUser.uid,
-                nama: currentUser.displayName.split(" ")[0], // Ambil nama depan aja
+                uid: userSkrg.uid,
+                nama: userSkrg.displayName.split(" ")[0], // Ambil nama depan
                 teks: teks,
                 waktu: new Date().toISOString()
             })
         });
     } catch (e) {
         console.error("Gagal kirim chat:", e);
+        alert("Gagal kirim pesan. Pastikan arrayUnion sudah di-import di atas app.js!");
     }
 };
 
