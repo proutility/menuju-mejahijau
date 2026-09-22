@@ -1534,204 +1534,136 @@ window.confirmFinish = async function() { // <--- Ada async di sini
     }
 }
 
+// ==========================================================
+// A. REVIEW SINGLEPLAYER (Membuka Tombol Keluar Kanan Atas)
+// ==========================================================
 window.closeResult = function() {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (window.innerWidth <= 768) {
         const sb = document.querySelector('.sidebar-right');
-        if (sb && sb.classList.contains('show-mobile')) {
-            window.toggleMobileSidebar();
-        }
+        if (sb && sb.classList.contains('show-mobile')) window.toggleMobileSidebar();
     }
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
 
-    // 1. RESET TIMER
-    const t1 = document.getElementById('timerDisplay');
-    const t2 = document.getElementById('floatingTimer');
+    const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 2. KUNCI SIDEBAR KIRI AJA (Daftar Modul)
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-        btn.disabled = true;
-    });
+    // KUNCI KIRI SAJA
+    document.querySelectorAll('.modul-btn').forEach(btn => { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; btn.disabled = true; });
 
-    // 🛑 KUNCI KANAN ATAS KHUSUS MULTIPLAYER AJA!
-    if (window.currentRoomCode || window.currentAppMode === 'room') {
-        document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.4';
-            btn.disabled = true;
-        });
-    }
+    // 🛑 BUKA KANAN ATAS (Biar Singleplayer bisa klik Keluar)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => { btn.disabled = false; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1'; });
 
-    // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
-    if (footer) {
-        footer.style.visibility = 'visible';
-        footer.style.display = 'flex';
-    }
+    if (footer) { footer.style.visibility = 'visible'; footer.style.display = 'flex'; }
 
-    // 4. CSS ANTI FREEZE & HILANGKAN TOMBOL RAGU
     let unfreezeStyle = document.getElementById('review-unfreeze');
-    if (!unfreezeStyle) {
-        unfreezeStyle = document.createElement('style');
-        unfreezeStyle.id = 'review-unfreeze';
-        document.head.appendChild(unfreezeStyle);
-    }
-    unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; }
-        .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }
-    `;
+    if (!unfreezeStyle) { unfreezeStyle = document.createElement('style'); unfreezeStyle.id = 'review-unfreeze'; document.head.appendChild(unfreezeStyle); }
+    unfreezeStyle.innerHTML = `#optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; } .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }`;
 
     const ind = document.getElementById('modeIndicator');
-    if (ind) {
-        ind.innerText = "PEMBAHASAN";
-        ind.style.background = "#e8f5e9";
-        ind.style.color = "#2e7d32";
-        ind.style.border = "1px solid #c8e6c9";
-    }
+    if (ind) { ind.innerText = "PEMBAHASAN"; ind.style.background = "#e8f5e9"; ind.style.color = "#2e7d32"; ind.style.border = "1px solid #c8e6c9"; }
     
-    // Render Soal
     loadQuestion(currentIdx);
     window.isAnswerLocked = true; 
 
-    // 🛑 5. CABUT GEMBOK HTML DARI JAWABAN & TOMBOL BAWAH (Sapu Jagat)
     setTimeout(() => {
-        // Nyalakan tombol Sebelumnya & Selanjutnya
-        const pBtn = document.getElementById('prevBtn');
-        const nBtn = document.getElementById('nextBtn');
+        const pBtn = document.getElementById('prevBtn'); const nBtn = document.getElementById('nextBtn');
         if(pBtn) { pBtn.style.display = 'inline-block'; pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
         if(nBtn) { nBtn.style.display = 'inline-block'; nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
-
-        // Nyalakan tombol Grid Nomor di Kanan
-        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
-            btn.disabled = false;
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
+        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn, #optionsContainer button, #optionsContainer input, .option-item').forEach(btn => {
+            btn.disabled = false; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
         });
-
-        // Bebaskan Pilihan Jawaban (Biar gak pudar/bisa diblok)
-        document.querySelectorAll('#optionsContainer button, #optionsContainer input, .option-item').forEach(opt => {
-            opt.disabled = false;
-            opt.style.pointerEvents = 'auto';
-            opt.style.opacity = '1';
-        });
-
-        // 🛑 BUKA KUNCI KANAN ATAS UNTUK SINGLEPLAYER (Biar lu bisa Keluar)
-        if (!window.currentRoomCode && window.currentAppMode !== 'room') {
-            document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
-                btn.disabled = false;
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
-        }
-    }, 100); // Jeda 100ms nunggu loadQuestion selesai render
+    }, 100); 
 };
 
 window.startReviewWrong = function() {
-    if (!wrongIndices || wrongIndices.length === 0) {
-        alert("Tidak ada jawaban salah untuk direview.");
-        return;
-    }
+    if (!wrongIndices || wrongIndices.length === 0) { alert("Tidak ada jawaban salah untuk direview."); return; }
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (window.innerWidth <= 768) {
         const sb = document.querySelector('.sidebar-right');
-        if (sb && sb.classList.contains('show-mobile')) {
-            window.toggleMobileSidebar();
-        }
+        if (sb && sb.classList.contains('show-mobile')) window.toggleMobileSidebar();
     }
-    
     isReviewMode = true;
 
-    // 1. RESET TIMER
-    const t1 = document.getElementById('timerDisplay');
-    const t2 = document.getElementById('floatingTimer');
+    const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 2. KUNCI SIDEBAR KIRI AJA (Daftar Modul)
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-        btn.disabled = true;
-    });
+    // KUNCI KIRI SAJA
+    document.querySelectorAll('.modul-btn').forEach(btn => { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; btn.disabled = true; });
 
-    // 🛑 KUNCI KANAN ATAS KHUSUS MULTIPLAYER AJA!
-    if (window.currentRoomCode || window.currentAppMode === 'room') {
-        document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
-            btn.style.pointerEvents = 'none';
-            btn.style.opacity = '0.4';
-            btn.disabled = true;
-        });
-    }
+    // 🛑 BUKA KANAN ATAS (Biar Singleplayer bisa klik Keluar)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => { btn.disabled = false; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1'; });
 
-    // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
-    if (footer) {
-        footer.style.visibility = 'visible';
-        footer.style.display = 'flex';
-    }
+    if (footer) { footer.style.visibility = 'visible'; footer.style.display = 'flex'; }
 
-    // 4. CSS ANTI FREEZE & HILANGKAN TOMBOL RAGU
     let unfreezeStyle = document.getElementById('review-unfreeze');
-    if (!unfreezeStyle) {
-        unfreezeStyle = document.createElement('style');
-        unfreezeStyle.id = 'review-unfreeze';
-        document.head.appendChild(unfreezeStyle);
-    }
-    unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; }
-        .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }
-    `;
+    if (!unfreezeStyle) { unfreezeStyle = document.createElement('style'); unfreezeStyle.id = 'review-unfreeze'; document.head.appendChild(unfreezeStyle); }
+    unfreezeStyle.innerHTML = `#optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; } .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }`;
 
     const overlay = document.getElementById('resultOverlay');
     if(overlay) overlay.style.setProperty('display', 'none', 'important');
     
     const ind = document.getElementById('modeIndicator');
-    if (ind) {
-        ind.innerText = "MODE: REVIEW SALAH";
-        ind.style.background = "#ffebee";
-        ind.style.color = "#c62828";
-        ind.style.border = "1px solid #ffcdd2";
-    }
+    if (ind) { ind.innerText = "MODE: REVIEW SALAH"; ind.style.background = "#ffebee"; ind.style.color = "#c62828"; ind.style.border = "1px solid #ffcdd2"; }
     
-    // Render Soal
     loadQuestion(wrongIndices[0]);
     window.isAnswerLocked = true; 
 
-    // 🛑 5. CABUT GEMBOK HTML DARI JAWABAN & TOMBOL BAWAH (Sapu Jagat)
     setTimeout(() => {
-        // Nyalakan tombol Sebelumnya & Selanjutnya
-        const pBtn = document.getElementById('prevBtn');
-        const nBtn = document.getElementById('nextBtn');
+        const pBtn = document.getElementById('prevBtn'); const nBtn = document.getElementById('nextBtn');
         if(pBtn) { pBtn.style.display = 'inline-block'; pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
         if(nBtn) { nBtn.style.display = 'inline-block'; nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
-
-        // Nyalakan tombol Grid Nomor di Kanan
-        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
-            btn.disabled = false;
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
+        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn, #optionsContainer button, #optionsContainer input, .option-item').forEach(btn => {
+            btn.disabled = false; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
         });
+    }, 100); 
+};
 
-        // Bebaskan Pilihan Jawaban (Biar gak pudar/bisa diblok)
-        document.querySelectorAll('#optionsContainer button, #optionsContainer input, .option-item').forEach(opt => {
-            opt.disabled = false;
-            opt.style.pointerEvents = 'auto';
-            opt.style.opacity = '1';
+// ==========================================================
+// B. REVIEW MULTIPLAYER (Mengunci Tombol Kanan Atas)
+// ==========================================================
+window.startReviewMultiplayer = function() {
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    if (window.innerWidth <= 768) {
+        const sb = document.querySelector('.sidebar-right');
+        if (sb && sb.classList.contains('show-mobile')) window.toggleMobileSidebar();
+    }
+    isReviewMode = false; 
+
+    const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
+    if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
+    if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
+
+    // 🛑 KUNCI TOTAL KIRI & KANAN ATAS (Karena Multiplayer pakai tombol ngambang)
+    document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => { 
+        btn.style.pointerEvents = 'none'; btn.style.opacity = '0.4'; btn.disabled = true; 
+    });
+
+    const footer = document.querySelector('.footer-nav');
+    if (footer) { footer.style.visibility = 'visible'; footer.style.display = 'flex'; }
+
+    let unfreezeStyle = document.getElementById('review-unfreeze');
+    if (!unfreezeStyle) { unfreezeStyle = document.createElement('style'); unfreezeStyle.id = 'review-unfreeze'; document.head.appendChild(unfreezeStyle); }
+    unfreezeStyle.innerHTML = `#optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; } .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }`;
+
+    const ind = document.getElementById('modeIndicator');
+    if (ind) { ind.innerText = "REVIEW MULTIPLAYER"; ind.style.background = "#f3e5f5"; ind.style.color = "#8e24aa"; ind.style.border = "1px solid #ce93d8"; }
+    
+    loadQuestion(0);
+    window.isAnswerLocked = true; 
+
+    setTimeout(() => {
+        const pBtn = document.getElementById('prevBtn'); const nBtn = document.getElementById('nextBtn');
+        if(pBtn) { pBtn.style.display = 'inline-block'; pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
+        if(nBtn) { nBtn.style.display = 'inline-block'; nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
+        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn, #optionsContainer button, #optionsContainer input, .option-item').forEach(btn => {
+            btn.disabled = false; btn.style.pointerEvents = 'auto'; btn.style.opacity = '1';
         });
-
-        // 🛑 BUKA KUNCI KANAN ATAS UNTUK SINGLEPLAYER (Biar lu bisa Keluar)
-        if (!window.currentRoomCode && window.currentAppMode !== 'room') {
-            document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
-                btn.disabled = false;
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
-        }
     }, 100); 
 };
 
@@ -1765,13 +1697,16 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
+        // 🛑 DEEP CLEAN: Cuci bersih semua memori jawaban dan status!
+        window.userAnswers = [];
+        window.wrongIndices = [];
+        window.currentIdx = 0;
+        window.isAnswerLocked = false;
+        window.isReviewMode = false;
+        
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
-        
-        // 🛑 OBAT PENAWAR: Reset status ujian biar gak freeze pas mulai baru!
-        window.isAnswerLocked = false;
-        window.isReviewMode = false;
 
         const btnMobile = document.getElementById('btnMobileNav');
         const btnModul = document.getElementById('btnMobileModul');
@@ -1802,7 +1737,6 @@ window.backToMenu = async function() {
         }
     }
 };
-
 window.showResult = function() {
     if(isSubmitted) {
         document.getElementById('resultOverlay').style.display = 'flex';
@@ -2855,26 +2789,27 @@ window.tampilkanTombolKeluarRoom = function() {
     }
 };
 
-// ==========================================================
-// FUNGSI KELUAR ROOM MANUAL
-// ==========================================================
 window.keluarDariRoom = () => {
-    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    currentRoomCode = null;
-    isHost = false;
-    currentAppMode = 'ujian'; // Balikin aplikasi ke mode individu
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    window.currentRoomCode = null;
+    window.isHost = false;
+    window.currentAppMode = 'ujian'; 
     
-    // Hapus tombol keluar room dari pop-up hasil (biar bersih pas ujian individu)
+    // 🛑 DEEP CLEAN MULTIPLAYER
+    window.userAnswers = [];
+    window.wrongIndices = [];
+    window.currentIdx = 0;
+    window.isAnswerLocked = false;
+    window.isReviewMode = false;
+    
     const btnOut = document.getElementById('btnKeluarRoomMode');
     if (btnOut) btnOut.remove(); 
     
-    // Tutup overlay result jika masih terbuka
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
     
-    window.backToMenu(); // Balik ke Lobby Utama
+    window.backToMenu(); 
 };
-
 window.tampilkanLobby = function() {
     // 🛑 OBAT PENAWAR LAPIS KEDUA (Biar makin aman)
     window.isAnswerLocked = false;
