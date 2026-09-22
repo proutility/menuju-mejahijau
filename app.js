@@ -1722,17 +1722,20 @@ window.changeQuestion = function(step) {
     }
 };
 
-window.backToMenu = async function() {  // <--- WAJIB TAMBAH ASYNC!
+window.backToMenu = async function() {  
     const yakin = await PROTAMA.confirm(
         "KEMBALI KE LOBBY", 
         "Yakin mau kembali ke menu utama?"
     );
 
     if (yakin) {
-        // --- SISA KODE LO KE BAWAH BIARIN TETEP SAMA ---
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
+        
+        // 🛑 OBAT PENAWAR: Reset status ujian biar gak freeze pas mulai baru!
+        window.isAnswerLocked = false;
+        window.isReviewMode = false;
 
         const btnMobile = document.getElementById('btnMobileNav');
         const btnModul = document.getElementById('btnMobileModul');
@@ -1754,6 +1757,7 @@ window.backToMenu = async function() {  // <--- WAJIB TAMBAH ASYNC!
         const modulTitle = document.getElementById('modulTitle');
         if(modulTitle) modulTitle.innerText = "Menu Utama";
         document.getElementById('qNum').innerText = "-";
+        
         window.tampilkanLobby();
         window.updateUserStatus(true, "Lobby Utama");
 
@@ -2772,6 +2776,10 @@ window.keluarDariRoom = () => {
 };
 
 window.tampilkanLobby = function() {
+    // 🛑 OBAT PENAWAR LAPIS KEDUA (Biar makin aman)
+    window.isAnswerLocked = false;
+    window.isReviewMode = false;
+
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
     
@@ -2817,18 +2825,19 @@ window.tampilkanLobby = function() {
     `;
     
     document.getElementById('optionsContainer').innerHTML = '';
-    document.getElementById('feedbackBox').style.display = 'none';
+    const fbBox = document.getElementById('feedbackBox');
+    if (fbBox) fbBox.style.display = 'none';
     document.getElementById('timerDisplay').innerText = "00:00:00";
 
-    // 🛑 BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
+    // BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
     document.querySelectorAll('.modul-btn').forEach(el => {
         el.classList.remove('active-modul');
-        el.disabled = false;             // Hancurkan gembok HTML
-        el.style.pointerEvents = 'auto'; // Buka akses klik
-        el.style.opacity = '1';          // Kembalikan warna terang
+        el.disabled = false;             
+        el.style.pointerEvents = 'auto'; 
+        el.style.opacity = '1';          
     });
 
-    // 🛑 BONGKAR GEMBOK TOMBOL KANAN ATAS (Jaga-jaga kalau nyangkut)
+    // BONGKAR GEMBOK TOMBOL KANAN ATAS
     document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.disabled = false;
         btn.style.pointerEvents = 'auto';
@@ -2837,7 +2846,6 @@ window.tampilkanLobby = function() {
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
-
 // ==========================================
 // FUNGSI UI LEADERBOARD (FINAL: FREEZE KANAN ATAS, NUMPUK KANAN BAWAH)
 // ==========================================
