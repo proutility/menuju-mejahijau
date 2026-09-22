@@ -1543,48 +1543,11 @@ window.closeResult = function() {
     }
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
-
-    // 🛑 KUNCI SIDEBAR KIRI: Bekukan daftar modul biar nggak bisa diklik iseng!
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-
-    // 🛑 BUKA KUNCI SIDEBAR KANAN: Biar grid nomor soal bisa diklik buat review
-    document.querySelectorAll('.nav-btn, .btn-action').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
-
-    // 🛑 HILANGKAN TOMBOL KELUAR DI KANAN ATAS
-    const btnExitAtas = document.querySelector('.act-exit');
-    if (btnExitAtas) btnExitAtas.style.display = 'none';
-
-    // 🛑 MUNCULIN TOMBOL KELUAR DI KANAN BAWAH (SEBELAH LIHAT PERINGKAT)
-    if (!document.getElementById('btnFloatKeluarReview')) {
-        const btnKeluar = document.createElement('button');
-        btnKeluar.id = 'btnFloatKeluarReview';
-        btnKeluar.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar ke Menu';
-        btnKeluar.style.cssText = "position:fixed; bottom:20px; right:190px; background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; z-index:1000; transition:0.3s; display:flex; align-items:center; gap:8px;";
-        
-        btnKeluar.onmouseover = () => btnKeluar.style.background = '#a5281b';
-        btnKeluar.onmouseout = () => btnKeluar.style.background = '#c0392b';
-        
-        btnKeluar.onclick = () => {
-            btnKeluar.remove(); // Bersihkan tombol melayang
-            
-            // Buka lagi gembok sidebar kiri & kembalikan tombol keluar atas pas balik ke Menu
-            document.querySelectorAll('.modul-btn').forEach(b => {
-                b.style.pointerEvents = 'auto';
-                b.style.opacity = '1';
-            });
-            if (btnExitAtas) btnExitAtas.style.display = '';
-
-            window.backToMenu();
-        };
-        document.body.appendChild(btnKeluar);
-    }
-
+    
+    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
+    currentAppMode = 'ujian'; 
+    
+    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
     const rWrap = document.querySelector('.ragu-wrapper');
@@ -1604,6 +1567,7 @@ window.closeResult = function() {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
     
+    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(currentIdx);
 };
 
@@ -1620,48 +1584,11 @@ window.startReviewWrong = function() {
     }
     
     isReviewMode = true;
+    
+    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
+    currentAppMode = 'ujian';
 
-    // 🛑 KUNCI SIDEBAR KIRI: Bekukan daftar modul
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-
-    // 🛑 BUKA KUNCI SIDEBAR KANAN: Biar grid nomor soal bisa diklik
-    document.querySelectorAll('.nav-btn, .btn-action').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
-
-    // 🛑 HILANGKAN TOMBOL KELUAR DI KANAN ATAS
-    const btnExitAtas = document.querySelector('.act-exit');
-    if (btnExitAtas) btnExitAtas.style.display = 'none';
-
-    // 🛑 MUNCULIN TOMBOL KELUAR DI KANAN BAWAH
-    if (!document.getElementById('btnFloatKeluarReview')) {
-        const btnKeluar = document.createElement('button');
-        btnKeluar.id = 'btnFloatKeluarReview';
-        btnKeluar.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar ke Menu';
-        btnKeluar.style.cssText = "position:fixed; bottom:20px; right:190px; background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; z-index:1000; transition:0.3s; display:flex; align-items:center; gap:8px;";
-        
-        btnKeluar.onmouseover = () => btnKeluar.style.background = '#a5281b';
-        btnKeluar.onmouseout = () => btnKeluar.style.background = '#c0392b';
-        
-        btnKeluar.onclick = () => {
-            btnKeluar.remove(); 
-            
-            // Buka lagi gembok sidebar kiri & kembalikan tombol keluar atas pas balik ke Menu
-            document.querySelectorAll('.modul-btn').forEach(b => {
-                b.style.pointerEvents = 'auto';
-                b.style.opacity = '1';
-            });
-            if (btnExitAtas) btnExitAtas.style.display = '';
-
-            window.backToMenu();
-        };
-        document.body.appendChild(btnKeluar);
-    }
-
+    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
     const rWrap = document.querySelector('.ragu-wrapper');
@@ -1678,69 +1605,10 @@ window.startReviewWrong = function() {
     ind.style.color = "#c62828";
     ind.style.border = "1px solid #ffcdd2";
     
+    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(wrongIndices[0]);
 };
-window.startReviewWrong = function() {
-    if (!wrongIndices || wrongIndices.length === 0) {
-        alert("Tidak ada jawaban salah untuk direview.");
-        return;
-    }
-    if (window.innerWidth <= 768) {
-        const sb = document.querySelector('.sidebar-right');
-        if (sb && sb.classList.contains('show-mobile')) {
-            window.toggleMobileSidebar();
-        }
-    }
-    
-    isReviewMode = true;
 
-    // 🛑 KUNCI SIDEBAR KIRI: Bekukan daftar modul biar nggak bisa diklik iseng!
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-
-    // 🛑 MUNCULIN TOMBOL KELUAR DI KANAN BAWAH (SEBELAH LIHAT PERINGKAT)
-    if (!document.getElementById('btnFloatKeluarReview')) {
-        const btnKeluar = document.createElement('button');
-        btnKeluar.id = 'btnFloatKeluarReview';
-        btnKeluar.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar ke Menu';
-        btnKeluar.style.cssText = "position:fixed; bottom:20px; right:190px; background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; z-index:1000; transition:0.3s; display:flex; align-items:center; gap:8px;";
-        
-        btnKeluar.onmouseover = () => btnKeluar.style.background = '#a5281b';
-        btnKeluar.onmouseout = () => btnKeluar.style.background = '#c0392b';
-        
-        btnKeluar.onclick = () => {
-            btnKeluar.remove(); // Bersihkan tombol melayang
-            
-            // Buka lagi gembok sidebar kiri pas balik ke Menu Utama
-            document.querySelectorAll('.modul-btn').forEach(b => {
-                b.style.pointerEvents = 'auto';
-                b.style.opacity = '1';
-            });
-            window.backToMenu();
-        };
-        document.body.appendChild(btnKeluar);
-    }
-
-    const pBtn = document.getElementById('prevBtn');
-    const nBtn = document.getElementById('nextBtn');
-    const rWrap = document.querySelector('.ragu-wrapper');
-    if(pBtn) pBtn.style.display = '';
-    if(nBtn) nBtn.style.display = '';
-    if(rWrap) rWrap.style.display = '';
-
-    const overlay = document.getElementById('resultOverlay');
-    if(overlay) overlay.style.setProperty('display', 'none', 'important');
-    
-    const ind = document.getElementById('modeIndicator');
-    ind.innerText = "MODE: REVIEW SALAH";
-    ind.style.background = "#ffebee";
-    ind.style.color = "#c62828";
-    ind.style.border = "1px solid #ffcdd2";
-    
-    loadQuestion(wrongIndices[0]);
-};
 window.changeQuestion = function(step) {
     if (isReviewMode) {
         let currentWrongPos = wrongIndices.indexOf(currentIdx);
