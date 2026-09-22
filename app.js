@@ -2678,11 +2678,14 @@ window.pantauRoom = (kodeRoom) => {
                 if (nBtn) nBtn.style.display = 'none';
                 if (rWrap) rWrap.style.display = 'none';
                 
-                document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+                            // Freeze navigasi, KECUALI bagian dalam Live Chat
+            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+                // Abaikan elemen jika dia berada di dalam roomChatContainer
+                if (!btn.closest('#roomChatContainer')) {
                     btn.style.pointerEvents = 'none';
                     btn.style.opacity = '0.4';
-                });
-            }
+                }
+            });
 
             if (data.players) {
                 let totalPeserta = 0;
@@ -2732,6 +2735,16 @@ window.pantauRoom = (kodeRoom) => {
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (timerInterval) clearInterval(timerInterval);
+
+            // 🛑 PASTIKAN LIVE CHAT TETAP BISA DIKETIK SAAT REVIEW BARENG
+            const chatWadah = document.getElementById('roomChatContainer');
+            if (chatWadah) {
+                chatWadah.style.pointerEvents = 'auto';
+                const chatInput = document.getElementById('chatInput');
+                const chatBtn = chatWadah.querySelector('button');
+                if (chatInput) chatInput.style.pointerEvents = 'auto';
+                if (chatBtn) chatBtn.style.pointerEvents = 'auto';
+            }
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
