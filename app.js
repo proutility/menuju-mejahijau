@@ -768,6 +768,7 @@ window.switchDatabase = async function(key) {
 
         isSubmitted = false;
         isReviewMode = false;
+        isAnswerLocked = false;
         currentIdx = 0;
 
         document.querySelectorAll('.modul-btn').forEach(btn => btn.classList.remove('active-modul'));
