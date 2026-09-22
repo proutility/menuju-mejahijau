@@ -2751,27 +2751,30 @@ window.tampilkanTombolKeluarRoom = function() {
     }
 };
 
-// ==========================================================
-// FUNGSI KELUAR ROOM MANUAL
-// ==========================================================
 window.keluarDariRoom = () => {
-    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    currentRoomCode = null;
-    isHost = false;
-    currentAppMode = 'ujian'; // Balikin aplikasi ke mode individu
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    window.currentRoomCode = null;
+    window.isHost = false;
+    window.currentAppMode = 'ujian'; 
     
-    // Hapus tombol keluar room dari pop-up hasil (biar bersih pas ujian individu)
+    // 🛑 FIX BUG MULTIPLAYER: Reset total status ujian biar gak freeze pas mulai lagi!
+    window.isAnswerLocked = false;
+    window.isReviewMode = false;
+    
     const btnOut = document.getElementById('btnKeluarRoomMode');
     if (btnOut) btnOut.remove(); 
     
-    // Tutup overlay result jika masih terbuka
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
     
-    window.backToMenu(); // Balik ke Lobby Utama
+    window.backToMenu(); 
 };
 
 window.tampilkanLobby = function() {
+    // 🛑 RESET TOTAL STATUS UJIAN DI LOBBY
+    window.isAnswerLocked = false;
+    window.isReviewMode = false;
+    
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
     
@@ -2782,8 +2785,7 @@ window.tampilkanLobby = function() {
     if(lobbySide) lobbySide.style.display = 'flex'; 
 
     const qText = document.getElementById('questionText');
-    
-    const namaPanggilan = currentUser ? currentUser.displayName.split(" ")[0] : "Peserta";
+    const namaPanggilan = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.displayName.split(" ")[0] : "Peserta";
 
     qText.innerHTML = `
         <div style="padding: 20px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.5s;">
@@ -2817,18 +2819,21 @@ window.tampilkanLobby = function() {
     `;
     
     document.getElementById('optionsContainer').innerHTML = '';
-    document.getElementById('feedbackBox').style.display = 'none';
-    document.getElementById('timerDisplay').innerText = "00:00:00";
+    const fbBox = document.getElementById('feedbackBox');
+    if (fbBox) fbBox.style.display = 'none';
+    
+    const tDisp = document.getElementById('timerDisplay');
+    if (tDisp) tDisp.innerText = "00:00:00";
 
-    // 🛑 BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
+    // BONGKAR GEMBOK SIDEBAR KIRI
     document.querySelectorAll('.modul-btn').forEach(el => {
         el.classList.remove('active-modul');
-        el.disabled = false;             // Hancurkan gembok HTML
-        el.style.pointerEvents = 'auto'; // Buka akses klik
-        el.style.opacity = '1';          // Kembalikan warna terang
+        el.disabled = false;             
+        el.style.pointerEvents = 'auto'; 
+        el.style.opacity = '1';          
     });
 
-    // 🛑 BONGKAR GEMBOK TOMBOL KANAN ATAS (Jaga-jaga kalau nyangkut)
+    // BONGKAR GEMBOK TOMBOL KANAN ATAS
     document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.disabled = false;
         btn.style.pointerEvents = 'auto';
@@ -2837,7 +2842,6 @@ window.tampilkanLobby = function() {
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
-
 // ==========================================
 // FUNGSI UI LEADERBOARD (FINAL: FREEZE KANAN ATAS, NUMPUK KANAN BAWAH)
 // ==========================================
@@ -3929,37 +3933,51 @@ document.addEventListener('keydown', function(e) {
     }
 });
 // ==========================================================
-// PENGAWAS ANTI-FREEZE SAAT PINDAH SOAL DI MODE REVIEW
+// PERETAS LOAD QUESTION (ANTI-FREEZE MUTLAK SAAT PINDAH SOAL)
 // ==========================================================
-document.addEventListener('click', function(e) {
-    // Hanya bereaksi kalau aplikasi sedang dalam mode review (jawaban terkunci)
-    if (window.isAnswerLocked) {
+if (!window.hijackLoadQuestionAdded) {
+    window.hijackLoadQuestionAdded = true;
+    const fungsiAsliLoadQuestion = window.loadQuestion; 
+    
+    window.loadQuestion = function(idx) {
+        // 1. Biarkan aplikasi merender soal seperti biasa dulu
+        if (typeof fungsiAsliLoadQuestion === 'function') {
+            fungsiAsliLoadQuestion(idx); 
+        }
         
-        // Cek apakah user ngeklik tombol Selanjutnya, Sebelumnya, atau Nomor Soal
-        const isNavigasi = e.target.closest('#nextBtn') || 
-                           e.target.closest('#prevBtn') || 
-                           e.target.closest('.nav-btn') || 
-                           e.target.closest('.nomor-btn');
-
-        if (isNavigasi) {
-            // Jeda 0.1 detik menunggu sistem lu ngegembok soal baru, lalu kita bongkar paksa lagi!
+        // 2. Jika sedang dalam masa review, bongkar paksa gembok UI-nya!
+        if (window.isAnswerLocked || window.isReviewMode) {
             setTimeout(() => {
+                // Paksa Footer dan Tombol Prev/Next Muncul
+                const footer = document.querySelector('.footer-nav');
+                if (footer) {
+                    footer.style.setProperty('visibility', 'visible', 'important');
+                    footer.style.setProperty('display', 'flex', 'important');
+                }
+                
                 const pBtn = document.getElementById('prevBtn');
                 const nBtn = document.getElementById('nextBtn');
-                
-                if (pBtn) { pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
-                if (nBtn) { nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
+                if (pBtn) { 
+                    pBtn.style.setProperty('display', 'inline-block', 'important'); 
+                    pBtn.disabled = false; 
+                    pBtn.style.setProperty('pointer-events', 'auto', 'important');
+                }
+                if (nBtn) { 
+                    nBtn.style.setProperty('display', 'inline-block', 'important'); 
+                    nBtn.disabled = false; 
+                    nBtn.style.setProperty('pointer-events', 'auto', 'important');
+                }
 
-                // Bebaskan kembali nomor urut dan pilihan jawaban
+                // Bongkar gembok pilihan jawaban dan nomor soal
                 document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn, #optionsContainer button, #optionsContainer input, .option-item').forEach(btn => {
                     btn.disabled = false;
-                    btn.style.pointerEvents = 'auto';
-                    btn.style.opacity = '1';
+                    btn.style.setProperty('pointer-events', 'auto', 'important');
+                    btn.style.setProperty('opacity', '1', 'important');
                 });
-            }, 100); 
+            }, 100); // 100ms adalah waktu yang pas setelah render HTML selesai
         }
-    }
-});
+    };
+}
 
 window.bukaDetailPapi = async (docId) => {
     try {
