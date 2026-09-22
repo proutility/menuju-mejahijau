@@ -972,7 +972,7 @@ function triggerPembahasanLatihan(idxPilihan) {
     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
     opsiElements.forEach((el, i) => {
         el.style.pointerEvents = 'none'; 
-        el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu waktu habis...', '');
+        el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu...', '');
         
         if (i === q.answer) {
             el.classList.add('review-correct');
@@ -2749,7 +2749,7 @@ window.pantauRoom = (kodeRoom) => {
                 
                 if (amIHost) {
                     badgeHtml.innerHTML = `
-                        <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Silakan bahas materi, lalu klik Lanjut.</div>
+                        <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Silakan baca pembahasan, lalu klik Lanjut.</div>
                         <button id="btnNextHostRoom" style="background:#1565c0; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             Lanjut Soal Berikutnya ➔
                         </button>
