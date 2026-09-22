@@ -1535,6 +1535,7 @@ window.confirmFinish = async function() { // <--- Ada async di sini
 }
 
 window.closeResult = function() {
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (window.innerWidth <= 768) {
         const sb = document.querySelector('.sidebar-right');
         if (sb && sb.classList.contains('show-mobile')) {
@@ -1544,32 +1545,29 @@ window.closeResult = function() {
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
 
-    // 🛑 1. RESET TIMER KE 00:00:00 PAS REVIEW
-    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    // 🛑 1. RESET TIMER KE 00:00:00
     const t1 = document.getElementById('timerDisplay');
     const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 🛑 2. KUNCI SIDEBAR KIRI (Modul)
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-
-    // 🛑 3. HANYA BUKA GRID NOMOR SOAL (.nav-btn) 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
-
-    // 🛑 4. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
-    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+    // 🛑 2. KUNCI MATI SIDEBAR KIRI & TOMBOL KANAN ATAS
+    document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
+        btn.disabled = true; // Gembok permanen
     });
 
-    // 🛑 5. ANTI-FREEZE JAWABAN & PEMBAHASAN (Biar teks terang & bisa dibaca/klik)
+    // 🛑 3. MUNCULKAN KEMBALI AREA TOMBOL BAWAH (FOOTER NAV)
+    const footer = document.querySelector('.footer-nav');
+    if (footer) {
+        footer.style.visibility = 'visible';
+        footer.style.display = 'flex';
+        footer.style.pointerEvents = 'auto';
+        footer.style.opacity = '1';
+    }
+
+    // 🛑 4. ANTI-FREEZE CSS (Buka Teks Jawaban & Sembunyikan Tombol Ragu)
     let unfreezeStyle = document.getElementById('review-unfreeze');
     if (!unfreezeStyle) {
         unfreezeStyle = document.createElement('style');
@@ -1581,14 +1579,10 @@ window.closeResult = function() {
             pointer-events: auto !important; 
             opacity: 1 !important; 
         }
+        .ragu-wrapper, .btn-finish, #btnFinish { 
+            display: none !important; 
+        }
     `;
-
-    const pBtn = document.getElementById('prevBtn');
-    const nBtn = document.getElementById('nextBtn');
-    const rWrap = document.querySelector('.ragu-wrapper');
-    if(pBtn) pBtn.style.display = '';
-    if(nBtn) nBtn.style.display = '';
-    if(rWrap) rWrap.style.display = '';
 
     const ind = document.getElementById('modeIndicator');
     if (ind) {
@@ -1597,13 +1591,19 @@ window.closeResult = function() {
         ind.style.color = "#2e7d32";
         ind.style.border = "1px solid #c8e6c9";
     }
-    document.getElementById('prevBtn').disabled = false;
-    document.getElementById('nextBtn').style.display = 'block';
-    const mainContent = document.querySelector('.main-content');
-    if(mainContent) mainContent.scrollTop = 0;
     
+    // Render ulang soal agar posisi tombol rapi
     loadQuestion(currentIdx);
-    window.isAnswerLocked = true; // Kunci permanen agar jawaban tidak tertimpa
+    window.isAnswerLocked = true; 
+
+    // 🛑 5. BONGKAR GEMBOK HTML DARI TOMBOL PREV, NEXT, & GRID NOMOR SOAL
+    setTimeout(() => {
+        document.querySelectorAll('#prevBtn, #nextBtn, #nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
+            btn.disabled = false; // Buka gembok HTML
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        });
+    }, 50);
 };
 
 window.startReviewWrong = function() {
@@ -1611,6 +1611,7 @@ window.startReviewWrong = function() {
         alert("Tidak ada jawaban salah untuk direview.");
         return;
     }
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (window.innerWidth <= 768) {
         const sb = document.querySelector('.sidebar-right');
         if (sb && sb.classList.contains('show-mobile')) {
@@ -1620,32 +1621,29 @@ window.startReviewWrong = function() {
     
     isReviewMode = true;
 
-    // 🛑 1. RESET TIMER KE 00:00:00 PAS REVIEW
-    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    // 🛑 1. RESET TIMER KE 00:00:00
     const t1 = document.getElementById('timerDisplay');
     const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 🛑 2. KUNCI SIDEBAR KIRI (Modul)
-    document.querySelectorAll('.modul-btn').forEach(btn => {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    });
-
-    // 🛑 3. HANYA BUKA GRID NOMOR SOAL (.nav-btn)
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
-
-    // 🛑 4. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
-    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+    // 🛑 2. KUNCI MATI SIDEBAR KIRI & TOMBOL KANAN ATAS
+    document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
+        btn.disabled = true; 
     });
 
-    // 🛑 5. ANTI-FREEZE JAWABAN & PEMBAHASAN (Biar teks terang & bisa dibaca/klik)
+    // 🛑 3. MUNCULKAN KEMBALI AREA TOMBOL BAWAH (FOOTER NAV)
+    const footer = document.querySelector('.footer-nav');
+    if (footer) {
+        footer.style.visibility = 'visible';
+        footer.style.display = 'flex';
+        footer.style.pointerEvents = 'auto';
+        footer.style.opacity = '1';
+    }
+
+    // 🛑 4. ANTI-FREEZE CSS
     let unfreezeStyle = document.getElementById('review-unfreeze');
     if (!unfreezeStyle) {
         unfreezeStyle = document.createElement('style');
@@ -1657,26 +1655,33 @@ window.startReviewWrong = function() {
             pointer-events: auto !important; 
             opacity: 1 !important; 
         }
+        .ragu-wrapper, .btn-finish, #btnFinish { 
+            display: none !important; 
+        }
     `;
-
-    const pBtn = document.getElementById('prevBtn');
-    const nBtn = document.getElementById('nextBtn');
-    const rWrap = document.querySelector('.ragu-wrapper');
-    if(pBtn) pBtn.style.display = '';
-    if(nBtn) nBtn.style.display = '';
-    if(rWrap) rWrap.style.display = '';
 
     const overlay = document.getElementById('resultOverlay');
     if(overlay) overlay.style.setProperty('display', 'none', 'important');
     
     const ind = document.getElementById('modeIndicator');
-    ind.innerText = "MODE: REVIEW SALAH";
-    ind.style.background = "#ffebee";
-    ind.style.color = "#c62828";
-    ind.style.border = "1px solid #ffcdd2";
+    if (ind) {
+        ind.innerText = "MODE: REVIEW SALAH";
+        ind.style.background = "#ffebee";
+        ind.style.color = "#c62828";
+        ind.style.border = "1px solid #ffcdd2";
+    }
     
     loadQuestion(wrongIndices[0]);
-    window.isAnswerLocked = true; // Kunci permanen agar jawaban tidak tertimpa
+    window.isAnswerLocked = true; 
+
+    // 🛑 5. BONGKAR GEMBOK HTML DARI TOMBOL PREV, NEXT, & GRID NOMOR SOAL
+    setTimeout(() => {
+        document.querySelectorAll('#prevBtn, #nextBtn, #nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
+            btn.disabled = false; // Buka gembok HTML
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        });
+    }, 50);
 };
 
 window.changeQuestion = function(step) {
