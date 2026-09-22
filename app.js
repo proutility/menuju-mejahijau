@@ -1545,29 +1545,27 @@ window.closeResult = function() {
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
 
-    // 🛑 1. RESET TIMER KE 00:00:00
+    // 1. RESET TIMER
     const t1 = document.getElementById('timerDisplay');
     const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 🛑 2. KUNCI MATI SIDEBAR KIRI & TOMBOL KANAN ATAS
+    // 2. KUNCI SIDEBAR KIRI & KANAN ATAS
     document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
-        btn.disabled = true; // Gembok permanen
+        btn.disabled = true;
     });
 
-    // 🛑 3. MUNCULKAN KEMBALI AREA TOMBOL BAWAH (FOOTER NAV)
+    // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
     if (footer) {
         footer.style.visibility = 'visible';
         footer.style.display = 'flex';
-        footer.style.pointerEvents = 'auto';
-        footer.style.opacity = '1';
     }
 
-    // 🛑 4. ANTI-FREEZE CSS (Buka Teks Jawaban & Sembunyikan Tombol Ragu)
+    // 4. CSS ANTI FREEZE & HILANGKAN TOMBOL RAGU
     let unfreezeStyle = document.getElementById('review-unfreeze');
     if (!unfreezeStyle) {
         unfreezeStyle = document.createElement('style');
@@ -1575,13 +1573,8 @@ window.closeResult = function() {
         document.head.appendChild(unfreezeStyle);
     }
     unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { 
-            pointer-events: auto !important; 
-            opacity: 1 !important; 
-        }
-        .ragu-wrapper, .btn-finish, #btnFinish { 
-            display: none !important; 
-        }
+        #optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; }
+        .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }
     `;
 
     const ind = document.getElementById('modeIndicator');
@@ -1592,18 +1585,32 @@ window.closeResult = function() {
         ind.style.border = "1px solid #c8e6c9";
     }
     
-    // Render ulang soal agar posisi tombol rapi
+    // Render Soal
     loadQuestion(currentIdx);
     window.isAnswerLocked = true; 
 
-    // 🛑 5. BONGKAR GEMBOK HTML DARI TOMBOL PREV, NEXT, & GRID NOMOR SOAL
+    // 🛑 5. CABUT GEMBOK HTML DARI JAWABAN & TOMBOL BAWAH (Sapu Jagat)
     setTimeout(() => {
-        document.querySelectorAll('#prevBtn, #nextBtn, #nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
-            btn.disabled = false; // Buka gembok HTML
+        // Nyalakan tombol Sebelumnya & Selanjutnya
+        const pBtn = document.getElementById('prevBtn');
+        const nBtn = document.getElementById('nextBtn');
+        if(pBtn) { pBtn.style.display = 'inline-block'; pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
+        if(nBtn) { nBtn.style.display = 'inline-block'; nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
+
+        // Nyalakan tombol Grid Nomor di Kanan
+        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
+            btn.disabled = false;
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
         });
-    }, 50);
+
+        // Bebaskan Pilihan Jawaban (Biar gak pudar/bisa diblok)
+        document.querySelectorAll('#optionsContainer button, #optionsContainer input, .option-item').forEach(opt => {
+            opt.disabled = false;
+            opt.style.pointerEvents = 'auto';
+            opt.style.opacity = '1';
+        });
+    }, 100); // Jeda 100ms nunggu loadQuestion selesai render
 };
 
 window.startReviewWrong = function() {
@@ -1621,29 +1628,27 @@ window.startReviewWrong = function() {
     
     isReviewMode = true;
 
-    // 🛑 1. RESET TIMER KE 00:00:00
+    // 1. RESET TIMER
     const t1 = document.getElementById('timerDisplay');
     const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
 
-    // 🛑 2. KUNCI MATI SIDEBAR KIRI & TOMBOL KANAN ATAS
+    // 2. KUNCI SIDEBAR KIRI & KANAN ATAS
     document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
-        btn.disabled = true; 
+        btn.disabled = true;
     });
 
-    // 🛑 3. MUNCULKAN KEMBALI AREA TOMBOL BAWAH (FOOTER NAV)
+    // 3. MUNCULKAN AREA BAWAH (FOOTER)
     const footer = document.querySelector('.footer-nav');
     if (footer) {
         footer.style.visibility = 'visible';
         footer.style.display = 'flex';
-        footer.style.pointerEvents = 'auto';
-        footer.style.opacity = '1';
     }
 
-    // 🛑 4. ANTI-FREEZE CSS
+    // 4. CSS ANTI FREEZE & HILANGKAN TOMBOL RAGU
     let unfreezeStyle = document.getElementById('review-unfreeze');
     if (!unfreezeStyle) {
         unfreezeStyle = document.createElement('style');
@@ -1651,13 +1656,8 @@ window.startReviewWrong = function() {
         document.head.appendChild(unfreezeStyle);
     }
     unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { 
-            pointer-events: auto !important; 
-            opacity: 1 !important; 
-        }
-        .ragu-wrapper, .btn-finish, #btnFinish { 
-            display: none !important; 
-        }
+        #optionsContainer, #feedbackBox, .option-label { pointer-events: auto !important; opacity: 1 !important; }
+        .ragu-wrapper, .btn-finish, #btnFinish { display: none !important; }
     `;
 
     const overlay = document.getElementById('resultOverlay');
@@ -1671,17 +1671,32 @@ window.startReviewWrong = function() {
         ind.style.border = "1px solid #ffcdd2";
     }
     
+    // Render Soal
     loadQuestion(wrongIndices[0]);
     window.isAnswerLocked = true; 
 
-    // 🛑 5. BONGKAR GEMBOK HTML DARI TOMBOL PREV, NEXT, & GRID NOMOR SOAL
+    // 🛑 5. CABUT GEMBOK HTML DARI JAWABAN & TOMBOL BAWAH (Sapu Jagat)
     setTimeout(() => {
-        document.querySelectorAll('#prevBtn, #nextBtn, #nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
-            btn.disabled = false; // Buka gembok HTML
+        // Nyalakan tombol Sebelumnya & Selanjutnya
+        const pBtn = document.getElementById('prevBtn');
+        const nBtn = document.getElementById('nextBtn');
+        if(pBtn) { pBtn.style.display = 'inline-block'; pBtn.disabled = false; pBtn.style.pointerEvents = 'auto'; }
+        if(nBtn) { nBtn.style.display = 'inline-block'; nBtn.disabled = false; nBtn.style.pointerEvents = 'auto'; }
+
+        // Nyalakan tombol Grid Nomor di Kanan
+        document.querySelectorAll('#nomorGrid button, .nav-btn, .nomor-btn').forEach(btn => {
+            btn.disabled = false;
             btn.style.pointerEvents = 'auto';
             btn.style.opacity = '1';
         });
-    }, 50);
+
+        // Bebaskan Pilihan Jawaban (Biar gak pudar/bisa diblok)
+        document.querySelectorAll('#optionsContainer button, #optionsContainer input, .option-item').forEach(opt => {
+            opt.disabled = false;
+            opt.style.pointerEvents = 'auto';
+            opt.style.opacity = '1';
+        });
+    }, 100); 
 };
 
 window.changeQuestion = function(step) {
