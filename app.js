@@ -1697,13 +1697,29 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
-        // 🛑 DEEP CLEAN: Cuci bersih semua memori jawaban dan status!
-        window.userAnswers = [];
-        window.wrongIndices = [];
-        window.currentIdx = 0;
-        window.isAnswerLocked = false;
-        window.isReviewMode = false;
+        // 🛑 DEEP CLEAN TAHAP 2: SAPU JAGAT MEMORI ASLI 
+        try {
+            // Kosongkan array asli tanpa membuat array bayangan baru
+            if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
+            if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
+            
+            // Hapus jejak jawaban yang nempel di dalam objek soal
+            if (typeof currentQuestions !== 'undefined') {
+                currentQuestions.forEach(q => { delete q.userAnswer; delete q.ragu; });
+            }
+            
+            // Matikan status kunci (Tembak langsung ke variabel aslinya)
+            isAnswerLocked = false;
+            isReviewMode = false;
+            window.isAnswerLocked = false;
+            window.isReviewMode = false;
+        } catch(e) { console.log("Aman, variabel belum terdefinisi."); }
+
+        // Hapus paksa CSS Anti-Freeze kalau masih nempel
+        const unfreezeStyle = document.getElementById('review-unfreeze');
+        if (unfreezeStyle) unfreezeStyle.remove();
         
+        // --- SISA KODE BAWAAN LU ---
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
@@ -2796,11 +2812,20 @@ window.keluarDariRoom = () => {
     window.currentAppMode = 'ujian'; 
     
     // 🛑 DEEP CLEAN MULTIPLAYER
-    window.userAnswers = [];
-    window.wrongIndices = [];
-    window.currentIdx = 0;
-    window.isAnswerLocked = false;
-    window.isReviewMode = false;
+    try {
+        if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
+        if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
+        if (typeof currentQuestions !== 'undefined') {
+            currentQuestions.forEach(q => { delete q.userAnswer; delete q.ragu; });
+        }
+        isAnswerLocked = false;
+        isReviewMode = false;
+        window.isAnswerLocked = false;
+        window.isReviewMode = false;
+    } catch(e) { console.log("Aman."); }
+
+    const unfreezeStyle = document.getElementById('review-unfreeze');
+    if (unfreezeStyle) unfreezeStyle.remove();
     
     const btnOut = document.getElementById('btnKeluarRoomMode');
     if (btnOut) btnOut.remove(); 
