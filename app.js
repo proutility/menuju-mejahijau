@@ -1697,28 +1697,36 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
-        // 🛑 DEEP CLEAN TAHAP 2: SAPU JAGAT MEMORI ASLI 
+        // 🛑 1. DEEP CLEAN DOM (Hapus Sisa HTML Soal Lama Secara Paksa)
+        const navGrid = document.getElementById('navGrid');
+        if (navGrid) navGrid.innerHTML = ''; // Hancurkan sisa kotak nomor di kanan!
+
+        const optContainer = document.getElementById('optionsContainer');
+        if (optContainer) optContainer.innerHTML = ''; // Hancurkan sisa pilihan ganda!
+
+        const fbBox = document.getElementById('feedbackBox');
+        if (fbBox) fbBox.style.display = 'none'; // Sembunyikan sisa pembahasan!
+
+        const progText = document.getElementById('progressText');
+        if (progText) progText.innerText = "Menjawab: 0/0"; // Reset teks progress
+
+        // 🛑 2. DEEP CLEAN JS (Reset Variabel Pakai Try-Catch)
         try {
-            // Kosongkan array asli tanpa membuat array bayangan baru
             if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
             if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
-            
-            // Hapus jejak jawaban yang nempel di dalam objek soal
             if (typeof currentQuestions !== 'undefined') {
                 currentQuestions.forEach(q => { delete q.userAnswer; delete q.ragu; });
             }
-            
-            // Matikan status kunci (Tembak langsung ke variabel aslinya)
             isAnswerLocked = false;
             isReviewMode = false;
-            window.isAnswerLocked = false;
-            window.isReviewMode = false;
-        } catch(e) { console.log("Aman, variabel belum terdefinisi."); }
+        } catch(e) { console.log("Aman, reset internal berhasil."); }
 
-        // Hapus paksa CSS Anti-Freeze kalau masih nempel
-        const unfreezeStyle = document.getElementById('review-unfreeze');
-        if (unfreezeStyle) unfreezeStyle.remove();
-        
+        window.userAnswers = [];
+        window.wrongIndices = [];
+        window.currentIdx = 0;
+        window.isAnswerLocked = false;
+        window.isReviewMode = false;
+
         // --- SISA KODE BAWAAN LU ---
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
@@ -2836,9 +2844,19 @@ window.keluarDariRoom = () => {
     window.backToMenu(); 
 };
 window.tampilkanLobby = function() {
-    // 🛑 OBAT PENAWAR LAPIS KEDUA (Biar makin aman)
+    // 🛑 3. PENGAMANAN LAPIS DUA SAAT MASUK LOBBY
     window.isAnswerLocked = false;
     window.isReviewMode = false;
+    
+    // Hancurkan ulang DOM untuk memastikan bersih 100%
+    const navGrid = document.getElementById('navGrid');
+    if (navGrid) navGrid.innerHTML = ''; 
+    const optContainer = document.getElementById('optionsContainer');
+    if (optContainer) optContainer.innerHTML = ''; 
+    const fbBox = document.getElementById('feedbackBox');
+    if (fbBox) fbBox.style.display = 'none';
+    const tDisp = document.getElementById('timerDisplay');
+    if (tDisp) tDisp.innerText = "00:00:00";
 
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
@@ -2850,7 +2868,6 @@ window.tampilkanLobby = function() {
     if(lobbySide) lobbySide.style.display = 'flex'; 
 
     const qText = document.getElementById('questionText');
-    
     const namaPanggilan = currentUser ? currentUser.displayName.split(" ")[0] : "Peserta";
 
     qText.innerHTML = `
@@ -2883,11 +2900,6 @@ window.tampilkanLobby = function() {
         </div>
         <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>
     `;
-    
-    document.getElementById('optionsContainer').innerHTML = '';
-    const fbBox = document.getElementById('feedbackBox');
-    if (fbBox) fbBox.style.display = 'none';
-    document.getElementById('timerDisplay').innerText = "00:00:00";
 
     // BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
     document.querySelectorAll('.modul-btn').forEach(el => {
