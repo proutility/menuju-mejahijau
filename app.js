@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. KONFIGURASI FIREBASE ---
 const firebaseConfig = {
@@ -1805,6 +1805,12 @@ window.keluarDariRoom = () => {
     
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
+
+    // 🛑 SEMBUNYIKAN DAN BERSIHKAN KOTAK CHAT
+    const chatContainer = document.getElementById('roomChatContainer');
+    if (chatContainer) chatContainer.style.display = 'none';
+    const chatBox = document.getElementById('chatMessages');
+    if (chatBox) chatBox.innerHTML = '';
     
     window.backToMenu(); 
 };
@@ -2380,6 +2386,7 @@ window.bikinRoomLatihan = async () => {
             players: {
                 [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
             },
+            messages: [],
             createdAt: new Date()
         });
 
@@ -2522,6 +2529,13 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
+
+        // --- RENDER LIVE CHAT ---
+        const chatContainer = document.getElementById('roomChatContainer');
+        if (chatContainer) {
+            chatContainer.style.display = 'flex'; // Munculkan UI chat
+            if (data.messages) window.renderChatMessages(data.messages);
+        }
         
         // --- A. WAITING ROOM ---
         if (data.status === 'waiting') {
@@ -4766,5 +4780,81 @@ window.migrasiModulBiarHemat = async function(modulId) {
         
     } catch (e) {
         console.error("Gagal migrasi:", e);
+    }
+};
+// ==========================================================
+// FITUR LIVE CHAT MULTIPLAYER
+// ==========================================================
+window.kirimPesanChat = async () => {
+    if (!window.currentRoomCode) return;
+    
+    const input = document.getElementById('chatInput');
+    const teks = input.value.trim();
+    if (!teks) return;
+
+    input.value = ''; // Kosongkan kotak ketik langsung biar kerasa responsif
+
+    const roomRef = doc(window.db, "rooms", window.currentRoomCode);
+    try {
+        await updateDoc(roomRef, {
+            messages: arrayUnion({
+                uid: currentUser.uid,
+                nama: currentUser.displayName.split(" ")[0], // Ambil nama depan aja
+                teks: teks,
+                waktu: new Date().toISOString()
+            })
+        });
+    } catch (e) {
+        console.error("Gagal kirim chat:", e);
+    }
+};
+
+window.renderChatMessages = (messages) => {
+    const chatBox = document.getElementById('chatMessages');
+    if (!chatBox) return;
+
+    const prevCount = chatBox.childElementCount;
+    let html = '';
+    
+    messages.forEach(m => {
+        const isMe = m.uid === currentUser.uid;
+        const align = isMe ? 'flex-end' : 'flex-start';
+        const bg = isMe ? '#dcf8c6' : '#ffffff';
+        const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0';
+        const namaWarna = isMe ? '#2e7d32' : '#d35400';
+        
+        html += `
+            <div style="align-self: ${align}; max-width: 85%; display:flex; flex-direction:column;">
+                <span style="font-size: 0.65rem; color: ${namaWarna}; font-weight:bold; margin-bottom: 2px; text-align: ${isMe ? 'right' : 'left'}">${isMe ? 'Kamu' : m.nama}</span>
+                <div style="background: ${bg}; padding: 8px 12px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; color:#333;">
+                    ${m.teks}
+                </div>
+            </div>
+        `;
+    });
+    
+    chatBox.innerHTML = html;
+
+    // Munculin notifikasi tulisan "Baru!" kalau chat lagi ditutup
+    const body = document.getElementById('chatBody');
+    const badge = document.getElementById('chatNotifBadge');
+    if (messages.length > prevCount && body.style.display === 'none') {
+        if (badge) badge.style.display = 'inline-block';
+    }
+
+    // Auto scroll ke chat paling bawah tiap ada pesan baru
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+
+window.toggleChatBody = () => {
+    const body = document.getElementById('chatBody');
+    const badge = document.getElementById('chatNotifBadge');
+    if (body.style.display === 'none') {
+        body.style.display = 'flex';
+        if (badge) badge.style.display = 'none';
+        const chatBox = document.getElementById('chatMessages');
+        setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 100);
+    } else {
+        body.style.display = 'none';
     }
 };
