@@ -119,47 +119,67 @@
             </div>
             
             <div class="modul-selector">
-                <div id="group-hukum">
-                    <small style="color: #666; display:block; margin-bottom:10px; font-weight:bold;">Materi Hukum & Peradilan:</small>
-                    <button class="modul-btn active-modul" id="btn-modul1" onclick="window.switchDatabase('modul1')">Modul 1: Kekuasaan Kehakiman</button>
+                <!-- GRUP 1: HUKUM DASAR & MATERIIL -->
+                <div id="group-dasar">
+                    <small style="color: #666; display:block; margin-bottom:10px; font-weight:bold;">Materi Hukum Dasar (Substansi):</small>
+                    
+                    <button class="modul-btn" id="btn-modul_ilmuhukum" onclick="window.switchDatabase('modul_ilmuhukum')">Ilmu Hukum</button>
+                    <button class="modul-btn" id="btn-modul1" onclick="window.switchDatabase('modul1')">Modul 1: Kekuasaan Kehakiman</button>
                     <button class="modul-btn" id="btn-modul2" onclick="window.switchDatabase('modul2')">Modul 2: Mahkamah Agung</button>
                     <button class="modul-btn" id="btn-modul3" onclick="window.switchDatabase('modul3')">Modul 3: Peradilan Agama</button>
-                    <button class="modul-btn" id="btn-modul4" onclick="window.switchDatabase('modul4')">Modul 4: Pendaftaran & Relaas</button>
-                    <button class="modul-btn" id="btn-modul5" onclick="window.switchDatabase('modul5')">Modul 5: Gugatan & Permohonan</button>
+                    
                     <button class="modul-btn" id="btn-modul6" onclick="window.switchDatabase('modul6')">Modul 6: PMH & Wanprestasi</button>
-                    <button class="modul-btn" id="btn-modul7" onclick="window.switchDatabase('modul7')">Modul 7: Mediasi</button>
+                    
                     <button class="modul-btn" id="btn-modul8" onclick="window.switchDatabase('modul8')">Modul 8: Perkawinan (KHI)</button>
                     <button class="modul-btn" id="btn-modul8.1" onclick="window.switchDatabase('modul8.1')">Modul 8.1: Perkawinan (Lanjutan)</button>
                     <button class="modul-btn" id="btn-modul8.2" onclick="window.switchDatabase('modul8.2')">Modul 8.2: Perkawinan (Akhir)</button>
                     <button class="modul-btn" id="btn-modul8.3" onclick="window.switchDatabase('modul8.3')">Modul 8.3: Perkawinan (UU 1/1974)</button>
                     <button class="modul-btn" id="btn-modul8.4" onclick="window.switchDatabase('modul8.4')">Modul 8.4: Pelaksana (PP 9/1975)</button>
+                    
                     <button class="modul-btn" id="btn-modul9" onclick="window.switchDatabase('modul9')">Modul 9: Perwalian & Pengangkatan</button>
+                    
                     <button class="modul-btn" id="btn-modul10" onclick="window.switchDatabase('modul10')">Modul 10: Waris Islam (Dasar)</button>
                     <button class="modul-btn" id="btn-modul10.1" onclick="window.switchDatabase('modul10.1')">Modul 10.1: Waris (KHI)</button>
                     <button class="modul-btn" id="btn-modul10.2" onclick="window.switchDatabase('modul10.2')">Modul 10.2: Waris (BW)</button>
                     <button class="modul-btn" id="btn-modul10.3" onclick="window.switchDatabase('modul10.3')">Modul 10.3: Studi Kasus Waris</button>
+                    
                     <button class="modul-btn" id="btn-modul11" onclick="window.switchDatabase('modul11')">Modul 11: Wasiat & Hibah</button>
-                    <button class="modul-btn" id="btn-modul12" onclick="window.switchDatabase('modul12')">Modul 12: Sita Jaminan</button> 
+                    
                     <button class="modul-btn" id="btn-modul13" onclick="window.switchDatabase('modul13')">Modul 13: Ekonomi Syariah A</button>
                     <button class="modul-btn" id="btn-modul13.1" onclick="window.switchDatabase('modul13.1')">Modul 13.1: Akad Syariah</button>
                     <button class="modul-btn" id="btn-modul13.2" onclick="window.switchDatabase('modul13.2')">Modul 13.2: Ekonomi Syariah B</button>
+                    
                     <button class="modul-btn" id="btn-modul14" onclick="window.switchDatabase('modul14')">Modul 14: Perwakafan</button>
+                    
                     <button class="modul-btn" id="btn-modul15" onclick="window.switchDatabase('modul15')">Modul 15: Buku Saku PA A</button>
                     <button class="modul-btn" id="btn-modul15.1" onclick="window.switchDatabase('modul15.1')">Modul 15.1: Buku Saku PA B</button>
                     <button class="modul-btn" id="btn-modul15.2" onclick="window.switchDatabase('modul15.2')">Modul 15.2: Buku Saku PA C</button>
-                    <button class="modul-btn" id="btn-modul16" onclick="window.switchDatabase('modul16')">Modul 16: Prodeo & Posbakum</button>
-                    <button class="modul-btn" id="btn-modul17" onclick="window.switchDatabase('modul17')">Modul 17: E-Court, E-Litigasi & Surat Tercatat</button>
-                    <button class="modul-btn" id="btn-modul18" onclick="window.switchDatabase('modul18')">Modul 18: Ilmu Hukum</button>
                 </div>
-        
+            
+                <!-- GRUP 2: HUKUM ACARA -->
+                <div id="group-acara" style="display: none;">
+                    <small style="color: #666; display:block; margin-bottom:10px; font-weight:bold;">Materi Hukum Acara (Formil):</small>
+                    
+                    <button class="modul-btn" id="btn-modul4" onclick="window.switchDatabase('modul4')">Modul 4: Pendaftaran & Relaas</button>
+                    <button class="modul-btn" id="btn-modul5" onclick="window.switchDatabase('modul5')">Modul 5: Gugatan & Permohonan</button>
+                    
+                    <button class="modul-btn" id="btn-modul7" onclick="window.switchDatabase('modul7')">Modul 7: Mediasi</button>
+                    <button class="modul-btn" id="btn-modul12" onclick="window.switchDatabase('modul12')">Modul 12: Sita Jaminan</button> 
+                    <button class="modul-btn" id="btn-modul16" onclick="window.switchDatabase('modul16')">Modul 16: Prodeo & Posbakum</button>
+                    <button class="modul-btn" id="btn-modul17" onclick="window.switchDatabase('modul17')">Modul 17: E-Court, E-Litigasi & Tercatat</button>
+                </div>
+            
+                <!-- GRUP 3: PSIKOTES & TPA -->
                 <div id="group-psikotes" style="display: none;">
                     <small style="color: #666; display:block; margin-bottom:10px; font-weight:bold;">Tes Kepribadian & TPA:</small>
-                    <button class="modul-btn" id="btn-modul19" onclick="window.switchDatabase('modul19')">Modul 19: PAPI Kostick</button>
-                    <button class="modul-btn" id="btn-modul20" onclick="window.switchDatabase('modul19')">Modul 20: TPA Verbal</button>
-                    <button class="modul-btn" id="btn-modul20.1" onclick="window.switchDatabase('modul19.1')">Modul 20.1: TPA Numerik</button>
-                    <button class="modul-btn" id="btn-modul20.2" onclick="window.switchDatabase('modul19.2')">Modul 20.2: TPA Kuant&Tekn</button>
-                    <button class="modul-btn" id="btn-modul20.3" onclick="window.switchDatabase('modul19.3')">Modul 20.3: TPA Daya Ingat</button>
-                    <button class="modul-btn" id="btn-modul20.4" onclick="window.switchDatabase('modul19.4')">Modul 20.4: TPA Figural</button>
+                    
+                    <!-- PAPI Kostick di sini, aman sentosa ID-nya modul18 -->
+                    <button class="modul-btn" id="btn-modul18" onclick="window.switchDatabase('modul18')">Modul 18: PAPI Kostick</button>
+                    <button class="modul-btn" id="btn-modul19" onclick="window.switchDatabase('modul19')">Modul 19: TPA Verbal</button>
+                    <button class="modul-btn" id="btn-modul19.1" onclick="window.switchDatabase('modul19.1')">Modul 19.1: TPA Numerik</button>
+                    <button class="modul-btn" id="btn-modul19.2" onclick="window.switchDatabase('modul19.2')">Modul 19.2: TPA Kuant&Tekn</button>
+                    <button class="modul-btn" id="btn-modul19.3" onclick="window.switchDatabase('modul19.3')">Modul 19.3: TPA Daya Ingat</button>
+                    <button class="modul-btn" id="btn-modul19.4" onclick="window.switchDatabase('modul19.4')">Modul 19.4: TPA Figural</button>
                 </div>
             </div>
         </div>
