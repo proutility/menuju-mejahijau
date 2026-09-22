@@ -1706,7 +1706,7 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
-        // 🛑 1. DEEP CLEAN DOM (Hapus Sisa HTML Soal Lama Secara Paksa)
+        // 🛑 1. DEEP CLEAN DOM (Hapus Sisa HTML)
         const navGrid = document.getElementById('navGrid');
         if (navGrid) navGrid.innerHTML = ''; 
 
@@ -1719,16 +1719,15 @@ window.backToMenu = async function() {
         const progText = document.getElementById('progressText');
         if (progText) progText.innerText = "Menjawab: 0/0"; 
 
-        // 🛑 2. DEEP CLEAN JS (Sapu Jagat + Matikan isSubmitted)
+        // 🛑 2. DEEP CLEAN JS (Sapu Jagat + Hancurkan Data Master Lama)
         try {
             if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
             if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
-            if (typeof currentQuestions !== 'undefined') {
-                currentQuestions.forEach(q => { delete q.userAnswer; delete q.ragu; });
-            }
+            if (typeof currentQuestions !== 'undefined') currentQuestions.length = 0; // <--- Hancurkan array soal lama!
+            
             isAnswerLocked = false;
             isReviewMode = false;
-            isSubmitted = false; // <--- INI BIANG KEROKNYA!
+            isSubmitted = false; 
         } catch(e) { console.log("Aman, reset internal berhasil."); }
 
         window.userAnswers = [];
@@ -1736,7 +1735,10 @@ window.backToMenu = async function() {
         window.currentIdx = 0;
         window.isAnswerLocked = false;
         window.isReviewMode = false;
-        window.isSubmitted = false; // <--- TEMBAK MATI DI WINDOW JUGA
+        window.isSubmitted = false; 
+        
+        // 🛑 INI OBATNYA: Hapus ingatan ID Modul biar dipaksa nyetak kotak nomor lagi!
+        window.currentDatabaseId = null; 
 
         if(window.timerInterval) clearInterval(window.timerInterval);
         window.speechSynthesis.cancel();
@@ -1770,6 +1772,41 @@ window.backToMenu = async function() {
             document.getElementById('mobileFooter').style.display = 'none';
         }
     }
+};
+
+window.keluarDariRoom = () => {
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    window.currentRoomCode = null;
+    window.isHost = false;
+    window.currentAppMode = 'ujian'; 
+    
+    // 🛑 DEEP CLEAN MULTIPLAYER
+    try {
+        if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
+        if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
+        if (typeof currentQuestions !== 'undefined') currentQuestions.length = 0; // <--- Hancurkan
+        
+        isAnswerLocked = false;
+        isReviewMode = false;
+        isSubmitted = false; 
+        
+        window.isAnswerLocked = false;
+        window.isReviewMode = false;
+        window.isSubmitted = false; 
+        
+        window.currentDatabaseId = null; // <--- Hapus ingatan ID Modul
+    } catch(e) { console.log("Aman."); }
+
+    const unfreezeStyle = document.getElementById('review-unfreeze');
+    if (unfreezeStyle) unfreezeStyle.remove();
+    
+    const btnOut = document.getElementById('btnKeluarRoomMode');
+    if (btnOut) btnOut.remove(); 
+    
+    const overlay = document.getElementById('resultOverlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    window.backToMenu(); 
 };
 window.showResult = function() {
     if(isSubmitted) {
@@ -2812,39 +2849,6 @@ window.tampilkanTombolKeluarRoom = function() {
     }
 };
 
-window.keluarDariRoom = () => {
-    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-    window.currentRoomCode = null;
-    window.isHost = false;
-    window.currentAppMode = 'ujian'; 
-    
-    // 🛑 DEEP CLEAN MULTIPLAYER + isSubmitted
-    try {
-        if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
-        if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
-        if (typeof currentQuestions !== 'undefined') {
-            currentQuestions.forEach(q => { delete q.userAnswer; delete q.ragu; });
-        }
-        isAnswerLocked = false;
-        isReviewMode = false;
-        isSubmitted = false; // <--- TEMBAK MATI
-        
-        window.isAnswerLocked = false;
-        window.isReviewMode = false;
-        window.isSubmitted = false; // <--- TEMBAK MATI
-    } catch(e) { console.log("Aman."); }
-
-    const unfreezeStyle = document.getElementById('review-unfreeze');
-    if (unfreezeStyle) unfreezeStyle.remove();
-    
-    const btnOut = document.getElementById('btnKeluarRoomMode');
-    if (btnOut) btnOut.remove(); 
-    
-    const overlay = document.getElementById('resultOverlay');
-    if (overlay) overlay.style.display = 'none';
-    
-    window.backToMenu(); 
-};
 window.tampilkanLobby = function() {
     // 🛑 3. PENGAMANAN LAPIS DUA SAAT MASUK LOBBY
     window.isAnswerLocked = false;
