@@ -1544,44 +1544,23 @@ window.closeResult = function() {
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
 
-    // 🛑 1. RESET TIMER KE 00:00:00 PAS REVIEW
-    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-    const t1 = document.getElementById('timerDisplay');
-    const t2 = document.getElementById('floatingTimer');
-    if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
-    if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
-
-    // 🛑 2. KUNCI SIDEBAR KIRI (Modul)
+    // 🛑 1. KUNCI SIDEBAR KIRI (Modul)
     document.querySelectorAll('.modul-btn').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.5';
     });
 
-    // 🛑 3. HANYA BUKA GRID NOMOR SOAL (.nav-btn) 
+    // 🛑 2. HANYA BUKA GRID NOMOR SOAL (.nav-btn) 
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     });
 
-    // 🛑 4. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
+    // 🛑 3. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
     document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
     });
-
-    // 🛑 5. ANTI-FREEZE JAWABAN & PEMBAHASAN (Biar teks terang & bisa dibaca/klik)
-    let unfreezeStyle = document.getElementById('review-unfreeze');
-    if (!unfreezeStyle) {
-        unfreezeStyle = document.createElement('style');
-        unfreezeStyle.id = 'review-unfreeze';
-        document.head.appendChild(unfreezeStyle);
-    }
-    unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { 
-            pointer-events: auto !important; 
-            opacity: 1 !important; 
-        }
-    `;
 
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
@@ -1603,7 +1582,6 @@ window.closeResult = function() {
     if(mainContent) mainContent.scrollTop = 0;
     
     loadQuestion(currentIdx);
-    window.isAnswerLocked = true; // Kunci permanen agar jawaban tidak tertimpa
 };
 
 window.startReviewWrong = function() {
@@ -1620,44 +1598,23 @@ window.startReviewWrong = function() {
     
     isReviewMode = true;
 
-    // 🛑 1. RESET TIMER KE 00:00:00 PAS REVIEW
-    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-    const t1 = document.getElementById('timerDisplay');
-    const t2 = document.getElementById('floatingTimer');
-    if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
-    if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
-
-    // 🛑 2. KUNCI SIDEBAR KIRI (Modul)
+    // 🛑 1. KUNCI SIDEBAR KIRI (Modul)
     document.querySelectorAll('.modul-btn').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.5';
     });
 
-    // 🛑 3. HANYA BUKA GRID NOMOR SOAL (.nav-btn)
+    // 🛑 2. HANYA BUKA GRID NOMOR SOAL (.nav-btn)
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.style.pointerEvents = 'auto';
         btn.style.opacity = '1';
     });
 
-    // 🛑 4. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
+    // 🛑 3. KUNCI MATI TOMBOL KANAN ATAS (Admin, Peringkat, Data, Nilai, Keluar)
     document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
         btn.style.pointerEvents = 'none';
         btn.style.opacity = '0.4';
     });
-
-    // 🛑 5. ANTI-FREEZE JAWABAN & PEMBAHASAN (Biar teks terang & bisa dibaca/klik)
-    let unfreezeStyle = document.getElementById('review-unfreeze');
-    if (!unfreezeStyle) {
-        unfreezeStyle = document.createElement('style');
-        unfreezeStyle.id = 'review-unfreeze';
-        document.head.appendChild(unfreezeStyle);
-    }
-    unfreezeStyle.innerHTML = `
-        #optionsContainer, #feedbackBox, .option-label { 
-            pointer-events: auto !important; 
-            opacity: 1 !important; 
-        }
-    `;
 
     const pBtn = document.getElementById('prevBtn');
     const nBtn = document.getElementById('nextBtn');
@@ -1676,7 +1633,6 @@ window.startReviewWrong = function() {
     ind.style.border = "1px solid #ffcdd2";
     
     loadQuestion(wrongIndices[0]);
-    window.isAnswerLocked = true; // Kunci permanen agar jawaban tidak tertimpa
 };
 
 window.changeQuestion = function(step) {
@@ -2710,7 +2666,6 @@ window.pantauRoom = (kodeRoom) => {
         }
     });
 };
-
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
@@ -2750,7 +2705,6 @@ window.keluarDariRoom = () => {
     
     window.backToMenu(); // Balik ke Lobby Utama
 };
-
 window.tampilkanLobby = function() {
     document.querySelector('.question-header').style.visibility = 'hidden';
     document.querySelector('.footer-nav').style.visibility = 'hidden';
@@ -2803,7 +2757,6 @@ window.tampilkanLobby = function() {
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
-
 // ==========================================
 // FUNGSI UI LEADERBOARD (FINAL: FREEZE KANAN ATAS, NUMPUK KANAN BAWAH)
 // ==========================================
@@ -2967,11 +2920,7 @@ window.tutupHasilMultiplayer = () => {
         btn.style.opacity = '1';
     });
 
-    // 🛑 4. BERSIHKAN CSS ANTI-FREEZE SAAT KELUAR ROOM (Agar mode biasa kembali normal)
-    const unfreezeStyle = document.getElementById('review-unfreeze');
-    if (unfreezeStyle) unfreezeStyle.remove();
-
-    // 5. Proses keluar seutuhnya
+    // 4. Proses keluar seutuhnya
     window.keluarDariRoom();
 };
 
