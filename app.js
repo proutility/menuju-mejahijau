@@ -2732,7 +2732,7 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
 // ==========================================
-// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED: +TIE BREAKER WAKTU & DESAIN RAPI)
+// FUNGSI UI LEADERBOARD (FINAL: FREEZE KANAN ATAS, NUMPUK KANAN BAWAH)
 // ==========================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     PROTAMA.loading("Merekap skor dan kecepatan semua peserta...");
@@ -2749,11 +2749,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 playersArray.push(data.players[uid]);
             }
 
-            // 🛑 LOGIKA TIE-BREAKER: Urutkan Skor dulu, kalau skornya SAMA, urutkan dari Kecepatan!
+            // Tie Breaker Waktu
             playersArray.sort((a, b) => {
-                if (b.skor === a.skor) {
-                    return (b.speed || 0) - (a.speed || 0); // Sisa detik banyakan yang menang
-                }
+                if (b.skor === a.skor) return (b.speed || 0) - (a.speed || 0); 
                 return b.skor - a.skor;
             });
 
@@ -2782,7 +2780,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     txtColor = '#1565c0';
                 }
 
-                // 🛑 TAMPILAN KECEPATAN: Munculin bonus detik di bawah nama
                 let speedText = p.speed !== undefined ? `<br><small style="color:#27ae60; font-size:0.75rem;"><i class="fas fa-bolt"></i> Speed: +${p.speed} dtk</small>` : '';
 
                 listHTML += `
@@ -2797,10 +2794,10 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 `;
             });
 
+            // 🛑 TOMBOL KELUAR DIHAPUS DARI DALAM POPUP (Biar user fokus ke tombol ngambang aja)
             overlay.innerHTML = `
                 <div style="background:white; width:90%; max-width:450px; border-radius:12px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
                     
-                    <!-- TANDA SILANG (X) BUAT TUTUP POPUP -->
                     <button onclick="document.getElementById('roomResultOverlay').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; z-index:10; line-height:1;">&times;</button>
 
                     <div style="background:var(--primary); padding:20px 15px; text-align:center; color:white;">
@@ -2813,20 +2810,12 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                         ${listHTML}
                     </div>
                     
-                    <!-- TOMBOL REVIEW DAN DOWNLOAD (DIRAPIKAN & DIKECILKAN) -->
-                    <div style="padding:12px 15px; background:#fff; display:flex; gap:10px; border-top:2px solid #eee;">
-                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="flex:1; background:#d32f2f; color:white; padding:8px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:5px;">
+                    <div style="padding:15px; background:#fff; display:flex; gap:10px; border-top:2px solid #eee;">
+                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="flex:1; background:#d32f2f; color:white; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:5px;">
                             <i class="fas fa-search-minus"></i> Review
                         </button>
-                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="flex:1; background:#27ae60; color:white; padding:8px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:5px;">
+                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="flex:1; background:#27ae60; color:white; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:5px;">
                             <i class="fas fa-file-excel"></i> CSV/Excel
-                        </button>
-                    </div>
-
-                    <!-- TOMBOL KELUAR -->
-                    <div style="padding:12px 15px; text-align:center; background:#f5f5f5; border-top:1px dashed #ccc;">
-                        <button onclick="window.konfirmasiKeluarRoom()" style="background:#2c3e50; color:white; padding:10px 15px; border:none; border-radius:6px; font-weight:bold; font-size:0.95rem; cursor:pointer; width:100%; transition: 0.2s;">
-                            <i class="fas fa-sign-out-alt"></i> Selesai & Keluar Room
                         </button>
                     </div>
                 </div>
@@ -2834,24 +2823,40 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
             document.body.appendChild(overlay);
 
-            // BUKA KUNCI UI BIAR BISA BACA PEMBAHASAN SETELAH DI-CLOSE
-            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
-            window.isAnswerLocked = true; // Tetap kunci biar ga bisa ganti jawaban
+            window.isAnswerLocked = true; 
 
-            // BIKIN TOMBOL APUNG BUAT MANGGIL RANKING LAGI
-            if (!document.getElementById('btnPanggilRanking')) {
-                const btnRankBack = document.createElement('button');
-                btnRankBack.id = 'btnPanggilRanking';
-                btnRankBack.innerHTML = '<i class="fas fa-trophy"></i> Lihat Peringkat';
-                btnRankBack.style.cssText = "position:fixed; bottom:20px; right:20px; background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; z-index:1000;";
-                btnRankBack.onclick = () => { 
+            // 🛑 1. FREEZE PANEL KANAN ATAS (Fitur Singleplayer Dimatikan)
+            document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.4';
+            });
+
+            // 🛑 2. BUAT 2 TOMBOL NGAMBANG NUMPUK DI KANAN BAWAH
+            if (!document.getElementById('roomFloatingMenu')) {
+                const floatMenu = document.createElement('div');
+                floatMenu.id = 'roomFloatingMenu';
+                // CSS untuk menumpuk tombol (flex-direction: column)
+                floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;";
+
+                // Tombol Atas: Lihat Peringkat
+                const btnRank = document.createElement('button');
+                btnRank.innerHTML = '<i class="fas fa-trophy"></i> Lihat Peringkat';
+                btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+                btnRank.onclick = () => { 
                     const resO = document.getElementById('roomResultOverlay');
                     if(resO) resO.style.display = 'flex'; 
                 };
-                document.body.appendChild(btnRankBack);
+
+                // Tombol Bawah: Keluar Room
+                const btnExit = document.createElement('button');
+                btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
+                btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+                btnExit.onclick = window.konfirmasiKeluarRoom;
+
+                // Masukkan ke dalam container
+                floatMenu.appendChild(btnRank);
+                floatMenu.appendChild(btnExit);
+                document.body.appendChild(floatMenu);
             }
 
         } catch (e) {
@@ -2861,22 +2866,35 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     }, 2500); 
 };
 
+// ==========================================
+// FUNGSI KONFIRMASI & BERSIH-BERSIH ROOM
+// ==========================================
 window.konfirmasiKeluarRoom = async () => {
     const yakin = await PROTAMA.confirm(
         "KELUAR ROOM?", 
         "Yakin mau keluar? Kamu tidak bisa melihat pembahasan lagi setelah keluar ke menu utama."
     );
     if (yakin) {
-        const btnRankBack = document.getElementById('btnPanggilRanking');
-        if (btnRankBack) btnRankBack.remove();
-        
         window.tutupHasilMultiplayer();
     }
 };
 
 window.tutupHasilMultiplayer = () => {
+    // 1. Hapus pop up hasil
     const overlay = document.getElementById('roomResultOverlay');
     if (overlay) overlay.remove();
+    
+    // 2. Hapus tumpukan tombol di kanan bawah
+    const floatMenu = document.getElementById('roomFloatingMenu');
+    if (floatMenu) floatMenu.remove();
+    
+    // 3. Lepas gembok panel kanan atas (Singleplayer)
+    document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
+
+    // 4. Proses keluar seutuhnya
     window.keluarDariRoom();
 };
 
