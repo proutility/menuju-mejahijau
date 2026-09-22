@@ -2732,10 +2732,10 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
 // ==========================================
-// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED)
+// FUNGSI UI LEADERBOARD KHUSUS MULTIPLAYER (UPDATED: +TIE BREAKER WAKTU & DESAIN RAPI)
 // ==========================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
-    PROTAMA.loading("Merekap skor semua peserta...");
+    PROTAMA.loading("Merekap skor dan kecepatan semua peserta...");
 
     setTimeout(async () => {
         try {
@@ -2749,7 +2749,13 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 playersArray.push(data.players[uid]);
             }
 
-            playersArray.sort((a, b) => b.skor - a.skor);
+            // 🛑 LOGIKA TIE-BREAKER: Urutkan Skor dulu, kalau skornya SAMA, urutkan dari Kecepatan!
+            playersArray.sort((a, b) => {
+                if (b.skor === a.skor) {
+                    return (b.speed || 0) - (a.speed || 0); // Sisa detik banyakan yang menang
+                }
+                return b.skor - a.skor;
+            });
 
             PROTAMA.close();
 
@@ -2776,42 +2782,50 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     txtColor = '#1565c0';
                 }
 
+                // 🛑 TAMPILAN KECEPATAN: Munculin bonus detik di bawah nama
+                let speedText = p.speed !== undefined ? `<br><small style="color:#27ae60; font-size:0.75rem;"><i class="fas fa-bolt"></i> Speed: +${p.speed} dtk</small>` : '';
+
                 listHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1.1rem; font-weight:bold; color:${txtColor};">
-                        <div><span style="display:inline-block; width:35px; text-align:center;">${medal}</span> ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}</div>
-                        <div style="color:var(--primary); font-size:1.3rem;">${p.skor} <small style="font-size:0.8rem; color:#666;">Pts</small></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1rem; font-weight:bold; color:${txtColor};">
+                        <div>
+                            <span style="display:inline-block; width:30px; text-align:center;">${medal}</span> 
+                            ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}
+                            ${speedText}
+                        </div>
+                        <div style="color:var(--primary); font-size:1.2rem;">${p.skor} <small style="font-size:0.75rem; color:#666;">Pts</small></div>
                     </div>
                 `;
             });
 
             overlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:500px; border-radius:15px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
+                <div style="background:white; width:90%; max-width:450px; border-radius:12px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
                     
                     <!-- TANDA SILANG (X) BUAT TUTUP POPUP -->
-                    <button onclick="document.getElementById('roomResultOverlay').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:white; font-size:2rem; cursor:pointer; z-index:10; line-height:1;">&times;</button>
+                    <button onclick="document.getElementById('roomResultOverlay').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; z-index:10; line-height:1;">&times;</button>
 
-                    <div style="background:var(--primary); padding:25px 20px; text-align:center; color:white;">
-                        <i class="fas fa-trophy" style="font-size:3rem; color:var(--gold); margin-bottom:10px;"></i>
-                        <h2 style="margin:0; font-size:1.8rem; font-weight:900;">HASIL MULTIPLAYER</h2>
-                        <p style="margin:5px 0 0 0; opacity:0.9; font-size:1rem;">Modul: ${data.modulId.toUpperCase()} | Room: ${kodeRoom}</p>
+                    <div style="background:var(--primary); padding:20px 15px; text-align:center; color:white;">
+                        <i class="fas fa-trophy" style="font-size:2.5rem; color:var(--gold); margin-bottom:8px;"></i>
+                        <h2 style="margin:0; font-size:1.5rem; font-weight:900;">HASIL MULTIPLAYER</h2>
+                        <p style="margin:5px 0 0 0; opacity:0.9; font-size:0.9rem;">Modul: ${data.modulId.toUpperCase()} | Room: ${kodeRoom}</p>
                     </div>
-                    <div style="max-height:40vh; overflow-y:auto; background:#f9f9f9;">
+                    
+                    <div style="max-height:45vh; overflow-y:auto; background:#f9f9f9;">
                         ${listHTML}
                     </div>
                     
-                    <!-- TOMBOL REVIEW DAN DOWNLOAD -->
-                    <div style="padding:15px 20px; background:#fff; display:flex; flex-direction:column; gap:10px; border-top:2px solid #eee;">
-                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="background:#d32f2f; color:white; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:1rem;">
-                            <i class="fas fa-search-minus"></i> Review Jawaban Salah
+                    <!-- TOMBOL REVIEW DAN DOWNLOAD (DIRAPIKAN & DIKECILKAN) -->
+                    <div style="padding:12px 15px; background:#fff; display:flex; gap:10px; border-top:2px solid #eee;">
+                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="flex:1; background:#d32f2f; color:white; padding:8px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:5px;">
+                            <i class="fas fa-search-minus"></i> Review
                         </button>
-                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="background:#27ae60; color:white; padding:12px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; font-size:1rem;">
-                            <i class="fas fa-file-excel"></i> Download Rekap CSV/Excel
+                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="flex:1; background:#27ae60; color:white; padding:8px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:5px;">
+                            <i class="fas fa-file-excel"></i> CSV/Excel
                         </button>
                     </div>
 
-                    <!-- TOMBOL KELUAR DENGAN KONFIRMASI -->
-                    <div style="padding:15px 20px; text-align:center; background:white; border-top:1px dashed #ccc;">
-                        <button onclick="window.konfirmasiKeluarRoom()" style="background:#2c3e50; color:white; padding:12px 20px; border:none; border-radius:8px; font-weight:bold; font-size:1.1rem; cursor:pointer; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;">
+                    <!-- TOMBOL KELUAR -->
+                    <div style="padding:12px 15px; text-align:center; background:#f5f5f5; border-top:1px dashed #ccc;">
+                        <button onclick="window.konfirmasiKeluarRoom()" style="background:#2c3e50; color:white; padding:10px 15px; border:none; border-radius:6px; font-weight:bold; font-size:0.95rem; cursor:pointer; width:100%; transition: 0.2s;">
                             <i class="fas fa-sign-out-alt"></i> Selesai & Keluar Room
                         </button>
                     </div>
