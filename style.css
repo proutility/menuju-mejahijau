@@ -958,3 +958,26 @@ div.swal2-container {
     border-top: 5px solid #2e7d32 !important;
     border-radius: 12px !important;
 }
+/* --- FIX LAYOUT CHAT SIDEBAR BIAR FULL KE BAWAH --- */
+#roomChatContainer {
+    flex-direction: column !important;
+    flex: 1 1 auto !important; 
+    height: 100% !important; 
+    border-top: 2px solid var(--gold) !important;
+    overflow: hidden !important;
+}
+
+#chatBody {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important; 
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+#chatMessages {
+    flex: 1 1 auto !important; 
+    overflow-y: auto !important;
+    padding: 15px !important;
+    background: #f0f2f5 !important;
+}
