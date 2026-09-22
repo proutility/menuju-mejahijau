@@ -958,3 +958,11 @@ div.swal2-container {
     border-top: 5px solid #2e7d32 !important;
     border-radius: 12px !important;
 }
+/* --- FIX: CHAT TETAP HIDUP & BISA DIKETIK DI MODE PEMBAHASAN --- */
+#roomChatContainer,
+#roomChatContainer * {
+    pointer-events: auto !important;
+    -webkit-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
