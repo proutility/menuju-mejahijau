@@ -18,7 +18,7 @@ const EDITOR_EMAILS = ["glorifikalaw@gmail.com", "amifaveiro9@gmail.com"];
 let db, auth, provider, currentUser;
 
 // ==========================================
-// SISTEM NOTIFIKASI PREMIUM PRO-TAMA
+// SISTEM NOTIFIKASI PREMIUM PRO-TAMA (FIX OVERLAP)
 // ==========================================
 window.PROTAMA = {
     alert: (title, text, icon = 'success') => {
@@ -30,7 +30,12 @@ window.PROTAMA = {
             confirmButtonColor: colors[icon] || '#004d00',
             confirmButtonText: 'Selesai',
             background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
-            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333'
+            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
+            didOpen: () => {
+                // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan (nembus overlay apapun)
+                const swalBox = document.querySelector('.swal2-container');
+                if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
+            }
         });
     },
 
@@ -45,7 +50,12 @@ window.PROTAMA = {
             confirmButtonText: 'Ya, Lanjutkan',
             cancelButtonText: 'Batal',
             background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
-            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333'
+            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
+            didOpen: () => {
+                // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan
+                const swalBox = document.querySelector('.swal2-container');
+                if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
+            }
         });
         return result.isConfirmed;
     },
@@ -55,7 +65,12 @@ window.PROTAMA = {
             title: 'MOHON TUNGGU',
             html: `<strong>${msg}</strong>`,
             allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
+            didOpen: () => { 
+                Swal.showLoading(); 
+                // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan
+                const swalBox = document.querySelector('.swal2-container');
+                if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
+            }
         });
     },
 
@@ -1527,6 +1542,18 @@ window.closeResult = function() {
     }
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
+    
+    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
+    currentAppMode = 'ujian'; 
+    
+    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
+    const pBtn = document.getElementById('prevBtn');
+    const nBtn = document.getElementById('nextBtn');
+    const rWrap = document.querySelector('.ragu-wrapper');
+    if(pBtn) pBtn.style.display = '';
+    if(nBtn) nBtn.style.display = '';
+    if(rWrap) rWrap.style.display = '';
+
     const ind = document.getElementById('modeIndicator');
     if (ind) {
         ind.innerText = "PEMBAHASAN";
@@ -1538,6 +1565,8 @@ window.closeResult = function() {
     document.getElementById('nextBtn').style.display = 'block';
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
+    
+    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(currentIdx);
 };
 
@@ -1554,6 +1583,18 @@ window.startReviewWrong = function() {
     }
     
     isReviewMode = true;
+    
+    // 🛑 FIX FATAL 1: Paksa reset variabel ke mode ujian (module scope)
+    currentAppMode = 'ujian';
+
+    // 🛑 FIX FATAL 2: Tampilkan kembali tombol navigasi yang disembunyikan oleh Room
+    const pBtn = document.getElementById('prevBtn');
+    const nBtn = document.getElementById('nextBtn');
+    const rWrap = document.querySelector('.ragu-wrapper');
+    if(pBtn) pBtn.style.display = '';
+    if(nBtn) nBtn.style.display = '';
+    if(rWrap) rWrap.style.display = '';
+
     const overlay = document.getElementById('resultOverlay');
     if(overlay) overlay.style.setProperty('display', 'none', 'important');
     
@@ -1563,6 +1604,7 @@ window.startReviewWrong = function() {
     ind.style.color = "#c62828";
     ind.style.border = "1px solid #ffcdd2";
     
+    // Begitu fungsi ini jalan, gembok sidebar kanan otomatis kebuka berkat mode "ujian"
     loadQuestion(wrongIndices[0]);
 };
 
