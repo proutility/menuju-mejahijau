@@ -1805,19 +1805,23 @@ window.keluarDariRoom = () => {
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
 
-// 🛑 RESET TAMPILAN SIDEBAR KIRI
-const chatContainer = document.getElementById('roomChatContainer');
-const modulContainer = document.getElementById('modulSidebarContainer');
-const chatBox = document.getElementById('chatMessages');
+    // 🛑 RESET TAMPILAN SIDEBAR KIRI (CHAT & MODUL)
+    const chatContainer = document.getElementById('roomChatContainer');
+    const modulContainer = document.getElementById('modulSidebarContainer');
+    const chatBox = document.getElementById('chatMessages');
 
-if (chatContainer && modulContainer) {
-    chatContainer.style.display = 'none';   // Tutup obrolan
-    modulContainer.style.display = 'flex';  // Munculkan daftar modul lagi
-}
+    if (chatContainer && modulContainer) {
+        chatContainer.style.display = 'none';   // Tutup obrolan
+        modulContainer.style.display = 'flex';  // Munculkan daftar modul lagi
+    }
 
-if (chatBox) {
-    chatBox.innerHTML = ''; // Bersihkan riwayat teks
-}
+    if (chatBox) {
+        chatBox.innerHTML = ''; // Bersihkan riwayat teks
+    }
+    
+    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN (Single Player)
+    const finishContainer = document.querySelector('.finish-container');
+    if (finishContainer) finishContainer.style.display = 'block';
     
     window.backToMenu(); 
 };
@@ -2535,6 +2539,15 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         const data = snap.data();
+        // Atur visibilitas tombol Selesai Ujian
+        const finishContainer = document.querySelector('.finish-container');
+        if (finishContainer) {
+            if (data.status === 'waiting' || data.status === 'pembahasan') {
+                finishContainer.style.display = 'none'; // Hilang pas nunggu / review
+            } else if (data.status === 'ujian') {
+        finishContainer.style.display = 'block'; // Muncul pas ujian jalan
+    }
+}
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
         
                // --- RENDER LIVE CHAT DI SIDEBAR KIRI ---
