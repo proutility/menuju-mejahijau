@@ -12,7 +12,6 @@ const firebaseConfig = {
     appId: "1:209182753461:web:1aa2201fa7c73e581234fc",
     measurementId: "G-NDNKMSMWV2"
 };
-
 const ADMIN_EMAILS = ["ilhamnp22@gmail.com", "inurprtma22@gmail.com"]; 
 const EDITOR_EMAILS = ["glorifikalaw@gmail.com", "amifaveiro9@gmail.com"];
 let db, auth, provider, currentUser;
