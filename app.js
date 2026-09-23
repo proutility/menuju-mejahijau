@@ -3132,10 +3132,16 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             // 🤖 STRING UNTUK PENGUMUMAN BOT
             let botMessageText = `🎉 HASIL MULTIPLAYER [ROOM: ${kodeRoom}] 🎉\n`;
 
-            playersArray.forEach((p, i) => {
+          playersArray.forEach((p, i) => {
                 let medal = '';
                 let bg = 'white';
                 let txtColor = '#333';
+                
+                // 🛑 PEMBULATAN SKOR FINAL (1 Angka di Belakang Koma)
+                // Misal: 33.333333333 jadi 33.3
+                // Tapi kalau angkanya bulat (misal 100), biar nggak jadi 100.0, kita parse lagi jadi float
+                let skorAsli = parseFloat(p.skor || 0);
+                let skorTampil = Number.isInteger(skorAsli) ? skorAsli : parseFloat(skorAsli.toFixed(1));
                 
                 if (i === 0) { medal = '🥇'; bg = '#fff9c4'; }
                 else if (i === 1) { medal = '🥈'; bg = '#f5f5f5'; }
@@ -3156,14 +3162,14 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                             ${p.nama} ${userSkrg && p.nama === userSkrg.displayName ? '(Kamu)' : ''}
                             ${speedText}
                         </div>
-                        <div style="color:var(--primary); font-size:1.2rem;">${p.skor} <small style="font-size:0.75rem; color:#666;">Pts</small></div>
+                        <div style="color:var(--primary); font-size:1.2rem;">${skorTampil} <small style="font-size:0.75rem; color:#666;">Pts</small></div>
                     </div>
                 `;
                 
                 // Tambahkan data ke string pesan bot (Top 3 saja agar chat tidak terlalu panjang)
                 if (i < 3) {
                      let simpleMedal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
-                     botMessageText += `${simpleMedal} ${p.nama} (${p.skor} Pts)\n`;
+                     botMessageText += `${simpleMedal} ${p.nama} (${skorTampil} Pts)\n`;
                 }
             });
             
@@ -5018,13 +5024,15 @@ window.renderChatMessages = (messages) => {
     let html = '';
     
     messages.forEach(m => {
+        // 🛑 PERBAIKAN LOGIKA POSISI: Pastikan UID cocok persis!
         const isMe = (window.currentUser && m.uid === window.currentUser.uid);
+        
+        // 🛑 PENGATURAN POSISI & WARNA
         const align = isMe ? 'flex-end' : 'flex-start';
-        const bg = isMe ? '#dcf8c6' : '#ffffff'; // Warna hijau khas WA
-        const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0';
+        const bg = isMe ? '#dcf8c6' : '#ffffff'; // Hijau WA buat lo, Putih buat lawan
+        const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0'; // Ekor gelembung
         const namaWarna = isMe ? '#2e7d32' : '#d35400';
         
-        // 🛑 FORMAT JAM ALA WHATSAPP
         let jam = "";
         if (m.waktu) {
             const dateObj = new Date(m.waktu);
