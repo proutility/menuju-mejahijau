@@ -2537,10 +2537,7 @@ window.mulaiUjianRoom = async (kode) => {
 };
 
 window.pantauRoom = (kodeRoom) => {
-    currentAppMode = 'room'; 
-    window.pantauRoom = (kodeRoom) => {
-    currentAppMode = 'room'; 
-    
+    currentAppMode = 'room';     
     // 1. KUNCI MATI KODE ROOM BIAR NGGAK HILANG INGATAN
     window.currentRoomCode = kodeRoom; 
     
