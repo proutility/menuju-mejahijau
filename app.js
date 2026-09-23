@@ -162,7 +162,25 @@ if(auth) {
             document.getElementById('gateLoading').style.display = 'block';
             document.getElementById('gateInputArea').style.display = 'none';
 
-           try {
+            // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomTarget = urlParams.get('room');
+
+            if (roomTarget) {
+                console.log("Jalur VIP Bypass Aktif untuk Room:", roomTarget);
+                // Langsung izinkan masuk Dashboard tanpa peduli VIP
+                lanjutKeAplikasi();
+                
+                // Beri jeda 1 detik biar animasi transisi DOM selesai, lalu gass join!
+                setTimeout(() => {
+                    window.gabungRoomLatihanOtomatis(roomTarget);
+                }, 1000);
+                
+                return; // 🛑 BERHENTI DI SINI, JANGAN LANJUT CEK KODE VIP KE BAWAH!
+            }
+
+            // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM ---
+            try {
                 // Cek Database VIP
                 const accessRef = doc(db, "vip_access", user.email);
                 const accessSnap = await getDoc(accessRef);
@@ -2411,7 +2429,7 @@ window.bikinRoomLatihan = async () => {
     }
 };
 // ==========================================================
-// 2. PESERTA: GABUNG KE ROOM (VERSI MODERN)
+// 2. PESERTA: GABUNG KE ROOM (MANUAL DARI KODE)
 // ==========================================================
 window.gabungRoomLatihan = async () => {
     const { value: kodeRoom } = await Swal.fire({
@@ -2419,27 +2437,17 @@ window.gabungRoomLatihan = async () => {
         text: 'Masukkan 5 Digit Kode Room temanmu:',
         input: 'text',
         inputPlaceholder: 'Contoh: 12345',
-        inputAttributes: {
-            maxlength: 5,
-            autocomplete: 'off'
-        },
+        inputAttributes: { maxlength: 5, autocomplete: 'off' },
         showCancelButton: true,
         confirmButtonColor: '#2e7d32', 
         cancelButtonColor: '#d32f2f',  
         confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Gabung',
         cancelButtonText: 'Batal',
         inputValidator: (value) => {
-            if (!value) {
-                return 'Kode Room wajib diisi bro! 😅';
-            }
-            if (value.length !== 5 || isNaN(value)) {
-                return 'Kode Room harus persis 5 digit angka!';
-            }
+            if (!value) return 'Kode Room wajib diisi bro! 😅';
+            if (value.length !== 5 || isNaN(value)) return 'Kode Room harus persis 5 digit angka!';
         },
-        customClass: {
-            popup: 'swal2-modal-modern',
-            input: 'swal2-input-modern'
-        }
+        customClass: { popup: 'swal2-modal-modern', input: 'swal2-input-modern' }
     });
 
     if(!kodeRoom) return; 
@@ -2451,28 +2459,41 @@ window.gabungRoomLatihan = async () => {
 
         if (!roomSnap.exists()) {
             PROTAMA.close();
-            return PROTAMA.alert("Gagal", "Room tidak ditemukan!", "error");
+            return PROTAMA.alert("Gagal", "Room tidak ditemukan atau sudah dibubarkan!", "error");
         }
+
+        const dataRoom = roomSnap.data();
         
-        const dataRoom = roomSnap.data(); // Tarik data
-        
-        if (dataRoom.status !== 'waiting') {
+        // 🛑 JURUS REJOIN: Cek apakah user ini udah ada di dalam daftar peserta?
+        const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
+
+        if (dataRoom.status !== 'waiting' && !isPemainLama) {
             PROTAMA.close();
-            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai!", "warning");
+            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
         }
 
-        await updateDoc(roomRef, {
-            [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
-        });
+        if (!isPemainLama) {
+            // Kalau peserta murni baru, set skor dari 0
+            await updateDoc(roomRef, {
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
+            });
+        } else {
+            console.log("Pemain lama reconnect. Welcome back!");
+        }
 
-        isHost = false;
+        // 🛑 CEK STATUS HOST: Biar kalau host yang refresh, kendalinya gak hilang!
+        window.isHost = (dataRoom.hostUid === currentUser.uid);
+        isHost = window.isHost;
+        
         currentRoomCode = kodeRoom;
         currentAppMode = 'room';
         
         PROTAMA.close();
         
-        // 🛑 OPER PARAMETER MODUL KE SINI
-        window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
+        // Kalau masih nunggu, buka UI Waiting Room. Kalau udah jalan, langsung tembak ke pantauRoom
+        if (dataRoom.status === 'waiting') {
+            window.tampilkanWaitingRoom(kodeRoom, isHost); 
+        }
         window.pantauRoom(kodeRoom);
 
     } catch(e) {
@@ -2480,8 +2501,64 @@ window.gabungRoomLatihan = async () => {
         alert("Gagal join: " + e.message);
     }
 };
+
 // ==========================================================
-// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR)
+// 2.6. PESERTA: AUTO-JOIN DARI LINK (BYPASS)
+// ==========================================================
+window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
+    if(!kodeRoom) return;
+
+    PROTAMA.loading("Mencari Room dari Link...");
+    try {
+        const roomRef = doc(window.db, "rooms", kodeRoom);
+        const roomSnap = await getDoc(roomRef);
+
+        if (!roomSnap.exists()) {
+            PROTAMA.close();
+            window.history.replaceState(null, null, window.location.pathname);
+            return PROTAMA.alert("Gagal", "Room tidak ditemukan atau sudah dibubarkan!", "error");
+        }
+
+        const dataRoom = roomSnap.data();
+        
+        // 🛑 JURUS REJOIN
+        const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
+
+        if (dataRoom.status !== 'waiting' && !isPemainLama) {
+            PROTAMA.close();
+            window.history.replaceState(null, null, window.location.pathname);
+            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
+        }
+
+        if (!isPemainLama) {
+            await updateDoc(roomRef, {
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
+            });
+        }
+
+        // 🛑 CEK STATUS HOST
+        window.isHost = (dataRoom.hostUid === currentUser.uid);
+        isHost = window.isHost;
+        
+        currentRoomCode = kodeRoom;
+        currentAppMode = 'room';
+        
+        PROTAMA.close();
+        
+        if (dataRoom.status === 'waiting') {
+            window.tampilkanWaitingRoom(kodeRoom, isHost); 
+        }
+        window.pantauRoom(kodeRoom);
+
+        window.history.replaceState(null, null, window.location.pathname);
+
+    } catch(e) {
+        PROTAMA.close();
+        alert("Gagal join otomatis: " + e.message);
+    }
+};
+// ==========================================================
+// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR + LINK AUTO JOIN)
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
@@ -2513,6 +2590,9 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
         `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI</button>` : 
         `<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:15px; border-radius:8px; margin-top:10px; color:#e67e22; font-weight:bold; font-size:1.1rem;"><i class="fas fa-spinner fa-spin"></i> Menunggu Host Memulai Ujian...</div>`;
 
+    // 🛑 BIKIN LINK AUTO-JOIN
+    const linkRoom = `${window.location.origin}${window.location.pathname}?room=${kode}`;
+
     qText.innerHTML = `
         <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:600px; margin:0 auto; border-top:8px solid var(--primary);">
             <i class="fas fa-users" style="font-size:4rem; color:var(--primary); margin-bottom:15px;"></i>
@@ -2522,6 +2602,11 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
             <div style="background:#f1f8e9; border:2px dashed var(--success); padding:15px; border-radius:10px; font-size:3.5rem; font-weight:900; color:var(--success); letter-spacing:8px; margin-bottom:15px;">
                 ${kode}
             </div>
+            
+            <!-- TOMBOL SALIN LINK OTOMATIS -->
+            <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Kirim link ini ke temanmu via WhatsApp.', 'success');" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-weight:bold; font-size:0.9rem; margin-bottom:20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <i class="fas fa-link"></i> Salin Link Invite Room
+            </button>
             
             <!-- KETERANGAN MODUL -->
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; border:1px solid #90caf9; margin-bottom:20px; font-weight:bold; color:#1565c0; font-size: 0.95rem;">
