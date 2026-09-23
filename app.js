@@ -3221,8 +3221,14 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             `;
 
             document.body.appendChild(overlay);
+// 🛑 TAMBAHAN: EFEK SUARA TEPUK TANGAN (MULTIPLAYER)
+            try {
+                const applause = new Audio('https://www.myinstants.com/media/sounds/applause.mp3');
+                applause.volume = 0.8; // Volume 80% biar nggak kelewat kencang
+                applause.play().catch(e => console.log('Suara keblokir browser:', e));
+            } catch(e) { console.log(e); }
 
-            window.isAnswerLocked = true; 
+            window.isAnswerLocked = true;
 
             // 🛑 1. FREEZE PANEL KANAN ATAS (Fitur Singleplayer Dimatikan)
             document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
