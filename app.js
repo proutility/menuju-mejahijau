@@ -2540,9 +2540,9 @@ window.gabungRoomLatihan = async () => {
         
         PROTAMA.close();
         
-        // Kalau masih nunggu, buka UI Waiting Room. Kalau udah jalan, langsung tembak ke pantauRoom
+       // Cari baris ini di bagian bawah window.gabungRoomLatihanOtomatis
         if (dataRoom.status === 'waiting') {
-            window.tampilkanWaitingRoom(kodeRoom, isHost); 
+            window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); // 🛑 TAMBAHKAN dataRoom.modulId DI SINI
         }
         window.pantauRoom(kodeRoom);
 
@@ -2608,9 +2608,9 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
     }
 };
 // ==========================================================
-// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR + LINK AUTO JOIN KHUSUS HOST)
+// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - KAMUS MODUL + ANTI BOCOR)
 // ==========================================================
-window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") {
+window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
     // 🛑 BASMI BOCORAN UI SINGLEPLAYER KE WAITING ROOM
@@ -2630,10 +2630,29 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
     qText.style.display = 'block';
     document.getElementById('optionsContainer').innerHTML = '';
     
-    // 🛑 PERCANTIK NAMA MODUL
-    let namaModulBersih = modulId.replace(/_/g, ' ').toUpperCase();
-    if (!namaModulBersih.includes('MODUL')) {
-        namaModulBersih = "MODUL " + namaModulBersih;
+    // 🛑 KAMUS NAMA MODUL BIAR TAMPILANNYA LENGKAP & RAPI
+    const kamusModul = {
+        "ilmu_hukum": "Ilmu Hukum Dasar (Materiil)",
+        "modul1": "Modul 1: Kekuasaan Kehakiman (UU 48/2009)",
+        "modul2": "Modul 2: Mahkamah Agung",
+        "modul3": "Modul 3: Peradilan Agama",
+        "modul6": "Modul 6: PMH & Wanprestasi",
+        "modul8": "Modul 8: Perkawinan (KHI)",
+        "modul8_1": "Modul 8.1: Perkawinan (Lanjutan)",
+        "modul8_2": "Modul 8.2: Perkawinan (Lanjutan)",
+        "modul8_3": "Modul 8.3: Perkawinan (Lanjutan)",
+        "latihan": "Modul Latihan Campuran"
+    };
+
+    // Ambil nama dari kamus, kalau nggak ada, rapikan teksnya otomatis
+    let namaModulBersih = "";
+    if (modulId && kamusModul[modulId.toLowerCase()]) {
+        namaModulBersih = kamusModul[modulId.toLowerCase()];
+    } else {
+        namaModulBersih = (modulId || "MODUL LATIHAN").replace(/_/g, ' ').toUpperCase();
+        if (!namaModulBersih.includes('MODUL') && !namaModulBersih.includes('HUKUM')) {
+            namaModulBersih = "MODUL " + namaModulBersih;
+        }
     }
     
     let btnMulai = isHost ? 
