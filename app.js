@@ -2830,27 +2830,44 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
 
-        // ========================================================
-        // 👑 1. SISTEM TRANSFER HOST OTOMATIS (ZOOM-STYLE)
+       // ========================================================
+        // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
         if (data.players && data.hostUid) {
             const hostMasihAda = data.players[data.hostUid];
+            
+            // Jika Host terdeteksi hilang/keluar dari room!
             if (!hostMasihAda) {
-                // Host lama terdeteksi hilang dari room!
                 const sisaPemain = Object.keys(data.players);
-                if (sisaPemain.length > 0) {
-                    // Urutkan UID biar peserta gak rebutan update ke Firebase
-                    sisaPemain.sort(); 
+                
+                // Pastikan kita ada di dalam room
+                if (sisaPemain.length > 0 && window.currentUser && sisaPemain.includes(window.currentUser.uid)) {
+                    sisaPemain.sort(); // Urutkan UID biar adil
+                    const myIndex = sisaPemain.indexOf(window.currentUser.uid);
                     
-                    // Orang yang UID-nya paling atas akan diangkat jadi Host baru
-                    if (window.currentUser && window.currentUser.uid === sisaPemain[0]) {
+                    // 🛑 STRATA VIP (LOGIKA BALAPAN WAKTU)
+                    // Jika VIP: Rebut posisi host dalam waktu 0 - 3 detik
+                    // Jika Non-VIP: Disuruh nunggu 6 - 9 detik (Ngalah sama VIP)
+                    let delayClaim = window.isVIPUser ? (myIndex * 1500) : 6000 + (myIndex * 1500);
+                    
+                    // Bersihkan timer klaim kalau sebelumnya udah ada
+                    if (window.hostClaimTimer) clearTimeout(window.hostClaimTimer);
+                    
+                    // Mulai menghitung mundur untuk merebut posisi Host
+                    window.hostClaimTimer = setTimeout(() => {
                         console.log("Mengambil alih posisi Host...");
                         updateDoc(roomRef, { hostUid: window.currentUser.uid }).then(() => {
                             if (typeof PROTAMA !== 'undefined') {
-                                PROTAMA.alert('Sistem Host Berpindah!', 'Host sebelumnya terputus. Kamu sekarang dialihkan menjadi Host.', 'info');
+                                PROTAMA.alert('Sistem Host Berpindah!', 'Host terputus. Karena otoritas akunmu, kamu kini dialihkan menjadi Host.', 'success');
                             }
-                        });
-                    }
+                        }).catch(e => console.log("Gagal klaim host:", e));
+                    }, delayClaim);
+                }
+            } else {
+                // 🛑 JIKA HOST BARU UDAH TERPILIH, BATALKAN SEMUA NIAT KUDETA!
+                if (window.hostClaimTimer) {
+                    clearTimeout(window.hostClaimTimer);
+                    window.hostClaimTimer = null;
                 }
             }
         }
@@ -2859,22 +2876,19 @@ window.pantauRoom = (kodeRoom) => {
         // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
         // ========================================================
         if (data.status === 'soal' || data.status === 'pembahasan') {
-            // Hapus paksa dashboard "Halo Ilham" dan riwayat tes
             const navGrid = document.getElementById('navGrid');
             if (navGrid) navGrid.innerHTML = ''; 
             
             const welcomeBanner = document.querySelector('.welcome-banner');
             if (welcomeBanner) welcomeBanner.style.display = 'none';
 
-            // Paksa mode sidebar ke ujian
             const lobbySb = document.getElementById('lobbySidebarContent');
             const examSb = document.getElementById('examSidebarContent');
             if (lobbySb) lobbySb.style.setProperty('display', 'none', 'important');
             if (examSb) examSb.style.setProperty('display', 'flex', 'important');
             
-            // Kasih layar "Tunggu" biar mereka sinkron di ronde berikutnya
             const qText = document.getElementById('questionText');
-            if (qText && qText.innerHTML.includes('Riwayat')) { // Jika layarnya nyangkut di riwayat
+            if (qText && qText.innerHTML.includes('Riwayat')) { 
                  qText.innerHTML = `
                     <div style="text-align:center; padding:50px; background:white; border-radius:10px;">
                         <i class="fas fa-sync fa-spin fa-3x" style="color:#1565c0; margin-bottom:20px;"></i><br>
