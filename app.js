@@ -3221,12 +3221,12 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             `;
 
             document.body.appendChild(overlay);
-// 🛑 TAMBAHAN: EFEK SUARA TEPUK TANGAN HEBOH (MULTIPLAYER)
+// 🛑 TAMBAHAN: EFEK SUARA KEMENANGAN ALA GAME (MULTIPLAYER)
             try {
-                // Pakai suara sorak sorai penonton (Crowd Cheering)
-                const applause = new Audio('https://www.myinstants.com/media/sounds/crowd-cheering.mp3');
-                applause.volume = 1.0; // Gas mentok 100% biar dapet hype-nya
-                applause.play().catch(e => console.log('Suara keblokir browser:', e));
+                // Suara Victory Fanfare (Rame, epik, tapi berupa melodi musik jadi enak didengar)
+                const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
+                victorySound.volume = 0.7; // Volume 70% biar pas dan nggak bikin kaget
+                victorySound.play().catch(e => console.log('Suara keblokir browser:', e));
             } catch(e) { console.log(e); }
 
             window.isAnswerLocked = true;
