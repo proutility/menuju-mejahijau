@@ -1786,8 +1786,51 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    // ========================================================
+    // 🛡️ TAHAP 1: CEGATAN SATPAM VIP (HARUS DI PALING ATAS!)
+    // ========================================================
+    if (window.currentUser && window.db) {
+        if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Memproses Keluar Room...");
+        try {
+            const accessRef = doc(window.db, "vip_access", window.currentUser.email);
+            const accessSnap = await getDoc(accessRef);
+
+            // JIKA DIA BUKAN VIP (MASUK JALUR LINK ROOM)
+            if (!accessSnap.exists() || accessSnap.data().isVerified !== true) {
+                if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+                
+                // Putus koneksi dari database Room biar gak nyangkut
+                if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+
+                // Tampilkan pesan perpisahan lalu tendang ke halaman awal
+                Swal.fire({
+                    title: 'Sesi Selesai',
+                    text: 'Terima kasih telah mengikuti simulasi! Silakan login dengan Kode VIP untuk mengakses Latihan Mandiri.',
+                    icon: 'info',
+                    confirmButtonColor: '#2e7d32',
+                    confirmButtonText: 'Kembali ke Layar Utama',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    // Reload bersih, menghapus parameter ?room= di URL
+                    window.location.href = window.location.origin + window.location.pathname;
+                });
+                
+                return; // 🛑 HENTIKAN FUNGSI DI SINI! (Kodingan di bawah gak akan dijalanin)
+            }
+        } catch (e) {
+            console.error("Error cek VIP:", e);
+            window.location.href = window.location.origin + window.location.pathname;
+            return;
+        }
+        if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+    }
+
+    // ========================================================
+    // 🟢 TAHAP 2: JIKA DIA VIP ASLI, BERSIHKAN ROOM & BUKA LOBBY
+    // ========================================================
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-    
+
     currentRoomCode = null;
     window.currentRoomCode = null;
     isHost = false;
@@ -1795,7 +1838,7 @@ window.keluarDariRoom = async () => {
     currentAppMode = 'ujian'; 
     window.currentAppMode = 'ujian'; 
     
-    // 🛑 RESET VARIABEL LANGSUNG (TANPA WINDOW.)
+    // Reset Data Jawaban
     userAnswers = [];
     wrongIndices = [];
     currentQuestions = [];
@@ -1803,9 +1846,9 @@ window.keluarDariRoom = async () => {
     isReviewMode = false;
     isSubmitted = false; 
     currentIdx = 0;
-    
     window.currentDatabaseId = null; 
 
+    // Bersihkan UI
     const unfreezeStyle = document.getElementById('review-unfreeze');
     if (unfreezeStyle) unfreezeStyle.remove();
     
@@ -1831,37 +1874,11 @@ window.keluarDariRoom = async () => {
     
     document.body.classList.remove('ujian-berjalan', 'room-mode');
 
-    // 🛑 JURUS TENDANGAN MAUT BUAT NON-VIP (PESERTA GRATISAN)
-    // Kita cek ke database apakah dia punya akses VIP yang valid
-    if (window.currentUser && window.db) {
-        try {
-            if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Keluar Room...");
-            
-            const accessRef = doc(window.db, "vip_access", window.currentUser.email);
-            const accessSnap = await getDoc(accessRef);
-            
-            // Kalau gak ada data VIP ATAU belum diverifikasi (belum masukin kode)
-            if (!accessSnap.exists() || accessSnap.data().isVerified !== true) {
-                // Tendang balik ke halaman Gatekeeper dengan cara me-reload bersih URL aslinya
-                window.location.href = window.location.origin + window.location.pathname;
-                return; // Berhenti di sini, gak usah load Lobby!
-            }
-            
-            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
-        } catch (e) {
-            console.error("Error cek VIP saat keluar:", e);
-            // Kalau error, mending cari aman: tendang ke depan
-            window.location.href = window.location.origin + window.location.pathname;
-            return;
-        }
-    }
-    
-    // --- JIKA DIA VIP RESMI, BALIK KE LOBBY SECARA NORMAL ---
-    window.backToMenu = window.backToMenu; 
+    // Buka Lobby secara aman
     setTimeout(() => {
         const navGrid = document.getElementById('navGrid');
         if (navGrid) navGrid.innerHTML = '';
-        window.tampilkanLobby();
+        if (typeof window.tampilkanLobby === 'function') window.tampilkanLobby();
     }, 100);
 };
 window.showResult = function() {
