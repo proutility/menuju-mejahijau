@@ -655,8 +655,15 @@ window.toggleMobileModul = function() {
     }
 }
 
+// ==========================================
+// PENGAMAN KEYBOARD SHORTCUT (NONAKTIF DI MULTIPLAYER)
+// ==========================================
 document.addEventListener('keydown', function(event) {
-    if(document.getElementById('appSection').style.display === 'none') return;
+    // 🛑 JIKA SEDANG DI LOBBY, DI MODAL, ATAU DI MODE ROOM (MULTIPLAYER), MATIKAN SEMUA SHORTCUT!
+    if (document.getElementById('appSection').style.display === 'none') return;
+    if (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') return;
+
+    // Tombol panah dan pilihan ganda hanya aktif di Singleplayer / Latihan Mandiri
     switch(event.key) {
         case "ArrowRight": window.changeQuestion(1); break;
         case "ArrowLeft": window.changeQuestion(-1); break;
@@ -2565,20 +2572,26 @@ window.mulaiUjianRoom = async (kode) => {
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
     window.currentRoomCode = kodeRoom; 
+
+    // 🛑 BERSIHKAN SEMUA TIMER GANDA (OBAT ISSUE 4 - TIMER KEBUT)
+    if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
     // 2. JURUS PAKSAAN MAKSIMAL: CLONING ELEMEN CHAT (PEMBASMI BUG)
     setTimeout(() => {
         const chatInp = document.getElementById('chatInput');
         const chatBtn = document.querySelector('#roomChatContainer button'); 
         
-        // 🔥 CLONE UNTUK MENGHAPUS SEMUA EVENT LISTENER LAMA & INLINE ONKEYPRESS 🔥
         if (chatInp) {
             chatInp.removeAttribute('onkeypress');
             chatInp.removeAttribute('disabled');
-            const newChatInp = chatInp.cloneNode(true); // Gandakan elemennya
-            chatInp.parentNode.replaceChild(newChatInp, chatInp); // Timpa yang lama
+            const newChatInp = chatInp.cloneNode(true); 
+            chatInp.parentNode.replaceChild(newChatInp, chatInp); 
             
             newChatInp.addEventListener('keydown', (e) => {
+                // 🛑 OBAT MUJARAB ISSUE 5: Blokir huruf nembus ke jawaban soal pas ngetik Chat!
+                e.stopPropagation(); 
+                
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     window.kirimPesanChat();
@@ -2597,7 +2610,6 @@ window.pantauRoom = (kodeRoom) => {
             });
         }
         
-        // 🔥 SUNTIK VAKSIN KEBAL CSS BIAR BISA DIKLIK PAS PEMBAHASAN 🔥
         let unfreezeChat = document.getElementById('chat-kebal-style');
         if(!unfreezeChat) {
             unfreezeChat = document.createElement('style');
@@ -2625,17 +2637,15 @@ window.pantauRoom = (kodeRoom) => {
         if (!container) return;
 
         let arr = Object.values(playersObj);
-        arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); // Sortir Poin Tertinggi
+        arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
 
         let html = '<div style="font-weight:900; color:#2e7d32; margin-bottom:6px; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class="fas fa-chart-line"></i> KLASEMEN SEMENTARA</div>';
         
-        arr.slice(0, 3).forEach((p, i) => { // Tampilkan Top 3 Aja
+        arr.slice(0, 3).forEach((p, i) => { 
             let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : ''));
             let namaDepan = p.nama.split(" ")[0]; 
             let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#555; font-weight:600;';
             let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
-
-            // 🛑 PEMBULATAN SKOR BIAR GA KERITING
             let skorTampil = Math.round(p.skor || 0);
 
             html += `
@@ -2645,12 +2655,8 @@ window.pantauRoom = (kodeRoom) => {
                 </div>
             `;
         });
-        
         container.innerHTML = html;
     };
-    // ========================================================
-
-    if (timerInterval) clearInterval(timerInterval);
 
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
     const roomRef = doc(db, "rooms", kodeRoom); 
@@ -2673,7 +2679,6 @@ window.pantauRoom = (kodeRoom) => {
         }
         
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
-        
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
@@ -2685,17 +2690,14 @@ window.pantauRoom = (kodeRoom) => {
             const cInput = document.getElementById('chatInput');
             if (cInput) cInput.style.pointerEvents = 'auto';
 
-            // 🛑 RENDER KLASEMEN SEMENTARA DI SINI
             if (data.players) window.renderLiveScore(data.players);
 
-            // 🛑 JURUS GRUP WA: Simpan waktu join di Session, filter chat yang lama!
             if (data.messages) {
                 let myJoinTime = sessionStorage.getItem(`join_time_${kodeRoom}`);
                 if (!myJoinTime) {
                     myJoinTime = new Date().toISOString();
                     sessionStorage.setItem(`join_time_${kodeRoom}`, myJoinTime);
                 }
-                
                 const filteredMessages = data.messages.filter(m => m.waktu >= myJoinTime);
                 window.renderChatMessages(filteredMessages);
             }
@@ -2721,7 +2723,6 @@ window.pantauRoom = (kodeRoom) => {
         // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
-            if (timerInterval) clearInterval(timerInterval);
             window.activePembahasanIdx = -1; 
             
             isSubmitted = false;
@@ -2756,7 +2757,10 @@ window.pantauRoom = (kodeRoom) => {
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
                 const fbBox = document.getElementById('feedbackBox');
-                if (fbBox) { fbBox.style.display = 'none'; fbBox.classList.remove('show'); }
+                if (fbBox) { 
+                    fbBox.style.setProperty('display', 'none', 'important'); 
+                    fbBox.classList.remove('show'); 
+                }
                 
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
@@ -2810,12 +2814,30 @@ window.pantauRoom = (kodeRoom) => {
                         btn.style.opacity = '0.4';
                     }
                 });
+
+                // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
+                // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
+                setTimeout(() => {
+                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                    opsiElements.forEach((el, i) => {
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            if (isAnswerLocked) return;
+                            isAnswerLocked = true;
+                            
+                            el.style.background = "#fff9c4"; 
+                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                            
+                            userAnswers[currentIdx] = i;
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
+                        };
+                    });
+                }, 300);
             }
 
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
-                
                 for (let uid in data.players) {
                     totalPeserta++;
                     if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
@@ -2830,36 +2852,17 @@ window.pantauRoom = (kodeRoom) => {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         }, 1000);
                     }
                 }
             }
-
-            setTimeout(() => {
-                const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
-                opsiElements.forEach((el, i) => {
-                    el.onclick = (e) => {
-                        e.preventDefault();
-                        if (isAnswerLocked) return;
-                        isAnswerLocked = true;
-                        
-                        el.style.background = "#fff9c4"; 
-                        el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
-                        
-                        userAnswers[currentIdx] = i;
-                        updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
-                    };
-                });
-            }, 300); 
         } 
         
         // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-            if (timerInterval) clearInterval(timerInterval);
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
@@ -2871,14 +2874,12 @@ window.pantauRoom = (kodeRoom) => {
 
                 const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 
-                // 🏆 LOGIKA LIVE SCORE: Bobot Dinamis! (Max: 100 Pts)
+                // 🏆 LOGIKA LIVE SCORE
                 if (jawabanGue === q.answer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
-                        
                         let bobotSoal = 100 / currentQuestions.length; 
                         let skorSekarang = parseFloat(data.players[currentUser.uid].skor || 0);
-                        
                         updateDoc(roomRef, {
                             [`players.${currentUser.uid}.skor`]: skorSekarang + bobotSoal
                         }).catch(e => console.log(e));
@@ -2909,7 +2910,9 @@ window.pantauRoom = (kodeRoom) => {
 
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
-                    fb.style.display = 'block';
+                    // 🛑 OBAT ISSUE 2 (Pembahasan Ilang): Paksa tembus blokir CSS
+                    fb.style.setProperty('display', 'block', 'important');
+                    fb.style.setProperty('visibility', 'visible', 'important');
                     fb.classList.add('show');
                     
                     let fText = document.getElementById('feedbackText');
@@ -2987,7 +2990,7 @@ window.pantauRoom = (kodeRoom) => {
         // --- D. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
-            if (timerInterval) clearInterval(timerInterval);
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             
             window.currentAppMode = 'ujian'; 
 
@@ -5039,14 +5042,16 @@ window.renderChatMessages = (messages) => {
     const prevCount = chatBox.childElementCount;
     let html = '';
     
+    // 🛑 CARI UID USER ASLI BIAR CHAT BISA DI KANAN
+    let myUid = null;
+    if (typeof auth !== 'undefined' && auth.currentUser) myUid = auth.currentUser.uid;
+    else if (window.currentUser) myUid = window.currentUser.uid;
+
     messages.forEach(m => {
-        // 🛑 PERBAIKAN LOGIKA POSISI: Pastikan UID cocok persis!
-        const isMe = (window.currentUser && m.uid === window.currentUser.uid);
-        
-        // 🛑 PENGATURAN POSISI & WARNA
+        const isMe = (myUid && m.uid === myUid);
         const align = isMe ? 'flex-end' : 'flex-start';
-        const bg = isMe ? '#dcf8c6' : '#ffffff'; // Hijau WA buat lo, Putih buat lawan
-        const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0'; // Ekor gelembung
+        const bg = isMe ? '#dcf8c6' : '#ffffff'; 
+        const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0'; 
         const namaWarna = isMe ? '#2e7d32' : '#d35400';
         
         let jam = "";
