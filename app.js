@@ -2369,7 +2369,6 @@ window.bikinRoomLatihan = async () => {
         }
     });
 
-    // Kalau user klik batal atau close popup-nya
     if (!modulId) return;
 
     const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
@@ -2379,7 +2378,7 @@ window.bikinRoomLatihan = async () => {
         await setDoc(doc(window.db, "rooms", kodeRoom), {
             hostUid: currentUser.uid,
             hostName: currentUser.displayName,
-            modulId: modulId, // Langsung tembak ID dari pilihan dropdown
+            modulId: modulId, 
             status: 'waiting', 
             currentIdx: 0,
             players: {
@@ -2391,10 +2390,12 @@ window.bikinRoomLatihan = async () => {
 
         isHost = true;
         currentRoomCode = kodeRoom;
-        currentAppMode = 'room'; // Set state jadi mode room
+        currentAppMode = 'room'; 
         
         PROTAMA.close();
-        window.tampilkanWaitingRoom(kodeRoom, isHost); // Alihkan layar ke Waiting Room
+        
+        // 🛑 OPER PARAMETER MODUL KE SINI
+        window.tampilkanWaitingRoom(kodeRoom, isHost, modulId); 
         window.pantauRoom(kodeRoom);
 
     } catch(e) {
@@ -2406,7 +2407,6 @@ window.bikinRoomLatihan = async () => {
 // 2. PESERTA: GABUNG KE ROOM (VERSI MODERN)
 // ==========================================================
 window.gabungRoomLatihan = async () => {
-    // 🛑 Ganti prompt jadul pakai SweetAlert2 dengan gaya modern
     const { value: kodeRoom } = await Swal.fire({
         title: 'GABUNG ROOM',
         text: 'Masukkan 5 Digit Kode Room temanmu:',
@@ -2417,8 +2417,8 @@ window.gabungRoomLatihan = async () => {
             autocomplete: 'off'
         },
         showCancelButton: true,
-        confirmButtonColor: '#2e7d32', // Hijau MA
-        cancelButtonColor: '#d32f2f',  // Merah
+        confirmButtonColor: '#2e7d32', 
+        cancelButtonColor: '#d32f2f',  
         confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Gabung',
         cancelButtonText: 'Batal',
         inputValidator: (value) => {
@@ -2435,7 +2435,7 @@ window.gabungRoomLatihan = async () => {
         }
     });
 
-    if(!kodeRoom) return; // Kalo user klik Batal
+    if(!kodeRoom) return; 
 
     PROTAMA.loading("Mencari Room...");
     try {
@@ -2446,7 +2446,10 @@ window.gabungRoomLatihan = async () => {
             PROTAMA.close();
             return PROTAMA.alert("Gagal", "Room tidak ditemukan!", "error");
         }
-        if (roomSnap.data().status !== 'waiting') {
+        
+        const dataRoom = roomSnap.data(); // Tarik data
+        
+        if (dataRoom.status !== 'waiting') {
             PROTAMA.close();
             return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai!", "warning");
         }
@@ -2460,7 +2463,9 @@ window.gabungRoomLatihan = async () => {
         currentAppMode = 'room';
         
         PROTAMA.close();
-        window.tampilkanWaitingRoom(kodeRoom, isHost); // Alihkan layar ke Waiting Room
+        
+        // 🛑 OPER PARAMETER MODUL KE SINI
+        window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
         window.pantauRoom(kodeRoom);
 
     } catch(e) {
@@ -2471,7 +2476,7 @@ window.gabungRoomLatihan = async () => {
 // ==========================================================
 // 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR)
 // ==========================================================
-window.tampilkanWaitingRoom = function(kode, isHost) {
+window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
     // 🛑 BASMI BOCORAN UI SINGLEPLAYER KE WAITING ROOM
@@ -2491,6 +2496,12 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
     qText.style.display = 'block';
     document.getElementById('optionsContainer').innerHTML = '';
     
+    // 🛑 PERCANTIK NAMA MODUL
+    let namaModulBersih = modulId.replace(/_/g, ' ').toUpperCase();
+    if (!namaModulBersih.includes('MODUL')) {
+        namaModulBersih = "MODUL " + namaModulBersih;
+    }
+    
     let btnMulai = isHost ? 
         `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI</button>` : 
         `<div style="background:#fff3e0; border:1px solid #ffe0b2; padding:15px; border-radius:8px; margin-top:10px; color:#e67e22; font-weight:bold; font-size:1.1rem;"><i class="fas fa-spinner fa-spin"></i> Menunggu Host Memulai Ujian...</div>`;
@@ -2499,10 +2510,15 @@ window.tampilkanWaitingRoom = function(kode, isHost) {
         <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:600px; margin:0 auto; border-top:8px solid var(--primary);">
             <i class="fas fa-users" style="font-size:4rem; color:var(--primary); margin-bottom:15px;"></i>
             <h2 style="color:var(--primary); margin-bottom:5px;">WAITING ROOM</h2>
-            <p style="color:#666; font-size:1rem; margin-bottom:20px;">Berikan kode ini ke user lain untuk bergabung:</p>
+            <p style="color:#666; font-size:1rem; margin-bottom:5px;">Berikan kode ini ke user lain untuk bergabung:</p>
             
-            <div style="background:#f1f8e9; border:2px dashed var(--success); padding:15px; border-radius:10px; font-size:3.5rem; font-weight:900; color:var(--success); letter-spacing:8px; margin-bottom:20px;">
+            <div style="background:#f1f8e9; border:2px dashed var(--success); padding:15px; border-radius:10px; font-size:3.5rem; font-weight:900; color:var(--success); letter-spacing:8px; margin-bottom:15px;">
                 ${kode}
+            </div>
+            
+            <!-- KETERANGAN MODUL -->
+            <div style="background:#e3f2fd; padding:10px; border-radius:8px; border:1px solid #90caf9; margin-bottom:20px; font-weight:bold; color:#1565c0; font-size: 0.95rem;">
+                <i class="fas fa-book-open"></i> Materi Ujian: ${namaModulBersih}
             </div>
             
             <!-- LIST PESERTA YANG JOIN BARENG -->
