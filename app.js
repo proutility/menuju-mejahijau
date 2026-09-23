@@ -162,37 +162,42 @@ if(auth) {
             document.getElementById('gateLoading').style.display = 'block';
             document.getElementById('gateInputArea').style.display = 'none';
 
-            // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
+           // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
             const urlParams = new URLSearchParams(window.location.search);
             const roomTarget = urlParams.get('room');
 
             if (roomTarget) {
                 console.log("Jalur VIP Bypass Aktif untuk Room:", roomTarget);
-                // Langsung izinkan masuk Dashboard tanpa peduli VIP
                 lanjutKeAplikasi();
                 
-                // Beri jeda 1 detik biar animasi transisi DOM selesai, lalu gass join!
-                setTimeout(() => {
+                setTimeout(async () => {
+                    // 🛑 INTELIJEN: Cek status VIP diam-diam buat nentuin bentuk tombol Keluar
+                    window.isVIPUser = false;
+                    try {
+                        const accRef = doc(db, "vip_access", user.email);
+                        const accSnap = await getDoc(accRef);
+                        if(accSnap.exists() && accSnap.data().isVerified === true) {
+                            window.isVIPUser = true;
+                        }
+                    } catch(e) {}
+                    
                     window.gabungRoomLatihanOtomatis(roomTarget);
                 }, 1000);
                 
-                return; // 🛑 BERHENTI DI SINI, JANGAN LANJUT CEK KODE VIP KE BAWAH!
+                return; // BERHENTI DI SINI
             }
 
             // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM ---
             try {
-                // Cek Database VIP
                 const accessRef = doc(db, "vip_access", user.email);
                 const accessSnap = await getDoc(accessRef);
 
                 if (accessSnap.exists()) {
                     if (accessSnap.data().isVerified === true) {
-                        // SUDAH VERIFIKASI -> MASUK
+                        window.isVIPUser = true; // 🛑 TANDAI SEBAGAI VIP ASLI
                         lanjutKeAplikasi();
                     } else {
-                        // BELUM INPUT KODE -> TAMPILKAN FORM
                         showGateInput(user.displayName, user.email);
-                        // --- TAMBAHAN: Lapor ke Radar kalau lagi nyangkut di Gatekeeper ---
                         window.updateUserStatus(true, "VIP Gatekeeper"); 
                     }
                 } else {
@@ -1786,51 +1791,10 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
-    // ========================================================
-    // 🛡️ TAHAP 1: CEGATAN SATPAM VIP (HARUS DI PALING ATAS!)
-    // ========================================================
-    if (window.currentUser && window.db) {
-        if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Memproses Keluar Room...");
-        try {
-            const accessRef = doc(window.db, "vip_access", window.currentUser.email);
-            const accessSnap = await getDoc(accessRef);
-
-            // JIKA DIA BUKAN VIP (MASUK JALUR LINK ROOM)
-            if (!accessSnap.exists() || accessSnap.data().isVerified !== true) {
-                if (typeof PROTAMA !== 'undefined') PROTAMA.close();
-                
-                // Putus koneksi dari database Room biar gak nyangkut
-                if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-
-                // Tampilkan pesan perpisahan lalu tendang ke halaman awal
-                Swal.fire({
-                    title: 'Sesi Selesai',
-                    text: 'Terima kasih telah mengikuti simulasi! Silakan login dengan Kode VIP untuk mengakses Latihan Mandiri.',
-                    icon: 'info',
-                    confirmButtonColor: '#2e7d32',
-                    confirmButtonText: 'Kembali ke Layar Utama',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then(() => {
-                    // Reload bersih, menghapus parameter ?room= di URL
-                    window.location.href = window.location.origin + window.location.pathname;
-                });
-                
-                return; // 🛑 HENTIKAN FUNGSI DI SINI! (Kodingan di bawah gak akan dijalanin)
-            }
-        } catch (e) {
-            console.error("Error cek VIP:", e);
-            window.location.href = window.location.origin + window.location.pathname;
-            return;
-        }
-        if (typeof PROTAMA !== 'undefined') PROTAMA.close();
-    }
-
-    // ========================================================
-    // 🟢 TAHAP 2: JIKA DIA VIP ASLI, BERSIHKAN ROOM & BUKA LOBBY
-    // ========================================================
+    // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
 
+    // Reset Variabel Mode
     currentRoomCode = null;
     window.currentRoomCode = null;
     isHost = false;
@@ -1858,6 +1822,7 @@ window.keluarDariRoom = async () => {
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
 
+    // Tutup Chat, Buka Sidebar Modul
     const chatContainer = document.getElementById('roomChatContainer');
     const modulContainer = document.getElementById('modulSidebarContainer');
     const chatBox = document.getElementById('chatMessages');
@@ -1874,7 +1839,7 @@ window.keluarDariRoom = async () => {
     
     document.body.classList.remove('ujian-berjalan', 'room-mode');
 
-    // Buka Lobby secara aman
+    // Buka Lobby
     setTimeout(() => {
         const navGrid = document.getElementById('navGrid');
         if (navGrid) navGrid.innerHTML = '';
@@ -1887,6 +1852,48 @@ window.showResult = function() {
     } else {
         alert("Belum ada nilai! Silahkan kerjakan dulu soalnya");
     }
+};
+// ==========================================================
+// 🛡️ MESIN PENENDANG OTOMATIS (KHUSUS NON-VIP) 🛡️
+// ==========================================================
+
+window.tendangNonVIP = () => {
+    // Putus koneksi dari room biar nggak error di background
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    
+    // Munculkan peringatan dan tendang ke halaman awal
+    Swal.fire({
+        title: 'Sesi Selesai',
+        text: 'Akses Latihan Mandiri (Singleplayer) hanya tersedia untuk akun VIP. Silakan login kembali dengan Kode VIP.',
+        icon: 'info',
+        confirmButtonColor: '#d32f2f',
+        confirmButtonText: 'Keluar',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    }).then(() => {
+        window.location.href = window.location.origin + window.location.pathname;
+    });
+};
+
+// 🛑 CEGAT TOMBOL KEMBALI KE LOBBY
+const originalBackToMenu = window.backToMenu;
+window.backToMenu = () => {
+    // Kalau dia non-VIP, langsung tendang (cegah masuk lobby)
+    if (window.isVIPUser === false) return window.tendangNonVIP();
+    
+    // Kalau VIP, biarkan kembali ke lobby normal
+    if (typeof originalBackToMenu === 'function') originalBackToMenu();
+    else window.location.reload();
+};
+
+// 🛑 CEGAT TOMBOL KELUAR DARI ROOM
+const originalKeluarDariRoom = window.keluarDariRoom;
+window.keluarDariRoom = async () => {
+    // Kalau dia non-VIP, langsung tendang
+    if (window.isVIPUser === false) return window.tendangNonVIP();
+    
+    // Kalau VIP, jalankan proses pembersihan room secara normal
+    if (typeof originalKeluarDariRoom === 'function') originalKeluarDariRoom();
 };
 
 window.toggleRagu = function() {
@@ -2668,14 +2675,19 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
                 </ul>
             </div>
 
+           // ... (Kodingan list peserta di atasnya biarin utuh) ...
+            
             ${btnMulai}
             
             <br><br>
-            <button onclick="window.keluarDariRoom()" style="background:none; border:none; color:var(--danger); text-decoration:underline; cursor:pointer; font-weight:bold;"><i class="fas fa-sign-out-alt"></i> Keluar Room</button>
+            <!-- 🛑 TOMBOL KELUAR DINAMIS BERDASARKAN STATUS VIP -->
+            ${window.isVIPUser ? 
+                `<button onclick="window.keluarDariRoom()" style="background:none; border:none; color:#1565c0; text-decoration:underline; cursor:pointer; font-weight:bold; font-size:1rem;"><i class="fas fa-arrow-left"></i> Kembali ke Lobby</button>` : 
+                `<button onclick="window.tendangNonVIP()" style="background:var(--danger); color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fas fa-power-off"></i> Keluar Aplikasi</button>`
+            }
         </div>
     `;
 };
-
 // ==========================================================
 // FUNGSI MULAI UJIAN (YANG TADI HILANG)
 // ==========================================================
