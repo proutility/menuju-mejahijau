@@ -2908,6 +2908,10 @@ window.pantauRoom = (kodeRoom) => {
             isSubmitted = false;
             window.isSubmitted = false;
             
+            // 🛑 OBAT BUG HOST & JAWABAN: Deteksi User yang Aman!
+            const activeUser = typeof currentUser !== 'undefined' ? currentUser : (window.currentUser || null);
+            const amIHost = (activeUser && data.hostUid === activeUser.uid);
+            
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
                 if (typeof window.switchDatabase === 'function') window.switchDatabase(data.modulId); 
@@ -2926,10 +2930,7 @@ window.pantauRoom = (kodeRoom) => {
             const qHead = document.querySelector('.question-header');
             if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
 
-            const qText = document.getElementById('questionText');
-            const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
-
-            if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
+            if (window.activeRoomIdx !== data.currentIdx) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 window.sedangAutoSkip = false; 
@@ -2946,7 +2947,7 @@ window.pantauRoom = (kodeRoom) => {
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                // 🛑 PEMBASMI TIMER ZOMBIE: Matikan timer singleplayer yg otomatis nyala dari loadQuestion!
+                // MATIKAN TIMER BAWAAN APLIKASI
                 setTimeout(() => {
                     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
                 }, 50);
@@ -2958,14 +2959,12 @@ window.pantauRoom = (kodeRoom) => {
                 const setLayarTimer = (detik) => {
                     let txt = "00:00:" + String(detik).padStart(2, '0');
                     let t1 = document.getElementById('timerDisplay');
-                    let t2 = document.getElementById('floatingTimer');
                     
                     let colorClass = 'timer-green';
                     if(detik <= 10) colorClass = 'timer-panic';
                     else if(detik <= 20) colorClass = 'timer-yellow';
 
                     if (t1) { t1.innerText = txt; t1.className = 'timer-container ' + colorClass; }
-                    if (t2) { t2.innerText = txt; t2.className = colorClass; }
                 };
                 
                 setLayarTimer(sisaWaktuRoom); 
@@ -3011,10 +3010,11 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
-                            if (window.currentUser) {
-                                // 🛑 BIKIN PASTI: Gunakan doc reference langsung biar gak nyasar
-                                updateDoc(doc(window.db, "rooms", window.currentRoomCode), { 
-                                    [`players.${window.currentUser.uid}.jawabanSekarang`]: i 
+                            
+                            // 🛑 PASTIKAN JAWABAN TERKIRIM KE FIREBASE DENGAN USER YANG BENAR
+                            if (activeUser) {
+                                updateDoc(roomRef, { 
+                                    [`players.${activeUser.uid}.jawabanSekarang`]: i 
                                 }).catch(err => console.error(err));
                             }
                         };
@@ -3023,7 +3023,7 @@ window.pantauRoom = (kodeRoom) => {
             }
 
             // ========================================================
-            // 🛑 LOGIKA AUTO-PROGRESS (THE BOMB-PROOF VERSION)
+            // 🛑 LOGIKA AUTO-PROGRESS
             // ========================================================
             if (data.players) {
                 let totalPeserta = 0;
@@ -3038,27 +3038,26 @@ window.pantauRoom = (kodeRoom) => {
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                // JIKA SEMUA PESERTA SUDAH KLIK JAWABAN (Siapapun boleh trigger, gak cuma Host!)
+                // JIKA SEMUA PESERTA SUDAH KLIK JAWABAN
                 if (totalPeserta > 0 && yangSudahJawab >= totalPeserta) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         
-                        // 1. BUNUH SEMUA TIMER DETIKAN SECARA PAKSA!
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
                         if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
                         
-                        // 2. KASIH FEEDBACK VISUAL INSTAN
                         const t1 = document.getElementById('timerDisplay');
                         if (t1) {
                             t1.innerText = "MEMPROSES...";
                             t1.className = 'timer-container timer-panic';
                         }
                         
-                        // 3. LANGSUNG TEMBAK KE PEMBAHASAN DALAM 0.5 DETIK
-                        setTimeout(() => {
-                            updateDoc(doc(window.db, "rooms", window.currentRoomCode), { status: 'pembahasan' })
-                                .catch(e => console.error(e));
-                        }, 500);
+                        // Cukup Host yang nembak Firebase biar aman gak bentrok
+                        if (amIHost) {
+                            setTimeout(() => {
+                                updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error(e));
+                            }, 500);
+                        }
                     }
                 }
             }
