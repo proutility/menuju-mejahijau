@@ -2829,6 +2829,60 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         const data = snap.data();
+
+        // ========================================================
+        // 👑 1. SISTEM TRANSFER HOST OTOMATIS (ZOOM-STYLE)
+        // ========================================================
+        if (data.players && data.hostUid) {
+            const hostMasihAda = data.players[data.hostUid];
+            if (!hostMasihAda) {
+                // Host lama terdeteksi hilang dari room!
+                const sisaPemain = Object.keys(data.players);
+                if (sisaPemain.length > 0) {
+                    // Urutkan UID biar peserta gak rebutan update ke Firebase
+                    sisaPemain.sort(); 
+                    
+                    // Orang yang UID-nya paling atas akan diangkat jadi Host baru
+                    if (window.currentUser && window.currentUser.uid === sisaPemain[0]) {
+                        console.log("Mengambil alih posisi Host...");
+                        updateDoc(roomRef, { hostUid: window.currentUser.uid }).then(() => {
+                            if (typeof PROTAMA !== 'undefined') {
+                                PROTAMA.alert('Sistem Host Berpindah!', 'Host sebelumnya terputus. Kamu sekarang dialihkan menjadi Host.', 'info');
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        // ========================================================
+        // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
+        // ========================================================
+        if (data.status === 'soal' || data.status === 'pembahasan') {
+            // Hapus paksa dashboard "Halo Ilham" dan riwayat tes
+            const navGrid = document.getElementById('navGrid');
+            if (navGrid) navGrid.innerHTML = ''; 
+            
+            const welcomeBanner = document.querySelector('.welcome-banner');
+            if (welcomeBanner) welcomeBanner.style.display = 'none';
+
+            // Paksa mode sidebar ke ujian
+            const lobbySb = document.getElementById('lobbySidebarContent');
+            const examSb = document.getElementById('examSidebarContent');
+            if (lobbySb) lobbySb.style.setProperty('display', 'none', 'important');
+            if (examSb) examSb.style.setProperty('display', 'flex', 'important');
+            
+            // Kasih layar "Tunggu" biar mereka sinkron di ronde berikutnya
+            const qText = document.getElementById('questionText');
+            if (qText && qText.innerHTML.includes('Riwayat')) { // Jika layarnya nyangkut di riwayat
+                 qText.innerHTML = `
+                    <div style="text-align:center; padding:50px; background:white; border-radius:10px;">
+                        <i class="fas fa-sync fa-spin fa-3x" style="color:#1565c0; margin-bottom:20px;"></i><br>
+                        <h3 style="color:#1565c0;">Menyinkronkan Sesi...</h3>
+                        <p>Kamu bergabung di pertengahan jalan. Menunggu Host beralih ke soal berikutnya agar layar sinkron.</p>
+                    </div>`;
+            }
+        }
         
         const finishContainer = document.querySelector('.finish-container');
         if (finishContainer) {
