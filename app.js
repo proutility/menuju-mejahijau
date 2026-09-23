@@ -3221,10 +3221,11 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             `;
 
             document.body.appendChild(overlay);
-// 🛑 TAMBAHAN: EFEK SUARA TEPUK TANGAN (MULTIPLAYER)
+// 🛑 TAMBAHAN: EFEK SUARA TEPUK TANGAN HEBOH (MULTIPLAYER)
             try {
-                const applause = new Audio('https://www.myinstants.com/media/sounds/applause.mp3');
-                applause.volume = 0.8; // Volume 80% biar nggak kelewat kencang
+                // Pakai suara sorak sorai penonton (Crowd Cheering)
+                const applause = new Audio('https://www.myinstants.com/media/sounds/crowd-cheering.mp3');
+                applause.volume = 1.0; // Gas mentok 100% biar dapet hype-nya
                 applause.play().catch(e => console.log('Suara keblokir browser:', e));
             } catch(e) { console.log(e); }
 
