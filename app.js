@@ -1705,41 +1705,27 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
-        // 🛑 1. DEEP CLEAN DOM (Hapus Sisa HTML)
         const navGrid = document.getElementById('navGrid');
         if (navGrid) navGrid.innerHTML = ''; 
-
         const optContainer = document.getElementById('optionsContainer');
         if (optContainer) optContainer.innerHTML = ''; 
-
         const fbBox = document.getElementById('feedbackBox');
         if (fbBox) fbBox.style.display = 'none'; 
-
         const progText = document.getElementById('progressText');
         if (progText) progText.innerText = "Menjawab: 0/0"; 
 
-        // 🛑 2. DEEP CLEAN JS (Sapu Jagat + Hancurkan Data Master Lama)
-        try {
-            if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
-            if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
-            if (typeof currentQuestions !== 'undefined') currentQuestions.length = 0; // <--- Hancurkan array soal lama!
-            
-            isAnswerLocked = false;
-            isReviewMode = false;
-            isSubmitted = false; 
-        } catch(e) { console.log("Aman, reset internal berhasil."); }
-
-        window.userAnswers = [];
-        window.wrongIndices = [];
-        window.currentIdx = 0;
-        window.isAnswerLocked = false;
-        window.isReviewMode = false;
-        window.isSubmitted = false; 
+        // 🛑 RESET VARIABEL LANGSUNG (TANPA WINDOW.)
+        userAnswers = [];
+        wrongIndices = [];
+        currentQuestions = []; 
+        currentIdx = 0;
+        isAnswerLocked = false;
+        isReviewMode = false;
+        isSubmitted = false; 
         
-        // 🛑 INI OBATNYA: Hapus ingatan ID Modul biar dipaksa nyetak kotak nomor lagi!
         window.currentDatabaseId = null; 
 
-        if(window.timerInterval) clearInterval(window.timerInterval);
+        if(timerInterval) clearInterval(timerInterval);
         window.speechSynthesis.cancel();
         document.body.classList.remove('mode-focus');
 
@@ -1750,6 +1736,7 @@ window.backToMenu = async function() {
         document.getElementById('resultOverlay').style.display = 'none';
         document.getElementById('statsOverlay').style.display = 'none';
         document.getElementById('leaderboardOverlay').style.display = 'none';
+        
         const sbLeft = document.querySelector('.sidebar-left');
         if(sbLeft) sbLeft.style.display = ''; 
         const sbRight = document.querySelector('.sidebar-right');
@@ -1776,33 +1763,23 @@ window.backToMenu = async function() {
 window.keluarDariRoom = () => {
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     
-    // 🛑 RESET VARIABEL GLOBAL & LOKAL (OBAT ANTI FREEZE)
+    currentRoomCode = null;
     window.currentRoomCode = null;
-    if (typeof currentRoomCode !== 'undefined') currentRoomCode = null;
-    
+    isHost = false;
     window.isHost = false;
-    if (typeof isHost !== 'undefined') isHost = false;
-    
+    currentAppMode = 'ujian'; 
     window.currentAppMode = 'ujian'; 
-    if (typeof currentAppMode !== 'undefined') currentAppMode = 'ujian'; 
     
-    // 🛑 DEEP CLEAN MULTIPLAYER
-    try {
-        if (typeof userAnswers !== 'undefined') userAnswers.length = 0;
-        if (typeof wrongIndices !== 'undefined') wrongIndices.length = 0;
-        if (typeof currentQuestions !== 'undefined') currentQuestions.length = 0; // <--- Hancurkan
-        
-        isAnswerLocked = false;
-        isReviewMode = false;
-        isSubmitted = false; 
-        
-        window.isAnswerLocked = false;
-        window.isReviewMode = false;
-        window.isSubmitted = false; 
-        
-        window.currentDatabaseId = null; // <--- Hapus ingatan ID Modul
-        if (typeof currentDatabaseId !== 'undefined') currentDatabaseId = null;
-    } catch(e) { console.log("Aman."); }
+    // 🛑 RESET VARIABEL LANGSUNG (TANPA WINDOW.)
+    userAnswers = [];
+    wrongIndices = [];
+    currentQuestions = [];
+    isAnswerLocked = false;
+    isReviewMode = false;
+    isSubmitted = false; 
+    currentIdx = 0;
+    
+    window.currentDatabaseId = null; 
 
     const unfreezeStyle = document.getElementById('review-unfreeze');
     if (unfreezeStyle) unfreezeStyle.remove();
@@ -1813,28 +1790,28 @@ window.keluarDariRoom = () => {
     const overlay = document.getElementById('resultOverlay');
     if (overlay) overlay.style.display = 'none';
 
-    // 🛑 RESET TAMPILAN SIDEBAR KIRI (CHAT & MODUL)
     const chatContainer = document.getElementById('roomChatContainer');
     const modulContainer = document.getElementById('modulSidebarContainer');
     const chatBox = document.getElementById('chatMessages');
 
     if (chatContainer && modulContainer) {
-        chatContainer.style.display = 'none';   // Tutup obrolan
-        modulContainer.style.display = 'flex';  // Munculkan daftar modul lagi
+        chatContainer.style.display = 'none';   
+        modulContainer.style.display = 'flex';  
     }
 
-    if (chatBox) {
-        chatBox.innerHTML = ''; // Bersihkan riwayat teks
-    }
+    if (chatBox) chatBox.innerHTML = ''; 
     
-    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN (Single Player)
     const finishContainer = document.querySelector('.finish-container');
     if (finishContainer) finishContainer.style.display = 'block';
     
-    // 🛑 BERSIHKAN CLASS BODY (Biar gak nyangkut UI Room)
     document.body.classList.remove('ujian-berjalan', 'room-mode');
     
-    window.backToMenu(); 
+    // Skip konfirmasi, langsung eksekusi bersih-bersih menu
+    window.backToMenu = window.backToMenu; 
+    setTimeout(() => {
+        document.getElementById('navGrid').innerHTML = '';
+        window.tampilkanLobby();
+    }, 100);
 };
 window.showResult = function() {
     if(isSubmitted) {
@@ -3148,26 +3125,25 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 document.body.appendChild(floatMenu);
             }
             
-            // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN (HANYA DIEKSEKUSI OLEH HOST)
-            const amIHost = (userSkrg && data.hostUid === userSkrg.uid);
-            if (amIHost) {
-                // Berikan sedikit jeda agar Firebase sinkron sempurna sebelum dikirimi pesan bot
-                setTimeout(async () => {
-                    try {
-                        const roomRef = doc(database, "rooms", kodeRoom);
-                        await updateDoc(roomRef, {
-                            messages: arrayUnion({
-                                uid: "system_bot",
-                                nama: "🤖 PRO-BOT", 
-                                teks: botMessageText,
-                                waktu: new Date().toISOString()
-                            })
-                        });
-                    } catch (e) {
-                        console.error("Gagal mengirim pengumuman Bot:", e);
-                    }
-                }, 1500);
-            }
+    // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN (HANYA DIEKSEKUSI OLEH HOST)
+                const amIHost = (userSkrg && data.hostUid === userSkrg.uid);
+                if (amIHost) {
+                    setTimeout(async () => {
+                        try {
+                            const roomRef = doc(database, "rooms", kodeRoom);
+                            await updateDoc(roomRef, {
+                                messages: arrayUnion({
+                                    uid: userSkrg.uid, // PAKAI UID HOST ASLI BIAR LOLOS FIREBASE
+                                    nama: "🤖 PRO-BOT (Sistem)", // TAPI NAMANYA KITA SAMARKAN
+                                    teks: botMessageText,
+                                    waktu: new Date().toISOString()
+                                })
+                            });
+                        } catch (e) {
+                            console.error("Gagal mengirim pengumuman Bot:", e);
+                        }
+                    }, 1500);
+                }
 
         } catch (e) {
             console.error("Gagal load hasil multiplayer", e);
@@ -4886,11 +4862,11 @@ window.migrasiModulBiarHemat = async function(modulId) {
     }
 };
 window.kirimPesanChat = async () => {
-    const roomCode = window.currentRoomCode;
+    const roomCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
     if (!roomCode) return console.error("❌ Error: Kode Room hilang!");
     
     const input = document.getElementById('chatInput');
-    if (!input) return console.error("❌ Error: Kotak input chat nggak ketemu!");
+    if (!input) return;
 
     const teks = input.value.trim();
     if (!teks) return;
@@ -4901,11 +4877,10 @@ window.kirimPesanChat = async () => {
     const database = window.db || (typeof db !== 'undefined' ? db : null);
     const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
     
-    if (!database || !userSkrg) return console.error("❌ Error: Database / User belum siap!");
+    if (!database || !userSkrg) return;
 
     const roomRef = doc(database, "rooms", roomCode);
     try {
-        console.log("🚀 OTW Kirim Pesan:", teks);
         await updateDoc(roomRef, {
             messages: arrayUnion({
                 uid: userSkrg.uid,
@@ -4914,12 +4889,22 @@ window.kirimPesanChat = async () => {
                 waktu: new Date().toISOString()
             })
         });
-        console.log("✅ Pesan sukses masuk Firebase!");
     } catch (e) {
         console.error("❌ Gagal kirim chat ke Firebase:", e);
-        alert("Gagal kirim pesan. Cek console bro!");
     }
 };
+
+// 🛑 LISTENER PAKSAAN: Tembus segala macam gembok UI
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const chatInp = document.getElementById('chatInput');
+        // Kalau kursor lagi kedap-kedip di dalam input chat, kirim paksa!
+        if (document.activeElement === chatInp) {
+            e.preventDefault();
+            window.kirimPesanChat();
+        }
+    }
+});
 
 window.renderChatMessages = (messages) => {
     const chatBox = document.getElementById('chatMessages');
