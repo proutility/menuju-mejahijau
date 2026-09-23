@@ -2667,7 +2667,7 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
                 <i class="fas fa-book-open"></i> Materi Ujian: ${namaModulBersih}
             </div>
             
-            <!-- LIST PESERTA YANG JOIN BARENG -->
+           <!-- LIST PESERTA YANG JOIN BARENG -->
             <div style="text-align:left; background:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #eee;">
                 <h4 style="margin-top:0; color:#555; border-bottom:2px solid #ddd; padding-bottom:5px;">Peserta Terhubung: <span id="countPeserta">1</span></h4>
                 <ul id="listPesertaRoom" style="list-style:none; padding:0; margin:0; max-height:150px; overflow-y:auto;">
@@ -2675,8 +2675,6 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
                 </ul>
             </div>
 
-           // ... (Kodingan list peserta di atasnya biarin utuh) ...
-            
             ${btnMulai}
             
             <br><br>
