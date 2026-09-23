@@ -700,14 +700,30 @@ body.dark-mode #appSection .sidebar-right .btn {
 }
 
 /* 11. TOMBOL FLOATING DARK MODE */
+#btnDarkModeToggle {
+    position: fixed !important;
+    bottom: 25px !important;
+    left: 300px !important; /* Geser ke kanan melewati batas sidebar kiri (280px) */
+}
+
 body.dark-mode #btnDarkModeToggle {
     background: #333 !important; 
     color: #f39c12 !important; 
     box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3) !important;
 }
+
 body:not(.dark-mode) #btnDarkModeToggle {
     background: #2c3e50 !important; 
     color: #f1c40f !important; 
+}
+
+/* Penyesuaian khusus jika dibuka di HP */
+@media (max-width: 768px) {
+    #btnDarkModeToggle {
+        left: auto !important;
+        right: 15px !important; /* Pindah ke kanan bawah kalau di HP biar gak nutupin chat */
+        bottom: 85px !important; 
+    }
 }
 /* ========================================================================= */
 /* 12. FINAL POLISH: LAPOR, HIGHLIGHT, & SIDEBAR WARNA KONTRAST              */
