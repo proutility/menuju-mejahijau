@@ -1791,20 +1791,6 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
-    // 🛑 [MASALAH 1 SOLVED] HAPUS NAMA DARI DATABASE FIREBASE SECARA REAL-TIME
-    if (window.currentRoomCode && window.currentUser && window.db) {
-        try {
-            const roomRef = doc(window.db, "rooms", window.currentRoomCode);
-            await updateDoc(roomRef, {
-                // Menghapus data peserta spesifik dari objek players di Firestore
-                [`players.${window.currentUser.uid}`]: deleteField() 
-            });
-            console.log("Berhasil menghapus data player dari Room.");
-        } catch(e) {
-            console.log("Gagal menghapus player:", e);
-        }
-    }
-
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
 
@@ -1875,7 +1861,7 @@ window.tendangNonVIP = () => {
     // Putus koneksi dari room biar nggak error di background
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     
-    // Munculkan peringatan dengan z-index tinggi biar nembus pop-up hasil ujian
+    // Munculkan peringatan dan tendang ke halaman awal
     Swal.fire({
         title: 'Sesi Selesai',
         text: 'Akses Latihan Mandiri (Singleplayer) hanya tersedia untuk akun VIP. Silakan login kembali dengan Kode VIP.',
@@ -1883,14 +1869,7 @@ window.tendangNonVIP = () => {
         confirmButtonColor: '#d32f2f',
         confirmButtonText: 'Keluar',
         allowOutsideClick: false,
-        allowEscapeKey: false,
-        // 🛑 PAKSA POP-UP SATPAM NAIK KE LAPISAN PALING ATAS (Z-INDEX 99999)
-        didOpen: () => {
-            const container = Swal.getContainer();
-            if (container) {
-                container.style.zIndex = '99999';
-            }
-        }
+        allowEscapeKey: false
     }).then(() => {
         window.location.href = window.location.origin + window.location.pathname;
     });
@@ -2755,11 +2734,11 @@ window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
     window.currentRoomCode = kodeRoom; 
 
-    // 🛑 BERSIHKAN SEMUA TIMER GANDA
+    // 🛑 BERSIHKAN SEMUA TIMER GANDA (OBAT ISSUE 4 - TIMER KEBUT)
     if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
-    // 2. JURUS PAKSAAN MAKSIMAL: CLONING ELEMEN CHAT
+    // 2. JURUS PAKSAAN MAKSIMAL: CLONING ELEMEN CHAT (PEMBASMI BUG)
     setTimeout(() => {
         const chatInp = document.getElementById('chatInput');
         const chatBtn = document.querySelector('#roomChatContainer button'); 
@@ -2771,7 +2750,9 @@ window.pantauRoom = (kodeRoom) => {
             chatInp.parentNode.replaceChild(newChatInp, chatInp); 
             
             newChatInp.addEventListener('keydown', (e) => {
+                // 🛑 OBAT MUJARAB ISSUE 5: Blokir huruf nembus ke jawaban soal pas ngetik Chat!
                 e.stopPropagation(); 
+                
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     window.kirimPesanChat();
@@ -2800,7 +2781,7 @@ window.pantauRoom = (kodeRoom) => {
     }, 1000);
 
     // ========================================================
-    // 🏆 FUNGSI RENDER LIVE SCORE
+    // 🏆 FUNGSI RENDER LIVE SCORE (DI ATAS CHAT)
     // ========================================================
     window.renderLiveScore = (playersObj) => {
         let container = document.getElementById('liveScoreContainer');
@@ -2838,8 +2819,8 @@ window.pantauRoom = (kodeRoom) => {
         container.innerHTML = html;
     };
 
-    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-    const roomRef = doc(window.db, "rooms", kodeRoom); 
+    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
+    const roomRef = doc(db, "rooms", kodeRoom); 
     
     roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
@@ -2858,8 +2839,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // 🛑 PERBAIKAN: Pastikan pakai window.currentUser biar gak nyangkut
-        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
+        const amIHost = (currentUser && data.hostUid === currentUser.uid);
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
@@ -2901,20 +2881,17 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-      // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
+        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
             window.activePembahasanIdx = -1; 
+            
             isSubmitted = false;
             window.isSubmitted = false;
             
-            // 🛑 OBAT BUG HOST & JAWABAN: Deteksi User yang Aman!
-            const activeUser = typeof currentUser !== 'undefined' ? currentUser : (window.currentUser || null);
-            const amIHost = (activeUser && data.hostUid === activeUser.uid);
-            
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                if (typeof window.switchDatabase === 'function') window.switchDatabase(data.modulId); 
+                if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
             }
             
@@ -2930,7 +2907,10 @@ window.pantauRoom = (kodeRoom) => {
             const qHead = document.querySelector('.question-header');
             if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
 
-            if (window.activeRoomIdx !== data.currentIdx) {
+            const qText = document.getElementById('questionText');
+            const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
+
+            if (window.activeRoomIdx !== data.currentIdx || isWaitingRoomUI) {
                 window.activeRoomIdx = data.currentIdx;
                 isAnswerLocked = false; 
                 window.sedangAutoSkip = false; 
@@ -2943,14 +2923,8 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.classList.remove('show'); 
                 }
                 
-                // MUAT SOAL
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
-                
-                // MATIKAN TIMER BAWAAN APLIKASI
-                setTimeout(() => {
-                    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-                }, 50);
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
@@ -2959,12 +2933,14 @@ window.pantauRoom = (kodeRoom) => {
                 const setLayarTimer = (detik) => {
                     let txt = "00:00:" + String(detik).padStart(2, '0');
                     let t1 = document.getElementById('timerDisplay');
+                    let t2 = document.getElementById('floatingTimer');
                     
                     let colorClass = 'timer-green';
                     if(detik <= 10) colorClass = 'timer-panic';
                     else if(detik <= 20) colorClass = 'timer-yellow';
 
                     if (t1) { t1.innerText = txt; t1.className = 'timer-container ' + colorClass; }
+                    if (t2) { t2.innerText = txt; t2.className = colorClass; }
                 };
                 
                 setLayarTimer(sisaWaktuRoom); 
@@ -2979,7 +2955,9 @@ window.pantauRoom = (kodeRoom) => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         } else {
                             let t1 = document.getElementById('timerDisplay');
+                            let t2 = document.getElementById('floatingTimer');
                             if(t1) { t1.innerText = "NUNGGU HOST..."; t1.className = 'timer-container timer-panic'; }
+                            if(t2) { t2.innerText = "NUNGGU HOST..."; t2.className = 'timer-panic'; }
                         }
                     }
                 }, 1000);
@@ -2998,6 +2976,8 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 });
 
+                // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
+                // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
                 setTimeout(() => {
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
@@ -3010,21 +2990,12 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
-                            
-                            // 🛑 PASTIKAN JAWABAN TERKIRIM KE FIREBASE DENGAN USER YANG BENAR
-                            if (activeUser) {
-                                updateDoc(roomRef, { 
-                                    [`players.${activeUser.uid}.jawabanSekarang`]: i 
-                                }).catch(err => console.error(err));
-                            }
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
                         };
                     });
                 }, 300);
             }
 
-            // ========================================================
-            // 🛑 LOGIKA AUTO-PROGRESS
-            // ========================================================
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
@@ -3038,30 +3009,18 @@ window.pantauRoom = (kodeRoom) => {
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                // JIKA SEMUA PESERTA SUDAH KLIK JAWABAN
-                if (totalPeserta > 0 && yangSudahJawab >= totalPeserta) {
+                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
-                        
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-                        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-                        
-                        const t1 = document.getElementById('timerDisplay');
-                        if (t1) {
-                            t1.innerText = "MEMPROSES...";
-                            t1.className = 'timer-container timer-panic';
-                        }
-                        
-                        // Cukup Host yang nembak Firebase biar aman gak bentrok
-                        if (amIHost) {
-                            setTimeout(() => {
-                                updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error(e));
-                            }, 500);
-                        }
+                        setTimeout(() => {
+                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        }, 1000);
                     }
                 }
             }
-        }
+        } 
+        
         // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
@@ -3074,16 +3033,16 @@ window.pantauRoom = (kodeRoom) => {
                 const q = currentQuestions[data.currentIdx];
                 if (!q) return;
 
-                const jawabanGue = data.players && window.currentUser && data.players[window.currentUser.uid] ? data.players[window.currentUser.uid].jawabanSekarang : null;
+                const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 
                 // 🏆 LOGIKA LIVE SCORE
                 if (jawabanGue === q.answer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
                         let bobotSoal = 100 / currentQuestions.length; 
-                        let skorSekarang = parseFloat(data.players[window.currentUser.uid].skor || 0);
+                        let skorSekarang = parseFloat(data.players[currentUser.uid].skor || 0);
                         updateDoc(roomRef, {
-                            [`players.${window.currentUser.uid}.skor`]: skorSekarang + bobotSoal
+                            [`players.${currentUser.uid}.skor`]: skorSekarang + bobotSoal
                         }).catch(e => console.log(e));
                     }
                 } else {
@@ -3112,6 +3071,7 @@ window.pantauRoom = (kodeRoom) => {
 
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
+                    // 🛑 OBAT ISSUE 2 (Pembahasan Ilang): Paksa tembus blokir CSS
                     fb.style.setProperty('display', 'block', 'important');
                     fb.style.setProperty('visibility', 'visible', 'important');
                     fb.classList.add('show');
@@ -3203,7 +3163,7 @@ window.pantauRoom = (kodeRoom) => {
                 btn.style.opacity = '1';
             });
             
-            if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+            if (roomListenerUnsubscribe) roomListenerUnsubscribe();
             
             const popUpBiasa = document.getElementById('resultOverlay');
             if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
