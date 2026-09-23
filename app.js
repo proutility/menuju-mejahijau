@@ -2901,17 +2901,16 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
+      // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
             window.activePembahasanIdx = -1; 
-            
             isSubmitted = false;
             window.isSubmitted = false;
             
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
+                if (typeof window.switchDatabase === 'function') window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
             }
             
@@ -2943,8 +2942,14 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.classList.remove('show'); 
                 }
                 
+                // MUAT SOAL
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
+                
+                // 🛑 PEMBASMI TIMER ZOMBIE: Matikan timer singleplayer yg otomatis nyala dari loadQuestion!
+                setTimeout(() => {
+                    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+                }, 50);
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
@@ -2975,9 +2980,7 @@ window.pantauRoom = (kodeRoom) => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         } else {
                             let t1 = document.getElementById('timerDisplay');
-                            let t2 = document.getElementById('floatingTimer');
                             if(t1) { t1.innerText = "NUNGGU HOST..."; t1.className = 'timer-container timer-panic'; }
-                            if(t2) { t2.innerText = "NUNGGU HOST..."; t2.className = 'timer-panic'; }
                         }
                     }
                 }, 1000);
@@ -3008,16 +3011,20 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
-                            // 🛑 PERBAIKAN: Pastikan nulis ke Firebase pake window.currentUser.uid
                             if (window.currentUser) {
-                                updateDoc(roomRef, { [`players.${window.currentUser.uid}.jawabanSekarang`]: i });
+                                // 🛑 BIKIN PASTI: Gunakan doc reference langsung biar gak nyasar
+                                updateDoc(doc(window.db, "rooms", window.currentRoomCode), { 
+                                    [`players.${window.currentUser.uid}.jawabanSekarang`]: i 
+                                }).catch(err => console.error(err));
                             }
                         };
                     });
                 }, 300);
             }
 
-            // 🛑 PERBAIKAN MASALAH 2: LOGIKA AUTO-PROGRESS YANG LEBIH SOLID
+            // ========================================================
+            // 🛑 LOGIKA AUTO-PROGRESS (THE BOMB-PROOF VERSION)
+            // ========================================================
             if (data.players) {
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
@@ -3031,25 +3038,31 @@ window.pantauRoom = (kodeRoom) => {
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                // Jika SEMUA peserta (yang tersisa di room) sudah klik jawaban...
-                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
+                // JIKA SEMUA PESERTA SUDAH KLIK JAWABAN (Siapapun boleh trigger, gak cuma Host!)
+                if (totalPeserta > 0 && yangSudahJawab >= totalPeserta) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         
-                        console.log("Semua sudah menjawab! Langsung lanjut pembahasan...");
-                        
-                        // Bunuh paksa timer detikan biar berhenti seketika
+                        // 1. BUNUH SEMUA TIMER DETIKAN SECARA PAKSA!
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
+                        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
                         
-                        // Eksekusi tembakan pembahasan
+                        // 2. KASIH FEEDBACK VISUAL INSTAN
+                        const t1 = document.getElementById('timerDisplay');
+                        if (t1) {
+                            t1.innerText = "MEMPROSES...";
+                            t1.className = 'timer-container timer-panic';
+                        }
+                        
+                        // 3. LANGSUNG TEMBAK KE PEMBAHASAN DALAM 0.5 DETIK
                         setTimeout(() => {
-                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error("Gagal auto-pembahasan:", e));
-                        }, 1000);
+                            updateDoc(doc(window.db, "rooms", window.currentRoomCode), { status: 'pembahasan' })
+                                .catch(e => console.error(e));
+                        }, 500);
                     }
                 }
             }
-        } 
-        
+        }
         // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
