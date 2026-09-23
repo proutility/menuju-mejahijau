@@ -2469,21 +2469,27 @@ window.gabungRoomLatihan = async () => {
     }
 };
 // ==========================================================
-// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED)
+// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR)
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost) {
-    if (typeof timerInterval !== 'undefined' && timerInterval) {
-        clearInterval(timerInterval);
-    }
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    
+    // 🛑 BASMI BOCORAN UI SINGLEPLAYER KE WAITING ROOM
+    const hideElements = ['.question-header', '.footer-nav', '.ragu-wrapper', '#feedbackBox'];
+    hideElements.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) {
+            el.style.setProperty('display', 'none', 'important');
+            el.style.visibility = 'hidden';
+        }
+    });
+
     document.getElementById('lobbySidebarContent').style.display = 'none';
     document.getElementById('examSidebarContent').style.display = 'flex';
-    document.querySelector('.question-header').style.visibility = 'hidden';
-    document.querySelector('.footer-nav').style.visibility = 'hidden';
     
     const qText = document.getElementById('questionText');
     qText.style.display = 'block';
     document.getElementById('optionsContainer').innerHTML = '';
-    document.getElementById('feedbackBox').style.display = 'none';
     
     let btnMulai = isHost ? 
         `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">🚀 MULAI</button>` : 
@@ -2542,28 +2548,46 @@ window.mulaiUjianRoom = async (kode) => {
 
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
-    // 1. KUNCI MATI KODE ROOM BIAR NGGAK HILANG INGATAN
     window.currentRoomCode = kodeRoom; 
     
-    // 2. JURUS PAKSAAN: AMBIL ALIH TOMBOL ENTER & KLIK CHAT
+    // 2. JURUS PAKSAAN MAKSIMAL: CLONING ELEMEN CHAT (PEMBASMI BUG)
     setTimeout(() => {
         const chatInp = document.getElementById('chatInput');
-        // Cari tombol send (sesuaikan selectornya kalau id-nya beda)
         const chatBtn = document.querySelector('#roomChatContainer button'); 
         
+        // 🔥 CLONE UNTUK MENGHAPUS SEMUA EVENT LISTENER LAMA & INLINE ONKEYPRESS 🔥
         if (chatInp) {
-            chatInp.onkeypress = (e) => {
+            chatInp.removeAttribute('onkeypress');
+            chatInp.removeAttribute('disabled');
+            const newChatInp = chatInp.cloneNode(true); // Gandakan elemennya
+            chatInp.parentNode.replaceChild(newChatInp, chatInp); // Timpa yang lama
+            
+            newChatInp.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     window.kirimPesanChat();
                 }
-            };
+            });
         }
         if (chatBtn) {
-            chatBtn.onclick = (e) => {
+            chatBtn.removeAttribute('onclick');
+            chatBtn.removeAttribute('disabled');
+            const newChatBtn = chatBtn.cloneNode(true);
+            chatBtn.parentNode.replaceChild(newChatBtn, chatBtn);
+            
+            newChatBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 window.kirimPesanChat();
-            };
+            });
+        }
+        
+        // 🔥 SUNTIK VAKSIN KEBAL CSS BIAR BISA DIKLIK PAS PEMBAHASAN 🔥
+        let unfreezeChat = document.getElementById('chat-kebal-style');
+        if(!unfreezeChat) {
+            unfreezeChat = document.createElement('style');
+            unfreezeChat.id = 'chat-kebal-style';
+            unfreezeChat.innerHTML = `#roomChatContainer, #roomChatContainer * { pointer-events: auto !important; }`;
+            document.head.appendChild(unfreezeChat);
         }
     }, 1000);
 
@@ -2580,7 +2604,6 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
         
-        // Atur visibilitas tombol Selesai Ujian
         const finishContainer = document.querySelector('.finish-container');
         if (finishContainer) {
             if (data.status === 'waiting' || data.status === 'pembahasan') {
@@ -2592,7 +2615,6 @@ window.pantauRoom = (kodeRoom) => {
         
         const amIHost = (currentUser && data.hostUid === currentUser.uid);
         
-        // --- RENDER LIVE CHAT DI SIDEBAR KIRI ---
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
@@ -2600,10 +2622,9 @@ window.pantauRoom = (kodeRoom) => {
             modulContainer.style.display = 'none'; 
             chatContainer.style.display = 'flex';  
             
-            // JURUS ANTI-FREEZE KHUSUS KOTAK CHAT
             chatContainer.style.pointerEvents = 'auto';
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) chatInput.style.pointerEvents = 'auto';
+            const cInput = document.getElementById('chatInput');
+            if (cInput) cInput.style.pointerEvents = 'auto';
 
             if (data.messages) {
                 window.renderChatMessages(data.messages);
@@ -2649,11 +2670,12 @@ window.pantauRoom = (kodeRoom) => {
                 modeInd.style.color = "#1565c0";
             }
 
+            // 🛑 MUNCULKAN KEMBALI UI SOAL YANG DISEMBUNYIKAN WAITING ROOM
             const fNav = document.querySelector('.footer-nav');
-            if (fNav) fNav.style.visibility = 'visible';
+            if (fNav) { fNav.style.setProperty('display', 'flex', 'important'); fNav.style.visibility = 'visible'; }
             const qHead = document.querySelector('.question-header');
-            if (qHead) qHead.style.visibility = 'visible';
-            
+            if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
+
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
 
@@ -2720,7 +2742,6 @@ window.pantauRoom = (kodeRoom) => {
                         btn.style.opacity = '0.4';
                     }
                 });
-
             }
 
             if (data.players) {
@@ -2917,8 +2938,8 @@ window.pantauRoom = (kodeRoom) => {
                 }
             }).catch(e => console.log(e));
         }
-    }); // Tutup dari onSnapshot
-}; // Tutup dari window.pantauRoom
+    }); 
+};
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
