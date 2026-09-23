@@ -2986,14 +2986,17 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
 }
 // ==========================================
-// FUNGSI UI LEADERBOARD (FINAL: FREEZE KANAN ATAS, NUMPUK KANAN BAWAH)
+// FUNGSI UI LEADERBOARD & BOT PENGUMUMAN OTOMATIS
 // ==========================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     PROTAMA.loading("Merekap skor dan kecepatan semua peserta...");
 
     setTimeout(async () => {
         try {
-            const roomSnap = await getDoc(doc(window.db, "rooms", kodeRoom));
+            const database = window.db || (typeof db !== 'undefined' ? db : null);
+            const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+
+            const roomSnap = await getDoc(doc(database, "rooms", kodeRoom));
             if (!roomSnap.exists()) return PROTAMA.close();
 
             const data = roomSnap.data();
@@ -3019,6 +3022,10 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2147483647; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(5px);";
 
             let listHTML = '';
+            
+            // 🤖 STRING UNTUK PENGUMUMAN BOT
+            let botMessageText = `🎉 HASIL MULTIPLAYER [ROOM: ${kodeRoom}] 🎉\n`;
+
             playersArray.forEach((p, i) => {
                 let medal = '';
                 let bg = 'white';
@@ -3029,7 +3036,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 else if (i === 2) { medal = '🥉'; bg = '#fff'; }
                 else { medal = `<span style="font-size:1rem; color:#888;">#${i+1}</span>`; }
 
-                if (p.nama === currentUser.displayName) {
+                if (userSkrg && p.nama === userSkrg.displayName) {
                     bg = '#e3f2fd';
                     txtColor = '#1565c0';
                 }
@@ -3040,15 +3047,22 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1rem; font-weight:bold; color:${txtColor};">
                         <div>
                             <span style="display:inline-block; width:30px; text-align:center;">${medal}</span> 
-                            ${p.nama} ${p.nama === currentUser.displayName ? '(Kamu)' : ''}
+                            ${p.nama} ${userSkrg && p.nama === userSkrg.displayName ? '(Kamu)' : ''}
                             ${speedText}
                         </div>
                         <div style="color:var(--primary); font-size:1.2rem;">${p.skor} <small style="font-size:0.75rem; color:#666;">Pts</small></div>
                     </div>
                 `;
+                
+                // Tambahkan data ke string pesan bot (Top 3 saja agar chat tidak terlalu panjang)
+                if (i < 3) {
+                     let simpleMedal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+                     botMessageText += `${simpleMedal} ${p.nama} (${p.skor} Pts)\n`;
+                }
             });
+            
+            botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
 
-            // 🛑 TOMBOL KELUAR DIHAPUS DARI DALAM POPUP (Biar user fokus ke tombol ngambang aja)
             overlay.innerHTML = `
                 <div style="background:white; width:90%; max-width:450px; border-radius:12px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
                     
@@ -3089,10 +3103,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             if (!document.getElementById('roomFloatingMenu')) {
                 const floatMenu = document.createElement('div');
                 floatMenu.id = 'roomFloatingMenu';
-                // CSS untuk menumpuk tombol (flex-direction: column)
                 floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;";
 
-                // Tombol Atas: Lihat Peringkat
                 const btnRank = document.createElement('button');
                 btnRank.innerHTML = '<i class="fas fa-trophy"></i> Lihat Peringkat';
                 btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
@@ -3101,16 +3113,35 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     if(resO) resO.style.display = 'flex'; 
                 };
 
-                // Tombol Bawah: Keluar Room
                 const btnExit = document.createElement('button');
                 btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
                 btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
                 btnExit.onclick = window.konfirmasiKeluarRoom;
 
-                // Masukkan ke dalam container
                 floatMenu.appendChild(btnRank);
                 floatMenu.appendChild(btnExit);
                 document.body.appendChild(floatMenu);
+            }
+            
+            // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN (HANYA DIEKSEKUSI OLEH HOST)
+            const amIHost = (userSkrg && data.hostUid === userSkrg.uid);
+            if (amIHost) {
+                // Berikan sedikit jeda agar Firebase sinkron sempurna sebelum dikirimi pesan bot
+                setTimeout(async () => {
+                    try {
+                        const roomRef = doc(database, "rooms", kodeRoom);
+                        await updateDoc(roomRef, {
+                            messages: arrayUnion({
+                                uid: "system_bot",
+                                nama: "🤖 PRO-BOT", 
+                                teks: botMessageText,
+                                waktu: new Date().toISOString()
+                            })
+                        });
+                    } catch (e) {
+                        console.error("Gagal mengirim pengumuman Bot:", e);
+                    }
+                }, 1500);
             }
 
         } catch (e) {
@@ -4839,6 +4870,8 @@ window.kirimPesanChat = async () => {
     }
     
     const input = document.getElementById('chatInput');
+    if (!input) return;
+
     const teks = input.value.trim();
     if (!teks) return;
 
@@ -4863,7 +4896,7 @@ window.kirimPesanChat = async () => {
         });
     } catch (e) {
         console.error("Gagal kirim chat:", e);
-        alert("Gagal kirim pesan. Pastikan arrayUnion sudah di-import di atas app.js!");
+        alert("Gagal kirim pesan. Pastikan koneksi internet stabil.");
     }
 };
 
