@@ -2591,6 +2591,49 @@ window.pantauRoom = (kodeRoom) => {
         }
     }, 1000);
 
+    // ========================================================
+    // 🏆 FUNGSI RENDER LIVE SCORE (DI ATAS CHAT)
+    // ========================================================
+    window.renderLiveScore = (playersObj) => {
+        let container = document.getElementById('liveScoreContainer');
+        if (!container) {
+            const chatBody = document.getElementById('chatBody');
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatBody && chatMessages) {
+                container = document.createElement('div');
+                container.id = 'liveScoreContainer';
+                container.style.cssText = "background: rgba(46, 125, 50, 0.05); border-bottom: 2px solid #c8e6c9; padding: 10px; flex-shrink: 0;";
+                chatBody.insertBefore(container, chatMessages);
+            }
+        }
+        if (!container) return;
+
+        let arr = Object.values(playersObj);
+        arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); // Sortir Poin Tertinggi
+
+        let html = '<div style="font-weight:900; color:#2e7d32; margin-bottom:6px; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class="fas fa-chart-line"></i> KLASEMEN SEMENTARA</div>';
+        
+        arr.slice(0, 3).forEach((p, i) => { // Tampilkan Top 3 Aja
+            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : ''));
+            let namaDepan = p.nama.split(" ")[0]; 
+            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#555; font-weight:600;';
+            let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
+
+            // 🛑 PEMBULATAN SKOR BIAR GA KERITING
+            let skorTampil = Math.round(p.skor || 0);
+
+            html += `
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding:4px 8px; ${bgRow} border-radius:4px; border-width:1px; border-style:solid; font-size:0.85rem;">
+                    <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${medal} ${namaDepan}</span>
+                    <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    };
+    // ========================================================
+
     if (timerInterval) clearInterval(timerInterval);
 
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
@@ -2626,8 +2669,11 @@ window.pantauRoom = (kodeRoom) => {
             const cInput = document.getElementById('chatInput');
             if (cInput) cInput.style.pointerEvents = 'auto';
 
-           if (data.messages) {
-                // 🛑 JURUS GRUP WA: Simpan waktu join di Session, filter chat yang lama!
+            // 🛑 RENDER KLASEMEN SEMENTARA DI SINI
+            if (data.players) window.renderLiveScore(data.players);
+
+            // 🛑 JURUS GRUP WA: Simpan waktu join di Session, filter chat yang lama!
+            if (data.messages) {
                 let myJoinTime = sessionStorage.getItem(`join_time_${kodeRoom}`);
                 if (!myJoinTime) {
                     myJoinTime = new Date().toISOString();
@@ -2678,7 +2724,6 @@ window.pantauRoom = (kodeRoom) => {
                 modeInd.style.color = "#1565c0";
             }
 
-            // 🛑 MUNCULKAN KEMBALI UI SOAL YANG DISEMBUNYIKAN WAITING ROOM
             const fNav = document.querySelector('.footer-nav');
             if (fNav) { fNav.style.setProperty('display', 'flex', 'important'); fNav.style.visibility = 'visible'; }
             const qHead = document.querySelector('.question-header');
@@ -2743,7 +2788,6 @@ window.pantauRoom = (kodeRoom) => {
                 if (nBtn) nBtn.style.display = 'none';
                 if (rWrap) rWrap.style.display = 'none';
                 
-                // Freeze navigasi, KECUALI bagian dalam Live Chat
                 document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
                     if (!btn.closest('#roomChatContainer')) {
                         btn.style.pointerEvents = 'none';
@@ -2796,7 +2840,7 @@ window.pantauRoom = (kodeRoom) => {
             }, 300); 
         } 
         
-        // --- C. PEMBAHASAN BARENG (TOMBOL NEXT KHUSUS HOST) ---
+        // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             if (timerInterval) clearInterval(timerInterval);
@@ -2811,6 +2855,22 @@ window.pantauRoom = (kodeRoom) => {
 
                 const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
                 
+                // 🏆 LOGIKA LIVE SCORE: Bobot Dinamis! (Max: 100 Pts)
+                if (jawabanGue === q.answer) {
+                    if (window.lastScoredIdx !== data.currentIdx) {
+                        window.lastScoredIdx = data.currentIdx;
+                        
+                        let bobotSoal = 100 / currentQuestions.length; 
+                        let skorSekarang = parseFloat(data.players[currentUser.uid].skor || 0);
+                        
+                        updateDoc(roomRef, {
+                            [`players.${currentUser.uid}.skor`]: skorSekarang + bobotSoal
+                        }).catch(e => console.log(e));
+                    }
+                } else {
+                    window.lastScoredIdx = data.currentIdx; 
+                }
+
                 if (jawabanGue === null || jawabanGue === undefined) {
                     userAnswers[data.currentIdx] = -1; 
                 }
@@ -2930,21 +2990,9 @@ window.pantauRoom = (kodeRoom) => {
             
             if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
             
-            let scoreRoom = 0;
-            userAnswers.forEach((a, i) => {
-                if (currentQuestions[i] && a === currentQuestions[i].answer) {
-                    scoreRoom++;
-                }
-            });
-            const finalScoreRoom = Math.round((scoreRoom / currentQuestions.length) * 100);
-
-            updateDoc(roomRef, {
-                [`players.${currentUser.uid}.skor`]: finalScoreRoom
-            }).then(() => {
-                if (typeof window.tampilkanHasilMultiplayer === 'function') {
-                    window.tampilkanHasilMultiplayer(kodeRoom);
-                }
-            }).catch(e => console.log(e));
+            if (typeof window.tampilkanHasilMultiplayer === 'function') {
+                window.tampilkanHasilMultiplayer(kodeRoom);
+            }
         }
     }); 
 };
