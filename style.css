@@ -711,7 +711,6 @@ body.dark-mode #btnDarkModeToggle {
     color: #f39c12 !important; 
     box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3) !important;
 }
-
 body:not(.dark-mode) #btnDarkModeToggle {
     background: #2c3e50 !important; 
     color: #f1c40f !important; 
