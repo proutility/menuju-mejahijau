@@ -2403,11 +2403,39 @@ window.bikinRoomLatihan = async () => {
     }
 };
 // ==========================================================
-// 2. PESERTA: GABUNG KE ROOM
+// 2. PESERTA: GABUNG KE ROOM (VERSI MODERN)
 // ==========================================================
 window.gabungRoomLatihan = async () => {
-    const kodeRoom = prompt("Masukkan 5 Digit Kode Room:");
-    if(!kodeRoom) return;
+    // 🛑 Ganti prompt jadul pakai SweetAlert2 dengan gaya modern
+    const { value: kodeRoom } = await Swal.fire({
+        title: 'GABUNG ROOM',
+        text: 'Masukkan 5 Digit Kode Room temanmu:',
+        input: 'text',
+        inputPlaceholder: 'Contoh: 12345',
+        inputAttributes: {
+            maxlength: 5,
+            autocomplete: 'off'
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#2e7d32', // Hijau MA
+        cancelButtonColor: '#d32f2f',  // Merah
+        confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Gabung',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Kode Room wajib diisi bro! 😅';
+            }
+            if (value.length !== 5 || isNaN(value)) {
+                return 'Kode Room harus persis 5 digit angka!';
+            }
+        },
+        customClass: {
+            popup: 'swal2-modal-modern',
+            input: 'swal2-input-modern'
+        }
+    });
+
+    if(!kodeRoom) return; // Kalo user klik Batal
 
     PROTAMA.loading("Mencari Room...");
     try {
@@ -2440,7 +2468,6 @@ window.gabungRoomLatihan = async () => {
         alert("Gagal join: " + e.message);
     }
 };
-
 // ==========================================================
 // 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED)
 // ==========================================================
