@@ -1785,7 +1785,7 @@ window.backToMenu = async function() {
     }
 };
 
-window.keluarDariRoom = () => {
+window.keluarDariRoom = async () => {
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     
     currentRoomCode = null;
@@ -1830,11 +1830,37 @@ window.keluarDariRoom = () => {
     if (finishContainer) finishContainer.style.display = 'block';
     
     document.body.classList.remove('ujian-berjalan', 'room-mode');
+
+    // 🛑 JURUS TENDANGAN MAUT BUAT NON-VIP (PESERTA GRATISAN)
+    // Kita cek ke database apakah dia punya akses VIP yang valid
+    if (window.currentUser && window.db) {
+        try {
+            if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Keluar Room...");
+            
+            const accessRef = doc(window.db, "vip_access", window.currentUser.email);
+            const accessSnap = await getDoc(accessRef);
+            
+            // Kalau gak ada data VIP ATAU belum diverifikasi (belum masukin kode)
+            if (!accessSnap.exists() || accessSnap.data().isVerified !== true) {
+                // Tendang balik ke halaman Gatekeeper dengan cara me-reload bersih URL aslinya
+                window.location.href = window.location.origin + window.location.pathname;
+                return; // Berhenti di sini, gak usah load Lobby!
+            }
+            
+            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+        } catch (e) {
+            console.error("Error cek VIP saat keluar:", e);
+            // Kalau error, mending cari aman: tendang ke depan
+            window.location.href = window.location.origin + window.location.pathname;
+            return;
+        }
+    }
     
-    // Skip konfirmasi, langsung eksekusi bersih-bersih menu
+    // --- JIKA DIA VIP RESMI, BALIK KE LOBBY SECARA NORMAL ---
     window.backToMenu = window.backToMenu; 
     setTimeout(() => {
-        document.getElementById('navGrid').innerHTML = '';
+        const navGrid = document.getElementById('navGrid');
+        if (navGrid) navGrid.innerHTML = '';
         window.tampilkanLobby();
     }, 100);
 };
@@ -2558,7 +2584,7 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
     }
 };
 // ==========================================================
-// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR + LINK AUTO JOIN)
+// 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - ANTI BOCOR + LINK AUTO JOIN KHUSUS HOST)
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
@@ -2593,6 +2619,12 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
     // 🛑 BIKIN LINK AUTO-JOIN
     const linkRoom = `${window.location.origin}${window.location.pathname}?room=${kode}`;
 
+    // 🛑 LOGIKA KUNCI: Tombol Invite cuma dirender kalau isHost itu true!
+    let btnInvite = isHost ? 
+        `<button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Kirim link ini ke temanmu via WhatsApp.', 'success');" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-weight:bold; font-size:0.9rem; margin-bottom:20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <i class="fas fa-link"></i> Salin Link Invite Room
+        </button>` : ``;
+
     qText.innerHTML = `
         <div style="text-align:center; padding: 40px; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); max-width:600px; margin:0 auto; border-top:8px solid var(--primary);">
             <i class="fas fa-users" style="font-size:4rem; color:var(--primary); margin-bottom:15px;"></i>
@@ -2603,10 +2635,8 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "MODUL LATIHAN") 
                 ${kode}
             </div>
             
-            <!-- TOMBOL SALIN LINK OTOMATIS -->
-            <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Kirim link ini ke temanmu via WhatsApp.', 'success');" style="background:#3498db; color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-weight:bold; font-size:0.9rem; margin-bottom:20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <i class="fas fa-link"></i> Salin Link Invite Room
-            </button>
+            <!-- TOMBOL SALIN LINK OTOMATIS (GAIB BUAT PESERTA BIASA) -->
+            ${btnInvite}
             
             <!-- KETERANGAN MODUL -->
             <div style="background:#e3f2fd; padding:10px; border-radius:8px; border:1px solid #90caf9; margin-bottom:20px; font-weight:bold; color:#1565c0; font-size: 0.95rem;">
