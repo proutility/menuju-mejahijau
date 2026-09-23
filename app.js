@@ -2626,8 +2626,16 @@ window.pantauRoom = (kodeRoom) => {
             const cInput = document.getElementById('chatInput');
             if (cInput) cInput.style.pointerEvents = 'auto';
 
-            if (data.messages) {
-                window.renderChatMessages(data.messages);
+           if (data.messages) {
+                // 🛑 JURUS GRUP WA: Simpan waktu join di Session, filter chat yang lama!
+                let myJoinTime = sessionStorage.getItem(`join_time_${kodeRoom}`);
+                if (!myJoinTime) {
+                    myJoinTime = new Date().toISOString();
+                    sessionStorage.setItem(`join_time_${kodeRoom}`, myJoinTime);
+                }
+                
+                const filteredMessages = data.messages.filter(m => m.waktu >= myJoinTime);
+                window.renderChatMessages(filteredMessages);
             }
         }
         
@@ -4962,18 +4970,27 @@ window.renderChatMessages = (messages) => {
     let html = '';
     
     messages.forEach(m => {
-        // 🛑 PROTEKSI 1: Pakai window.currentUser biar nggak error 'undefined'
         const isMe = (window.currentUser && m.uid === window.currentUser.uid);
         const align = isMe ? 'flex-end' : 'flex-start';
-        const bg = isMe ? '#dcf8c6' : '#ffffff';
+        const bg = isMe ? '#dcf8c6' : '#ffffff'; // Warna hijau khas WA
         const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0';
         const namaWarna = isMe ? '#2e7d32' : '#d35400';
         
+        // 🛑 FORMAT JAM ALA WHATSAPP
+        let jam = "";
+        if (m.waktu) {
+            const dateObj = new Date(m.waktu);
+            const h = String(dateObj.getHours()).padStart(2, '0');
+            const min = String(dateObj.getMinutes()).padStart(2, '0');
+            jam = `${h}:${min}`;
+        }
+
         html += `
-            <div style="align-self: ${align}; max-width: 85%; display:flex; flex-direction:column;">
+            <div style="align-self: ${align}; max-width: 85%; display:flex; flex-direction:column; margin-bottom:8px;">
                 <span style="font-size: 0.65rem; color: ${namaWarna}; font-weight:bold; margin-bottom: 2px; text-align: ${isMe ? 'right' : 'left'}">${isMe ? 'Kamu' : m.nama}</span>
-                <div style="background: ${bg}; padding: 8px 12px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; color:#333;">
-                    ${m.teks}
+                <div style="background: ${bg}; padding: 6px 10px 18px 10px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; color:#333; position:relative; min-width: 70px;">
+                    <span style="display:block; line-height: 1.4;">${m.teks}</span>
+                    <span style="font-size: 0.6rem; color: #888; position: absolute; bottom: 3px; right: 7px;">${jam}</span>
                 </div>
             </div>
         `;
@@ -4981,16 +4998,12 @@ window.renderChatMessages = (messages) => {
     
     chatBox.innerHTML = html;
 
-    // Munculin notifikasi tulisan "Baru!" kalau chat lagi ditutup
     const body = document.getElementById('chatBody');
     const badge = document.getElementById('chatNotifBadge');
     if (messages.length > prevCount && body && body.style.display === 'none') {
         if (badge) badge.style.display = 'inline-block';
     }
 
-    // 🛑 PROTEKSI 2: Gunakan setTimeout untuk Auto-Scroll
-    // Kadang browser butuh waktu sepersekian detik buat menggambar HTML baru
-    // Kalau nggak pakai setTimeout, scroll-nya bakal nyangkut di atas pesan baru
     setTimeout(() => {
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 50);
