@@ -2538,6 +2538,34 @@ window.mulaiUjianRoom = async (kode) => {
 
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room'; 
+    window.pantauRoom = (kodeRoom) => {
+    currentAppMode = 'room'; 
+    
+    // 1. KUNCI MATI KODE ROOM BIAR NGGAK HILANG INGATAN
+    window.currentRoomCode = kodeRoom; 
+    
+    // 2. JURUS PAKSAAN: AMBIL ALIH TOMBOL ENTER & KLIK CHAT
+    setTimeout(() => {
+        const chatInp = document.getElementById('chatInput');
+        // Cari tombol send (sesuaikan selectornya kalau id-nya beda)
+        const chatBtn = document.querySelector('#roomChatContainer button'); 
+        
+        if (chatInp) {
+            chatInp.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.kirimPesanChat();
+                }
+            };
+        }
+        if (chatBtn) {
+            chatBtn.onclick = (e) => {
+                e.preventDefault();
+                window.kirimPesanChat();
+            };
+        }
+    }, 1000);
+
     if (timerInterval) clearInterval(timerInterval);
 
     if (roomListenerUnsubscribe) roomListenerUnsubscribe();
@@ -4861,42 +4889,38 @@ window.migrasiModulBiarHemat = async function(modulId) {
     }
 };
 window.kirimPesanChat = async () => {
-    // 🛑 Cari kode room secara global biar ngga meleset
-    const roomCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
-    
-    if (!roomCode) {
-        console.log("Kode Room tidak terdeteksi!");
-        return;
-    }
+    const roomCode = window.currentRoomCode;
+    if (!roomCode) return console.error("❌ Error: Kode Room hilang!");
     
     const input = document.getElementById('chatInput');
-    if (!input) return;
+    if (!input) return console.error("❌ Error: Kotak input chat nggak ketemu!");
 
     const teks = input.value.trim();
     if (!teks) return;
 
-    input.value = ''; // Kosongkan input langsung
-    input.focus();    // Kembalikan kursor ke kotak ketik
+    input.value = ''; 
+    input.focus();    
 
-    // 🛑 Cari database dan user
     const database = window.db || (typeof db !== 'undefined' ? db : null);
     const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-
-    if (!database || !userSkrg) return;
+    
+    if (!database || !userSkrg) return console.error("❌ Error: Database / User belum siap!");
 
     const roomRef = doc(database, "rooms", roomCode);
     try {
+        console.log("🚀 OTW Kirim Pesan:", teks);
         await updateDoc(roomRef, {
             messages: arrayUnion({
                 uid: userSkrg.uid,
-                nama: userSkrg.displayName.split(" ")[0], // Ambil nama depan
+                nama: userSkrg.displayName.split(" ")[0],
                 teks: teks,
                 waktu: new Date().toISOString()
             })
         });
+        console.log("✅ Pesan sukses masuk Firebase!");
     } catch (e) {
-        console.error("Gagal kirim chat:", e);
-        alert("Gagal kirim pesan. Pastikan koneksi internet stabil.");
+        console.error("❌ Gagal kirim chat ke Firebase:", e);
+        alert("Gagal kirim pesan. Cek console bro!");
     }
 };
 
