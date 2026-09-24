@@ -5,7 +5,7 @@
     --accent: #2e7d32;    /* Hijau Daun */
     --gold: #d4af37;      /* Emas Mewah */
     --purple: #8e44ad;    /* Ungu (Grafik) */
-    --light: #f1f8e9;       
+    --light: #f1f8e9;        
     --filled: #7f8c8d;      
     --success: #2e7d32;     
     --danger: #c0392b;      
@@ -378,45 +378,132 @@ body.mode-focus #floatingTimer { display: block !important; }
 
 #floatingTimer { display: none; position: fixed; top: 50px; left: 30px; z-index: 99999; padding: 10px 25px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 2px solid white; color: #ffeb3b; background: rgba(0, 77, 0, 0.9); }
 
-/* === TAMPILAN HP FIXED === */
+/* ========================================================================= */
+/* 🔥 TAMPILAN HP FIXED (MOBILE APP-LIKE UX) 🔥                              */
+/* ========================================================================= */
 @media (max-width: 768px) {
-    body { padding-bottom: 0 !important; flex-direction: column; overflow: hidden; }
-    .sidebar-left { width: 100% !important; height: 100% !important; border-right: none; z-index: 100; position: fixed; top: 0; left: 0; }
+    body { padding-bottom: 0 !important; flex-direction: column; overflow: hidden; background: #f8f9fa; }
+    
+    /* SIDEBAR KIRI (MENU MODUL & CHAT) - Dibikin lebih rapi & gak menuh-menuhin layar */
+    .sidebar-left { width: 100% !important; height: 100% !important; border-right: none; z-index: 100; position: fixed; top: 0; left: 0; background: white;}
     .sidebar-left .timer-container { display: none !important; }
-    .modul-selector { max-height: none !important; height: calc(100% - 85px); overflow-y: auto; padding-bottom: 120px !important; }
-    .main-content { width: 100% !important; margin: 0 !important; height: calc(100dvh - 120px) !important; flex: 1; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 15px 15px 0 15px !important; }
-    .card::after { content: ""; display: block; height: 200px; width: 100%; }
-    .card { margin-bottom: 0 !important; padding: 20px !important; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .modul-selector { max-height: none !important; height: calc(100% - 90px); overflow-y: auto; padding-bottom: 90px !important; }
+    
+    /* AREA SOAL - Kasih margin bawah biar ga nabrak Bottom Bar */
+    .main-content { width: 100% !important; margin: 0 !important; height: 100dvh !important; flex: 1; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 15px 15px 90px 15px !important; background: #f8f9fa;}
+    .card::after { content: ""; display: block; height: 100px; width: 100%; } /* Jarak napas akhir */
+    .card { margin-bottom: 0 !important; padding: 20px 15px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-radius: 12px;}
+    
+    /* SIDEBAR KANAN (KOTAK NOMOR & KLASEMEN MABAR) */
     .sidebar-right { display: none; }
     .sidebar-right.show-mobile { display: flex !important; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; background: white; padding-top: 50px; margin-right: 0 !important; }
-    .nav-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 5px !important; }
-    .nav-btn { font-size: 0.75rem !important; aspect-ratio: 1; border-radius: 4px; }
+    
+    /* 🛑 UX BARU: Tombol Aksi di Sidebar Kanan dibikin 2 Kolom biar rapi */
+    .sidebar-right .btn-group, 
+    .sidebar-right > div:first-of-type {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+        padding: 0 15px;
+    }
+    
+    /* Tombol Keluar / Tutup dibikin panjang full width */
+    .sidebar-right .btn-keluar, 
+    #btnCloseMobile {
+        grid-column: span 2 !important;
+        padding: 12px !important;
+        font-size: 0.95rem !important;
+        border-radius: 8px !important;
+    }
+    
+    .sidebar-right .btn { padding: 10px !important; font-size: 0.85rem !important; border-radius: 8px !important; }
+    
+    /* Grid Kotak Nomor Soal */
+    .nav-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; padding: 0 15px;}
+    .nav-btn { font-size: 0.85rem !important; aspect-ratio: 1; border-radius: 6px; font-weight: bold;}
+    .nav-container { padding-bottom: 100px !important; }
+    
+    /* 🛑 UX BARU: BOTTOM NAVIGATION BAR (Ubah Menu Bawah ala Aplikasi Native) */
+    #mobileFooter { 
+        display: none; 
+        position: fixed; 
+        bottom: 0; 
+        left: 0; 
+        width: 100%; 
+        background: #ffffff; 
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); 
+        padding: 10px 10px 20px 10px !important; /* Ekstra padding bawah biar aman di iPhone */
+        z-index: 9999; 
+        display: flex !important;
+        justify-content: space-evenly !important; 
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+        gap: 0;
+    }
+
     .finish-container { display: none !important; }
-    #floatingTimer { display: none; position: fixed; top: 10px; left: 10px; right: auto; font-size: 13px; padding: 6px 12px; z-index: 99999; border-radius: 20px; }
-    .footer-nav { flex-direction: column; gap: 12px; margin-top: 20px; position: relative; z-index: 10; }
-    .footer-nav .ragu-wrapper { width: 100%; margin-right: 0; justify-content: center; background: #fff3e0; padding: 10px; border-radius: 8px; }
+    #floatingTimer { display: none; position: fixed; top: 10px; left: 10px; right: auto; font-size: 13px; padding: 6px 12px; z-index: 99999; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+    
+    /* Tombol Prev-Next dibikin 50-50 */
+    .footer-nav { flex-direction: column; gap: 12px; margin-top: 20px; position: relative; z-index: 10; padding-bottom: 20px;}
+    .footer-nav .ragu-wrapper { width: 100%; margin-right: 0; justify-content: center; background: #fff3e0; padding: 12px; border-radius: 8px; font-weight: bold;}
     .footer-nav > div:last-child { width: 100% !important; display: flex !important; gap: 10px !important; }
-    .footer-nav .btn { padding: 12px 15px !important; font-size: 0.9rem !important; width: 50% !important; border-radius: 8px; flex: 1; }
-    #mobileFooter { display: none; position: fixed; bottom: 35px; left: 0; width: 100%; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); box-shadow: 0 -2px 10px rgba(0,0,0,0.1); padding: 8px 15px; z-index: 1001; justify-content: space-between; border-top: 1px solid #eee; gap: 10px; box-sizing: border-box; }
-    .close-sidebar-btn { display: block !important; }
-    .question-box { font-size: 15px; line-height: 1.5; }
-    .option-label { padding: 12px; margin-bottom: 10px; font-size: 0.95rem; }
+    .footer-nav .btn { padding: 12px 15px !important; font-size: 0.95rem !important; width: 50% !important; border-radius: 8px; flex: 1; }
+    
+    .question-box { font-size: 15px; line-height: 1.6; color: #333;}
+    .option-label { padding: 14px; margin-bottom: 12px; font-size: 0.95rem; border-radius: 8px; border: 1px solid #e0e0e0; background: white;}
+    
     .question-header .focus-btn { display: none; } 
     .question-header { flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    #modulTitle { font-size: 0.95rem !important; line-height: 1.3; font-weight:700; color:var(--primary); }
-    #qNum { font-size: 0.85rem !important; font-weight:600; }
-    #modeIndicator { font-size: 0.7rem; padding: 2px 8px; align-self: flex-start; margin-top: 5px; }
+    #modulTitle { font-size: 1rem !important; line-height: 1.3; font-weight:700; color:var(--primary); }
+    #qNum { font-size: 0.85rem !important; font-weight:600; color: #666;}
+    #modeIndicator { font-size: 0.7rem; padding: 4px 10px; align-self: flex-start; margin-top: 5px; font-weight: bold;}
+    
     body.ujian-berjalan .sidebar-left { display: none; }
-    .nav-container { padding-bottom: 150px !important; }
+    
+    /* 🛑 UX BARU: Perbaikan Tabel Statistik Biar Gak Sesak */
+    .stats-table th, .stats-table td { padding: 8px 5px !important; font-size: 0.75rem !important; word-wrap: break-word !important; }
+    .stats-table { display: block !important; width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap;}
+    
+    /* 🛑 UX BARU: Perbaikan Pop-up Hasil Lulus/Gagal */
+    #resultOverlay .result-box { width: 95% !important; padding: 25px 15px !important; border-radius: 15px !important;}
+    #resultOverlay .btn { padding: 12px !important; font-size: 0.9rem !important; margin-bottom: 10px !important; border-radius: 8px !important;}
+    
+    #btnDarkModeToggle {
+        left: auto !important;
+        right: 15px !important;
+        bottom: 90px !important; /* Naikin dikit biar ga nabrak bottom bar baru */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
 }
 
+/* Base Styles untuk Fitur Mobile & Desktop */
 #mobileFooter { display: none; }
-.mobile-nav-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 600; flex: 1; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s; white-space: nowrap; }
+.mobile-nav-btn { 
+    background: transparent !important; 
+    color: #7f8c8d !important; 
+    border: none !important; 
+    padding: 5px !important; 
+    border-radius: 0 !important; 
+    font-weight: 600 !important; 
+    flex: 1 !important; 
+    display: flex !important; 
+    flex-direction: column !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    gap: 5px !important; 
+    font-size: 0.75rem !important; 
+    box-shadow: none !important; 
+    transition: all 0.2s; 
+}
+.mobile-nav-btn i { font-size: 1.3rem !important; margin: 0 !important; color: var(--primary);}
 .mobile-nav-btn:active { transform: scale(0.95); opacity: 0.9; }
+
 .close-sidebar-btn { display: none; width: 100%; padding: 15px; background: var(--danger); color: white; border: none; border-radius: 0; position: absolute; top:0; left:0; font-weight: bold; font-size: 16px; z-index: 10000; }
 
 @media (min-width: 769px) {
-    .ragu-wrapper { flex: 1; background-color: #fdfdfd; padding: 12px 20px; border-radius: 8px; margin-right: 20px; cursor: pointer; }
+    .ragu-wrapper { flex: 1; background-color: #fdfdfd; padding: 12px 20px; border-radius: 8px; margin-right: 20px; cursor: pointer; border: 1px solid #eee;}
     .ragu-wrapper:hover { background-color: #fff3e0; border-color: var(--warning); }
     #prevBtn { margin-right: 0 !important; }
     .footer-nav > div:last-child { width: auto !important; gap: 15px !important; }
