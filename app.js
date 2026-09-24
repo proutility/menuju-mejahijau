@@ -3,41 +3,42 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChang
 import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ========================================================
-// 🛑 SISTEM GATEKEEPER: DETEKSI & FREEZE MODE HP
+// 🛑 SUPER GATEKEEPER: ANTI-BYPASS LINK INVITE MABAR
 // ========================================================
 function deteksiDanFreezeHP() {
-    // Cek apakah user pakai HP (dari User Agent bawaan HP atau ukuran layar)
+    // Cek perangkat dari User Agent atau Lebar Layar
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
     if (isMobile) {
-        // Tembakkan SweetAlert tingkat dewa yang gabisa di-close
-        Swal.fire({
-            icon: 'warning',
-            title: '<span style="color: #d32f2f;">Akses Terkunci!</span>',
-            html: `
-                <div style="text-align: center; line-height: 1.6;">
-                    Mohon maaf, mode tampilan HP saat ini sedang dalam <b>proses maintenance & perombakan sistem</b>.<br><br>
-                    Untuk kelancaran dan keamanan ujian, kamu <b>WAJIB menggunakan Laptop/PC atau mode Desktop</b>.
-                </div>
-            `,
-            allowOutsideClick: false, // Gak bisa ditutup klik luar
-            allowEscapeKey: false,    // Gak bisa ditutup pencet tombol back/esc
-            showConfirmButton: false, // Gak ada tombol OK
-            backdrop: `
-                rgba(0,0,0,0.95)
-                url("https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif")
-                center top
-                no-repeat
-            ` // Background gelap total biar layar belakang ketutup
-        });
+        // JURUS NUKE: Timpa seluruh isi <body> dengan halaman error mati
+        document.body.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999999; padding: 20px; text-align: center; font-family: 'Poppins', sans-serif;">
+                <i class="fas fa-mobile-alt" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
+                <h1 style="color: #e74c3c; margin-bottom: 10px; font-weight: 800;">Akses HP Dikunci!</h1>
+                <p style="font-size: 1rem; line-height: 1.6; color: #ccc; max-width: 400px;">
+                    Wah, ketahuan mau nerobos lewat link invite ya? 😅<br><br>
+                    Mode HP saat ini sedang dalam <b>proses maintenance & perombakan UI</b>.<br><br>
+                    Biar ujian lu aman dan nggak nge-bug, silakan buka link ini menggunakan <b>Laptop / PC Desktop</b>.
+                </p>
+            </div>
+        `;
+        
+        // Hentikan proses Firebase / Script lain di bawahnya (opsional tapi ngebantu)
+        window.stop();
     }
 }
 
-// Jalankan sistem deteksi begitu aplikasi dibuka
+// 1. Eksekusi langsung sepersekian detik file JS dibaca!
+deteksiDanFreezeHP(); 
+
+// 2. Eksekusi pas dokumen HTML kelar di-load
 document.addEventListener('DOMContentLoaded', deteksiDanFreezeHP);
 
-// Jalankan juga kalau user iseng nge-resize layar laptop jadi ukuran HP
+// 3. Eksekusi kalau user iseng resize browser laptop jadi kecil
 window.addEventListener('resize', deteksiDanFreezeHP);
+
+// 4. Eksekusi brutal tiap 1 detik (Buat ngelawan user yg coba ngapus div-nya lewat Inspect Element)
+setInterval(deteksiDanFreezeHP, 1000);
 
 // --- 1. KONFIGURASI FIREBASE ---
 const firebaseConfig = {
