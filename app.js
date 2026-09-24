@@ -668,66 +668,55 @@ window.toggleMobileSidebar = function() {
     }
 }
 
-// --- FIX TOGGLE MODUL HP (SLIDE UP) ---
-window.toggleMobileModul = function() {
-    const sidebar = document.querySelector('.sidebar-left');
-    const sidebarRight = document.querySelector('.sidebar-right');
-    
-    // Tutup sidebar kanan kalau lagi kebuka
-    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
-        sidebarRight.classList.remove('show-mobile');
-    }
-    
-    // Munculkan/Sembunyikan sidebar kiri
-    if (sidebar) sidebar.classList.toggle('show-mobile');
-}
-
-// --- FIX TOGGLE SIDEBAR NOMOR SOAL HP (SLIDE UP) ---
-window.toggleMobileSidebar = function() {
-    const sidebarRight = document.querySelector('.sidebar-right');
-    const sidebarLeft = document.querySelector('.sidebar-left');
-    
-    // Tutup sidebar modul kalau lagi kebuka
-    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
-        sidebarLeft.classList.remove('show-mobile');
-    }
-
-    // Munculkan/Sembunyikan sidebar kanan
-    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
-}
 // ========================================================
-// 📱 LOGIKA NAVIGASI KHUSUS MOBILE APP (LOBBY BARU)
+// 📱 LOGIKA NAVIGASI KHUSUS MOBILE APP & FIX BUG
 // ========================================================
 
-// --- FIX TOGGLE MODUL HP (SLIDE UP) ---
-window.toggleMobileModul = function() {
-    const sidebar = document.querySelector('.sidebar-left');
-    const sidebarRight = document.querySelector('.sidebar-right');
+// 1. Obat "Memuat Nama..." - Sinkronisasi Foto & Nama dari Desktop ke Mobile
+setInterval(() => {
+    const mainName = document.getElementById('roleDisplay');
+    const mainPhoto = document.getElementById('userAvatar');
+    const mobName = document.getElementById('mobileUserName');
+    const mobPhoto = document.getElementById('mobileUserPhoto');
     
-    // Tutup sidebar kanan kalau lagi kebuka
-    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
-        sidebarRight.classList.remove('show-mobile');
+    if (mainName && mobName && mainName.innerText !== 'Memuat Nama...') {
+        mobName.innerText = mainName.innerText;
     }
-    
-    // Munculkan/Sembunyikan sidebar kiri
-    if (sidebar) sidebar.classList.toggle('show-mobile');
+    if (mainPhoto && mobPhoto && mainPhoto.src) {
+        mobPhoto.src = mainPhoto.src;
+    }
+}, 1000);
+
+// 2. Auto-Tutup Sidebar pas Modul Diklik (Biar Soal Gak Ketutup)
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.modul-btn')) {
+        // Sembunyikan semua sidebar biar layar fokus ke soal
+        document.querySelector('.sidebar-left')?.classList.remove('show-mobile');
+        document.querySelector('.sidebar-right')?.classList.remove('show-mobile');
+    }
+});
+
+// 3. Tombol Mabar (Pop-up Bottom Sheet ala Gojek)
+window.bukaModeMabarMobile = function() {
+    Swal.fire({
+        title: '<strong style="color:var(--primary)">Mode Mabar</strong>',
+        html: `
+            <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
+                <button onclick="Swal.close(); window.bikinRoomLatihan()" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 10px rgba(46,125,50,0.2); cursor:pointer;">
+                    <i class="fas fa-plus-circle"></i> Bikin Room Baru
+                </button>
+                <button onclick="Swal.close(); window.gabungRoomLatihan()" style="background:#f39c12; color:white; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 10px rgba(243,156,18,0.2); cursor:pointer;">
+                    <i class="fas fa-sign-in-alt"></i> Gabung Room
+                </button>
+            </div>
+        `,
+        showConfirmButton: false,
+        position: 'bottom',
+        customClass: { popup: 'swal-bottom-sheet' }
+    });
 };
 
-// --- FIX TOGGLE SIDEBAR NOMOR SOAL HP (SLIDE UP) ---
-window.toggleMobileSidebar = function() {
-    const sidebarRight = document.querySelector('.sidebar-right');
-    const sidebarLeft = document.querySelector('.sidebar-left');
-    
-    // Tutup sidebar modul kalau lagi kebuka
-    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
-        sidebarLeft.classList.remove('show-mobile');
-    }
-
-    // Munculkan/Sembunyikan sidebar kanan
-    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
-};
-
-// --- TOMBOL LATIHAN MANDIRI DI LOBBY ---
+// 4. Tombol Latihan Mandiri di Lobby
 window.bukaModeLatihanMobile = function() {
     // Sembunyikan Lobby, Tampilkan Area Ujian
     document.getElementById('mobileLobby').style.setProperty('display', 'none', 'important');
@@ -737,12 +726,7 @@ window.bukaModeLatihanMobile = function() {
     window.toggleMobileModul(); 
 };
 
-// --- TOMBOL MABAR DI LOBBY ---
-window.bukaModeMabarMobile = function() {
-    alert("Menu Gabung/Bikin Room Mabar siap dirakit selanjutnya!");
-};
-
-// --- FUNGSI KLIK BOTTOM NAVIGATION BAR ---
+// 5. Navigasi Bottom Bar
 window.navigasiMobile = function(tujuan) {
     // Ubah warna icon jadi aktif
     document.querySelectorAll('#mobileBottomNav .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -756,8 +740,8 @@ window.navigasiMobile = function(tujuan) {
         document.getElementById('mobileLobby').style.setProperty('display', 'flex', 'important');
         
         // Pastikan sidebar tertutup
-        document.querySelector('.sidebar-left').classList.remove('show-mobile');
-        document.querySelector('.sidebar-right').classList.remove('show-mobile');
+        document.querySelector('.sidebar-left')?.classList.remove('show-mobile');
+        document.querySelector('.sidebar-right')?.classList.remove('show-mobile');
     } else if (tujuan === 'modul') {
         window.bukaModeLatihanMobile();
     } else if (tujuan === 'mabar') {
@@ -770,6 +754,32 @@ window.navigasiMobile = function(tujuan) {
     }
 };
 
+// 6. Fix Toggle Modul & Sidebar (Slide Up)
+window.toggleMobileModul = function() {
+    const sidebar = document.querySelector('.sidebar-left');
+    const sidebarRight = document.querySelector('.sidebar-right');
+    
+    // Tutup sidebar kanan kalau lagi kebuka
+    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
+        sidebarRight.classList.remove('show-mobile');
+    }
+    
+    // Munculkan/Sembunyikan sidebar kiri
+    if (sidebar) sidebar.classList.toggle('show-mobile');
+};
+
+window.toggleMobileSidebar = function() {
+    const sidebarRight = document.querySelector('.sidebar-right');
+    const sidebarLeft = document.querySelector('.sidebar-left');
+    
+    // Tutup sidebar modul kalau lagi kebuka
+    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
+        sidebarLeft.classList.remove('show-mobile');
+    }
+
+    // Munculkan/Sembunyikan sidebar kanan
+    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
+};
 // ==========================================
 // PENGAMAN KEYBOARD SHORTCUT (NONAKTIF DI MULTIPLAYER)
 // ==========================================
