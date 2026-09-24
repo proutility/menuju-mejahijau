@@ -1791,6 +1791,19 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    // 🛑 LANGKAH 1: Ubah status jadi Offline (Skor aman untuk Reconnect!)
+    const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+    if (window.currentRoomCode && activeUser && window.db) {
+        try {
+            const { doc, updateDoc } = await import("firebase/firestore");
+            await updateDoc(doc(window.db, "rooms", window.currentRoomCode), {
+                [`players.${activeUser.uid}.isOnline`]: false
+            });
+        } catch(e) {
+            console.error("Gagal update status offline:", e);
+        }
+    }
+
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
 
@@ -2819,8 +2832,9 @@ window.pantauRoom = (kodeRoom) => {
         container.innerHTML = html;
     };
 
-    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    const roomRef = doc(db, "rooms", kodeRoom); 
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    // Pastikan pakai window.db jika db tidak terdefinisi secara global
+    const roomRef = doc(window.db || db, "rooms", kodeRoom); 
     
     roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
@@ -2830,50 +2844,85 @@ window.pantauRoom = (kodeRoom) => {
 
         const data = snap.data();
 
-       // ========================================================
-        // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
+        // 🛑 DEFINISI USER AKTIF & STATUS HOST (Pindah ke atas biar bisa dipake di mana aja)
+        const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+        const amIHost = (activeUser && data.hostUid === activeUser.uid);
+
+        // 🛑 AUTO-RECONNECT: Kalau dia masuk lagi, ubah statusnya jadi Online!
+        if (activeUser && data.players && data.players[activeUser.uid]) {
+            if (data.players[activeUser.uid].isOnline === false) {
+                try {
+                    const { updateDoc } = await import("firebase/firestore");
+                    updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: true });
+                } catch(e) { console.error("Gagal reconnect:", e); }
+            }
+        }
+
+        // ========================================================
+        // 👑 1. SISTEM TRANSFER HOST (MENGABAIKAN YANG OFFLINE + POP-UP)
         // ========================================================
         if (data.players && data.hostUid) {
-            const hostMasihAda = data.players[data.hostUid];
+            const hostData = data.players[data.hostUid];
+            const hostHilang = !hostData || hostData.isOnline === false;
             
-            // Jika Host terdeteksi hilang/keluar dari room!
-            if (!hostMasihAda) {
-                const sisaPemain = Object.keys(data.players);
+            if (hostHilang) {
+                // Filter: Cuma peserta yang ONLINE yang diantrekan jadi Host baru
+                const sisaPemain = Object.keys(data.players).filter(uid => data.players[uid].isOnline !== false);
                 
-                // Pastikan kita ada di dalam room
-                if (sisaPemain.length > 0 && window.currentUser && sisaPemain.includes(window.currentUser.uid)) {
-                    sisaPemain.sort(); // Urutkan UID biar adil
-                    const myIndex = sisaPemain.indexOf(window.currentUser.uid);
+                if (sisaPemain.length > 0 && activeUser && sisaPemain.includes(activeUser.uid)) {
+                    sisaPemain.sort(); 
+                    const myIndex = sisaPemain.indexOf(activeUser.uid);
                     
-                    // 🛑 STRATA VIP (LOGIKA BALAPAN WAKTU)
-                    // Jika VIP: Rebut posisi host dalam waktu 0 - 3 detik
-                    // Jika Non-VIP: Disuruh nunggu 6 - 9 detik (Ngalah sama VIP)
-                    let delayClaim = window.isVIPUser ? (myIndex * 1500) : 6000 + (myIndex * 1500);
+                    let delayClaim = window.isVIPUser ? (myIndex * 1500) + 1000 : 3000 + (myIndex * 2000);
                     
-                    // Bersihkan timer klaim kalau sebelumnya udah ada
                     if (window.hostClaimTimer) clearTimeout(window.hostClaimTimer);
                     
-                    // Mulai menghitung mundur untuk merebut posisi Host
-                    window.hostClaimTimer = setTimeout(() => {
-                        console.log("Mengambil alih posisi Host...");
-                        updateDoc(roomRef, { hostUid: window.currentUser.uid }).then(() => {
-                            if (typeof PROTAMA !== 'undefined') {
-                                PROTAMA.alert('Sistem Host Berpindah!', 'Host terputus. Karena otoritas akunmu, kamu kini dialihkan menjadi Host.', 'success');
+                    window.hostClaimTimer = setTimeout(async () => {
+                        try {
+                            const { getDoc, updateDoc } = await import("firebase/firestore");
+                            const checkSnap = await getDoc(roomRef);
+                            if (checkSnap.exists()) {
+                                const currentData = checkSnap.data();
+                                const currentHostData = currentData.players[currentData.hostUid];
+                                
+                                // Pastikan Host di database beneran masih Offline/Hilang
+                                if (!currentHostData || currentHostData.isOnline === false) {
+                                    Swal.fire({
+                                        title: 'Host Meninggalkan Room',
+                                        text: 'Apakah kamu bersedia mengambil alih sebagai Host agar simulasi bisa dilanjutkan?',
+                                        icon: 'question',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#1565c0',
+                                        cancelButtonColor: '#757575',
+                                        confirmButtonText: '<i class="fas fa-check"></i> Ya, Jadi Host',
+                                        cancelButtonText: 'Tolak',
+                                        allowOutsideClick: false,
+                                        allowEscapeKey: false
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            updateDoc(roomRef, { hostUid: activeUser.uid }).then(() => {
+                                                Swal.fire('Berhasil!', 'Kamu sekarang memegang kendali Room.', 'success');
+                                            });
+                                        } 
+                                    });
+                                }
                             }
-                        }).catch(e => console.log("Gagal klaim host:", e));
+                        } catch(e) { console.error("Gagal cek status host:", e); }
                     }, delayClaim);
                 }
             } else {
-                // 🛑 JIKA HOST BARU UDAH TERPILIH, BATALKAN SEMUA NIAT KUDETA!
                 if (window.hostClaimTimer) {
                     clearTimeout(window.hostClaimTimer);
                     window.hostClaimTimer = null;
+                }
+                if (Swal.isVisible() && Swal.getTitle().textContent === 'Host Meninggalkan Room') {
+                    Swal.close();
                 }
             }
         }
 
         // ========================================================
-        // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
+        // 🧹 2. PEMBERSIH LAYAR + TOMBOL DARURAT HOST BARU
         // ========================================================
         if (data.status === 'soal' || data.status === 'pembahasan') {
             const navGrid = document.getElementById('navGrid');
@@ -2889,15 +2938,43 @@ window.pantauRoom = (kodeRoom) => {
             
             const qText = document.getElementById('questionText');
             if (qText && qText.innerHTML.includes('Riwayat')) { 
+                 
+                 let btnRescue = amIHost ? 
+                    `<br><br><div style="padding:15px; background:#e3f2fd; border:2px dashed #90caf9; border-radius:8px;">
+                        <p style="color:#1565c0; font-weight:bold; margin-top:0;">Kamu telah menjadi Host baru!</p>
+                        <button onclick="window.nextSoalDarurat()" style="background:#1565c0; color:white; padding:12px 25px; border:none; border-radius:30px; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.1);">Lanjutkan Sesi ➔</button>
+                    </div>` 
+                    : `<p>Menunggu Host mengambil alih sesi agar layar sinkron.</p>`;
+                 
                  qText.innerHTML = `
                     <div style="text-align:center; padding:50px; background:white; border-radius:10px;">
                         <i class="fas fa-sync fa-spin fa-3x" style="color:#1565c0; margin-bottom:20px;"></i><br>
                         <h3 style="color:#1565c0;">Menyinkronkan Sesi...</h3>
-                        <p>Kamu bergabung di pertengahan jalan. Menunggu Host beralih ke soal berikutnya agar layar sinkron.</p>
+                        ${btnRescue}
                     </div>`;
+                    
+                 if (amIHost) {
+                     window.nextSoalDarurat = () => {
+                         let nextIndex = parseInt(data.currentIdx || 0) + 1; 
+                         if (typeof currentQuestions !== 'undefined' && nextIndex < currentQuestions.length) {
+                             let updates = { status: 'soal', currentIdx: nextIndex };
+                             if (data.players) {
+                                 for (let uid in data.players) updates[`players.${uid}.jawabanSekarang`] = null;
+                             }
+                             import("firebase/firestore").then(({updateDoc}) => {
+                                 updateDoc(roomRef, updates);
+                             });
+                         } else {
+                             import("firebase/firestore").then(({updateDoc}) => {
+                                 updateDoc(roomRef, { status: 'selesai' });
+                             });
+                         }
+                     };
+                 }
             }
         }
         
+        // --- SISA KODINGAN BAWAAN (UI dll) ---
         const finishContainer = document.querySelector('.finish-container');
         if (finishContainer) {
             if (data.status === 'waiting' || data.status === 'pembahasan') {
@@ -2907,7 +2984,6 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        const amIHost = (currentUser && data.hostUid === currentUser.uid);
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
@@ -3064,30 +3140,53 @@ window.pantauRoom = (kodeRoom) => {
                 }, 300);
             }
 
+          // ========================================================
+            // 🛑 LANGKAH 3: LOGIKA AUTO-PROGRESS (HANYA HITUNG YANG ONLINE)
+            // ========================================================
             if (data.players) {
-                let totalPeserta = 0;
+                let totalPesertaAktif = 0;
                 let yangSudahJawab = 0;
+                
                 for (let uid in data.players) {
-                    totalPeserta++;
-                    if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
-                        yangSudahJawab++;
+                    // 🛑 KUNCI: Cuma hitung peserta yang isOnline-nya BUKAN false
+                    if (data.players[uid].isOnline !== false) {
+                        totalPesertaAktif++;
+                        if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
+                            yangSudahJawab++;
+                        }
                     }
                 }
 
                 let txtProgress = document.getElementById('progressText');
-                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
+                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPesertaAktif}`;
 
-                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
+                // JIKA SEMUA PESERTA AKTIF SUDAH KLIK JAWABAN (Langsung Gas Pembahasan!)
+                if (totalPesertaAktif > 0 && yangSudahJawab >= totalPesertaAktif) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
+                        
+                        // Bunuh paksa timer
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-                        setTimeout(() => {
-                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
-                        }, 1000);
+                        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+                        
+                        const t1 = document.getElementById('timerDisplay');
+                        if (t1) {
+                            t1.innerText = "MEMPROSES...";
+                            t1.className = 'timer-container timer-panic';
+                        }
+                        
+                        // Cukup Host yang nembak Firebase biar gak dobel
+                        if (amIHost) {
+                            setTimeout(() => {
+                                // Pakai import dinamis biar aman dari error undefined
+                                import("firebase/firestore").then(({updateDoc}) => {
+                                    updateDoc(roomRef, { status: 'pembahasan' });
+                                }).catch(e => console.error(e));
+                            }, 500);
+                        }
                     }
                 }
             }
-        } 
         
         // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
