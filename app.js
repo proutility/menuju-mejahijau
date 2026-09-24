@@ -120,9 +120,9 @@ if(auth) {
                 const btnAdminLobby = document.getElementById('btnAdminLobby');
                 if(btnAdminLobby) btnAdminLobby.style.display = 'block';
 
-                // --- SENSOR FITUR KHUSUS ASISTEN ADMIN ---
+               // --- SENSOR FITUR KHUSUS ASISTEN ADMIN ---
                 if (isEditor && !isSuperAdmin) {
-                    setout(() => {
+                    setTimeout(() => {  // <--- UBAH JADI setTimeout
                         // 1. Sembunyikan Tombol Maintenance
                         const btnMaintenance = document.getElementById('btnToggleMaintenance');
                         if (btnMaintenance) btnMaintenance.style.display = 'none';
