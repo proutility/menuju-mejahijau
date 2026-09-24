@@ -668,21 +668,32 @@ window.toggleMobileSidebar = function() {
     }
 }
 
-// --- FIX TOGGLE MODUL HP (AUTO HIDE BUTTONS) ---
+// --- FIX TOGGLE MODUL HP (SLIDE UP) ---
 window.toggleMobileModul = function() {
     const sidebar = document.querySelector('.sidebar-left');
-    const timer = document.getElementById('floatingTimer');
-    const mobileFooter = document.getElementById('mobileFooter');
-
-    if (sidebar.style.display === 'flex') {
-        sidebar.style.display = ''; 
-        if(timer && document.body.classList.contains('ujian-berjalan')) timer.style.display = 'block';
-        if(mobileFooter) mobileFooter.style.display = 'flex';
-    } else {
-        sidebar.style.display = 'flex'; 
-        if(timer) timer.style.display = 'none';
-        if(mobileFooter) mobileFooter.style.display = 'none';
+    const sidebarRight = document.querySelector('.sidebar-right');
+    
+    // Tutup sidebar kanan kalau lagi kebuka
+    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
+        sidebarRight.classList.remove('show-mobile');
     }
+    
+    // Munculkan/Sembunyikan sidebar kiri
+    if (sidebar) sidebar.classList.toggle('show-mobile');
+}
+
+// --- FIX TOGGLE SIDEBAR NOMOR SOAL HP (SLIDE UP) ---
+window.toggleMobileSidebar = function() {
+    const sidebarRight = document.querySelector('.sidebar-right');
+    const sidebarLeft = document.querySelector('.sidebar-left');
+    
+    // Tutup sidebar modul kalau lagi kebuka
+    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
+        sidebarLeft.classList.remove('show-mobile');
+    }
+
+    // Munculkan/Sembunyikan sidebar kanan
+    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
 }
 
 // ==========================================
