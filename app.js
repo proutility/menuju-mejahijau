@@ -1131,7 +1131,16 @@ function loadQuestion(idx) {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
 
-    document.getElementById('qNum').innerText = idx + 1;
+    // 🛑 UX BARU: Ubah format nomor jadi "1 / 50"
+    const elNum = document.getElementById('qNum');
+    if (elNum) {
+        if (currentQuestions && currentQuestions.length > 0) {
+            elNum.innerText = (idx + 1) + " / " + currentQuestions.length;
+        } else {
+            elNum.innerText = idx + 1;
+        }
+    }
+
     document.getElementById('questionText').innerText = q.q;
     
     updateSidebarStatus();
@@ -1255,36 +1264,56 @@ function loadQuestion(idx) {
     });
 
     const chk = document.getElementById('checkRagu');
-        if(chk) {
-            chk.checked = raguStatus[idx] || false;
-            chk.disabled = isSubmitted;
-        }
+    if(chk) {
+        chk.checked = raguStatus[idx] || false;
+        chk.disabled = isSubmitted;
+    }
 
-// ==========================================================
-        // 🛑 KUNCI UI KHUSUS MODE ROOM (JANGAN DIHAPUS)
-        // ==========================================================
-        if (currentAppMode === 'room') {
-            const pBtn = document.getElementById('prevBtn');
-            const nBtn = document.getElementById('nextBtn');
-            const rWrap = document.querySelector('.ragu-wrapper');
-            
-            if(pBtn) pBtn.style.display = 'none';
-            if(nBtn) nBtn.style.display = 'none';
-            if(rWrap) rWrap.style.display = 'none';
+    // ==========================================================
+    // 🛑 LOGIKA UX: TUKAR POSISI KOTAK NOMOR VS KLASEMEN LIVE
+    // ==========================================================
+    const navGridContainer = document.getElementById('navGrid');
+    const legendContainer = document.querySelector('.legend'); // Legend warna Menjawab/Kosong
+    let rightLb = document.getElementById('rightSidebarLeaderboard');
 
-            // KUNCI MATI SEMUA: Nomor Soal, Modul Kiri, Tombol Kanan (Admin/Keluar), & Tombol Selesai
-            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.4'; // Bikin kusam biar kelihatan ga bisa diklik
-            });
+    if (currentAppMode === 'room') {
+        const pBtn = document.getElementById('prevBtn');
+        const nBtn = document.getElementById('nextBtn');
+        const rWrap = document.querySelector('.ragu-wrapper');
+        
+        if(pBtn) pBtn.style.display = 'none';
+        if(nBtn) nBtn.style.display = 'none';
+        if(rWrap) rWrap.style.display = 'none';
+
+        // KUNCI MATI SEMUA: Nomor Soal, Modul Kiri, Tombol Kanan (Admin/Keluar), & Tombol Selesai
+        document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.4'; // Bikin kusam biar kelihatan ga bisa diklik
+        });
+
+        // 🛑 MAGIC UX: Kalo Ujian belum kelar, Sembunyikan Grid Nomor, Munculkan Klasemen!
+        if (!isSubmitted) {
+            if (navGridContainer) navGridContainer.style.display = 'none';
+            if (legendContainer) legendContainer.style.display = 'none';
+            if (rightLb) rightLb.style.display = 'block';
         } else {
-            // Balikin ke normal kalo balik ke mode latihan mandiri
-            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'auto';
-                btn.style.opacity = '1';
-            });
+            // Kalo udah masuk Pembahasan, balikin Grid Nomornya dan sembunyikan klasemen!
+            if (navGridContainer) navGridContainer.style.display = ''; 
+            if (legendContainer) legendContainer.style.display = 'flex';
+            if (rightLb) rightLb.style.display = 'none';
         }
-} // <--- PASTIKAN KURUNG KURAWAL INI TETAP ADA SEBAGAI PENUTUP
+    } else {
+        // Balikin ke normal kalo balik ke mode latihan mandiri (Singleplayer)
+        document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        });
+
+        if (navGridContainer) navGridContainer.style.display = ''; 
+        if (legendContainer) legendContainer.style.display = 'flex';
+        if (rightLb) rightLb.style.display = 'none';
+    }
+} // <--- PASTIKAN KURUNG KURAWAL INI TETAP ADA SEBAGAI PENUTUP SEBAGAI PENUTUP
 // ==========================================
 // FUNGSI SUBMIT FINAL
 // ==========================================
@@ -3076,7 +3105,11 @@ window.pantauRoom = (kodeRoom) => {
                 }, 300);
             }
 
-            if (data.players) {
+           if (data.players) {
+                // 🛑 TAMBAHIN BARIS INI BIAR KLASEMEN KANAN NYALA REAL-TIME:
+                if (typeof window.renderLiveLeaderboardRight === 'function') {
+                    window.renderLiveLeaderboardRight(data.players, data.hostUid);
+                }
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
                 for (let uid in data.players) {
@@ -5407,3 +5440,61 @@ const initDraggableChat = () => {
 document.addEventListener("DOMContentLoaded", () => {
     initDraggableChat();
 });
+window.renderLiveLeaderboardRight = (players, hostUid) => {
+    let rightLb = document.getElementById('rightSidebarLeaderboard');
+    
+    // 1. Injeksi HTML Otomatis ke Sidebar Kanan kalau belum ada
+    if (!rightLb) {
+        const sidebarRight = document.querySelector('.sidebar-right');
+        if (sidebarRight) {
+            const lbHtml = `
+            <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 15px 10px;">
+                <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
+                    <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
+                </h4>
+                <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 400px; overflow-y:auto; padding-right:5px;"></div>
+            </div>`;
+            sidebarRight.insertAdjacentHTML('afterbegin', lbHtml);
+            rightLb = document.getElementById('rightSidebarLeaderboard');
+        } else return;
+    }
+
+    const listContainer = document.getElementById('liveLeaderboardList');
+    if (!listContainer) return;
+
+    // 2. Olah Data Peserta dan Urutkan Berdasarkan Skor
+    let html = '';
+    let arrPlayers = [];
+    for (let uid in players) {
+        arrPlayers.push({ uid: uid, ...players[uid] });
+    }
+    arrPlayers.sort((a, b) => (b.skor || 0) - (a.skor || 0)); // Tertinggi di atas
+
+    // 3. Render ke Layar
+    arrPlayers.forEach((p, index) => {
+        let isUdahJawab = p.jawabanSekarang !== null && p.jawabanSekarang !== undefined;
+        let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
+        let skorTeks = p.skor !== undefined ? `<b style="color:#e67e22; font-size:0.9rem;">${p.skor} Pts</b>` : '';
+
+        let isMe = p.uid === (window.currentUser ? window.currentUser.uid : '');
+        let roleIcon = p.uid === hostUid ? '👑' : '<span style="color:#7f8c8d; font-weight:bold;">#'+(index+1)+'</span>';
+        let bgRow = isMe ? '#e3f2fd' : '#ffffff';
+        let borderRow = isMe ? '2px solid #90caf9' : '1px solid #eee';
+
+        html += `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:${bgRow}; border:${borderRow}; padding:10px 12px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+                ${roleIcon}
+                <span style="font-weight:bold; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px;" title="${p.nama}">
+                    ${isMe ? 'Kamu' : p.nama.split(" ")[0]}
+                </span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                ${skorTeks}
+                ${statusIcon}
+            </div>
+        </div>`;
+    });
+
+    listContainer.innerHTML = html;
+};
