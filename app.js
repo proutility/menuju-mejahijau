@@ -2884,6 +2884,18 @@ window.pantauRoom = (kodeRoom) => {
         
         listContainer.innerHTML = html;
     };
+
+    // 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    const roomRef = doc(window.db || db, "rooms", kodeRoom); 
+    
+    roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
+        if (!snap.exists()) {
+            alert("Room telah dibubarkan oleh Host.");
+            return window.keluarDariRoom();
+        }
+        
+        const data = snap.data();
        // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
