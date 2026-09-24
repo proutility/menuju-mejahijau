@@ -2822,53 +2822,68 @@ window.pantauRoom = (kodeRoom) => {
     }, 1000);
 
     // ========================================================
-    // 🏆 FUNGSI RENDER LIVE SCORE (DI ATAS CHAT)
+    // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & TAMPIL SEMUA)
     // ========================================================
     window.renderLiveScore = (playersObj) => {
-        let container = document.getElementById('liveScoreContainer');
-        if (!container) {
-            const chatBody = document.getElementById('chatBody');
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatBody && chatMessages) {
-                container = document.createElement('div');
-                container.id = 'liveScoreContainer';
-                container.style.cssText = "background: rgba(46, 125, 50, 0.05); border-bottom: 2px solid #c8e6c9; padding: 10px; flex-shrink: 0;";
-                chatBody.insertBefore(container, chatMessages);
-            }
-        }
-        if (!container) return;
+        // 1. Sapu bersih sisa klasemen lama di area chat (biar chat kiri lega total)
+        const oldContainer = document.getElementById('liveScoreContainer');
+        if (oldContainer) oldContainer.remove();
 
+        // 2. Siapkan rumah baru di Sidebar Kanan
+        let rightLb = document.getElementById('rightSidebarLeaderboard');
+        if (!rightLb) {
+            const sidebarRight = document.querySelector('.sidebar-right');
+            if (sidebarRight) {
+                const lbHtml = `
+                <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 15px 10px;">
+                    <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
+                        <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
+                    </h4>
+                    <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 480px; overflow-y:auto; padding-right:5px;"></div>
+                </div>`;
+                sidebarRight.insertAdjacentHTML('afterbegin', lbHtml);
+                rightLb = document.getElementById('rightSidebarLeaderboard');
+            } else return;
+        }
+
+        const listContainer = document.getElementById('liveLeaderboardList');
+        if (!listContainer) return;
+
+        // 3. Olah Data (HAPUS fungsi slice(0,3) biar tampil SEBANYAK-BANYAKNYA)
         let arr = Object.values(playersObj);
         arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
 
-        let html = '<div style="font-weight:900; color:#2e7d32; margin-bottom:6px; font-size:0.8rem; display:flex; align-items:center; gap:5px;"><i class="fas fa-chart-line"></i> KLASEMEN SEMENTARA</div>';
+        let html = '';
         
-        arr.slice(0, 3).forEach((p, i) => { 
-            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : ''));
+        arr.forEach((p, i) => { 
+            // Ranking 1, 2, 3 dapet medali. Sisanya angka biasa (contoh: #4, #5)
+            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:22px; display:inline-block; text-align:center;">#${i+1}</span>`));
+            
             let namaDepan = p.nama.split(" ")[0]; 
-            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#555; font-weight:600;';
+            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#333; font-weight:600;';
             let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
             let skorTampil = Math.round(p.skor || 0);
 
+            // Indikator psikologis: Kelihatan mana peserta yg udah jawab, mana yg masih mikir
+            let isUdahJawab = p.jawabanSekarang !== null && p.jawabanSekarang !== undefined;
+            let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
+
             html += `
-                <div style="display:flex; justify-content:space-between; margin-bottom:4px; padding:4px 8px; ${bgRow} border-radius:4px; border-width:1px; border-style:solid; font-size:0.85rem;">
-                    <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${medal} ${namaDepan}</span>
-                    <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:8px 12px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${medal} 
+                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:100px;">${namaDepan}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
+                        ${statusIcon}
+                    </div>
                 </div>
             `;
         });
-        container.innerHTML = html;
+        
+        listContainer.innerHTML = html;
     };
-
-    if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-    const roomRef = doc(db, "rooms", kodeRoom); 
-    
-    roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
-        if (!snap.exists()) {
-            alert("Room telah dibubarkan oleh Host.");
-            return window.keluarDariRoom();
-        }
-
         const data = snap.data();
 
        // ========================================================
@@ -3105,11 +3120,11 @@ window.pantauRoom = (kodeRoom) => {
                 }, 300);
             }
 
-           if (data.players) {
-                // 🛑 TAMBAHIN BARIS INI BIAR KLASEMEN KANAN NYALA REAL-TIME:
-                if (typeof window.renderLiveLeaderboardRight === 'function') {
-                    window.renderLiveLeaderboardRight(data.players, data.hostUid);
-                }
+        if (data.players) {
+            // 🛑 Panggil klasemen kanan yang baru dirombak!
+            if (typeof window.renderLiveScore === 'function') {
+                window.renderLiveScore(data.players);
+            }
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
                 for (let uid in data.players) {
@@ -5440,61 +5455,3 @@ const initDraggableChat = () => {
 document.addEventListener("DOMContentLoaded", () => {
     initDraggableChat();
 });
-window.renderLiveLeaderboardRight = (players, hostUid) => {
-    let rightLb = document.getElementById('rightSidebarLeaderboard');
-    
-    // 1. Injeksi HTML Otomatis ke Sidebar Kanan kalau belum ada
-    if (!rightLb) {
-        const sidebarRight = document.querySelector('.sidebar-right');
-        if (sidebarRight) {
-            const lbHtml = `
-            <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 15px 10px;">
-                <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
-                    <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
-                </h4>
-                <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 400px; overflow-y:auto; padding-right:5px;"></div>
-            </div>`;
-            sidebarRight.insertAdjacentHTML('afterbegin', lbHtml);
-            rightLb = document.getElementById('rightSidebarLeaderboard');
-        } else return;
-    }
-
-    const listContainer = document.getElementById('liveLeaderboardList');
-    if (!listContainer) return;
-
-    // 2. Olah Data Peserta dan Urutkan Berdasarkan Skor
-    let html = '';
-    let arrPlayers = [];
-    for (let uid in players) {
-        arrPlayers.push({ uid: uid, ...players[uid] });
-    }
-    arrPlayers.sort((a, b) => (b.skor || 0) - (a.skor || 0)); // Tertinggi di atas
-
-    // 3. Render ke Layar
-    arrPlayers.forEach((p, index) => {
-        let isUdahJawab = p.jawabanSekarang !== null && p.jawabanSekarang !== undefined;
-        let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
-        let skorTeks = p.skor !== undefined ? `<b style="color:#e67e22; font-size:0.9rem;">${p.skor} Pts</b>` : '';
-
-        let isMe = p.uid === (window.currentUser ? window.currentUser.uid : '');
-        let roleIcon = p.uid === hostUid ? '👑' : '<span style="color:#7f8c8d; font-weight:bold;">#'+(index+1)+'</span>';
-        let bgRow = isMe ? '#e3f2fd' : '#ffffff';
-        let borderRow = isMe ? '2px solid #90caf9' : '1px solid #eee';
-
-        html += `
-        <div style="display:flex; justify-content:space-between; align-items:center; background:${bgRow}; border:${borderRow}; padding:10px 12px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
-                ${roleIcon}
-                <span style="font-weight:bold; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90px;" title="${p.nama}">
-                    ${isMe ? 'Kamu' : p.nama.split(" ")[0]}
-                </span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                ${skorTeks}
-                ${statusIcon}
-            </div>
-        </div>`;
-    });
-
-    listContainer.innerHTML = html;
-};
