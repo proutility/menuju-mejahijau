@@ -1003,4 +1003,56 @@ div.swal2-container {
     
     /* Tombol Dark Mode HP digeser ke atas biar ga ketutup Bottom Nav */
     #btnDarkModeToggle { left: auto !important; right: 15px !important; bottom: 95px !important; }
+
+    /* 1. Sembunyikan Scrollbar Biar Murni Kayak App Android/iOS */
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 2. Fix Sidebar Kiri (Modul) Jadi Full Screen tanpa garis lengkung */
+    .sidebar-left {
+        height: 100vh !important;
+        bottom: -100vh !important; /* Animasi dari bawah layar penuh */
+        border-radius: 0 !important; 
+    }
+    .sidebar-left::before { display: none !important; } /* Hapus garis abu estetik karena udh fullscreen */
+    
+    /* 3. Fix Sidebar Kanan (Kotak Nomor) biar gak nutupin soal */
+    .sidebar-right {
+        height: auto !important;
+        max-height: 85vh !important; /* Tetap bottom sheet 85% layar */
+    }
+
+    /* 4. Fix Peringkat Global biar masuk HP */
+    #leaderboardOverlay .result-box {
+        width: 95% !important;
+        padding: 20px 15px !important;
+        border-radius: 20px !important;
+        max-height: 80vh !important;
+    }
+    #leaderboardOverlay .stats-table {
+        font-size: 0.75rem !important;
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+    }
+
+    /* 5. Animasi Pop-up SweetAlert (Mabar Menu ala Gojek) */
+    .swal-bottom-sheet {
+        margin: 0 !important;
+        width: 100% !important;
+        border-radius: 25px 25px 0 0 !important;
+        padding-bottom: 20px !important;
+        animation: slideUp 0.3s ease-out !important;
+    }
+
+    /* 6. Fix Floating Chat Mabar di Layar HP */
+    #roomChatContainer {
+        bottom: 85px !important; /* Posisikan pas di atas Bottom Nav */
+        right: 10px !important;
+        left: 10px !important;
+        width: calc(100% - 20px) !important;
+        border-radius: 15px !important;
+        z-index: 99998 !important;
+        box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
+    }
 }
