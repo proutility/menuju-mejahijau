@@ -379,73 +379,130 @@ body.mode-focus #floatingTimer { display: block !important; }
 #floatingTimer { display: none; position: fixed; top: 50px; left: 30px; z-index: 99999; padding: 10px 25px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border: 2px solid white; color: #ffeb3b; background: rgba(0, 77, 0, 0.9); }
 
 /* ========================================================================= */
-/* 🔥 TAMPILAN HP FIXED (MOBILE APP-LIKE UX) 🔥                              */
+/* 🔥 TAMPILAN HP FIXED (MOBILE APP-LIKE UX - ZENIUS/RUANGGURU STYLE) 🔥     */
 /* ========================================================================= */
 @media (max-width: 768px) {
-    body { padding-bottom: 0 !important; flex-direction: column; overflow: hidden; background: #f8f9fa; }
+    body { padding-bottom: 0 !important; flex-direction: column; overflow-x: hidden; background: #f4f7f6; }
+
+    /* 1. HEADER HIJAU "DIET" KETAT (BIAR GAK MAKAN TEMPAT) */
+    .sidebar-header {
+        padding: 10px 15px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        text-align: left !important;
+        height: 60px !important;
+    }
+    .header-app-title { margin: 0 !important; }
+    .header-app-title h3 { font-size: 1.1rem !important; }
+    .header-app-title span { display: none !important; } /* Sembunyiin teks CBT CAKIM */
     
-    /* SIDEBAR KIRI (MENU MODUL & CHAT) - Dibikin lebih rapi & gak menuh-menuhin layar */
-    .sidebar-left { width: 100% !important; height: 100% !important; border-right: none; z-index: 100; position: fixed; top: 0; left: 0; background: white;}
+    .user-profile-card { margin: 0 !important; padding: 5px 10px !important; border: none !important; background: transparent !important; }
+    .user-role-label { display: none !important; } /* Sembunyiin tulisan Administrator */
+    .user-avatar-styled { width: 35px; height: 35px; border-width: 1px; }
+    
+    .timer-container { width: auto !important; margin: 0 !important; font-size: 0.9rem !important; padding: 5px 10px !important; }
+
+    /* 2. LOBBY UTAMA JADI BERANDA (FULL SCREEN) */
+    .main-content {
+        width: 100% !important;
+        height: calc(100dvh - 60px) !important;
+        padding: 15px 15px 90px 15px !important;
+        margin: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        z-index: 1;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 3. OBAT GENCET: PAKSA SEMUA KOTAK LOBBY NUMPUK KE BAWAH */
+    .main-content > div[style*="display: flex"],
+    .main-content > div[style*="grid"] {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+        width: 100% !important;
+    }
+    .card { width: 100% !important; margin: 0 0 15px 0 !important; padding: 20px 15px !important; box-sizing: border-box !important; border-radius: 12px; }
+
+    /* 4. SIDEBAR DAFTAR MODUL JADI BOTTOM SHEET (POP-UP DARI BAWAH) */
+    .sidebar-left {
+        position: fixed !important;
+        bottom: -100% !important; /* Sembunyi di bawah layar */
+        top: auto !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 75vh !important; /* Muncul 3/4 layar */
+        background: white !important;
+        z-index: 10000 !important;
+        border-radius: 25px 25px 0 0 !important;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.2) !important;
+        transition: bottom 0.3s ease-in-out !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border-right: none;
+    }
+    .sidebar-left.show-mobile { bottom: 0 !important; } /* Class aktifnya dari JS */
     .sidebar-left .timer-container { display: none !important; }
-    .modul-selector { max-height: none !important; height: calc(100% - 90px); overflow-y: auto; padding-bottom: 90px !important; }
-    
-    /* AREA SOAL - Kasih margin bawah biar ga nabrak Bottom Bar */
-    .main-content { width: 100% !important; margin: 0 !important; height: 100dvh !important; flex: 1; overflow-y: scroll !important; -webkit-overflow-scrolling: touch; padding: 15px 15px 90px 15px !important; background: #f8f9fa;}
-    .card::after { content: ""; display: block; height: 100px; width: 100%; } /* Jarak napas akhir */
-    .card { margin-bottom: 0 !important; padding: 20px 15px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-radius: 12px;}
-    
-    /* SIDEBAR KANAN (KOTAK NOMOR & KLASEMEN MABAR) */
-    .sidebar-right { display: none; }
-    .sidebar-right.show-mobile { display: flex !important; flex-direction: column; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 15000; background: white; padding-top: 50px; margin-right: 0 !important; }
-    
-    /* 🛑 UX BARU: Tombol Aksi di Sidebar Kanan dibikin 2 Kolom biar rapi */
-    .sidebar-right .btn-group, 
-    .sidebar-right > div:first-of-type {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        margin-bottom: 15px !important;
-        padding: 0 15px;
+    .modul-selector { padding: 30px 15px 80px 15px !important; height: 100% !important; max-height: none !important; overflow-y: auto; }
+
+    /* 5. SIDEBAR KOTAK NOMOR JADI POP-UP DARI BAWAH JUGA */
+    .sidebar-right {
+        position: fixed !important;
+        bottom: -100% !important;
+        top: auto !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 80vh !important;
+        background: white !important;
+        z-index: 10000 !important;
+        border-radius: 25px 25px 0 0 !important;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.2) !important;
+        transition: bottom 0.3s ease-in-out !important;
+        display: flex !important;
+        flex-direction: column !important;
+        padding-top: 30px !important;
     }
+    .sidebar-right.show-mobile { bottom: 0 !important; }
     
-    /* Tombol Keluar / Tutup dibikin panjang full width */
-    .sidebar-right .btn-keluar, 
-    #btnCloseMobile {
-        grid-column: span 2 !important;
-        padding: 12px !important;
-        font-size: 0.95rem !important;
-        border-radius: 8px !important;
-    }
-    
+    .sidebar-right .btn-group, .sidebar-right > div:first-of-type { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; padding: 0 15px; margin-bottom: 15px !important;}
+    .sidebar-right .btn-keluar, #btnCloseMobile { grid-column: span 2 !important; padding: 12px !important; font-size: 0.95rem !important; border-radius: 8px !important; }
     .sidebar-right .btn { padding: 10px !important; font-size: 0.85rem !important; border-radius: 8px !important; }
     
-    /* Grid Kotak Nomor Soal */
     .nav-grid { grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; padding: 0 15px;}
     .nav-btn { font-size: 0.85rem !important; aspect-ratio: 1; border-radius: 6px; font-weight: bold;}
     .nav-container { padding-bottom: 100px !important; }
-    
-    /* 🛑 UX BARU: BOTTOM NAVIGATION BAR (Ubah Menu Bawah ala Aplikasi Native) */
+
+    /* Garis Handle Estetik di atas Pop-up */
+    .sidebar-left::before, .sidebar-right::before {
+        content: ""; position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+        width: 40px; height: 5px; background: #ccc; border-radius: 10px; z-index: 10001;
+    }
+
+    /* 6. BOTTOM NAVIGATION BAR (FIXED PALING DEPAN) */
     #mobileFooter { 
-        display: none; 
-        position: fixed; 
-        bottom: 0; 
-        left: 0; 
-        width: 100%; 
-        background: #ffffff; 
-        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08); 
-        padding: 10px 10px 20px 10px !important; /* Ekstra padding bawah biar aman di iPhone */
-        z-index: 9999; 
-        display: flex !important;
+        display: flex !important; 
+        position: fixed !important; 
+        bottom: 0 !important; 
+        left: 0 !important; 
+        width: 100% !important; 
+        background: #ffffff !important; 
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08) !important; 
+        padding: 10px 10px 20px 10px !important; 
+        z-index: 99999 !important; /* Wajib tinggi biar aman diklik */
         justify-content: space-evenly !important; 
+        border-top: 1px solid #eee;
         border-top-left-radius: 20px;
         border-top-right-radius: 20px;
         gap: 0;
     }
 
+    /* AREA UJIAN & FITUR LAINNYA */
     .finish-container { display: none !important; }
     #floatingTimer { display: none; position: fixed; top: 10px; left: 10px; right: auto; font-size: 13px; padding: 6px 12px; z-index: 99999; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
     
-    /* Tombol Prev-Next dibikin 50-50 */
     .footer-nav { flex-direction: column; gap: 12px; margin-top: 20px; position: relative; z-index: 10; padding-bottom: 20px;}
     .footer-nav .ragu-wrapper { width: 100%; margin-right: 0; justify-content: center; background: #fff3e0; padding: 12px; border-radius: 8px; font-weight: bold;}
     .footer-nav > div:last-child { width: 100% !important; display: flex !important; gap: 10px !important; }
@@ -462,20 +519,15 @@ body.mode-focus #floatingTimer { display: block !important; }
     
     body.ujian-berjalan .sidebar-left { display: none; }
     
-    /* 🛑 UX BARU: Perbaikan Tabel Statistik Biar Gak Sesak */
     .stats-table th, .stats-table td { padding: 8px 5px !important; font-size: 0.75rem !important; word-wrap: break-word !important; }
     .stats-table { display: block !important; width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap;}
     
-    /* 🛑 UX BARU: Perbaikan Pop-up Hasil Lulus/Gagal */
     #resultOverlay .result-box { width: 95% !important; padding: 25px 15px !important; border-radius: 15px !important;}
     #resultOverlay .btn { padding: 12px !important; font-size: 0.9rem !important; margin-bottom: 10px !important; border-radius: 8px !important;}
     
-    #btnDarkModeToggle {
-        left: auto !important;
-        right: 15px !important;
-        bottom: 90px !important; /* Naikin dikit biar ga nabrak bottom bar baru */
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
+    #btnDarkModeToggle { left: auto !important; right: 15px !important; bottom: 90px !important; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    
+    .close-sidebar-btn { display: none !important; } /* Sembunyiin tombol merah gede tutup sidebar */
 }
 
 /* Base Styles untuk Fitur Mobile & Desktop */
@@ -508,7 +560,6 @@ body.mode-focus #floatingTimer { display: block !important; }
     #prevBtn { margin-right: 0 !important; }
     .footer-nav > div:last-child { width: auto !important; gap: 15px !important; }
 }
-
 /* Sidebar Lobby */
 .stat-box-small { background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; }
 .stat-box-small:hover { transform: translateY(-2px); }
