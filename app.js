@@ -14,11 +14,10 @@ function deteksiDanFreezeHP() {
         document.body.innerHTML = `
             <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999999; padding: 20px; text-align: center; font-family: 'Poppins', sans-serif;">
                 <i class="fas fa-mobile-alt" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
-                <h1 style="color: #e74c3c; margin-bottom: 10px; font-weight: 800;">Akses HP Dikunci!</h1>
+                <h1 style="color: #e74c3c; margin-bottom: 10px; font-weight: 800;">Akses Web Dikunci!</h1>
                 <p style="font-size: 1rem; line-height: 1.6; color: #ccc; max-width: 400px;">
-                    Wah, ketahuan mau nerobos lewat link invite ya? 😅<br><br>
-                    Mode HP saat ini sedang dalam <b>proses maintenance & perombakan UI</b>.<br><br>
-                    Biar ujian lu aman dan nggak nge-bug, silakan buka link ini menggunakan <b>Laptop / PC Desktop</b>.
+                    Mode HP saat ini sedang dalam <b>proses maintenance & perombakan</b>.<br><br>
+                    Biar ujian kamu aman, silakan buka link ini menggunakan <b>Laptop/PC atau Mode Desktop</b>.
                 </p>
             </div>
         `;
