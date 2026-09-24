@@ -2838,7 +2838,7 @@ window.pantauRoom = (kodeRoom) => {
             const lbHtml = `
             <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 5px 10px; margin-top: 15px;">
                 <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
-                    <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
+                    <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Sementara
                 </h4>
                 <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 480px; overflow-y:auto; padding-right:5px;"></div>
             </div>`;
