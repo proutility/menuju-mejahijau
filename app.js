@@ -695,6 +695,80 @@ window.toggleMobileSidebar = function() {
     // Munculkan/Sembunyikan sidebar kanan
     if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
 }
+// ========================================================
+// 📱 LOGIKA NAVIGASI KHUSUS MOBILE APP (LOBBY BARU)
+// ========================================================
+
+// --- FIX TOGGLE MODUL HP (SLIDE UP) ---
+window.toggleMobileModul = function() {
+    const sidebar = document.querySelector('.sidebar-left');
+    const sidebarRight = document.querySelector('.sidebar-right');
+    
+    // Tutup sidebar kanan kalau lagi kebuka
+    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
+        sidebarRight.classList.remove('show-mobile');
+    }
+    
+    // Munculkan/Sembunyikan sidebar kiri
+    if (sidebar) sidebar.classList.toggle('show-mobile');
+};
+
+// --- FIX TOGGLE SIDEBAR NOMOR SOAL HP (SLIDE UP) ---
+window.toggleMobileSidebar = function() {
+    const sidebarRight = document.querySelector('.sidebar-right');
+    const sidebarLeft = document.querySelector('.sidebar-left');
+    
+    // Tutup sidebar modul kalau lagi kebuka
+    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
+        sidebarLeft.classList.remove('show-mobile');
+    }
+
+    // Munculkan/Sembunyikan sidebar kanan
+    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
+};
+
+// --- TOMBOL LATIHAN MANDIRI DI LOBBY ---
+window.bukaModeLatihanMobile = function() {
+    // Sembunyikan Lobby, Tampilkan Area Ujian
+    document.getElementById('mobileLobby').style.setProperty('display', 'none', 'important');
+    document.getElementById('appSection').style.setProperty('display', 'flex', 'important');
+    
+    // Langsung luncurkan daftar modul dari bawah
+    window.toggleMobileModul(); 
+};
+
+// --- TOMBOL MABAR DI LOBBY ---
+window.bukaModeMabarMobile = function() {
+    alert("Menu Gabung/Bikin Room Mabar siap dirakit selanjutnya!");
+};
+
+// --- FUNGSI KLIK BOTTOM NAVIGATION BAR ---
+window.navigasiMobile = function(tujuan) {
+    // Ubah warna icon jadi aktif
+    document.querySelectorAll('#mobileBottomNav .nav-item').forEach(btn => btn.classList.remove('active'));
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+
+    if (tujuan === 'beranda') {
+        // Balik ke Lobby Utama
+        document.getElementById('appSection').style.setProperty('display', 'none', 'important');
+        document.getElementById('mobileLobby').style.setProperty('display', 'flex', 'important');
+        
+        // Pastikan sidebar tertutup
+        document.querySelector('.sidebar-left').classList.remove('show-mobile');
+        document.querySelector('.sidebar-right').classList.remove('show-mobile');
+    } else if (tujuan === 'modul') {
+        window.bukaModeLatihanMobile();
+    } else if (tujuan === 'mabar') {
+        window.bukaModeMabarMobile();
+    } else if (tujuan === 'peringkat') {
+        // Panggil fungsi leaderboard bawaan lu
+        if (typeof window.openLeaderboard === 'function') {
+            window.openLeaderboard('global');
+        }
+    }
+};
 
 // ==========================================
 // PENGAMAN KEYBOARD SHORTCUT (NONAKTIF DI MULTIPLAYER)
