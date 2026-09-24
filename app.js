@@ -1112,6 +1112,12 @@ window.skipTrainingCountdown = async function() {
     }
 };
 function loadQuestion(idx) {
+    // 🛑 SAFETY NET: Cetak ulang kotak nomor jika terhapus oleh proses Lobby / Selesai Ujian!
+    const navG = document.getElementById('navGrid');
+    if (navG && navG.innerHTML.trim() === '' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
+        if (typeof renderSidebarGrid === 'function') renderSidebarGrid();
+    }
+
     window.speechSynthesis.cancel();
     const btnSpeakIcon = document.querySelector('#btnSpeak i');
     if(btnSpeakIcon) btnSpeakIcon.className = 'fas fa-volume-up';
@@ -1279,7 +1285,6 @@ function loadQuestion(idx) {
             });
         }
 } // <--- PASTIKAN KURUNG KURAWAL INI TETAP ADA SEBAGAI PENUTUP
-
 // ==========================================
 // FUNGSI SUBMIT FINAL
 // ==========================================
