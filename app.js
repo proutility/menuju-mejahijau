@@ -2,6 +2,43 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// ========================================================
+// 🛑 SISTEM GATEKEEPER: DETEKSI & FREEZE MODE HP
+// ========================================================
+function deteksiDanFreezeHP() {
+    // Cek apakah user pakai HP (dari User Agent bawaan HP atau ukuran layar)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+    if (isMobile) {
+        // Tembakkan SweetAlert tingkat dewa yang gabisa di-close
+        Swal.fire({
+            icon: 'warning',
+            title: '<span style="color: #d32f2f;">Akses Terkunci!</span>',
+            html: `
+                <div style="text-align: center; line-height: 1.6;">
+                    Mohon maaf, mode tampilan HP saat ini sedang dalam <b>proses maintenance & perombakan sistem</b>.<br><br>
+                    Untuk kelancaran dan keamanan ujian, kamu <b>WAJIB menggunakan Laptop/PC atau mode Desktop</b>.
+                </div>
+            `,
+            allowOutsideClick: false, // Gak bisa ditutup klik luar
+            allowEscapeKey: false,    // Gak bisa ditutup pencet tombol back/esc
+            showConfirmButton: false, // Gak ada tombol OK
+            backdrop: `
+                rgba(0,0,0,0.95)
+                url("https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif")
+                center top
+                no-repeat
+            ` // Background gelap total biar layar belakang ketutup
+        });
+    }
+}
+
+// Jalankan sistem deteksi begitu aplikasi dibuka
+document.addEventListener('DOMContentLoaded', deteksiDanFreezeHP);
+
+// Jalankan juga kalau user iseng nge-resize layar laptop jadi ukuran HP
+window.addEventListener('resize', deteksiDanFreezeHP);
+
 // --- 1. KONFIGURASI FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyAC4Tskg8XC1N0a13xcsV3A1Mq_8mDnY-A",
