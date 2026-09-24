@@ -171,7 +171,6 @@ if(auth) {
                 lanjutKeAplikasi();
                 
                 setTimeout(async () => {
-                    // 🛑 INTELIJEN: Cek status VIP diam-diam buat nentuin bentuk tombol Keluar
                     window.isVIPUser = false;
                     try {
                         const accRef = doc(db, "vip_access", user.email);
@@ -187,11 +186,19 @@ if(auth) {
                 return; // BERHENTI DI SINI
             }
 
-            // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM ---
+            // 🛑 JALUR TOL KHUSUS ADMIN & EDITOR (BYPASS GERBANG VIP)
+            if (isSuperAdmin || isEditor) {
+                console.log("Jalur Bebas Hambatan (VVIP) untuk Admin & Editor");
+                window.isVIPUser = true; // Langsung cap halal sebagai VIP
+                lanjutKeAplikasi();      // Terbangkan langsung ke Lobby
+                return;                  // Hentikan sistem biar ga minta kode VIP!
+            }
+
+            // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM (PESERTA BIASA) ---
             try {
                 const accessRef = doc(db, "vip_access", user.email);
                 const accessSnap = await getDoc(accessRef);
-
+            
                 if (accessSnap.exists()) {
                     if (accessSnap.data().isVerified === true) {
                         window.isVIPUser = true; // 🛑 TANDAI SEBAGAI VIP ASLI
