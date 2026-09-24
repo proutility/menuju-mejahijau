@@ -2884,8 +2884,6 @@ window.pantauRoom = (kodeRoom) => {
         
         listContainer.innerHTML = html;
     };
-        const data = snap.data();
-
        // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
