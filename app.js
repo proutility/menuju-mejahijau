@@ -2829,27 +2829,36 @@ window.pantauRoom = (kodeRoom) => {
         const oldContainer = document.getElementById('liveScoreContainer');
         if (oldContainer) oldContainer.remove();
 
-        // 2. Siapkan rumah baru di Sidebar Kanan
+        // 2. Siapkan rumah baru di Sidebar Kanan (FIX POSISI DI BAWAH)
         let rightLb = document.getElementById('rightSidebarLeaderboard');
         if (!rightLb) {
+            const navGrid = document.getElementById('navGrid');
             const sidebarRight = document.querySelector('.sidebar-right');
-            if (sidebarRight) {
-                const lbHtml = `
-                <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 15px 10px;">
-                    <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
-                        <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
-                    </h4>
-                    <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 480px; overflow-y:auto; padding-right:5px;"></div>
-                </div>`;
-                sidebarRight.insertAdjacentHTML('afterbegin', lbHtml);
-                rightLb = document.getElementById('rightSidebarLeaderboard');
-            } else return;
+            
+            const lbHtml = `
+            <div id="rightSidebarLeaderboard" style="display:none; width: 100%; padding: 5px 10px; margin-top: 15px;">
+                <h4 style="text-align:center; color:#1565c0; border-bottom:2px solid #1565c0; padding-bottom:8px; margin-bottom:15px; font-weight:bold; font-size:1rem;">
+                    <i class="fas fa-trophy" style="color:#f1c40f;"></i> Klasemen Mabar
+                </h4>
+                <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 480px; overflow-y:auto; padding-right:5px;"></div>
+            </div>`;
+            
+            // 🛑 Taruh persis di bawah kotak nomor (yang lagi di-hide), bukan di paling atas!
+            if (navGrid) {
+                navGrid.insertAdjacentHTML('afterend', lbHtml);
+            } else if (sidebarRight) {
+                sidebarRight.insertAdjacentHTML('beforeend', lbHtml); // Cadangan ditaruh paling bawah
+            } else {
+                return;
+            }
+            
+            rightLb = document.getElementById('rightSidebarLeaderboard');
         }
 
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
 
-        // 3. Olah Data (HAPUS fungsi slice(0,3) biar tampil SEBANYAK-BANYAKNYA)
+        // 3. Olah Data (Tampil SEBANYAK-BANYAKNYA)
         let arr = Object.values(playersObj);
         arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
 
@@ -2884,7 +2893,6 @@ window.pantauRoom = (kodeRoom) => {
         
         listContainer.innerHTML = html;
     };
-
     // 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     const roomRef = doc(window.db || db, "rooms", kodeRoom); 
