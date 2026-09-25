@@ -1964,25 +1964,24 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
-    // ========================================================
     // 🛑 LOGIKA KELUAR PINTAR (Lobby vs In-Game)
-    // ========================================================
     const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
     
     if (window.currentRoomCode && activeUser && (window.db || db)) {
         try {
             const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
+            const { updateDoc, deleteField } = await import("firebase/firestore");
             
             // Cek posisi room sekarang
             if (window.currentRoomStatus === 'waiting') {
                 // 1. Jika di Waiting Room: Hapus permanen dari Firebase
-                import("firebase/firestore").then(({ updateDoc, deleteField }) => {
-                    updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() }).catch(()=>{});
+                await updateDoc(roomRef, { 
+                    [`players.${activeUser.uid}`]: deleteField() 
                 });
             } else {
                 // 2. Jika lagi ujian/pembahasan: Cuma set status Offline (Bisa Reconnect)
-                import("firebase/firestore").then(({ updateDoc }) => {
-                    updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false }).catch(()=>{});
+                await updateDoc(roomRef, { 
+                    [`players.${activeUser.uid}.isOnline`]: false 
                 });
             }
         } catch(e) {
@@ -1992,7 +1991,7 @@ window.keluarDariRoom = async () => {
 
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-
+    
     // Reset Variabel Mode
     currentRoomCode = null;
     window.currentRoomCode = null;
@@ -2980,7 +2979,7 @@ window.pantauRoom = (kodeRoom) => {
     }, 1000);
 
     // ========================================================
-    // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & TAMPIL SEMUA)
+    // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & ANTI-OFFLINE)
     // ========================================================
     window.renderLiveScore = (playersObj) => {
         // 1. Sapu bersih sisa klasemen lama di area chat (biar chat kiri lega total)
@@ -3015,6 +3014,43 @@ window.pantauRoom = (kodeRoom) => {
 
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
+
+        // ========================================================
+        // 🛑 INI INTI LANGKAH 3: FILTER HANYA YANG ONLINE!
+        // ========================================================
+        let arr = Object.values(playersObj).filter(p => p.isOnline !== false && p.isOnline !== "false");
+        arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
+        
+        let html = '';
+        arr.forEach((p, i) => { 
+            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : ''));
+            let namaDepan = (p.nama || "Unknown").split(" ")[0]; 
+            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#555; font-weight:600;';
+            let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
+            let skorTampil = Math.round(p.skor || 0);
+
+            // Cek status jawaban (jika ada data jawabanSekarang)
+            let statusJawab = (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) 
+                ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' 
+                : '<i class="fas fa-spinner fa-spin" style="color:#bdc3c7;" title="Belum Jawab"></i>';
+
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:6px 8px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem;">
+                    <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                        <span>${medal}</span>
+                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${namaDepan}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
+                        ${statusJawab}
+                    </div>
+                </div>
+            `;
+        });
+        
+        listContainer.innerHTML = html;
+        rightLb.style.display = 'block'; // Tampilkan containernya
+    };
 
         // 3. Olah Data (Tampil SEBANYAK-BANYAKNYA)
         let arr = Object.values(playersObj);
@@ -3192,7 +3228,7 @@ window.pantauRoom = (kodeRoom) => {
             
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
+                if (typeof window.switchDatabase === 'function') window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
             }
             
@@ -3227,6 +3263,11 @@ window.pantauRoom = (kodeRoom) => {
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
+                // 🛑 MATIKAN TIMER BAWAAN APLIKASI (Biar gak bentrok sama timer Room)
+                setTimeout(() => {
+                    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+                }, 50);
+                
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
                 let sisaWaktuRoom = 30; 
@@ -3253,6 +3294,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
+                            // Panggil updateDoc yang udah ada di atas
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         } else {
                             let t1 = document.getElementById('timerDisplay');
@@ -3276,6 +3318,71 @@ window.pantauRoom = (kodeRoom) => {
                         btn.style.opacity = '0.4';
                     }
                 });
+
+                setTimeout(() => {
+                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
+                    opsiElements.forEach((el, i) => {
+                        el.onclick = (e) => {
+                            e.preventDefault();
+                            if (isAnswerLocked) return;
+                            isAnswerLocked = true;
+                            
+                            el.style.background = "#fff9c4"; 
+                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
+                            
+                            userAnswers[currentIdx] = i;
+                            if (activeUser) {
+                                updateDoc(roomRef, { [`players.${activeUser.uid}.jawabanSekarang`]: i }).catch(err => console.error(err));
+                            }
+                        };
+                    });
+                }, 300);
+            }
+
+            // ========================================================
+            // 🛑 LOGIKA AUTO-PROGRESS (HANYA HITUNG YANG ONLINE)
+            // ========================================================
+            if (data.players) {
+                let totalPesertaAktif = 0;
+                let yangSudahJawab = 0;
+                
+                for (let uid in data.players) {
+                    // 🛑 FILTER KETAT: Abaikan yang offline
+                    const p = data.players[uid];
+                    if (p && p.isOnline !== false && p.isOnline !== "false") {
+                        totalPesertaAktif++;
+                        if (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) {
+                            yangSudahJawab++;
+                        }
+                    }
+                }
+
+                let txtProgress = document.getElementById('progressText');
+                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPesertaAktif}`;
+
+                // JIKA SEMUA PESERTA AKTIF SUDAH KLIK JAWABAN (Gas Pembahasan!)
+                if (totalPesertaAktif > 0 && yangSudahJawab >= totalPesertaAktif) {
+                    if (!window.sedangAutoSkip) {
+                        window.sedangAutoSkip = true; 
+                        
+                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
+                        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+                        
+                        const t1 = document.getElementById('timerDisplay');
+                        if (t1) {
+                            t1.innerText = "MEMPROSES...";
+                            t1.className = 'timer-container timer-panic';
+                        }
+                        
+                        if (amIHost) {
+                            setTimeout(() => {
+                                updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error(e));
+                            }, 500);
+                        }
+                    }
+                }
+            }
+        }
 
                 // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
                 // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
