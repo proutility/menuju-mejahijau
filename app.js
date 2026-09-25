@@ -1964,24 +1964,25 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    // ========================================================
     // 🛑 LOGIKA KELUAR PINTAR (Lobby vs In-Game)
+    // ========================================================
     const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
     
     if (window.currentRoomCode && activeUser && (window.db || db)) {
         try {
             const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
-            const { updateDoc, deleteField } = await import("firebase/firestore");
             
             // Cek posisi room sekarang
             if (window.currentRoomStatus === 'waiting') {
                 // 1. Jika di Waiting Room: Hapus permanen dari Firebase
-                await updateDoc(roomRef, { 
-                    [`players.${activeUser.uid}`]: deleteField() 
+                import("firebase/firestore").then(({ updateDoc, deleteField }) => {
+                    updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() }).catch(()=>{});
                 });
             } else {
                 // 2. Jika lagi ujian/pembahasan: Cuma set status Offline (Bisa Reconnect)
-                await updateDoc(roomRef, { 
-                    [`players.${activeUser.uid}.isOnline`]: false 
+                import("firebase/firestore").then(({ updateDoc }) => {
+                    updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false }).catch(()=>{});
                 });
             }
         } catch(e) {
@@ -1991,7 +1992,7 @@ window.keluarDariRoom = async () => {
 
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
-    
+
     // Reset Variabel Mode
     currentRoomCode = null;
     window.currentRoomCode = null;
@@ -2979,7 +2980,7 @@ window.pantauRoom = (kodeRoom) => {
     }, 1000);
 
     // ========================================================
-    // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & ANTI-OFFLINE)
+    // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & TAMPIL SEMUA)
     // ========================================================
     window.renderLiveScore = (playersObj) => {
         // 1. Sapu bersih sisa klasemen lama di area chat (biar chat kiri lega total)
@@ -3014,43 +3015,6 @@ window.pantauRoom = (kodeRoom) => {
 
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
-
-        // ========================================================
-        // 🛑 INI INTI LANGKAH 3: FILTER HANYA YANG ONLINE!
-        // ========================================================
-        let arr = Object.values(playersObj).filter(p => p.isOnline !== false && p.isOnline !== "false");
-        arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
-        
-        let html = '';
-        arr.forEach((p, i) => { 
-            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : ''));
-            let namaDepan = (p.nama || "Unknown").split(" ")[0]; 
-            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#555; font-weight:600;';
-            let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
-            let skorTampil = Math.round(p.skor || 0);
-
-            // Cek status jawaban (jika ada data jawabanSekarang)
-            let statusJawab = (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) 
-                ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' 
-                : '<i class="fas fa-spinner fa-spin" style="color:#bdc3c7;" title="Belum Jawab"></i>';
-
-            html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:6px 8px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem;">
-                    <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-                        <span>${medal}</span>
-                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${namaDepan}</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
-                        ${statusJawab}
-                    </div>
-                </div>
-            `;
-        });
-        
-        listContainer.innerHTML = html;
-        rightLb.style.display = 'block'; // Tampilkan containernya
-    };
 
         // 3. Olah Data (Tampil SEBANYAK-BANYAKNYA)
         let arr = Object.values(playersObj);
@@ -3099,7 +3063,7 @@ window.pantauRoom = (kodeRoom) => {
         
         const data = snap.data();
         window.currentRoomStatus = data.status;
-      // ========================================================
+       // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
         if (data.players && data.hostUid) {
@@ -3188,9 +3152,7 @@ window.pantauRoom = (kodeRoom) => {
             const cInput = document.getElementById('chatInput');
             if (cInput) cInput.style.pointerEvents = 'auto';
 
-            if (data.players && typeof window.renderLiveScore === 'function') {
-                window.renderLiveScore(data.players);
-            }
+            if (data.players) window.renderLiveScore(data.players);
 
             if (data.messages) {
                 let myJoinTime = sessionStorage.getItem(`join_time_${kodeRoom}`);
@@ -3220,7 +3182,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-       // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
+        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
             window.activePembahasanIdx = -1; 
@@ -3228,39 +3190,23 @@ window.pantauRoom = (kodeRoom) => {
             isSubmitted = false;
             window.isSubmitted = false;
             
-            // 🛑 BUG FIX: Tambahin "await" yang sempet hilang biar loading database selesai dulu!
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
                 if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
             }
             
-            // 🛑 BUG FIX UI: Paksa Header agar mekar ke Kiri & Kanan (Space-Between)
-            const qHead = document.querySelector('.question-header');
-            if (qHead) { 
-                qHead.style.setProperty('display', 'flex', 'important'); 
-                qHead.style.flexDirection = 'row';
-                qHead.style.justifyContent = 'space-between'; 
-                qHead.style.alignItems = 'flex-start';
-                qHead.style.visibility = 'visible'; 
-            }
-
             const modeInd = document.getElementById('modeIndicator');
             if (modeInd) {
                 modeInd.innerText = "Mode: Room Multiplayer";
                 modeInd.style.background = "#e3f2fd";
                 modeInd.style.color = "#1565c0";
-                modeInd.style.fontWeight = "bold";
-                modeInd.style.marginTop = "0"; // Hilangkan margin atas biar sejajar
-                
-                // Pastikan modeInd ada di dalam qHead agar sejajar di kanan
-                if (qHead && !qHead.contains(modeInd)) {
-                    qHead.appendChild(modeInd);
-                }
             }
 
             const fNav = document.querySelector('.footer-nav');
             if (fNav) { fNav.style.setProperty('display', 'flex', 'important'); fNav.style.visibility = 'visible'; }
+            const qHead = document.querySelector('.question-header');
+            if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
 
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
@@ -3281,13 +3227,8 @@ window.pantauRoom = (kodeRoom) => {
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                // 🛑 MATIKAN TIMER BAWAAN APLIKASI
-                setTimeout(() => {
-                    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-                }, 50);
-                
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
-                            
+                
                 let sisaWaktuRoom = 30; 
                 
                 const setLayarTimer = (detik) => {
@@ -3312,7 +3253,6 @@ window.pantauRoom = (kodeRoom) => {
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
                         if (amIHost) {
-                            // Panggil updateDoc yang udah ada di atas
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         } else {
                             let t1 = document.getElementById('timerDisplay');
@@ -3337,6 +3277,8 @@ window.pantauRoom = (kodeRoom) => {
                     }
                 });
 
+                // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
+                // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
                 setTimeout(() => {
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
@@ -3349,55 +3291,36 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
-                            const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-                            if (activeUser) {
-                                updateDoc(roomRef, { [`players.${activeUser.uid}.jawabanSekarang`]: i }).catch(err => console.error(err));
-                            }
+                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
                         };
                     });
                 }, 300);
-            } // <--- INI BATAS PENUTUP if window.activeRoomIdx
+            }
 
-            // ========================================================
-            // 🛑 LOGIKA AUTO-PROGRESS (HANYA HITUNG YANG ONLINE)
-            // ========================================================
-            if (data.players) {
-                let totalPesertaAktif = 0;
+        if (data.players) {
+            // 🛑 Panggil klasemen kanan yang baru dirombak!
+            if (typeof window.renderLiveScore === 'function') {
+                window.renderLiveScore(data.players);
+            }
+                let totalPeserta = 0;
                 let yangSudahJawab = 0;
-                
                 for (let uid in data.players) {
-                    // 🛑 FILTER KETAT: Abaikan yang offline
-                    const p = data.players[uid];
-                    if (p && p.isOnline !== false && p.isOnline !== "false") {
-                        totalPesertaAktif++;
-                        if (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) {
-                            yangSudahJawab++;
-                        }
+                    totalPeserta++;
+                    if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
+                        yangSudahJawab++;
                     }
                 }
 
                 let txtProgress = document.getElementById('progressText');
-                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPesertaAktif}`;
+                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                // JIKA SEMUA PESERTA AKTIF SUDAH KLIK JAWABAN (Gas Pembahasan!)
-                if (totalPesertaAktif > 0 && yangSudahJawab >= totalPesertaAktif) {
+                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
-                        
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-                        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-                        
-                        const t1 = document.getElementById('timerDisplay');
-                        if (t1) {
-                            t1.innerText = "MEMPROSES...";
-                            t1.className = 'timer-container timer-panic';
-                        }
-                        
-                        if (amIHost) {
-                            setTimeout(() => {
-                                updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error(e));
-                            }, 500);
-                        }
+                        setTimeout(() => {
+                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                        }, 1000);
                     }
                 }
             }
