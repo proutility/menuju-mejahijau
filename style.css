@@ -996,3 +996,20 @@ div.swal2-container {
     padding: 15px !important;
     background: #f0f2f5 !important;
 }
+
+/* --- HIGHLIGHT SOAL AKTIF DI PANEL ADMIN --- */
+.soal-item-admin {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.soal-item-admin:hover {
+    background-color: #f1f8e9; /* Hijau super pudar pas di-hover */
+}
+.soal-item-admin.active-soal {
+    background-color: #e8f5e9 !important; /* Background Hijau Muda */
+    border-left: 5px solid var(--primary) !important; /* Garis tegas di kiri */
+    font-weight: bold !important; /* Teks jadi tebal */
+    color: var(--primary) !important; /* Warna teks jadi hijau tua */
+}
