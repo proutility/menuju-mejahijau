@@ -1311,6 +1311,10 @@ function loadQuestion(idx) {
          btnNext.className = "btn btn-next";
          btnNext.onclick = () => window.changeQuestion(1);
     }
+
+    // 🛑 INI BARIS YANG HILANG (Deklarasi fb)
+    const fb = document.getElementById('feedbackBox');
+
     if (isSubmitted) {
         if(fb) { fb.style.display = 'block'; fb.classList.add('show'); }
         const teksPembahasan = q.explanation || ""; 
@@ -1342,6 +1346,7 @@ function loadQuestion(idx) {
     } else { 
         if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
     }
+}
     
     const cont = document.getElementById('optionsContainer');
     cont.innerHTML = '';
