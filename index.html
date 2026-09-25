@@ -44,56 +44,9 @@
 
     <div id="floatingTimer">00:00:00</div>
     
-    <!-- 🛑 UX BARU: LOBBY UTAMA KHUSUS MOBILE (Menggantikan Sidebar) -->
-    <div id="mobileLobby" class="mobile-only-view" style="display: none;">
-        <div class="mobile-header">
-            <img src="PRO-TAMA.png" alt="Logo" class="mobile-logo">
-            <div class="mobile-user-info">
-                <span class="user-name-label" id="mobileUserName">Memuat Nama...</span>
-                <span class="user-role-label"><i class="fas fa-user-shield"></i> Peserta Ujian</span>
-            </div>
-            <img id="mobileUserPhoto" src="" alt="User" class="mobile-avatar">
-        </div>
-
-        <div class="mobile-lobby-content">
-            <h2>Pilih Mode Belajar</h2>
-            
-            <button class="btn-giant btn-solo" onclick="window.bukaModeLatihanMobile()">
-                <i class="fas fa-book-reader"></i>
-                <div>
-                    <strong>LATIHAN MANDIRI</strong>
-                    <span>Tryout & Hafalan Pasal</span>
-                </div>
-            </button>
-
-            <button class="btn-giant btn-mabar" onclick="window.bukaModeMabarMobile()">
-                <i class="fas fa-gamepad"></i>
-                <div>
-                    <strong>MABAR SAMA TEMAN</strong>
-                    <span>Adu Mekanik & Live Score</span>
-                </div>
-            </button>
-        </div>
-    </div>
-
-    <!-- 🛑 UX BARU: BOTTOM NAVIGATION BAR -->
-    <div id="mobileBottomNav" class="mobile-only-view" style="display: none;">
-        <button class="nav-item active" onclick="window.navigasiMobile('beranda')">
-            <i class="fas fa-home"></i>
-            <span>Beranda</span>
-        </button>
-        <button class="nav-item" onclick="window.navigasiMobile('modul')">
-            <i class="fas fa-book"></i>
-            <span>Modul</span>
-        </button>
-        <button class="nav-item" onclick="window.navigasiMobile('mabar')">
-            <i class="fas fa-users"></i>
-            <span>Room</span>
-        </button>
-        <button class="nav-item" onclick="window.navigasiMobile('peringkat')">
-            <i class="fas fa-trophy"></i>
-            <span>Peringkat</span>
-        </button>
+    <div id="mobileFooter">
+        <button class="mobile-nav-btn" onclick="window.toggleMobileModul()"><i class="fas fa-book"></i> Daftar Modul</button>
+        <button class="mobile-nav-btn" onclick="window.toggleMobileSidebar()"><i class="fas fa-th"></i> Daftar Soal</button>
     </div>
 
     <div id="loginOverlay">
