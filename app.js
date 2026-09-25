@@ -3099,7 +3099,7 @@ window.pantauRoom = (kodeRoom) => {
         
         const data = snap.data();
         window.currentRoomStatus = data.status;
-       // ========================================================
+      // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
         if (data.players && data.hostUid) {
@@ -3188,7 +3188,9 @@ window.pantauRoom = (kodeRoom) => {
             const cInput = document.getElementById('chatInput');
             if (cInput) cInput.style.pointerEvents = 'auto';
 
-            if (data.players) window.renderLiveScore(data.players);
+            if (data.players && typeof window.renderLiveScore === 'function') {
+                window.renderLiveScore(data.players);
+            }
 
             if (data.messages) {
                 let myJoinTime = sessionStorage.getItem(`join_time_${kodeRoom}`);
@@ -3347,13 +3349,14 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
+                            const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
                             if (activeUser) {
                                 updateDoc(roomRef, { [`players.${activeUser.uid}.jawabanSekarang`]: i }).catch(err => console.error(err));
                             }
                         };
                     });
                 }, 300);
-            }
+            } // <--- INI BATAS PENUTUP if window.activeRoomIdx
 
             // ========================================================
             // 🛑 LOGIKA AUTO-PROGRESS (HANYA HITUNG YANG ONLINE)
@@ -3395,55 +3398,6 @@ window.pantauRoom = (kodeRoom) => {
                                 updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.error(e));
                             }, 500);
                         }
-                    }
-                }
-            }
-        }
-
-                // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
-                // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
-                setTimeout(() => {
-                    const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
-                    opsiElements.forEach((el, i) => {
-                        el.onclick = (e) => {
-                            e.preventDefault();
-                            if (isAnswerLocked) return;
-                            isAnswerLocked = true;
-                            
-                            el.style.background = "#fff9c4"; 
-                            el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
-                            
-                            userAnswers[currentIdx] = i;
-                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
-                        };
-                    });
-                }, 300);
-            }
-
-        if (data.players) {
-            // 🛑 Panggil klasemen kanan yang baru dirombak!
-            if (typeof window.renderLiveScore === 'function') {
-                window.renderLiveScore(data.players);
-            }
-                let totalPeserta = 0;
-                let yangSudahJawab = 0;
-                for (let uid in data.players) {
-                    totalPeserta++;
-                    if (data.players[uid].jawabanSekarang !== null && data.players[uid].jawabanSekarang !== undefined) {
-                        yangSudahJawab++;
-                    }
-                }
-
-                let txtProgress = document.getElementById('progressText');
-                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
-
-                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
-                    if (!window.sedangAutoSkip) {
-                        window.sedangAutoSkip = true; 
-                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
-                        setTimeout(() => {
-                            updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
-                        }, 1000);
                     }
                 }
             }
