@@ -454,7 +454,54 @@
             </div>
             <div id="tabEdit" style="display:none;">
                  <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="editModulTarget" placeholder="Nama Modul (cth: modul1)" style="flex:1; padding:8px;">
+                   <select id="editModulTarget" style="flex:1; padding:8px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; color: var(--primary); cursor: pointer;">
+                        <option value="" disabled selected>-- Pilih Modul Untuk Diedit --</option>
+                        
+                        <optgroup label="Hukum Dasar (Materil)">
+                            <option value="modul_ilmuhukum">Ilmu Hukum</option>
+                            <option value="modul1">Modul 1: Kekuasaan Kehakiman</option>
+                            <option value="modul2">Modul 2: Mahkamah Agung</option>
+                            <option value="modul3">Modul 3: Peradilan Agama</option>
+                            <option value="modul6">Modul 6: PMH & Wanprestasi</option>
+                            <option value="modul8">Modul 8: Perkawinan (KHI)</option>
+                            <option value="modul8.1">Modul 8.1: Perkawinan (Lanjutan)</option>
+                            <option value="modul8.2">Modul 8.2: Perkawinan (Akhir)</option>
+                            <option value="modul8.3">Modul 8.3: Perkawinan (UU 1/1974)</option>
+                            <option value="modul8.4">Modul 8.4: Pelaksana (PP 9/1975)</option>
+                            <option value="modul9">Modul 9: Perwalian & Pengangkatan</option>
+                            <option value="modul10">Modul 10: Waris Islam (Dasar)</option>
+                            <option value="modul10.1">Modul 10.1: Waris (KHI)</option>
+                            <option value="modul10.2">Modul 10.2: Waris (BW)</option>
+                            <option value="modul10.3">Modul 10.3: Studi Kasus Waris</option>
+                            <option value="modul11">Modul 11: Wasiat & Hibah</option>
+                            <option value="modul13">Modul 13: Ekonomi Syariah A</option>
+                            <option value="modul13.1">Modul 13.1: Akad Syariah</option>
+                            <option value="modul13.2">Modul 13.2: Ekonomi Syariah B</option>
+                            <option value="modul14">Modul 14: Perwakafan</option>
+                            <option value="modul15">Modul 15: Buku Saku PA A</option>
+                            <option value="modul15.1">Modul 15.1: Buku Saku PA B</option>
+                            <option value="modul15.2">Modul 15.2: Buku Saku PA C</option>
+                        </optgroup>
+                    
+                        <optgroup label="Hukum Acara (Formil)">
+                            <option value="modul4">Modul 4: Pendaftaran & Relaas</option>
+                            <option value="modul5">Modul 5: Gugatan & Permohonan</option>
+                            <option value="modul7">Modul 7: Mediasi</option>
+                            <option value="modul12">Modul 12: Sita Jaminan</option> 
+                            <option value="modul16">Modul 16: Prodeo & Posbakum</option>
+                            <option value="modul17">Modul 17: E-Court & Tercatat</option>
+                        </optgroup>
+                    
+                        <optgroup label="Psikotes & TPA">
+                            <option value="modul18">Modul 18: PAPI Kostick</option>
+                            <option value="modul19">Modul 19: TPA Verbal</option>
+                            <option value="modul19.1">Modul 19.1: TPA Numerik</option>
+                            <option value="modul19.2">Modul 19.2: TPA Kuant&Tekn</option>
+                            <option value="modul19.3">Modul 19.3: TPA Daya Ingat</option>
+                            <option value="modul19.4">Modul 19.4: TPA Figural</option>
+                        </optgroup>
+                    </select>
+                     
                     <button onclick="window.loadSoalAdmin()" class="btn-small" style="background:var(--primary); color: white !important;">🔍 Load Soal</button>
                 </div>
                 <div style="display:flex; gap:20px; height: 400px;">
