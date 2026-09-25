@@ -3218,7 +3218,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
+       // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             currentAppMode = 'room'; 
             window.activePembahasanIdx = -1; 
@@ -3226,23 +3226,39 @@ window.pantauRoom = (kodeRoom) => {
             isSubmitted = false;
             window.isSubmitted = false;
             
+            // 🛑 BUG FIX: Tambahin "await" yang sempet hilang biar loading database selesai dulu!
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
-                if (typeof window.switchDatabase === 'function') window.switchDatabase(data.modulId); 
+                if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
                 if (typeof PROTAMA !== 'undefined') PROTAMA.close();
             }
             
+            // 🛑 BUG FIX UI: Paksa Header agar mekar ke Kiri & Kanan (Space-Between)
+            const qHead = document.querySelector('.question-header');
+            if (qHead) { 
+                qHead.style.setProperty('display', 'flex', 'important'); 
+                qHead.style.flexDirection = 'row';
+                qHead.style.justifyContent = 'space-between'; 
+                qHead.style.alignItems = 'flex-start';
+                qHead.style.visibility = 'visible'; 
+            }
+
             const modeInd = document.getElementById('modeIndicator');
             if (modeInd) {
                 modeInd.innerText = "Mode: Room Multiplayer";
                 modeInd.style.background = "#e3f2fd";
                 modeInd.style.color = "#1565c0";
+                modeInd.style.fontWeight = "bold";
+                modeInd.style.marginTop = "0"; // Hilangkan margin atas biar sejajar
+                
+                // Pastikan modeInd ada di dalam qHead agar sejajar di kanan
+                if (qHead && !qHead.contains(modeInd)) {
+                    qHead.appendChild(modeInd);
+                }
             }
 
             const fNav = document.querySelector('.footer-nav');
             if (fNav) { fNav.style.setProperty('display', 'flex', 'important'); fNav.style.visibility = 'visible'; }
-            const qHead = document.querySelector('.question-header');
-            if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
 
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
@@ -3263,13 +3279,13 @@ window.pantauRoom = (kodeRoom) => {
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                // 🛑 MATIKAN TIMER BAWAAN APLIKASI (Biar gak bentrok sama timer Room)
+                // 🛑 MATIKAN TIMER BAWAAN APLIKASI
                 setTimeout(() => {
                     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
                 }, 50);
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
-                
+                            
                 let sisaWaktuRoom = 30; 
                 
                 const setLayarTimer = (detik) => {
