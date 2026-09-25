@@ -4053,6 +4053,11 @@ window.loadSoalAdmin = async () => {
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const div = document.createElement('div');
+            
+            // --- INI DIA KUNCI AJAIBNYA BIAR NYALA IJO ---
+            div.className = "soal-item-admin"; 
+            
+            // Style bawaan lu biarin aja, aman.
             div.style.borderBottom = "1px solid #ddd";
             div.style.padding = "8px";
             div.style.cursor = "pointer";
