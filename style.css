@@ -319,7 +319,13 @@ body.mode-focus #floatingTimer { display: block !important; }
     .stats-table { display: block !important; width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap;}
     
     /* 🛑 UX BARU: Perbaikan Pop-up Hasil Lulus/Gagal */
-    #resultOverlay .result-box { width: 95% !important; padding: 25px 15px !important; border-radius: 15px !important;}
+    #resultOverlay .result-box { 
+    width: 100% !important; 
+    max-width: 650px !important; /* 🛑 KUNCI: Batasi biar nggak melar di laptop */
+    padding: 30px !important; 
+    border-radius: 15px !important;
+    margin: 0 auto !important;
+    }
     #resultOverlay .btn { padding: 12px !important; font-size: 0.9rem !important; margin-bottom: 10px !important; border-radius: 8px !important;}
     
     #btnDarkModeToggle {
