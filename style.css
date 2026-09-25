@@ -355,12 +355,44 @@ body.mode-focus #floatingTimer { display: block !important; }
 .close-sidebar-btn { display: none; width: 100%; padding: 15px; background: var(--danger); color: white; border: none; border-radius: 0; position: absolute; top:0; left:0; font-weight: bold; font-size: 16px; z-index: 10000; }
 
 @media (min-width: 769px) {
-    .ragu-wrapper { flex: 1; background-color: #fdfdfd; padding: 12px 20px; border-radius: 8px; margin-right: 20px; cursor: pointer; border: 1px solid #eee;}
-    .ragu-wrapper:hover { background-color: #fff3e0; border-color: var(--warning); }
-    #prevBtn { margin-right: 0 !important; }
-    .footer-nav > div:last-child { width: auto !important; gap: 15px !important; }
+    /* Paksa baris menyamping (Kiri - Kanan) */
+    .footer-nav { 
+        flex-direction: row !important; 
+        justify-content: space-between !important;
+        align-items: center !important;
+    }
+    
+    /* Tombol Ragu-Ragu rapi di Kiri */
+    .ragu-wrapper { 
+        flex: none !important; 
+        width: auto !important;
+        background-color: #fdfdfd; 
+        padding: 12px 25px !important; 
+        border-radius: 8px; 
+        margin-right: auto !important; 
+        cursor: pointer; 
+        border: 1px solid #eee;
+    }
+    
+    .ragu-wrapper:hover { 
+        background-color: #fff3e0; 
+        border-color: var(--warning); 
+    }
+    
+    /* Kelompok Tombol Sebelumnya & Selanjutnya di Kanan */
+    .footer-nav > div:last-child { 
+        width: auto !important; 
+        display: flex !important;
+        justify-content: flex-end !important;
+        gap: 15px !important; 
+    }
+    
+    /* Kembalikan proporsi tombol navigasi */
+    .footer-nav .btn {
+        width: auto !important;
+        padding: 12px 25px !important;
+    }
 }
-
 /* Sidebar Lobby */
 .stat-box-small { background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; }
 .stat-box-small:hover { transform: translateY(-2px); }
