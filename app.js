@@ -1964,6 +1964,32 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    // ========================================================
+    // 🛑 LOGIKA KELUAR PINTAR (Lobby vs In-Game)
+    // ========================================================
+    const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+    
+    if (window.currentRoomCode && activeUser && (window.db || db)) {
+        try {
+            const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
+            
+            // Cek posisi room sekarang
+            if (window.currentRoomStatus === 'waiting') {
+                // 1. Jika di Waiting Room: Hapus permanen dari Firebase
+                import("firebase/firestore").then(({ updateDoc, deleteField }) => {
+                    updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() }).catch(()=>{});
+                });
+            } else {
+                // 2. Jika lagi ujian/pembahasan: Cuma set status Offline (Bisa Reconnect)
+                import("firebase/firestore").then(({ updateDoc }) => {
+                    updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false }).catch(()=>{});
+                });
+            }
+        } catch(e) {
+            console.error("Gagal update status keluar:", e);
+        }
+    }
+
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
 
@@ -3036,6 +3062,7 @@ window.pantauRoom = (kodeRoom) => {
         }
         
         const data = snap.data();
+        window.currentRoomStatus = data.status;
        // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
@@ -5604,4 +5631,28 @@ const initDraggableChat = () => {
 // Jalankan fungsi drag saat halaman siap
 document.addEventListener("DOMContentLoaded", () => {
     initDraggableChat();
+});
+
+// ==========================================================
+// 🛡️ SENSOR DARURAT (DETEKSI CLOSE TAB / KELUAR APLIKASI)
+// ==========================================================
+window.addEventListener("beforeunload", (e) => {
+    const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+    
+    // Kalau user lagi di dalam room dan tiba-tiba nutup tab
+    if (window.currentRoomCode && activeUser && (window.db || db)) {
+        const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
+        
+        if (window.currentRoomStatus === 'waiting') {
+            // Tendang dari lobby
+            import("firebase/firestore").then(({ updateDoc, deleteField }) => {
+                updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() });
+            }).catch(()=>{});
+        } else if (window.currentRoomStatus === 'soal' || window.currentRoomStatus === 'pembahasan') {
+            // Jadikan AFK/Offline di tengah ujian
+            import("firebase/firestore").then(({ updateDoc }) => {
+                updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false });
+            }).catch(()=>{});
+        }
+    }
 });
