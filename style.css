@@ -205,7 +205,25 @@ body.mode-focus #floatingTimer { display: block !important; }
 .nav-btn.ragu { background-color: var(--warning) !important; color: black !important; border-color: var(--warning) !important; }
 
 .finish-container { padding: 15px 20px; border-top: 1px solid #eee; background: #f9f9f9; padding-bottom: 50px; margin-top: auto; flex-shrink: 0; }
-.question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--light); padding-bottom: 15px; }
+/* =========================================
+   PERBAIKAN HEADER (JUDUL KIRI, MODE KANAN) UNTUK LAPTOP & HP
+   ========================================= */
+.question-header { 
+    display: flex !important; 
+    flex-direction: row !important; 
+    justify-content: space-between !important; 
+    align-items: center !important; 
+    margin-bottom: 25px; 
+    border-bottom: 2px solid var(--light); 
+    padding-bottom: 15px; 
+    width: 100%;
+}
+
+#modeIndicator {
+    margin-top: 0 !important;
+    white-space: nowrap;
+    align-self: center;
+}
 .question-text { font-size: 1.2rem; margin-bottom: 30px; line-height: 1.6; font-weight: 500; color: #2c3e50; }
 
 .option-label { display: flex; align-items: center; padding: 15px; border: 2px solid #eee; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 1rem; background: white; margin-bottom: 10px; }
@@ -290,7 +308,6 @@ body.mode-focus #floatingTimer { display: block !important; }
     .option-label { padding: 14px; margin-bottom: 12px; font-size: 0.95rem; border-radius: 8px; border: 1px solid #e0e0e0; background: white;}
     
     .question-header .focus-btn { display: none; } 
-    .question-header { flex-direction: column; align-items: flex-start; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
     #modulTitle { font-size: 1rem !important; line-height: 1.3; font-weight:700; color:var(--primary); }
     #qNum { font-size: 0.85rem !important; font-weight:600; color: #666;}
     #modeIndicator { font-size: 0.7rem; padding: 4px 10px; align-self: flex-start; margin-top: 5px; font-weight: bold;}
