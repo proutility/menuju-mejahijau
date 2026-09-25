@@ -2,43 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ========================================================
-// 🛑 SUPER GATEKEEPER: ANTI-BYPASS LINK INVITE MABAR
-// ========================================================
-function deteksiDanFreezeHP() {
-    // Cek perangkat dari User Agent atau Lebar Layar
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-
-    if (isMobile) {
-        // JURUS NUKE: Timpa seluruh isi <body> dengan halaman error mati
-        document.body.innerHTML = `
-            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999999999; padding: 20px; text-align: center; font-family: 'Poppins', sans-serif;">
-                <i class="fas fa-mobile-alt" style="font-size: 5rem; color: #e74c3c; margin-bottom: 20px;"></i>
-                <h1 style="color: #e74c3c; margin-bottom: 10px; font-weight: 800;">Akses Web Dikunci!</h1>
-                <p style="font-size: 1rem; line-height: 1.6; color: #ccc; max-width: 400px;">
-                    Mode HP saat ini sedang dalam <b>proses maintenance & perombakan</b>.<br><br>
-                    Biar ujian kamu aman, silakan buka link ini menggunakan <b>Laptop/PC atau Mode Desktop</b>.
-                </p>
-            </div>
-        `;
-        
-        // Hentikan proses Firebase / Script lain di bawahnya (opsional tapi ngebantu)
-        window.stop();
-    }
-}
-
-// 1. Eksekusi langsung sepersekian detik file JS dibaca!
-deteksiDanFreezeHP(); 
-
-// 2. Eksekusi pas dokumen HTML kelar di-load
-document.addEventListener('DOMContentLoaded', deteksiDanFreezeHP);
-
-// 3. Eksekusi kalau user iseng resize browser laptop jadi kecil
-window.addEventListener('resize', deteksiDanFreezeHP);
-
-// 4. Eksekusi brutal tiap 1 detik (Buat ngelawan user yg coba ngapus div-nya lewat Inspect Element)
-setInterval(deteksiDanFreezeHP, 1000);
-
 // --- 1. KONFIGURASI FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyAC4Tskg8XC1N0a13xcsV3A1Mq_8mDnY-A",
@@ -705,118 +668,23 @@ window.toggleMobileSidebar = function() {
     }
 }
 
-// ========================================================
-// 📱 LOGIKA NAVIGASI KHUSUS MOBILE APP & FIX BUG
-// ========================================================
-
-// 1. Obat "Memuat Nama..." - Sinkronisasi Foto & Nama dari Desktop ke Mobile
-setInterval(() => {
-    const mainName = document.getElementById('roleDisplay');
-    const mainPhoto = document.getElementById('userAvatar');
-    const mobName = document.getElementById('mobileUserName');
-    const mobPhoto = document.getElementById('mobileUserPhoto');
-    
-    if (mainName && mobName && mainName.innerText !== 'Memuat Nama...') {
-        mobName.innerText = mainName.innerText;
-    }
-    if (mainPhoto && mobPhoto && mainPhoto.src) {
-        mobPhoto.src = mainPhoto.src;
-    }
-}, 1000);
-
-// 2. Auto-Tutup Sidebar pas Modul Diklik (Biar Soal Gak Ketutup)
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.modul-btn')) {
-        // Sembunyikan semua sidebar biar layar fokus ke soal
-        document.querySelector('.sidebar-left')?.classList.remove('show-mobile');
-        document.querySelector('.sidebar-right')?.classList.remove('show-mobile');
-    }
-});
-
-// 3. Tombol Mabar (Pop-up Bottom Sheet ala Gojek)
-window.bukaModeMabarMobile = function() {
-    Swal.fire({
-        title: '<strong style="color:var(--primary)">Mode Mabar</strong>',
-        html: `
-            <div style="display:flex; flex-direction:column; gap:12px; margin-top:10px;">
-                <button onclick="Swal.close(); window.bikinRoomLatihan()" style="background:#2e7d32; color:white; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 10px rgba(46,125,50,0.2); cursor:pointer;">
-                    <i class="fas fa-plus-circle"></i> Bikin Room Baru
-                </button>
-                <button onclick="Swal.close(); window.gabungRoomLatihan()" style="background:#f39c12; color:white; padding:15px; border:none; border-radius:12px; font-weight:bold; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 4px 10px rgba(243,156,18,0.2); cursor:pointer;">
-                    <i class="fas fa-sign-in-alt"></i> Gabung Room
-                </button>
-            </div>
-        `,
-        showConfirmButton: false,
-        position: 'bottom',
-        customClass: { popup: 'swal-bottom-sheet' }
-    });
-};
-
-// 4. Tombol Latihan Mandiri di Lobby
-window.bukaModeLatihanMobile = function() {
-    // Sembunyikan Lobby, Tampilkan Area Ujian
-    document.getElementById('mobileLobby').style.setProperty('display', 'none', 'important');
-    document.getElementById('appSection').style.setProperty('display', 'flex', 'important');
-    
-    // Langsung luncurkan daftar modul dari bawah
-    window.toggleMobileModul(); 
-};
-
-// 5. Navigasi Bottom Bar
-window.navigasiMobile = function(tujuan) {
-    // Ubah warna icon jadi aktif
-    document.querySelectorAll('#mobileBottomNav .nav-item').forEach(btn => btn.classList.remove('active'));
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
-
-    if (tujuan === 'beranda') {
-        // Balik ke Lobby Utama
-        document.getElementById('appSection').style.setProperty('display', 'none', 'important');
-        document.getElementById('mobileLobby').style.setProperty('display', 'flex', 'important');
-        
-        // Pastikan sidebar tertutup
-        document.querySelector('.sidebar-left')?.classList.remove('show-mobile');
-        document.querySelector('.sidebar-right')?.classList.remove('show-mobile');
-    } else if (tujuan === 'modul') {
-        window.bukaModeLatihanMobile();
-    } else if (tujuan === 'mabar') {
-        window.bukaModeMabarMobile();
-    } else if (tujuan === 'peringkat') {
-        // Panggil fungsi leaderboard bawaan lu
-        if (typeof window.openLeaderboard === 'function') {
-            window.openLeaderboard('global');
-        }
-    }
-};
-
-// 6. Fix Toggle Modul & Sidebar (Slide Up)
+// --- FIX TOGGLE MODUL HP (AUTO HIDE BUTTONS) ---
 window.toggleMobileModul = function() {
     const sidebar = document.querySelector('.sidebar-left');
-    const sidebarRight = document.querySelector('.sidebar-right');
-    
-    // Tutup sidebar kanan kalau lagi kebuka
-    if (sidebarRight && sidebarRight.classList.contains('show-mobile')) {
-        sidebarRight.classList.remove('show-mobile');
-    }
-    
-    // Munculkan/Sembunyikan sidebar kiri
-    if (sidebar) sidebar.classList.toggle('show-mobile');
-};
+    const timer = document.getElementById('floatingTimer');
+    const mobileFooter = document.getElementById('mobileFooter');
 
-window.toggleMobileSidebar = function() {
-    const sidebarRight = document.querySelector('.sidebar-right');
-    const sidebarLeft = document.querySelector('.sidebar-left');
-    
-    // Tutup sidebar modul kalau lagi kebuka
-    if (sidebarLeft && sidebarLeft.classList.contains('show-mobile')) {
-        sidebarLeft.classList.remove('show-mobile');
+    if (sidebar.style.display === 'flex') {
+        sidebar.style.display = ''; 
+        if(timer && document.body.classList.contains('ujian-berjalan')) timer.style.display = 'block';
+        if(mobileFooter) mobileFooter.style.display = 'flex';
+    } else {
+        sidebar.style.display = 'flex'; 
+        if(timer) timer.style.display = 'none';
+        if(mobileFooter) mobileFooter.style.display = 'none';
     }
+}
 
-    // Munculkan/Sembunyikan sidebar kanan
-    if (sidebarRight) sidebarRight.classList.toggle('show-mobile');
-};
 // ==========================================
 // PENGAMAN KEYBOARD SHORTCUT (NONAKTIF DI MULTIPLAYER)
 // ==========================================
@@ -1280,35 +1148,37 @@ function loadQuestion(idx) {
     
     document.getElementById('prevBtn').disabled = (isReviewMode ? false : idx === 0);
     
-   const btnNext = document.getElementById('nextBtn');
-    btnNext.style.display = ''; // Biar CSS yang atur lebarnya
+    const btnNext = document.getElementById('nextBtn');
+    btnNext.style.display = 'block'; 
     
-    // 🛑 LOGIKA TOMBOL NEXT / SELESAI (Berlaku Global: HP & Laptop)
     if (idx === currentQuestions.length - 1) {
         if (isSubmitted) {
             btnNext.style.display = 'none'; 
         } else {
-            btnNext.style.display = '';
-            btnNext.innerHTML = '<i class="fas fa-flag-checkered"></i> Selesai';
-            btnNext.className = "btn btn-finish"; 
-            btnNext.style.backgroundColor = "var(--success)"; 
-            btnNext.onclick = window.confirmFinish; 
+            if (window.innerWidth <= 768) {
+                btnNext.innerHTML = "Selesai";
+                btnNext.className = "btn btn-finish"; 
+                btnNext.onclick = window.confirmFinish; 
+            } else {
+                btnNext.style.display = 'none';
+            }
         }
     } else {
         btnNext.innerHTML = isReviewMode ? "Lanjut (Salah) ❯" : "Selanjutnya ❯";
         if(isSubmitted) btnNext.innerHTML = "Selanjutnya ❯"; 
         
         btnNext.className = "btn btn-next"; 
-        btnNext.style.backgroundColor = ""; // Reset warna
         btnNext.onclick = () => window.changeQuestion(1);
     }
     
     if (isReviewMode) {
-         btnNext.style.display = '';
+         btnNext.style.display = 'block';
          btnNext.innerHTML = "Lanjut (Salah) ❯";
          btnNext.className = "btn btn-next";
          btnNext.onclick = () => window.changeQuestion(1);
     }
+
+    const fb = document.getElementById('feedbackBox');
     if (isSubmitted) {
         if(fb) { fb.style.display = 'block'; fb.classList.add('show'); }
         const teksPembahasan = q.explanation || ""; 
@@ -1962,32 +1832,6 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
-    // ========================================================
-    // 🛑 LOGIKA KELUAR PINTAR (Lobby vs In-Game)
-    // ========================================================
-    const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-    
-    if (window.currentRoomCode && activeUser && (window.db || db)) {
-        try {
-            const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
-            
-            // Cek posisi room sekarang
-            if (window.currentRoomStatus === 'waiting') {
-                // 1. Jika di Waiting Room: Hapus permanen dari Firebase
-                import("firebase/firestore").then(({ updateDoc, deleteField }) => {
-                    updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() }).catch(()=>{});
-                });
-            } else {
-                // 2. Jika lagi ujian/pembahasan: Cuma set status Offline (Bisa Reconnect)
-                import("firebase/firestore").then(({ updateDoc }) => {
-                    updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false }).catch(()=>{});
-                });
-            }
-        } catch(e) {
-            console.error("Gagal update status keluar:", e);
-        }
-    }
-
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
 
@@ -3060,7 +2904,6 @@ window.pantauRoom = (kodeRoom) => {
         }
         
         const data = snap.data();
-        window.currentRoomStatus = data.status;
        // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
@@ -5629,28 +5472,4 @@ const initDraggableChat = () => {
 // Jalankan fungsi drag saat halaman siap
 document.addEventListener("DOMContentLoaded", () => {
     initDraggableChat();
-});
-
-// ==========================================================
-// 🛡️ SENSOR DARURAT (DETEKSI CLOSE TAB / KELUAR APLIKASI)
-// ==========================================================
-window.addEventListener("beforeunload", (e) => {
-    const activeUser = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
-    
-    // Kalau user lagi di dalam room dan tiba-tiba nutup tab
-    if (window.currentRoomCode && activeUser && (window.db || db)) {
-        const roomRef = doc(window.db || db, "rooms", window.currentRoomCode);
-        
-        if (window.currentRoomStatus === 'waiting') {
-            // Tendang dari lobby
-            import("firebase/firestore").then(({ updateDoc, deleteField }) => {
-                updateDoc(roomRef, { [`players.${activeUser.uid}`]: deleteField() });
-            }).catch(()=>{});
-        } else if (window.currentRoomStatus === 'soal' || window.currentRoomStatus === 'pembahasan') {
-            // Jadikan AFK/Offline di tengah ujian
-            import("firebase/firestore").then(({ updateDoc }) => {
-                updateDoc(roomRef, { [`players.${activeUser.uid}.isOnline`]: false });
-            }).catch(()=>{});
-        }
-    }
 });
