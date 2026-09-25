@@ -1280,19 +1280,18 @@ function loadQuestion(idx) {
     
     document.getElementById('prevBtn').disabled = (isReviewMode ? false : idx === 0);
     
-    const btnNext = document.getElementById('nextBtn');
-    btnNext.style.display = ''; // 🛑 KUNCI: Kosongin biar CSS yang ngatur lebarnya!
+   const btnNext = document.getElementById('nextBtn');
+    btnNext.style.display = ''; // Biar CSS yang atur lebarnya
     
     // 🛑 LOGIKA TOMBOL NEXT / SELESAI (Berlaku Global: HP & Laptop)
     if (idx === currentQuestions.length - 1) {
         if (isSubmitted) {
             btnNext.style.display = 'none'; 
         } else {
-            // Tembak jadi tombol Selesai di soal terakhir
             btnNext.style.display = '';
             btnNext.innerHTML = '<i class="fas fa-flag-checkered"></i> Selesai';
             btnNext.className = "btn btn-finish"; 
-            btnNext.style.backgroundColor = "var(--success)"; // Warna hijau
+            btnNext.style.backgroundColor = "var(--success)"; 
             btnNext.onclick = window.confirmFinish; 
         }
     } else {
@@ -1300,21 +1299,16 @@ function loadQuestion(idx) {
         if(isSubmitted) btnNext.innerHTML = "Selanjutnya ❯"; 
         
         btnNext.className = "btn btn-next"; 
-        btnNext.style.backgroundColor = ""; // Reset ke warna asli
+        btnNext.style.backgroundColor = ""; // Reset warna
         btnNext.onclick = () => window.changeQuestion(1);
     }
     
-    // Khusus saat ngebahas jawaban yang salah (Review Mode)
     if (isReviewMode) {
          btnNext.style.display = '';
          btnNext.innerHTML = "Lanjut (Salah) ❯";
          btnNext.className = "btn btn-next";
          btnNext.onclick = () => window.changeQuestion(1);
     }
-
-    // 🛑 INI BARIS YANG HILANG (Deklarasi fb)
-    const fb = document.getElementById('feedbackBox');
-
     if (isSubmitted) {
         if(fb) { fb.style.display = 'block'; fb.classList.add('show'); }
         const teksPembahasan = q.explanation || ""; 
@@ -1346,7 +1340,6 @@ function loadQuestion(idx) {
     } else { 
         if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
     }
-}
     
     const cont = document.getElementById('optionsContainer');
     cont.innerHTML = '';
