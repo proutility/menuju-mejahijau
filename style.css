@@ -387,10 +387,16 @@ body.mode-focus #floatingTimer { display: block !important; }
         gap: 15px !important; 
     }
     
-    /* Kembalikan proporsi tombol navigasi */
+/* Kembalikan proporsi tombol navigasi dan PAKSA SEBARIS */
     .footer-nav .btn {
         width: auto !important;
         padding: 12px 25px !important;
+        display: inline-flex !important; /* Bikin elemen di dalamnya sejajar */
+        align-items: center !important; /* Rata tengah vertikal */
+        justify-content: center !important; 
+        gap: 6px !important; /* Jarak antara panah dan teks */
+        white-space: nowrap !important; /* 🛑 KUNCI: Larang ikon/teks turun baris */
+        flex-direction: row !important;
     }
 }
 /* Sidebar Lobby */
