@@ -4074,10 +4074,21 @@ window.loadSoalAdmin = async () => {
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
     document.getElementById('editQ').value = data.q;
-    document.getElementById('editOpt').value = data.options.join(","); 
+    document.getElementById('editOpt').value = data.options.join(", "); 
     document.getElementById('editAns').value = data.answer;
     document.getElementById('editExp').value = data.explanation;
     document.getElementById('editCite').value = data.cite || "";
+
+    // --- INJEKSI KODINGAN LANGKAH 2B (HIGHLIGHT SOAL AKTIF) ---
+    // 1. Bersihin dulu warna hijau dari semua soal di daftar
+    document.querySelectorAll('#listSoalAdmin div').forEach(el => el.classList.remove('active-soal'));
+    
+    // 2. Deteksi elemen mana yang baru aja diklik, lalu kasih warna hijau & bold
+    if (window.event && window.event.target) {
+        let itemSoal = window.event.target.closest('.soal-item-admin');
+        // Kalau ketemu div bungkusnya, tembak class active-nya
+        if (itemSoal) itemSoal.classList.add('active-soal');
+    }
 }
 
 window.simpanPerubahan = async () => {
