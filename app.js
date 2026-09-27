@@ -2774,7 +2774,6 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
 
             ${btnMulai}
             
-            // ... (Kodingan HTML UI Waiting Room lu yang lama biarin aja)
             <br><br>
             <!-- 🛑 TOMBOL KELUAR DINAMIS BERDASARKAN STATUS VIP -->
             ${window.isVIPUser ? 
@@ -2831,6 +2830,71 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
             }
         }
     });
+};
+
+// ==========================================================
+// FUNGSI RENDER JADWAL TRYOUT DI LOBBY
+// ==========================================================
+window.loadJadwalLobby = async () => {
+    const listContainer = document.getElementById('listJadwalTryout');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '<p style="color:#ccc; text-align:center; margin: 10px 0;"><i class="fas fa-spinner fa-spin"></i> Mengecek jadwal...</p>';
+
+    try {
+        // Tarik semua data room dari Firebase
+        const qRef = collection(window.db, "rooms");
+        const snapshot = await getDocs(qRef);
+
+        let html = '';
+        let adaJadwalAktif = false;
+        let waktuSekarang = new Date().getTime();
+
+        snapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const roomId = docSnap.id;
+
+            // Filter manual: Cuma ambil yang statusnya "waiting" dan punya jadwal
+            if (data.status === 'waiting' && data.jadwal_mulai) {
+                
+                // Opsional: Sembunyikan jadwal yang udah lewat lebih dari 2 jam (biar ga numpuk)
+                if (waktuSekarang - data.jadwal_mulai > (2 * 60 * 60 * 1000)) return;
+
+                adaJadwalAktif = true;
+                
+                // Format tanggal jadi cakep (Contoh: "Sab, 28 Sep - 19:30")
+                let tgl = new Date(data.jadwal_mulai);
+                let strHari = tgl.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+                let strJam = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                html += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:10px; border:1px solid #e0e0e0; border-radius:8px; background:#f9f9f9; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="flex:1;">
+                            <h6 style="margin:0; color:var(--primary); font-size:0.95rem;">${data.nama}</h6>
+                            <div style="margin-top:4px; font-size:0.8rem;">
+                                <span style="background:#fff3e0; color:#e67e22; padding:2px 6px; border-radius:4px; font-weight:bold; margin-right:5px;">
+                                    <i class="far fa-clock"></i> ${strHari} - ${strJam}
+                                </span>
+                            </div>
+                        </div>
+                        <button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-left:10px; min-width:80px;">
+                            <i class="fas fa-sign-in-alt"></i> JOIN
+                        </button>
+                    </div>
+                `;
+            }
+        });
+
+        if (!adaJadwalAktif) {
+            listContainer.innerHTML = '<p style="color:#999; text-align:center; margin: 15px 0; font-style:italic;">Belum ada jadwal Tryout terdekat.</p>';
+        } else {
+            listContainer.innerHTML = html;
+        }
+
+    } catch (e) {
+        console.error("Gagal load jadwal:", e);
+        listContainer.innerHTML = '<p style="color:var(--danger); text-align:center; margin: 10px 0;">Gagal memuat jadwal dari server.</p>';
+    }
 };
 // ==========================================================
 // FUNGSI MULAI UJIAN (YANG TADI HILANG)
@@ -3502,6 +3566,7 @@ window.tampilkanLobby = function() {
     });
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
+    if(typeof window.loadJadwalLobby === 'function') window.loadJadwalLobby();
 }
 // ==========================================
 // FUNGSI UI LEADERBOARD & BOT PENGUMUMAN OTOMATIS
