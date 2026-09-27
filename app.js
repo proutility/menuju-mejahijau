@@ -2976,6 +2976,15 @@ window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
     window.currentRoomCode = kodeRoom; 
 
+    let hideBtnStyle = document.getElementById('hide-kembali-mabar');
+    if (!hideBtnStyle) {
+        hideBtnStyle = document.createElement('style');
+        hideBtnStyle.id = 'hide-kembali-mabar';
+        // !important maksa tombol ini ga bisa dimunculin sama fungsi singleplayer manapun
+        hideBtnStyle.innerHTML = `#btnSidebarKembali { display: none !important; }`;
+        document.head.appendChild(hideBtnStyle);
+    }
+
     // 🛑 BERSIHKAN SEMUA TIMER GANDA (OBAT ISSUE 4 - TIMER KEBUT)
     if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
@@ -3544,6 +3553,8 @@ window.tampilkanTombolKeluarRoom = function() {
 };
 
 window.tampilkanLobby = function() {
+    let hideBtnStyle = document.getElementById('hide-kembali-mabar');
+    if (hideBtnStyle) hideBtnStyle.remove();
     // 🛑 3. PENGAMANAN LAPIS DUA SAAT MASUK LOBBY
     window.isAnswerLocked = false;
     window.isReviewMode = false;
