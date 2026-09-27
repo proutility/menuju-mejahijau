@@ -5734,3 +5734,38 @@ const initDraggableChat = () => {
 document.addEventListener("DOMContentLoaded", () => {
     initDraggableChat();
 });
+// ==========================================================
+// FUNGSI MENU STIKER CHAT
+// ==========================================================
+window.toggleStikerMenu = () => {
+    const menu = document.getElementById('stikerMenu');
+    if (menu) {
+        // Sistem buka-tutup (Toggle)
+        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    }
+};
+
+window.kirimStiker = (teksStiker) => {
+    const chatInp = document.getElementById('chatInput');
+    if (chatInp) {
+        chatInp.value = teksStiker; // Tembak teks stiker ke dalam input
+        
+        if (typeof window.kirimPesanChat === 'function') {
+            window.kirimPesanChat(); // Langsung kirim pakai fungsi chat bawaan lu
+        }
+        
+        // Tutup kembali pop-up stikernya setelah terkirim
+        document.getElementById('stikerMenu').style.display = 'none';
+    }
+};
+
+// Tambahan: Tutup menu stiker otomatis kalau user ngeklik di luar area chat
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('stikerMenu');
+    const btnSmile = document.querySelector('button[onclick="window.toggleStikerMenu()"]');
+    if (menu && menu.style.display === 'block') {
+        if (!menu.contains(e.target) && !btnSmile.contains(e.target)) {
+            menu.style.display = 'none';
+        }
+    }
+});
