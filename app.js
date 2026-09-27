@@ -2596,7 +2596,7 @@ window.gabungRoomLatihan = async () => {
 
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
             PROTAMA.close();
-            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
+            return PROTAMA.alert("Telat", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
         }
 
         if (!isPemainLama) {
@@ -2654,7 +2654,7 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
             PROTAMA.close();
             window.history.replaceState(null, null, window.location.pathname);
-            return PROTAMA.alert("Telat Bro", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
+            return PROTAMA.alert("Telat", "Ujian di room ini udah dimulai, peserta baru tidak bisa masuk!", "warning");
         }
 
         if (!isPemainLama) {
