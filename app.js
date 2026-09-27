@@ -2833,7 +2833,7 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
 };
 
 // ==========================================================
-// FUNGSI RENDER JADWAL TRYOUT DI LOBBY (DENGAN COPY LINK & HAPUS)
+// FUNGSI RENDER JADWAL TRYOUT DI LOBBY (DENGAN COPY LINK & HAPUS KEBAL)
 // ==========================================================
 window.loadJadwalLobby = async () => {
     const listContainer = document.getElementById('listJadwalTryout');
@@ -2842,13 +2842,23 @@ window.loadJadwalLobby = async () => {
     listContainer.innerHTML = '<p style="color:#ccc; text-align:center; margin: 10px 0;"><i class="fas fa-spinner fa-spin"></i> Mengecek jadwal...</p>';
 
     try {
-        const qRef = collection(window.db, "rooms");
+        const qRef = collection(window.db || db, "rooms");
         const snapshot = await getDocs(qRef);
 
         let html = '';
         let adaJadwalAktif = false;
         let waktuSekarang = new Date().getTime();
-        const uidSaya = window.currentUser ? window.currentUser.uid : null;
+        
+        // 🛑 PERBAIKAN: Tarik data user dengan lebih akurat & kebal
+        let uidSaya = null;
+        let namaSaya = null;
+        if (typeof currentUser !== 'undefined' && currentUser) {
+            uidSaya = currentUser.uid;
+            namaSaya = currentUser.displayName;
+        } else if (window.currentUser) {
+            uidSaya = window.currentUser.uid;
+            namaSaya = window.currentUser.displayName;
+        }
 
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
@@ -2864,16 +2874,19 @@ window.loadJadwalLobby = async () => {
                 let strHari = tgl.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
                 let strJam = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-                // 🛑 CEK APAKAH USER INI ADALAH HOST
-                let isMyRoom = (uidSaya && data.hostUid === uidSaya);
+                // 🛑 CEK HOST DIPERKUAT: 
+                // Cocokkan UID, ATAU Cocokkan Nama, ATAU berikan Akses Dewa khusus untuk Ilham
+                let isMyRoom = (uidSaya && data.hostUid === uidSaya) || 
+                               (namaSaya && data.hostName === namaSaya) || 
+                               (namaSaya && namaSaya.includes("Ilham Nur Pratama"));
                 
-                // 1. TOMBOL HAPUS (Khusus Host)
+                // 1. TOMBOL HAPUS (Khusus Host / Admin)
                 let btnHapus = isMyRoom ? 
-                    `<button onclick="window.hapusRoomJadwal('${roomId}')" style="background:transparent; color:#d32f2f; border:1px solid #d32f2f; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:8px; transition:0.3s;" title="Batalkan/Hapus Room">
+                    `<button onclick="window.hapusRoomJadwal('${roomId}')" style="background:transparent; color:#d32f2f; border:1px solid #d32f2f; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; transition:0.3s;" title="Batalkan/Hapus Room">
                         <i class="fas fa-trash-alt"></i>
                     </button>` : '';
 
-                // 2. TOMBOL COPY LINK (Muncul buat semua orang biar bisa bantu share)
+                // 2. TOMBOL COPY LINK
                 let linkRoom = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
                 let btnCopyLink = `
                     <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Bagikan link ini ke temanmu via WhatsApp.', 'success');" style="background:transparent; color:#3498db; border:1px solid #3498db; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:8px; transition:0.3s;" title="Salin Link Invite">
