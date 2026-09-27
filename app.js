@@ -2537,7 +2537,7 @@ window.eksekusiBikinRoom = async () => {
                 [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
             },
             messages: [],
-            createdAt: serverTimestamp()
+            createdAt: new Date()
         });
 
         isHost = true;
