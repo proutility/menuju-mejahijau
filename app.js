@@ -2463,7 +2463,11 @@ window.bikinRoomLatihan = async () => {
         input: 'select',
         inputOptions: {
             'Hukum Dasar (Substansi)': {
+                'modul_ilmuhukum_test': 'Ilmu Hukum_test',
                 'modul_ilmuhukum': 'Ilmu Hukum',
+                'modul_asas_umum': 'Asas Umum',
+                'modul_asas_peradilan_agama': 'Asas Peradilan Agama',
+                'modul_asas_asas': 'Asas-Asas',
                 'modul1': 'Modul 1: Kekuasaan Kehakiman',
                 'modul2': 'Modul 2: Mahkamah Agung',
                 'modul3': 'Modul 3: Peradilan Agama',
