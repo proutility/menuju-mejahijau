@@ -1659,6 +1659,13 @@ window.closeResult = function() {
     const ind = document.getElementById('modeIndicator');
     if (ind) { ind.innerText = "PEMBAHASAN"; ind.style.background = "#e8f5e9"; ind.style.color = "#2e7d32"; ind.style.border = "1px solid #c8e6c9"; }
     
+    // 👇 BUMBU RAHASIA: Munculin tombol Kembali ke Menu Utama di Sidebar 👇
+    let btnBalik = document.getElementById('btnSidebarKembali');
+    if (btnBalik) {
+        btnBalik.style.display = 'block';
+    }
+    // 👆 SAMPAI SINI 👆
+    
     loadQuestion(currentIdx);
     window.isAnswerLocked = true; 
 
@@ -1703,6 +1710,13 @@ window.startReviewWrong = function() {
     
     const ind = document.getElementById('modeIndicator');
     if (ind) { ind.innerText = "MODE: REVIEW SALAH"; ind.style.background = "#ffebee"; ind.style.color = "#c62828"; ind.style.border = "1px solid #ffcdd2"; }
+    
+    // 👇 BUMBU RAHASIA: Munculin tombol Kembali ke Menu Utama di Sidebar 👇
+    let btnBalik = document.getElementById('btnSidebarKembali');
+    if (btnBalik) {
+        btnBalik.style.display = 'block';
+    }
+    // 👆 SAMPAI SINI 👆
     
     loadQuestion(wrongIndices[0]);
     window.isAnswerLocked = true; 
