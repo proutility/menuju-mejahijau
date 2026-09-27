@@ -761,9 +761,10 @@ window.switchDatabase = async function(key) {
         }
 
       const dataLama = loadProgresLokal(key);
+        const jumlahSoalServer = qSnap.size; // Hitung jumlah soal fresh dari Firebase
 
-        // ABAIKAN CACHE LOKAL KALO MODE ROOM BIAR SOAL SINKRON SEMUA
-        if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room') {
+        // SYARAT PAKAI CACHE: Mode bukan room, data lokal ada, DAN jumlah soalnya SAMA PERSIS dengan di Firebase
+        if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room' && dataLama.soalAcak.length === jumlahSoalServer) {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
             currentQuestions = dataLama.soalAcak;
             userAnswers = dataLama.jawaban;
@@ -771,12 +772,12 @@ window.switchDatabase = async function(key) {
             totalExamTime = currentQuestions.length * 30; 
             timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
         } else {
-            console.log(`🆕 Mulai ujian baru untuk modul: ${key}`);
+            console.log(`🆕 Mulai ujian baru (Server punya ${jumlahSoalServer} soal) untuk modul: ${key}`);
             let rawQuestions = []; 
             
             // 🛑 CUCI CETAKAN SOAL: Bikin salinan mentah (Deep Clone) biar 100% perawan!
             qSnap.forEach((doc) => { 
-                let d = JSON.parse(JSON.stringify(doc.data())); // Menghilangkan semua jejak properti gaib
+                let d = JSON.parse(JSON.stringify(doc.data())); 
                 d.id = doc.id; 
                 rawQuestions.push(d); 
             });
@@ -791,7 +792,7 @@ window.switchDatabase = async function(key) {
                     let correctText = q.options[q.answer]; 
                     
                     if (currentAppMode !== 'room') {
-                        shuffleArray(q.options); // Jangan ngacak opsi juga
+                        shuffleArray(q.options); 
                     }
                     
                     q.answer = q.options.indexOf(correctText); 
@@ -807,7 +808,7 @@ window.switchDatabase = async function(key) {
             totalExamTime = currentQuestions.length * 30; 
             timeRemaining = totalExamTime;
             
-            // Simpan kondisi awal ujian baru ke memori
+            // Simpan kondisi awal ujian baru ke memori (Menimpa memori lama yang salah)
             simpanProgresTotal(); 
         }
 
