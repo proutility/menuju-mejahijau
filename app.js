@@ -170,10 +170,6 @@ if(auth) {
                 console.log("Jalur VIP Bypass Aktif untuk Room:", roomTarget);
                 lanjutKeAplikasi();
                 
-                // 👇 TRIGGER JADWAL ROOM 👇
-                if(window.muatJadwalRoomHost) window.muatJadwalRoomHost();
-                // 👆 SAMPAI SINI 👆
-                
                 setTimeout(async () => {
                     window.isVIPUser = false;
                     try {
@@ -195,11 +191,6 @@ if(auth) {
                 console.log("Jalur Bebas Hambatan (VVIP) untuk Admin & Editor");
                 window.isVIPUser = true; // Langsung cap halal sebagai VIP
                 lanjutKeAplikasi();      // Terbangkan langsung ke Lobby
-                
-                // 👇 TRIGGER JADWAL ROOM 👇
-                if(window.muatJadwalRoomHost) window.muatJadwalRoomHost();
-                // 👆 SAMPAI SINI 👆
-                
                 return;                  // Hentikan sistem biar ga minta kode VIP!
             }
 
@@ -212,11 +203,6 @@ if(auth) {
                     if (accessSnap.data().isVerified === true) {
                         window.isVIPUser = true; // 🛑 TANDAI SEBAGAI VIP ASLI
                         lanjutKeAplikasi();
-                        
-                        // 👇 TRIGGER JADWAL ROOM 👇
-                        if(window.muatJadwalRoomHost) window.muatJadwalRoomHost();
-                        // 👆 SAMPAI SINI 👆
-                        
                     } else {
                         showGateInput(user.displayName, user.email);
                         window.updateUserStatus(true, "VIP Gatekeeper"); 
@@ -3434,25 +3420,6 @@ window.tampilkanLobby = function() {
                 </p>
             </div>
 
-            <!-- 👇 KOTAK JADWAL ROOM UJIAN (ZOOM STYLE) 👇 -->
-            <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.04); margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f4f7f6; padding-bottom: 12px; margin-bottom: 15px;">
-                    <h4 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">
-                        <i class="fas fa-calendar-alt" style="color: var(--primary); margin-right: 8px;"></i> Jadwal Room Ujian (Aktif)
-                    </h4>
-                    <span style="font-size: 0.8rem; background: #e3f2fd; color: #1565c0; padding: 4px 8px; border-radius: 20px; font-weight: bold;">
-                        Sebagai Host
-                    </span>
-                </div>
-                <div id="roomAktifContainer" style="overflow-x: auto;">
-                    <div style="text-align: center; padding: 15px;">
-                        <i class="fas fa-circle-notch fa-spin" style="font-size: 1.5rem; color: #ddd;"></i>
-                        <p style="color: #999; margin-top: 10px; font-size: 0.9rem;">Mengecek jadwal room...</p>
-                    </div>
-                </div>
-            </div>
-            <!-- 👆 SAMPAI SINI 👆 -->
-
             <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.04);">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f4f7f6; padding-bottom: 12px; margin-bottom: 15px;">
                     <h4 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">
@@ -3473,116 +3440,6 @@ window.tampilkanLobby = function() {
         </div>
         <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>
     `;
-
-    // 👇 TRIGGER OTOMATIS: Jalanin fungsi pencarian Room & Riwayat Tes 👇
-    setTimeout(() => {
-        if(window.muatJadwalRoomHost) window.muatJadwalRoomHost();
-    }, 100);
-
-    // BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
-    document.querySelectorAll('.modul-btn').forEach(el => {
-        el.classList.remove('active-modul');
-        el.disabled = false;             
-        el.style.pointerEvents = 'auto'; 
-        el.style.opacity = '1';          
-    });
-
-    // BONGKAR GEMBOK TOMBOL KANAN ATAS
-    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
-        btn.disabled = false;
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
-
-    if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
-}; // <-- INI PENUTUP FUNGSI tampilkanLobby
-
-// ==========================================================
-// 🚀 FUNGSI BARU: NGECEK JADWAL ROOM AKTIF DI FIREBASE
-// ==========================================================
-window.muatJadwalRoomHost = async function() {
-    const rCont = document.getElementById('roomAktifContainer');
-    if (!rCont || !currentUser) return;
-
-    try {
-        // Cari room dimana lu adalah host-nya dan statusnya masih waiting
-        const qRooms = query(collection(window.db, "rooms"), 
-                             where("hostUid", "==", currentUser.uid), 
-                             where("status", "==", "waiting"));
-        
-        const snap = await getDocs(qRooms);
-
-        if (snap.empty) {
-            rCont.innerHTML = `<div style="text-align:center; padding: 15px; color: #888; font-size: 0.95rem; background: #fafafa; border-radius: 8px;">Tidak ada room aktif yang sedang menunggu.</div>`;
-            return;
-        }
-
-        let html = `
-            <table style="width: 100%; border-collapse: collapse; min-width: 600px; font-size: 0.9rem;">
-                <thead>
-                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #64748b; text-align: left;">
-                        <th style="padding: 10px; font-weight: bold;">PIN</th>
-                        <th style="padding: 10px; font-weight: bold;">Materi Ujian</th>
-                        <th style="padding: 10px; font-weight: bold;">Dibuat Tgl</th>
-                        <th style="padding: 10px; font-weight: bold; text-align: right;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        snap.forEach(doc => {
-            const data = doc.data();
-            const pin = doc.id;
-            let materi = (data.modulId || "Modul Latihan").replace(/_/g, ' ').toUpperCase();
-            
-            // Format Tanggal Bikin (Kalau ada timestamp)
-            let tglTampil = "-";
-            if (data.createdAt) {
-                const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-                tglTampil = date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-            }
-
-            const linkRoom = `${window.location.origin}${window.location.pathname}?room=${pin}`;
-
-            html += `
-                <tr style="border-bottom: 1px solid #f1f5f9; hover: background: #f8fafc;">
-                    <td style="padding: 12px 10px; font-weight: 800; color: var(--success); font-size: 1.1rem; letter-spacing: 2px;">${pin}</td>
-                    <td style="padding: 12px 10px; font-weight: 600; color: #334155;">${materi}</td>
-                    <td style="padding: 12px 10px; color: #64748b; font-size: 0.85rem;">${tglTampil}</td>
-                    <td style="padding: 12px 10px; text-align: right;">
-                        <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Berhasil', 'Link tercopy', 'success')" style="background: #e0f2fe; color: #0284c7; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; margin-right: 5px;" title="Copy Link"><i class="fas fa-copy"></i> Link</button>
-                        <button onclick="window.masukJadwalRoom('${pin}')" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; margin-right: 5px;"><i class="fas fa-sign-in-alt"></i> Masuk</button>
-                        <button onclick="window.hapusRoomDariLobby('${pin}')" style="background: #fee2e2; color: #ef4444; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;" title="Hapus Room"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table>`;
-        rCont.innerHTML = html;
-
-    } catch (e) {
-        console.error("Gagal muat jadwal room:", e);
-        rCont.innerHTML = `<div style="text-align:center; padding: 15px; color: #e74c3c;">Gagal memuat jadwal room.</div>`;
-    }
-};
-
-// Fungsi Helper buat Masuk Langsung & Hapus
-window.masukJadwalRoom = function(pin) {
-    // Karena gabungRoomLatihan butuh prompt Swal, kita pakai yg otomatis
-    window.gabungRoomLatihanOtomatis(pin);
-};
-
-window.hapusRoomDariLobby = async function(pin) {
-    if(!confirm(`Yakin mau menghapus permanen jadwal room ${pin}?`)) return;
-    try {
-        await deleteDoc(doc(window.db, "rooms", pin));
-        PROTAMA.alert("Terhapus", "Jadwal room berhasil dihapus", "success");
-        window.muatJadwalRoomHost(); // Refresh tabel
-    } catch (e) {
-        alert("Gagal menghapus room: " + e.message);
-    }
-};
 
     // BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
     document.querySelectorAll('.modul-btn').forEach(el => {
