@@ -744,10 +744,18 @@ window.switchDatabase = async function(key) {
     if(footer) footer.style.visibility = 'hidden';
 
     try {
-        const docRef = doc(db, "bank_soal", key);
+    const docRef = doc(db, "bank_soal", key);
         const docSnap = await getDoc(docRef);
+        
+        // 🔥 CARA OTOMATIS: Ambil teks langsung dari tombol menu sebelah kiri
         let judulModul = "Modul Latihan";
-        if (docSnap.exists()) {
+        const tombolMenu = document.getElementById('btn-' + key);
+        if (tombolMenu) {
+            judulModul = tombolMenu.innerText.trim(); 
+        }
+
+        // Tapi kalau suatu saat lu iseng ngisi field 'title' di Firebase, dia bakal memprioritaskan yang dari Firebase
+        if (docSnap.exists() && docSnap.data().title) {
             judulModul = docSnap.data().title;
         }
 
