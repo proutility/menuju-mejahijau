@@ -825,6 +825,11 @@ window.switchDatabase = async function(key) {
         isAnswerLocked = false;
         currentIdx = 0;
 
+        let btnBalik = document.getElementById('btnSidebarKembali');
+        if (btnBalik) {
+            btnBalik.style.display = 'none';
+        }
+
         document.querySelectorAll('.modul-btn').forEach(btn => btn.classList.remove('active-modul'));
         const activeBtn = document.getElementById('btn-'+key);
         if(activeBtn) activeBtn.classList.add('active-modul');
@@ -1899,6 +1904,14 @@ window.keluarDariRoom = async () => {
 window.showResult = function() {
     if(isSubmitted) {
         document.getElementById('resultOverlay').style.display = 'flex';
+        
+        // 👇 BUMBU RAHASIA: Munculin tombol kembali di sidebar pas nilai keluar 👇
+        let btnBalik = document.getElementById('btnSidebarKembali');
+        if (btnBalik) {
+            btnBalik.style.display = 'block';
+        }
+        // 👆 SAMPAI SINI 👆
+        
     } else {
         alert("Belum ada nilai! Silahkan kerjakan dulu soalnya");
     }
