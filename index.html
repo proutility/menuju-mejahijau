@@ -184,7 +184,7 @@
                 </div>
             </div>
 
-          <!-- WADAH LIVE CHAT (Menggantikan posisi modul saat Multiplayer) -->
+            <!-- WADAH LIVE CHAT (Menggantikan posisi modul saat Multiplayer) -->
             <div id="roomChatContainer" style="display: none; flex-direction: column; flex: 1; background: white; border-top: 2px solid var(--gold); overflow: hidden;">
                 
                 <!-- Header Chat -->
@@ -199,14 +199,17 @@
                         <!-- Pesan masuk sini -->
                     </div>
                     
-                    <!-- Input Chat & Fitur Stiker (DIKEMBALIKAN NORMAL BUKAN MARGIN NEGATIF) -->
-                    <div style="padding: 12px 10px; border-top: 1px solid #eee; display: flex; gap: 8px; background: white; position: relative; align-items: center; box-sizing: border-box; width: 100%;">
+                    <!-- Input Chat & Fitur Stiker -->
+                    <!-- 🛑 FIX FINAL: Kasih PADDING-BOTTOM 70px di sini biar input kedorong naik persis kayak sidebar kanan -->
+                    <div style="padding: 12px 10px 70px 10px; border-top: 1px solid #eee; display: flex; gap: 8px; background: white; position: relative; align-items: center; box-sizing: border-box; width: 100%;">
                         
                         <span onclick="window.toggleStikerMenu()" style="font-size: 1.5rem; cursor: pointer; color: #f39c12; padding: 0 5px; transition: 0.2s; display: flex; align-items: center; justify-content: center; position: relative; z-index: 1000;" title="Kirim Stiker">
                             <i class="fas fa-smile"></i>
                         </span>
                         
-                        <div id="stikerMenu" style="display: none; position: absolute; bottom: 60px; left: 10px; background: white; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); padding: 12px; width: 240px; z-index: 10000; box-sizing: border-box;">
+                        <!-- MENU POP-UP STIKER -->
+                        <!-- 🛑 Posisi bottom dinaikin jadi 120px menyesuaikan bantalan padding 70px di atasnya -->
+                        <div id="stikerMenu" style="display: none; position: absolute; bottom: 120px; left: 10px; background: white; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); padding: 12px; width: 240px; z-index: 10000; box-sizing: border-box;">
                             <h6 style="margin: 0 0 10px 0; color: #777; font-size: 0.75rem; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Quick Stiker Mabar</h6>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                 <div onclick="window.kirimStiker('🔥 GAS TERUS!')" style="background:#fff3e0; border:1px solid #ffe0b2; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#e67e22; font-size:0.8rem; text-align:center;">🔥 Gas Terus!</div>
