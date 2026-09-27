@@ -2833,7 +2833,7 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
 };
 
 // ==========================================================
-// FUNGSI RENDER JADWAL TRYOUT DI LOBBY
+// FUNGSI RENDER JADWAL TRYOUT DI LOBBY (DENGAN COPY LINK & HAPUS)
 // ==========================================================
 window.loadJadwalLobby = async () => {
     const listContainer = document.getElementById('listJadwalTryout');
@@ -2842,30 +2842,44 @@ window.loadJadwalLobby = async () => {
     listContainer.innerHTML = '<p style="color:#ccc; text-align:center; margin: 10px 0;"><i class="fas fa-spinner fa-spin"></i> Mengecek jadwal...</p>';
 
     try {
-        // Tarik semua data room dari Firebase
         const qRef = collection(window.db, "rooms");
         const snapshot = await getDocs(qRef);
 
         let html = '';
         let adaJadwalAktif = false;
         let waktuSekarang = new Date().getTime();
+        const uidSaya = window.currentUser ? window.currentUser.uid : null;
 
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const roomId = docSnap.id;
 
-            // Filter manual: Cuma ambil yang statusnya "waiting" dan punya jadwal
             if (data.status === 'waiting' && data.jadwal_mulai) {
-                
-                // Opsional: Sembunyikan jadwal yang udah lewat lebih dari 2 jam (biar ga numpuk)
+                // Sembunyikan jadwal yang udah lewat lebih dari 2 jam
                 if (waktuSekarang - data.jadwal_mulai > (2 * 60 * 60 * 1000)) return;
 
                 adaJadwalAktif = true;
                 
-                // Format tanggal jadi cakep (Contoh: "Sab, 28 Sep - 19:30")
                 let tgl = new Date(data.jadwal_mulai);
                 let strHari = tgl.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
                 let strJam = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                // 🛑 CEK APAKAH USER INI ADALAH HOST
+                let isMyRoom = (uidSaya && data.hostUid === uidSaya);
+                
+                // 1. TOMBOL HAPUS (Khusus Host)
+                let btnHapus = isMyRoom ? 
+                    `<button onclick="window.hapusRoomJadwal('${roomId}')" style="background:transparent; color:#d32f2f; border:1px solid #d32f2f; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:8px; transition:0.3s;" title="Batalkan/Hapus Room">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>` : '';
+
+                // 2. TOMBOL COPY LINK (Muncul buat semua orang biar bisa bantu share)
+                let linkRoom = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+                let btnCopyLink = `
+                    <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Bagikan link ini ke temanmu via WhatsApp.', 'success');" style="background:transparent; color:#3498db; border:1px solid #3498db; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:8px; transition:0.3s;" title="Salin Link Invite">
+                        <i class="fas fa-link"></i>
+                    </button>
+                `;
 
                 html += `
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:10px; border:1px solid #e0e0e0; border-radius:8px; background:#f9f9f9; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
@@ -2877,9 +2891,13 @@ window.loadJadwalLobby = async () => {
                                 </span>
                             </div>
                         </div>
-                        <button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-left:10px; min-width:80px;">
-                            <i class="fas fa-sign-in-alt"></i> JOIN
-                        </button>
+                        <div style="display:flex; align-items:center;">
+                            <button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); min-width:70px; margin-right:8px;">
+                                <i class="fas fa-sign-in-alt"></i> JOIN
+                            </button>
+                            ${btnCopyLink}
+                            ${btnHapus}
+                        </div>
                     </div>
                 `;
             }
@@ -2894,6 +2912,26 @@ window.loadJadwalLobby = async () => {
     } catch (e) {
         console.error("Gagal load jadwal:", e);
         listContainer.innerHTML = '<p style="color:var(--danger); text-align:center; margin: 10px 0;">Gagal memuat jadwal dari server.</p>';
+    }
+};
+// ==========================================================
+// FUNGSI EKSEKUSI HAPUS ROOM OLEH HOST
+// ==========================================================
+window.hapusRoomJadwal = async (roomId) => {
+    const yakin = await PROTAMA.confirm("Batalkan Tryout?", "Room ini akan dihapus permanen dan peserta tidak akan bisa bergabung.");
+    if (!yakin) return;
+    
+    PROTAMA.loading("Menghapus jadwal...");
+    try {
+        await deleteDoc(doc(window.db, "rooms", roomId));
+        PROTAMA.close();
+        PROTAMA.alert("Berhasil", "Jadwal Tryout berhasil dihapus.", "success");
+        
+        // Refresh daftar jadwal di lobi secara otomatis
+        window.loadJadwalLobby();
+    } catch (e) {
+        PROTAMA.close();
+        PROTAMA.alert("Error", "Gagal menghapus room: " + e.message, "error");
     }
 };
 // ==========================================================
