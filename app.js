@@ -3519,32 +3519,53 @@ window.tampilkanLobby = function() {
     const qText = document.getElementById('questionText');
     const namaPanggilan = currentUser ? currentUser.displayName.split(" ")[0] : "Peserta";
 
-    qText.innerHTML = `
+   qText.innerHTML = `
         <div style="padding: 20px; max-width: 800px; margin: 0 auto; animation: fadeIn 0.5s;">
-            <div style="text-align: center; margin-bottom: 35px;">
+            <div style="text-align: center; margin-bottom: 25px;">
                 <div style="font-size: 3.5rem; margin-bottom: 10px;">👋</div>
                 <h2 style="color: var(--primary); margin-bottom: 5px; font-weight: 800;">Halo, ${namaPanggilan}! Siap Latihan?</h2>
                 <p style="font-size: 1.05rem; color: #666;">
-                    Silahkan klik salah satu modul di menu samping kiri untuk memulai simulasi ujian.
+                    Silahkan klik menu modul di kiri, atau pilih Tryout Live di bawah.
                 </p>
             </div>
 
-            <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.04);">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f4f7f6; padding-bottom: 12px; margin-bottom: 15px;">
-                    <h4 style="margin: 0; color: #2c3e50; font-size: 1.1rem;">
-                        <i class="fas fa-history" style="color: var(--gold); margin-right: 8px;"></i> Riwayat 5 Tes Terakhir
-                    </h4>
-                    <button onclick="window.openStats('hukum')" style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 0.85rem; padding: 5px;">
-                        Lihat Semua >
+            <div style="background: white; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.04);">
+                
+                <!-- TOMBOL TAB NAVIGASI -->
+                <div style="display: flex; background: #fafafa;">
+                    <button onclick="window.switchTabLobby('jadwal')" id="btnTabJadwal" style="flex: 1; padding: 15px; border: none; border-bottom: 3px solid var(--primary); background: transparent; color: var(--primary); font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
+                        <i class="fas fa-calendar-alt"></i> Jadwal Tryout Live
+                    </button>
+                    <button onclick="window.switchTabLobby('riwayat')" id="btnTabRiwayat" style="flex: 1; padding: 15px; border: none; border-bottom: 1px solid #ddd; background: transparent; color: #666; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s;">
+                        <i class="fas fa-history"></i> Riwayat Tes
                     </button>
                 </div>
-                
-                <div id="tableLobbyContainer" style="overflow-x: auto;">
-                    <div style="text-align: center; padding: 30px;">
-                        <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: #ddd;"></i>
-                        <p style="color: #999; margin-top: 10px; font-size: 0.9rem;">Memuat riwayat belajar...</p>
+
+                <!-- ISI TAB 1: JADWAL -->
+                <div id="tabJadwal" style="padding: 20px; display: block;">
+                    <div id="listJadwalTryout" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="text-align: center; padding: 20px;">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size: 1.5rem; color: #ddd;"></i>
+                            <p style="color: #999; margin-top: 10px; font-size: 0.9rem;">Memuat jadwal dari server...</p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- ISI TAB 2: RIWAYAT (Sembunyi dulu di awal) -->
+                <div id="tabRiwayat" style="padding: 20px; display: none;">
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <button onclick="window.openStats('hukum')" style="background: #e3f2fd; border: none; color: var(--primary); cursor: pointer; font-weight: bold; font-size: 0.85rem; padding: 8px 15px; border-radius: 6px;">
+                            <i class="fas fa-chart-bar"></i> Lihat Detail Statistik
+                        </button>
+                    </div>
+                    <div id="tableLobbyContainer" style="overflow-x: auto;">
+                        <div style="text-align: center; padding: 30px;">
+                            <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: #ddd;"></i>
+                            <p style="color: #999; margin-top: 10px; font-size: 0.9rem;">Memuat riwayat belajar...</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
         <style>@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }</style>
@@ -3568,6 +3589,28 @@ window.tampilkanLobby = function() {
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
     if(typeof window.loadJadwalLobby === 'function') window.loadJadwalLobby();
 }
+// ==========================================
+// FUNGSI GANTI TAB LOBBY
+// ==========================================
+window.switchTabLobby = function(tab) {
+    document.getElementById('tabJadwal').style.display = tab === 'jadwal' ? 'block' : 'none';
+    document.getElementById('tabRiwayat').style.display = tab === 'riwayat' ? 'block' : 'none';
+    
+    const btnJadwal = document.getElementById('btnTabJadwal');
+    const btnRiwayat = document.getElementById('btnTabRiwayat');
+    
+    if (tab === 'jadwal') {
+        btnJadwal.style.color = 'var(--primary)';
+        btnJadwal.style.borderBottom = '3px solid var(--primary)';
+        btnRiwayat.style.color = '#666';
+        btnRiwayat.style.borderBottom = '1px solid #ddd';
+    } else {
+        btnRiwayat.style.color = 'var(--primary)';
+        btnRiwayat.style.borderBottom = '3px solid var(--primary)';
+        btnJadwal.style.color = '#666';
+        btnJadwal.style.borderBottom = '1px solid #ddd';
+    }
+};
 // ==========================================
 // FUNGSI UI LEADERBOARD & BOT PENGUMUMAN OTOMATIS
 // ==========================================
