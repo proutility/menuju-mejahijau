@@ -2453,95 +2453,91 @@ let currentRoomCode = null;
 let isHost = false;
 
 // ==========================================================
-// 1. HOST: BIKIN ROOM BARU (VERSI DROPDOWN MODERN - FULL LIST)
+// 1. HOST: BIKIN ROOM BARU (VERSI JADWAL ZOOM & RACIK SOAL)
 // ==========================================================
-window.bikinRoomLatihan = async () => {
-    // 🛑 Menggunakan SweetAlert2 Dropdown dengan Optgroup
-    const { value: modulId } = await Swal.fire({
-        title: 'CREATE ROOM',
-        text: 'Pilih modul materi yang ingin dikerjakan bersama:',
-        input: 'select',
-        inputOptions: {
-            'Hukum Dasar (Substansi)': {
-                'modul_ilmuhukum_test': 'Ilmu Hukum_test',
-                'modul_ilmuhukum': 'Ilmu Hukum',
-                'modul_asas_umum': 'Asas Umum',
-                'modul_asas_peradilan_agama': 'Asas Peradilan Agama',
-                'modul_asas_asas': 'Asas-Asas',
-                'modul1': 'Modul 1: Kekuasaan Kehakiman',
-                'modul2': 'Modul 2: Mahkamah Agung',
-                'modul3': 'Modul 3: Peradilan Agama',
-                'modul6': 'Modul 6: PMH & Wanprestasi',
-                'modul8': 'Modul 8: Perkawinan (KHI)',
-                'modul8.1': 'Modul 8.1: Perkawinan (Lanjutan)',
-                'modul8.2': 'Modul 8.2: Perkawinan (Akhir)',
-                'modul8.3': 'Modul 8.3: Perkawinan (UU 1/1974)',
-                'modul8.4': 'Modul 8.4: Pelaksana (PP 9/1975)',
-                'modul9': 'Modul 9: Perwalian & Pengangkatan',
-                'modul10': 'Modul 10: Waris Islam (Dasar)',
-                'modul10.1': 'Modul 10.1: Waris (KHI)',
-                'modul10.2': 'Modul 10.2: Waris (BW)',
-                'modul10.3': 'Modul 10.3: Studi Kasus Waris',
-                'modul11': 'Modul 11: Wasiat & Hibah',
-                'modul13': 'Modul 13: Ekonomi Syariah A',
-                'modul13.1': 'Modul 13.1: Akad Syariah',
-                'modul13.2': 'Modul 13.2: Ekonomi Syariah B',
-                'modul14': 'Modul 14: Perwakafan',
-                'modul15': 'Modul 15: Buku Saku PA A',
-                'modul15.1': 'Modul 15.1: Buku Saku PA B',
-                'modul15.2': 'Modul 15.2: Buku Saku PA C'
-            },
-            'Hukum Acara (Formil)': {
-                'modul4': 'Modul 4: Pendaftaran & Relaas',
-                'modul5': 'Modul 5: Gugatan & Permohonan',
-                'modul7': 'Modul 7: Mediasi',
-                'modul12': 'Modul 12: Sita Jaminan',
-                'modul16': 'Modul 16: Prodeo & Posbakum',
-                'modul17': 'Modul 17: E-Court & Tercatat'
-            },
-            'Psikotes & TPA': {
-                'modul18': 'Modul 18: PAPI Kostick',
-                'modul19': 'Modul 19: TPA Verbal',
-                'modul19.1': 'Modul 19.1: TPA Numerik',
-                'modul19.2': 'Modul 19.2: TPA Kuant & Tekn',
-                'modul19.3': 'Modul 19.3: TPA Daya Ingat',
-                'modul19.4': 'Modul 19.4: TPA Figural'
-            }
-        },
-        inputPlaceholder: '--- Silahkan Pilih Modul ---',
-        showCancelButton: true,
-        confirmButtonColor: '#2e7d32', // Hijau MA
-        cancelButtonColor: '#d32f2f',  // Merah
-        confirmButtonText: '<i class="fas fa-check"></i> Buat Room',
-        cancelButtonText: 'Batal',
-        inputValidator: (value) => {
-            if (!value) {
-                return 'Pilih modulnya dulu bro! 😅';
-            }
-        },
-        customClass: {
-            popup: 'swal2-modal-modern',
-            input: 'swal2-input-modern'
-        }
+window.bikinRoomLatihan = () => {
+    // Tampilkan Pop-up Bikin Room Baru yang udah lu tambahin di index.html tadi
+    const modalRoom = document.getElementById('modalBikinRoom');
+    if(modalRoom) modalRoom.style.display = 'flex';
+    
+    const listDiv = document.getElementById('listModulCheckbox');
+    if(!listDiv) return;
+    listDiv.innerHTML = '';
+    
+    // Trik pinter: Tarik opsi otomatis dari sidebar kiri lu
+    document.querySelectorAll('.modul-selector .modul-btn').forEach(btn => {
+        let idModul = btn.id.replace('btn-', '');
+        let namaModul = btn.innerText;
+        listDiv.innerHTML += `
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px; border-bottom:1px solid #eee;">
+                <input type="checkbox" class="chk-modul-mabar" value="${idModul}">
+                <span style="font-weight:600; color:var(--primary);">${namaModul}</span>
+            </label>
+        `;
     });
+};
 
-    if (!modulId) return;
-
-    const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
-    PROTAMA.loading("Membangun Room...");
-
+window.eksekusiBikinRoom = async () => {
+    const namaRoom = document.getElementById('inputNamaRoom').value || 'Tryout Mabar';
+    const jadwalStr = document.getElementById('inputJadwalRoom').value; 
+    const chks = document.querySelectorAll('.chk-modul-mabar:checked');
+    
+    if(chks.length === 0) return PROTAMA.alert("Waduh!", "Pilih minimal 1 modul buat diracik bro!", "warning");
+    
+    // Default jadwal: Langsung mulai sekarang kalau nggak diisi
+    const waktuMulaiMilis = jadwalStr ? new Date(jadwalStr).getTime() : new Date().getTime() + 5000; 
+    let selectedModuls = Array.from(chks).map(c => c.value);
+    
+    document.getElementById('modalBikinRoom').style.display = 'none';
+    PROTAMA.loading("Meracik Soal Mabar...");
+    
+    let kawahSoal = [];
     try {
+        // 1. Tarik semua soal dari modul yang dicentang secara paralel
+        const tarikanServer = selectedModuls.map(modId => getDocs(collection(window.db, "bank_soal", modId, "daftar_soal")));
+        const hasilTarikan = await Promise.all(tarikanServer);
+        
+        hasilTarikan.forEach(qSnap => {
+            qSnap.forEach(docSnap => {
+                let d = docSnap.data(); d.id = docSnap.id; kawahSoal.push(d);
+            });
+        });
+
+        if(kawahSoal.length === 0) {
+            PROTAMA.close();
+            return PROTAMA.alert("Kosong", "Modul yang dipilih belum ada soalnya!", "error");
+        }
+
+        // 2. Acak semua soal & ambil maksimal 100 soal
+        shuffleArray(kawahSoal);
+        let soalMabarFinal = kawahSoal.slice(0, 100); 
+
+        // 3. Acak Opsi Jawabannya
+        soalMabarFinal.forEach(q => {
+            if(q.options && q.answer < q.options.length) {
+                let jawabanBenar = q.options[q.answer]; 
+                shuffleArray(q.options); 
+                q.answer = q.options.indexOf(jawabanBenar); 
+            }
+        });
+
+        // 4. Bikin Kode Room
+        const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
+
         await setDoc(doc(window.db, "rooms", kodeRoom), {
+            nama: namaRoom,
             hostUid: currentUser.uid,
             hostName: currentUser.displayName,
-            modulId: modulId, 
+            modulId: selectedModuls.length > 1 ? "latihan_campuran" : selectedModuls[0], 
+            soalTersimpan: soalMabarFinal, // SOAL RACIKAN DISIMPAN DI SINI
+            jadwal_mulai: waktuMulaiMilis,
             status: 'waiting', 
             currentIdx: 0,
             players: {
                 [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
             },
             messages: [],
-            createdAt: new Date()
+            createdAt: serverTimestamp()
         });
 
         isHost = true;
@@ -2550,13 +2546,13 @@ window.bikinRoomLatihan = async () => {
         
         PROTAMA.close();
         
-        // 🛑 OPER PARAMETER MODUL KE SINI
-        window.tampilkanWaitingRoom(kodeRoom, isHost, modulId); 
+        // Lempar ke UI Waiting Room
+        window.tampilkanWaitingRoom(kodeRoom, isHost, selectedModuls.length > 1 ? "latihan_campuran" : selectedModuls[0]); 
         window.pantauRoom(kodeRoom);
 
-    } catch(e) {
+    } catch (e) {
         PROTAMA.close();
-        PROTAMA.alert("Error", "Gagal bikin room: " + e.message, "error");
+        PROTAMA.alert("Error", "Gagal membuat soal: " + e.message, "error");
     }
 };
 // ==========================================================
@@ -2778,6 +2774,7 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
 
             ${btnMulai}
             
+            // ... (Kodingan HTML UI Waiting Room lu yang lama biarin aja)
             <br><br>
             <!-- 🛑 TOMBOL KELUAR DINAMIS BERDASARKAN STATUS VIP -->
             ${window.isVIPUser ? 
@@ -2786,6 +2783,54 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
             }
         </div>
     `;
+
+    // ==========================================
+    // LOGIKA COUNTDOWN JADWAL ZOOM-STYLE
+    // ==========================================
+    const roomRef = doc(window.db, "rooms", kode);
+    getDoc(roomRef).then(snap => {
+        if(snap.exists()) {
+            let dataRoom = snap.data();
+            let waktuMulai = dataRoom.jadwal_mulai;
+            let tombolMulai = document.querySelector(`button[onclick="window.mulaiUjianRoom('${kode}')"]`);
+            
+            // Kalau bukan host, kita ubah div pesannya jadi tempat nampilin detik
+            let divTunggu = document.querySelector('div.fa-spinner')?.parentNode;
+
+            if(waktuMulai && waktuMulai > new Date().getTime()) {
+                if(tombolMulai) {
+                    tombolMulai.disabled = true;
+                    tombolMulai.style.background = "#95a5a6";
+                }
+                
+                let intervalTunggu = setInterval(() => {
+                    let sisa = waktuMulai - new Date().getTime();
+                    if(sisa <= 0) {
+                        clearInterval(intervalTunggu);
+                        if(tombolMulai) {
+                            tombolMulai.disabled = false;
+                            tombolMulai.style.background = "var(--success)";
+                            tombolMulai.innerHTML = "🚀 MULAI UJIAN SEKARANG";
+                        }
+                        if(divTunggu && !isHost) {
+                            divTunggu.innerHTML = '<i class="fas fa-unlock"></i> Pintu Ujian Terbuka! Menunggu Host Memulai...';
+                            divTunggu.style.background = "#e8f5e9";
+                            divTunggu.style.borderColor = "#c8e6c9";
+                            divTunggu.style.color = "#2e7d32";
+                        }
+                    } else {
+                        let jam = Math.floor((sisa / (1000 * 60 * 60)) % 24);
+                        let mnt = Math.floor((sisa / 1000 / 60) % 60);
+                        let dtk = Math.floor((sisa / 1000) % 60);
+                        let teksWaktu = `Jadwal Dimulai Dalam: ${jam}j ${mnt}m ${dtk}d`;
+                        
+                        if(tombolMulai) tombolMulai.innerHTML = `⏳ ${teksWaktu}`;
+                        if(divTunggu && !isHost) divTunggu.innerHTML = `⏳ ${teksWaktu} <br><small>Menunggu Host Memulai...</small>`;
+                    }
+                }, 1000);
+            }
+        }
+    });
 };
 // ==========================================================
 // FUNGSI MULAI UJIAN (YANG TADI HILANG)
