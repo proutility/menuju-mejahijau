@@ -3477,9 +3477,25 @@ window.tampilkanLobby = function() {
     // 👇 TRIGGER OTOMATIS: Jalanin fungsi pencarian Room & Riwayat Tes 👇
     setTimeout(() => {
         if(window.muatJadwalRoomHost) window.muatJadwalRoomHost();
-        // (Pastikan fungsi muat riwayat lu, misal loadRiwayatLobby(), juga dipanggil di sekitar sini)
     }, 100);
-};
+
+    // BONGKAR SEMUA GEMBOK SIDEBAR KIRI SAAT MASUK LOBBY
+    document.querySelectorAll('.modul-btn').forEach(el => {
+        el.classList.remove('active-modul');
+        el.disabled = false;             
+        el.style.pointerEvents = 'auto'; 
+        el.style.opacity = '1';          
+    });
+
+    // BONGKAR GEMBOK TOMBOL KANAN ATAS
+    document.querySelectorAll('.action-box button, .act-exit, .btn-action').forEach(btn => {
+        btn.disabled = false;
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+    });
+
+    if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
+}; // <-- INI PENUTUP FUNGSI tampilkanLobby
 
 // ==========================================================
 // 🚀 FUNGSI BARU: NGECEK JADWAL ROOM AKTIF DI FIREBASE
@@ -3553,7 +3569,6 @@ window.muatJadwalRoomHost = async function() {
 
 // Fungsi Helper buat Masuk Langsung & Hapus
 window.masukJadwalRoom = function(pin) {
-    document.getElementById('search_retur') // Bypass Swal, langsung panggil gabung otomatis
     // Karena gabungRoomLatihan butuh prompt Swal, kita pakai yg otomatis
     window.gabungRoomLatihanOtomatis(pin);
 };
