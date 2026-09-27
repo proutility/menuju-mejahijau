@@ -2621,9 +2621,9 @@ window.gabungRoomLatihan = async () => {
         
         PROTAMA.close();
         
-       // Cari baris ini di bagian bawah window.gabungRoomLatihanOtomatis
         if (dataRoom.status === 'waiting') {
-            window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); // 🛑 TAMBAHKAN dataRoom.modulId DI SINI
+            // 👇 BUMBU RAHASIA: Lempar modulId dari Firebase ke UI peserta 👇
+            window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
         }
         window.pantauRoom(kodeRoom);
 
@@ -2677,7 +2677,8 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         PROTAMA.close();
         
         if (dataRoom.status === 'waiting') {
-            window.tampilkanWaitingRoom(kodeRoom, isHost); 
+            // 👇 BUMBU RAHASIA JUGA DI SINI: Lempar modulId ke UI auto-join 👇
+            window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
         }
         window.pantauRoom(kodeRoom);
 
