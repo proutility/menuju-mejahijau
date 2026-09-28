@@ -3874,182 +3874,227 @@ window.switchTabLobby = function(tab) {
         btnJadwal.style.borderBottom = '1px solid #ddd';
     }
 };
-// ==========================================
-// FUNGSI UI LEADERBOARD & BOT PENGUMUMAN OTOMATIS
-// ==========================================
+// ========================================================
+// 🏆 FUNGSI KLASEMEN AKHIR MABAR (STYLE PODIUM KAHOOT + SUARA EPIC)
+// ========================================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
-    PROTAMA.loading("Merekap skor dan kecepatan semua peserta...");
+    try {
+        const roomRef = doc(window.db || db, "rooms", kodeRoom);
+        const snap = await getDoc(roomRef);
+        if (!snap.exists()) return;
+        
+        const data = snap.data();
+        let arr = Object.values(data.players);
+        
+        arr.sort((a, b) => (b.skor || 0) - (a.skor || 0));
 
-    setTimeout(async () => {
-        try {
-            const database = window.db || (typeof db !== 'undefined' ? db : null);
-            const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+        let bgOverlay = document.getElementById('kahootResultOverlay');
+        if (bgOverlay) bgOverlay.remove();
 
-            const roomSnap = await getDoc(doc(database, "rooms", kodeRoom));
-            if (!roomSnap.exists()) return PROTAMA.close();
+        bgOverlay = document.createElement('div');
+        bgOverlay.id = 'kahootResultOverlay';
+        bgOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(20, 30, 48, 0.95); z-index:9999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Poppins', sans-serif; backdrop-filter:blur(10px); overflow-y:auto; padding: 20px;";
 
-            const data = roomSnap.data();
-            let playersArray = [];
+        let p1 = arr[0] || null;
+        let p2 = arr[1] || null;
+        let p3 = arr[2] || null;
 
-            for (let uid in data.players) {
-                playersArray.push(data.players[uid]);
-            }
-
-            // Tie Breaker Waktu
-            playersArray.sort((a, b) => {
-                if (b.skor === a.skor) return (b.speed || 0) - (a.speed || 0); 
-                return b.skor - a.skor;
-            });
-
-            PROTAMA.close();
-
-            const oldOverlay = document.getElementById('roomResultOverlay');
-            if (oldOverlay) oldOverlay.remove();
-
-            const overlay = document.createElement('div');
-            overlay.id = 'roomResultOverlay';
-            overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:2147483647; display:flex; justify-content:center; align-items:center; backdrop-filter: blur(5px);";
-
-            let listHTML = '';
+        const buatPodium = (player, posisi, tinggi, warna, ikon, delay) => {
+            if (!player) return `<div class="podium-kosong" style="width:140px;"></div>`;
             
-            // 🤖 STRING UNTUK PENGUMUMAN BOT
-            let botMessageText = `🎉 HASIL MULTIPLAYER [ROOM: ${kodeRoom}] 🎉\n`;
+            let namaPendek = player.nama.split(" ")[0]; 
+            let skor = Math.round(player.skor || 0);
+            let isMe = window.currentUser && player.nama === window.currentUser.displayName ? '<div class="me-badge">KAMU</div>' : '';
 
-          playersArray.forEach((p, i) => {
-                let medal = '';
-                let bg = 'white';
-                let txtColor = '#333';
-                
-                // 🛑 PEMBULATAN SKOR FINAL (1 Angka di Belakang Koma)
-                // Misal: 33.333333333 jadi 33.3
-                // Tapi kalau angkanya bulat (misal 100), biar nggak jadi 100.0, kita parse lagi jadi float
-                let skorAsli = parseFloat(p.skor || 0);
-                let skorTampil = Number.isInteger(skorAsli) ? skorAsli : parseFloat(skorAsli.toFixed(1));
-                
-                if (i === 0) { medal = '🥇'; bg = '#fff9c4'; }
-                else if (i === 1) { medal = '🥈'; bg = '#f5f5f5'; }
-                else if (i === 2) { medal = '🥉'; bg = '#fff'; }
-                else { medal = `<span style="font-size:1rem; color:#888;">#${i+1}</span>`; }
+            return `
+            <div class="podium-wrapper" style="animation: slideUp 0.8s ease ${delay}s backwards;">
+                <div class="podium-avatar">
+                    <i class="fas fa-user-astronaut" style="color:${warna};"></i>
+                </div>
+                ${isMe}
+                <div class="podium-name">${namaPendek}</div>
+                <div class="podium-score">${skor} Pts</div>
+                <div class="podium-block" style="height:${tinggi}px; background:linear-gradient(to top, ${warna}, #ffffff33); border-top: 4px solid ${warna};">
+                    <span class="podium-rank">${ikon}</span>
+                </div>
+            </div>`;
+        };
 
-                if (userSkrg && p.nama === userSkrg.displayName) {
-                    bg = '#e3f2fd';
-                    txtColor = '#1565c0';
-                }
+        let htmlTop3 = `
+            <div class="podium-container">
+                ${buatPodium(p2, 2, 160, '#bdc3c7', '2', 0.2)} 
+                ${buatPodium(p1, 1, 220, '#f1c40f', '1', 0.4)} 
+                ${buatPodium(p3, 3, 120, '#e67e22', '3', 0)}   
+            </div>
+        `;
 
-                let speedText = p.speed !== undefined ? `<br><small style="color:#27ae60; font-size:0.75rem;"><i class="fas fa-bolt"></i> Speed: +${p.speed} dtk</small>` : '';
-
-                listHTML += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 15px; background:${bg}; border-bottom:1px solid #ddd; font-size:1rem; font-weight:bold; color:${txtColor};">
-                        <div>
-                            <span style="display:inline-block; width:30px; text-align:center;">${medal}</span> 
-                            ${p.nama} ${userSkrg && p.nama === userSkrg.displayName ? '(Kamu)' : ''}
-                            ${speedText}
-                        </div>
-                        <div style="color:var(--primary); font-size:1.2rem;">${skorTampil} <small style="font-size:0.75rem; color:#666;">Pts</small></div>
+        let htmlSisaPemain = '';
+        if (arr.length > 3) {
+            htmlSisaPemain += `<div class="other-players-list">`;
+            for (let i = 3; i < arr.length; i++) {
+                let p = arr[i];
+                let isMe = window.currentUser && p.nama === window.currentUser.displayName ? 'border-left: 5px solid #3498db; background: #f0f8ff;' : '';
+                htmlSisaPemain += `
+                    <div class="list-row" style="${isMe}">
+                        <div class="list-rank">${i + 1}</div>
+                        <div class="list-avatar"><i class="fas fa-user"></i></div>
+                        <div class="list-name">${p.nama} ${isMe ? '<b>(Kamu)</b>' : ''}</div>
+                        <div class="list-score">${Math.round(p.skor || 0)} <small>Pts</small></div>
                     </div>
                 `;
-                
-                // Tambahkan data ke string pesan bot (Top 3 saja agar chat tidak terlalu panjang)
-                if (i < 3) {
-                     let simpleMedal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
-                     botMessageText += `${simpleMedal} ${p.nama} (${skorTampil} Pts)\n`;
-                }
-            });
-            
-            botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
-
-            overlay.innerHTML = `
-                <div style="background:white; width:90%; max-width:450px; border-radius:12px; overflow:hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); animation: zoomIn 0.3s ease; position:relative;">
-                    
-                    <button onclick="document.getElementById('roomResultOverlay').style.display='none'" style="position:absolute; top:12px; right:12px; background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; z-index:10; line-height:1;">&times;</button>
-
-                    <div style="background:var(--primary); padding:20px 15px; text-align:center; color:white;">
-                        <i class="fas fa-trophy" style="font-size:2.5rem; color:var(--gold); margin-bottom:8px;"></i>
-                        <h2 style="margin:0; font-size:1.5rem; font-weight:900;">HASIL MULTIPLAYER</h2>
-                        <p style="margin:5px 0 0 0; opacity:0.9; font-size:0.9rem;">Modul: ${data.modulId.toUpperCase()} | Room: ${kodeRoom}</p>
-                    </div>
-                    
-                    <div style="max-height:45vh; overflow-y:auto; background:#f9f9f9;">
-                        ${listHTML}
-                    </div>
-                    
-                    <div style="padding:15px; background:#fff; display:flex; gap:10px; border-top:2px solid #eee;">
-                        <button onclick="document.getElementById('roomResultOverlay').style.display='none'; window.startReviewWrong();" style="flex:1; background:#d32f2f; color:white; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:5px;">
-                            <i class="fas fa-search-minus"></i> Review
-                        </button>
-                        <button onclick="window.downloadEvaluasiPesertaExcel()" style="flex:1; background:#27ae60; color:white; padding:10px; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.9rem; display:flex; align-items:center; justify-content:center; gap:5px;">
-                            <i class="fas fa-file-excel"></i> CSV/Excel
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-// 🛑 TAMBAHAN: EFEK SUARA KEMENANGAN ALA GAME (MULTIPLAYER)
-            try {
-                // Suara Victory Fanfare (Rame, epik, tapi berupa melodi musik jadi enak didengar)
-                const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
-                victorySound.volume = 0.7; // Volume 70% biar pas dan nggak bikin kaget
-                victorySound.play().catch(e => console.log('Suara keblokir browser:', e));
-            } catch(e) { console.log(e); }
-
-            window.isAnswerLocked = true;
-
-            // 🛑 1. FREEZE PANEL KANAN ATAS (Fitur Singleplayer Dimatikan)
-            document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'none';
-                btn.style.opacity = '0.4';
-            });
-
-            // 🛑 2. BUAT 2 TOMBOL NGAMBANG NUMPUK DI KANAN BAWAH
-            if (!document.getElementById('roomFloatingMenu')) {
-                const floatMenu = document.createElement('div');
-                floatMenu.id = 'roomFloatingMenu';
-                floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;";
-
-                const btnRank = document.createElement('button');
-                btnRank.innerHTML = '<i class="fas fa-trophy"></i> Lihat Peringkat';
-                btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
-                btnRank.onclick = () => { 
-                    const resO = document.getElementById('roomResultOverlay');
-                    if(resO) resO.style.display = 'flex'; 
-                };
-
-                const btnExit = document.createElement('button');
-                btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
-                btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
-                btnExit.onclick = window.konfirmasiKeluarRoom;
-
-                floatMenu.appendChild(btnRank);
-                floatMenu.appendChild(btnExit);
-                document.body.appendChild(floatMenu);
             }
-            
-    // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN (HANYA DIEKSEKUSI OLEH HOST)
-                const amIHost = (userSkrg && data.hostUid === userSkrg.uid);
-                if (amIHost) {
-                    setTimeout(async () => {
-                        try {
-                            const roomRef = doc(database, "rooms", kodeRoom);
-                            await updateDoc(roomRef, {
-                                messages: arrayUnion({
-                                    uid: userSkrg.uid, // PAKAI UID HOST ASLI BIAR LOLOS FIREBASE
-                                    nama: "🤖 PRO-BOT (Sistem)", // TAPI NAMANYA KITA SAMARKAN
-                                    teks: botMessageText,
-                                    waktu: new Date().toISOString()
-                                })
-                            });
-                        } catch (e) {
-                            console.error("Gagal mengirim pengumuman Bot:", e);
-                        }
-                    }, 1500);
-                }
-
-        } catch (e) {
-            console.error("Gagal load hasil multiplayer", e);
-            PROTAMA.alert("Gagal", "Gagal memuat hasil akhir.", "error");
+            htmlSisaPemain += `</div>`;
         }
-    }, 2500); 
+
+        // 🤖 STRING UNTUK PENGUMUMAN BOT
+        let botMessageText = `🎉 HASIL MULTIPLAYER [ROOM: ${kodeRoom}] 🎉\n`;
+        arr.forEach((p, i) => {
+            let skorBot = Math.round(p.skor || 0);
+            if (i < 3) {
+                let simpleMedal = i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉');
+                botMessageText += `${simpleMedal} ${p.nama} (${skorBot} Pts)\n`;
+            }
+        });
+        botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
+
+        bgOverlay.innerHTML = `
+            <div class="result-card">
+                <div class="confetti-bg"></div>
+
+                <h1 class="result-title"><i class="fas fa-trophy"></i> HASIL MATCHMAKING <i class="fas fa-trophy"></i></h1>
+                <p class="result-subtitle">Room: <b>${kodeRoom}</b> | Peserta: <b>${arr.length}</b></p>
+                
+                ${htmlTop3}
+                ${htmlSisaPemain}
+
+                <div class="result-actions">
+                    <button class="btn-review" onclick="window.reviewHasilMabar()"><i class="fas fa-search"></i> Review Jawaban</button>
+                    <button class="btn-tutup" onclick="document.getElementById('kahootResultOverlay').remove()"><i class="fas fa-times"></i> Tutup & Kembali</button>
+                </div>
+            </div>
+
+            <style>
+                @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+                .result-card {
+                    background: #ffffff;
+                    width: 100%;
+                    max-width: 800px;
+                    border-radius: 20px;
+                    padding: 40px;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                    text-align: center;
+                    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    position: relative;
+                    overflow: hidden;
+                }
+                .result-title { font-size: 2.5rem; color: #2c3e50; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+                .result-subtitle { color: #7f8c8d; font-size: 1.1rem; margin-bottom: 40px; }
+
+                .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; height: 280px; border-bottom: 3px solid #eee; }
+                .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
+                .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
+                .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.8); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
+                .podium-avatar { width: 70px; height: 70px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -35px; z-index: 10; }
+                .podium-name { background: white; padding: 4px 15px; border-radius: 20px; font-weight: 800; color: #333; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+                .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; }
+                .me-badge { position: absolute; top: -20px; background: #e74c3c; color: white; font-size: 0.7rem; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index: 11; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+
+                .other-players-list { max-height: 200px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 10px; margin-bottom: 30px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+                .list-row { display: flex; align-items: center; background: white; padding: 12px 20px; margin-bottom: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
+                .list-row:hover { transform: scale(1.01); }
+                .list-rank { font-size: 1.2rem; font-weight: 900; color: #7f8c8d; width: 40px; text-align: left; }
+                .list-avatar { width: 35px; height: 35px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #aaa; margin-right: 15px; }
+                .list-name { flex-grow: 1; text-align: left; font-weight: 600; color: #2c3e50; font-size: 1rem; }
+                .list-score { font-weight: 800; color: #e67e22; font-size: 1.1rem; }
+
+                .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+                .result-actions button { padding: 15px 30px; border: none; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
+                .btn-review { background: #3498db; color: white; box-shadow: 0 4px 15px rgba(52,152,219,0.4); }
+                .btn-review:hover { background: #2980b9; transform: translateY(-2px); }
+                .btn-tutup { background: #e74c3c; color: white; box-shadow: 0 4px 15px rgba(231,76,60,0.4); }
+                .btn-tutup:hover { background: #c0392b; transform: translateY(-2px); }
+
+                @media (max-width: 600px) {
+                    .podium-wrapper { width: 100px; }
+                    .podium-rank { font-size: 2.5rem; }
+                    .result-card { padding: 20px; }
+                    .result-title { font-size: 1.8rem; }
+                }
+            </style>
+        `;
+
+        document.body.appendChild(bgOverlay);
+
+        // 🛑 EFEK SUARA EPIC KEMENANGAN (MULTIPLAYER)
+        try {
+            const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
+            victorySound.volume = 0.7; // Volume 70% biar pas
+            victorySound.play().catch(e => console.log('Suara keblokir browser:', e));
+        } catch(e) { console.log(e); }
+
+        window.isAnswerLocked = true;
+
+        // 🛑 1. FREEZE PANEL KANAN ATAS
+        document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.4';
+        });
+
+        // 🛑 2. BUAT TOMBOL NGAMBANG
+        if (!document.getElementById('roomFloatingMenu')) {
+            const floatMenu = document.createElement('div');
+            floatMenu.id = 'roomFloatingMenu';
+            floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;";
+
+            const btnRank = document.createElement('button');
+            btnRank.innerHTML = '<i class="fas fa-trophy"></i> Lihat Podium';
+            btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+            btnRank.onclick = () => { 
+                const resO = document.getElementById('kahootResultOverlay');
+                if(resO) resO.style.display = 'flex'; 
+            };
+
+            const btnExit = document.createElement('button');
+            btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
+            btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+            btnExit.onclick = window.konfirmasiKeluarRoom;
+
+            floatMenu.appendChild(btnRank);
+            floatMenu.appendChild(btnExit);
+            document.body.appendChild(floatMenu);
+        }
+        
+        // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN
+        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
+        if (amIHost) {
+            setTimeout(async () => {
+                try {
+                    const roomDBRef = doc(window.db || db, "rooms", kodeRoom);
+                    await updateDoc(roomDBRef, {
+                        messages: arrayUnion({
+                            uid: window.currentUser.uid,
+                            nama: "🤖 PRO-BOT (Sistem)",
+                            teks: botMessageText,
+                            waktu: new Date().toISOString()
+                        })
+                    });
+                } catch (e) {
+                    console.error("Gagal mengirim pengumuman Bot:", e);
+                }
+            }, 1500);
+        }
+
+        window.reviewHasilMabar = () => {
+            bgOverlay.style.display = 'none';
+            const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
+            if(btnReviewReal) btnReviewReal.click();
+        };
+
+    } catch (e) {
+        console.error("Gagal memuat hasil mabar:", e);
+    }
 };
 
 // ==========================================
