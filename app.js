@@ -4149,8 +4149,18 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-        window.reviewHasilMabar = () => {
-            bgOverlay.style.display = 'none';
+       window.reviewHasilMabar = () => {
+            // 1. Hapus overlay podiumnya sampai bersih
+            bgOverlay.remove();
+            
+            // 2. Buka kuncian tombol-tombol yang tadi mati rasa
+            document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+                btn.style.pointerEvents = 'auto'; // Kuncian dibuka
+                btn.style.opacity = '1';
+            });
+            window.isAnswerLocked = false; // Buka status kuncian jawaban
+
+            // 3. Eksekusi fungsi review aslinya
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if(btnReviewReal) btnReviewReal.click();
         };
@@ -5022,25 +5032,40 @@ window.downloadSoalJSON = async () => {
 };
 
 // ==========================================================
-// DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL
+// 📥 DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL (FIXED & AMAN)
 // ==========================================================
 window.downloadEvaluasiPesertaExcel = function() {
-    if (!currentQuestions || currentQuestions.length === 0) {
-        return alert("Data evaluasi tidak tersedia.");
+    // 1. Pastikan data soal ada
+    if (!window.currentQuestions || window.currentQuestions.length === 0) {
+        return alert("Data evaluasi tidak tersedia. Selesaikan ujian dulu ya bro!");
     }
 
-    const namaPeserta = currentUser ? currentUser.displayName : "Peserta";
+    // 2. Fungsi Helper untuk membersihkan tag HTML (<p>, <br>, dll) 
+    // biar teks rapi dan gak ngerusak susunan cell/tabel Excel
+    const bersihkanHTML = (teks) => {
+        if (!teks) return "-";
+        let div = document.createElement("div");
+        div.innerHTML = teks;
+        return div.textContent || div.innerText || "";
+    };
+
+    const namaPeserta = window.currentUser ? window.currentUser.displayName : "Peserta";
     const modul = (window.currentDatabaseId || "Latihan").toUpperCase();
     
     let tableHTML = `
         <html xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head><meta charset="UTF-8"></head>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                td { vertical-align: top; padding: 5px; }
+            </style>
+        </head>
         <body>
             <h3>LEMBAR HASIL EVALUASI UJIAN - PRO-TAMA</h3>
             <p><b>Nama Peserta:</b> ${namaPeserta}<br>
             <b>Modul:</b> ${modul}<br>
             <b>Tanggal:</b> ${new Date().toLocaleString('id-ID')}</p>
-            <table border="1">
+            <table border="1" style="border-collapse: collapse;">
                 <thead>
                     <tr style="background-color: #004d00; color: white;">
                         <th>No</th>
@@ -5054,35 +5079,41 @@ window.downloadEvaluasiPesertaExcel = function() {
                 </thead>
                 <tbody>`;
 
-    currentQuestions.forEach((q, i) => {
-        const ansUserIdx = userAnswers[i];
+    window.currentQuestions.forEach((q, i) => {
+        // Ambil data jawaban user dan kunci jawaban
+        const ansUserIdx = window.userAnswers ? window.userAnswers[i] : null;
         const ansKunciIdx = q.answer;
         
+        // Cek teks opsinya (kalo kosong atau gak kejawab kasih tanda)
         const teksUser = (ansUserIdx !== null && ansUserIdx !== undefined && q.options) ? q.options[ansUserIdx] : "(Tidak Dijawab)";
         const teksKunci = (q.options && q.options[ansKunciIdx]) ? q.options[ansKunciIdx] : "-";
         
         const isBenar = ansUserIdx === ansKunciIdx;
         const status = isBenar ? "BENAR" : "SALAH";
-        const warnaRow = isBenar ? "#e8f5e9" : "#ffebee";
+        const warnaRow = isBenar ? "#e8f5e9" : "#ffebee"; // Hijau muda buat benar, merah muda buat salah
 
+        // Masukkan ke baris tabel (HTML-nya dibersihkan dulu)
         tableHTML += `
             <tr style="background-color: ${warnaRow};">
                 <td style="text-align:center;">${i + 1}</td>
-                <td>${q.q || ""}</td>
-                <td>${teksUser}</td>
-                <td>${teksKunci}</td>
+                <td>${bersihkanHTML(q.q)}</td>
+                <td>${bersihkanHTML(teksUser)}</td>
+                <td>${bersihkanHTML(teksKunci)}</td>
                 <td style="text-align:center; font-weight:bold; color:${isBenar ? 'green' : 'red'};">${status}</td>
-                <td>${q.explanation || "-"}</td>
-                <td>${q.cite || "-"}</td>
+                <td>${bersihkanHTML(q.explanation)}</td>
+                <td>${bersihkanHTML(q.cite)}</td>
             </tr>`;
     });
 
     tableHTML += `</tbody></table></body></html>`;
 
-    const blob = new Blob([tableHTML], { type: "application/vnd.ms-excel" });
+    // 3. Eksekusi Download 
+    // Tambahin BOM '\uFEFF' biar karakter spesial (Arab, Simbol Hukum) gak error di Excel
+    const blob = new Blob(['\uFEFF' + tableHTML], { type: "application/vnd.ms-excel;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
+    // Bikin nama file rapi, tanpa spasi
     a.download = `Hasil_Evaluasi_${modul}_${namaPeserta.replace(/\s+/g, '_')}.xls`;
     document.body.appendChild(a);
     a.click();
