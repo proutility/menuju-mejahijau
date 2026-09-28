@@ -744,27 +744,24 @@ window.switchDatabase = async function(key) {
     if(footer) footer.style.visibility = 'hidden';
 
     try {
-    const docRef = doc(db, "bank_soal", key);
-        const docSnap = await getDoc(docRef);
-        
-       try {
         let judulModul = "Modul Latihan";
         const tombolMenu = document.getElementById('btn-' + key);
-        if (tombolMenu) judulModul = tombolMenu.innerText.trim(); 
+        if (tombolMenu) {
+            judulModul = tombolMenu.innerText.trim(); 
+        }
 
         let rawQuestions = [];
         let jumlahSoalServer = 0;
 
-        // 🛑 JURUS BYPASS MABAR: Kalau lagi mabar, ambil dari brankas Room! 🛑
+        // 🛑 JURUS BYPASS MABAR: Ambil dari brankas Room! 🛑
         if (currentAppMode === 'room' && window.currentRoomCode) {
             const roomRef = doc(db, "rooms", window.currentRoomCode);
             const roomSnap = await getDoc(roomRef);
             
             if (roomSnap.exists() && roomSnap.data().soalTersimpan) {
-                // Sedot soal yang udah diracik sama Host tadi
                 rawQuestions = JSON.parse(JSON.stringify(roomSnap.data().soalTersimpan)); 
                 jumlahSoalServer = rawQuestions.length;
-                judulModul = roomSnap.data().nama || judulModul; // Pake nama Tryout
+                judulModul = roomSnap.data().nama || judulModul; 
                 console.log(`🎮 Mode Mabar: Menyedot ${jumlahSoalServer} soal proporsional dari Room!`);
             } else {
                 alert("⚠️ Data soal room tidak ditemukan!");
@@ -789,7 +786,6 @@ window.switchDatabase = async function(key) {
             }
             
             jumlahSoalServer = qSnap.size;
-            // Cuci cetakan
             qSnap.forEach((doc) => { 
                 let d = JSON.parse(JSON.stringify(doc.data())); 
                 d.id = doc.id; 
@@ -799,7 +795,7 @@ window.switchDatabase = async function(key) {
 
         const dataLama = loadProgresLokal(key);
 
-        // SYARAT PAKAI CACHE: Mode bukan room, data lokal ada, DAN jumlah soalnya SAMA PERSIS
+        // SYARAT PAKAI CACHE
         if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room' && dataLama.soalAcak.length === jumlahSoalServer) {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
             currentQuestions = dataLama.soalAcak;
@@ -810,7 +806,7 @@ window.switchDatabase = async function(key) {
         } else {
             console.log(`🆕 Mulai ujian baru...`);
             
-            // 🛑 JANGAN DIACAK KALO MODE ROOM (Biar soal semua peserta URUTANNYA SAMA)
+            // 🛑 JANGAN DIACAK KALO MODE ROOM 
             if (currentAppMode !== 'room') {
                 shuffleArray(rawQuestions); 
             }
@@ -818,7 +814,6 @@ window.switchDatabase = async function(key) {
             rawQuestions.forEach(q => {
                 if(q.options && q.answer < q.options.length) {
                     let correctText = q.options[q.answer]; 
-                    // JANGAN ACAK OPSI DI ROOM (Karena opsi udah diacak saat Host bikin room)
                     if (currentAppMode !== 'room') {
                         shuffleArray(q.options); 
                     }
@@ -828,14 +823,12 @@ window.switchDatabase = async function(key) {
 
             currentQuestions = rawQuestions;
             
-            // 🛑 RESET ARRAY JAWABAN DARI NOL
             userAnswers = new Array(currentQuestions.length).fill(null);
             raguStatus = new Array(currentQuestions.length).fill(false);
             
             totalExamTime = currentQuestions.length * 30; 
             timeRemaining = totalExamTime;
             
-            // Simpan kondisi awal ujian baru ke memori (Menimpa memori lama yang salah)
             simpanProgresTotal(); 
         }
 
@@ -880,12 +873,11 @@ window.switchDatabase = async function(key) {
         updateTimerDisplay();
         renderSidebarGrid();
         
-// --- LOGIKA KHUSUS DAYA INGAT (MODUL 19.3) ---
+        // --- LOGIKA KHUSUS DAYA INGAT (MODUL 19.3) ---
         if (key === 'modul19.3') {
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             showMemorizationPhase(); 
         } else {
-            // MATIKAN TIMER GLOBAL KALO LAGI MODE ROOM
             if (currentAppMode !== 'room') {
                 startTimer();
             }
@@ -903,6 +895,7 @@ window.switchDatabase = async function(key) {
             if(sbLeft) sbLeft.style.display = ''; 
         }
 
+    // 👇 INI DIA SI PENUTUP YANG HILANG 👇
     } catch (e) {
         console.error("Error ambil data:", e);
         alert("Gagal memuat soal: " + e.message);
