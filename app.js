@@ -3171,7 +3171,7 @@ window.pantauRoom = (kodeRoom) => {
                 const overlayReady = document.getElementById('readyCheckOverlay');
                 if (overlayReady) overlayReady.remove();
                 
-                PROTAMA.alert("Kena Kick!", "Kamu dikeluarkan dari Room karena AFK / tidak klik Ready.", "error");
+                PROTAMA.alert("KELUAR!", "Kamu KELUAR OTOMATIS dari Room karena klik Ready.", "error");
                 if (roomListenerUnsubscribe) roomListenerUnsubscribe();
                 return window.keluarDariRoom(); // 🛑 BLOKIR TOTAL AKSES SOAL!
             }
@@ -3341,7 +3341,7 @@ window.pantauRoom = (kodeRoom) => {
 
             bgOverlay.innerHTML = `
                 <div style="animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align:center; display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px;">
-                    <h1 style="font-size:3.5rem; color:var(--gold); margin-bottom:5px; text-shadow: 0 0 25px rgba(241,196,15,0.6); font-weight:900;">MATCH FOUND!</h1>
+                    <h1 style="font-size:3.5rem; color:var(--gold); margin-bottom:5px; text-shadow: 0 0 25px rgba(241,196,15,0.6); font-weight:900;">SESSION READY!</h1>
                     <p style="font-size:1.2rem; margin-bottom:20px; color:#aaa;">Menunggu peserta siap... <b style="color:white;">(${totalReady}/${totalPemain})</b></p>
                     <div style="font-size:5rem; font-weight:900; color:#e74c3c; margin-bottom:30px; text-shadow: 0 0 30px rgba(231,76,60,0.6); font-variant-numeric: tabular-nums;" id="readyTxtCountdown">${currentTimerVal}</div>
                     ${isGueReady ?
