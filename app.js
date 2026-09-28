@@ -3995,6 +3995,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
                 <div class="result-actions">
                     <button class="btn-review" onclick="window.reviewHasilMabar()"><i class="fas fa-search"></i> Review Jawaban</button>
+                    <!-- 👉 TOMBOL CSV DI SINI 👈 -->
+                    <button onclick="window.downloadCSVMabar('${kodeRoom}')" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(39,174,96,0.4);"><i class="fas fa-file-csv"></i> Download CSV</button>
+                    <!-- ================================ -->
                     <button class="btn-tutup" onclick="document.getElementById('kahootResultOverlay').remove()"><i class="fas fa-times"></i> Tutup & Kembali</button>
                 </div>
             </div>
@@ -4100,6 +4103,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }
         } catch(e) { console.log(e); }
 
+        // Kuncian jawaban biasa (hanya saat Mabar berlangsung)
         window.isAnswerLocked = true;
 
         document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
@@ -4107,6 +4111,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             btn.style.opacity = '0.4';
         });
 
+        // 🛑 FLOATING MENU UNTUK REVIEW DAN DOWNLOAD 🛑
         if (!document.getElementById('roomFloatingMenu')) {
             const floatMenu = document.createElement('div');
             floatMenu.id = 'roomFloatingMenu';
@@ -4120,12 +4125,19 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 if(resO) resO.style.display = 'flex'; 
             };
 
+            // 👉 TOMBOL CSV DI FLOATING MENU 👈
+            const btnCsv = document.createElement('button');
+            btnCsv.innerHTML = '<i class="fas fa-file-csv"></i> Download CSV';
+            btnCsv.style.cssText = "background:#27ae60; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+            btnCsv.onclick = () => window.downloadCSVMabar(kodeRoom);
+
             const btnExit = document.createElement('button');
             btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
             btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
             btnExit.onclick = window.konfirmasiKeluarRoom;
 
             floatMenu.appendChild(btnRank);
+            floatMenu.appendChild(btnCsv); // Pasang btnCsv ke layar
             floatMenu.appendChild(btnExit);
             document.body.appendChild(floatMenu);
         }
@@ -4149,7 +4161,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-      window.reviewHasilMabar = () => {
+        // 🛑 JURUS BUKA GEMBOK SIDEBAR SAAT REVIEW 🛑
+        window.reviewHasilMabar = () => {
             // 1. Hapus layar podium Kahoot
             const bgOverlay = document.getElementById('kahootResultOverlay');
             if (bgOverlay) bgOverlay.remove();
@@ -4158,9 +4171,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms biar nggak ketimpa sistem bawaan)
+            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms biar aman)
             setTimeout(() => {
-                // Sembunyikan popup nilai bawaan (jaga-jaga kalo muncul lagi)
+                // Sembunyikan popup nilai bawaan
                 const popUpBiasa = document.getElementById('resultOverlay');
                 if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
 
@@ -4184,6 +4197,11 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 });
             }, 300);
         };
+
+    } catch (e) {
+        console.error("Gagal memuat hasil mabar:", e);
+    }
+}; // INI TUTUP KURUNG UTAMA FUNGSI
 // ==========================================
 // FUNGSI KONFIRMASI & BERSIH-BERSIH ROOM
 // ==========================================
