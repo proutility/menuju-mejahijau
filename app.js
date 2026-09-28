@@ -2468,7 +2468,6 @@ let isHost = false;
 // 1. HOST: BIKIN ROOM BARU (VERSI JADWAL ZOOM & RACIK SOAL)
 // ==========================================================
 window.bikinRoomLatihan = () => {
-    // Tampilkan Pop-up Bikin Room Baru yang udah lu tambahin di index.html tadi
     const modalRoom = document.getElementById('modalBikinRoom');
     if(modalRoom) modalRoom.style.display = 'flex';
     
@@ -2476,7 +2475,6 @@ window.bikinRoomLatihan = () => {
     if(!listDiv) return;
     listDiv.innerHTML = '';
     
-    // Trik pinter: Tarik opsi otomatis dari sidebar kiri lu
     document.querySelectorAll('.modul-selector .modul-btn').forEach(btn => {
         let idModul = btn.id.replace('btn-', '');
         let namaModul = btn.innerText;
@@ -2496,22 +2494,19 @@ window.eksekusiBikinRoom = async () => {
     
     if(chks.length === 0) return PROTAMA.alert("Waduh!", "Pilih minimal 1 modul buat diracik bro!", "warning");
     
-    // Default jadwal: Langsung mulai sekarang kalau nggak diisi
     const waktuMulaiMilis = jadwalStr ? new Date(jadwalStr).getTime() : new Date().getTime() + 5000; 
     let selectedModuls = Array.from(chks).map(c => c.value);
     
     document.getElementById('modalBikinRoom').style.display = 'none';
     PROTAMA.loading("Meracik Soal Mabar...");
     
-let kawahSoal = [];
+    let kawahSoal = [];
     try {
-        // 👇 1. MATEMATIKA PROPORSIONAL SOAL 👇
         let totalSoalTarget = 100;
         let jumlahModul = selectedModuls.length;
         let baseJatah = Math.floor(totalSoalTarget / jumlahModul);
-        let sisaJatah = totalSoalTarget % jumlahModul; // Jaga-jaga kalo ganjil
+        let sisaJatah = totalSoalTarget % jumlahModul; 
 
-        // Tarik semua soal dari modul yang dicentang secara paralel
         const tarikanServer = selectedModuls.map(async (modId, index) => {
             const qSnap = await getDocs(collection(window.db, "bank_soal", modId, "daftar_soal"));
             let soalModulIni = [];
@@ -2519,17 +2514,14 @@ let kawahSoal = [];
                 let d = docSnap.data(); d.id = docSnap.id; soalModulIni.push(d);
             });
             
-            // Acak dulu per modul biar dapet soal terbaik
             shuffleArray(soalModulIni);
             
-            // Potong sesuai jatah (Modul terakhir dapet jatah tambahan kalau ada sisa pembagian)
             let jatah = baseJatah + (index === jumlahModul - 1 ? sisaJatah : 0);
             return soalModulIni.slice(0, jatah);
         });
 
         const hasilTarikan = await Promise.all(tarikanServer);
         
-        // Gabungin ke kawah besar
         hasilTarikan.forEach(kumpulan => {
             kawahSoal = kawahSoal.concat(kumpulan);
         });
@@ -2539,11 +2531,9 @@ let kawahSoal = [];
             return PROTAMA.alert("Kosong", "Modul yang dipilih belum ada soalnya!", "error");
         }
 
-        // 👇 2. ACAK KESELURUHAN (Biar campur aduk: Hukum, Asas, Hukum lagi, dst) 👇
         shuffleArray(kawahSoal);
         let soalMabarFinal = kawahSoal; 
 
-        // 3. Acak Opsi Jawabannya (Biar A, B, C, D nya beda tiap room)
         soalMabarFinal.forEach(q => {
             if(q.options && q.answer < q.options.length) {
                 let jawabanBenar = q.options[q.answer]; 
@@ -2552,7 +2542,6 @@ let kawahSoal = [];
             }
         });
 
-        // 4. Bikin Kode Room
         const kodeRoom = Math.floor(10000 + Math.random() * 90000).toString(); 
 
         await setDoc(doc(window.db, "rooms", kodeRoom), {
@@ -2560,12 +2549,13 @@ let kawahSoal = [];
             hostUid: currentUser.uid,
             hostName: currentUser.displayName,
             modulId: selectedModuls.length > 1 ? "latihan_campuran" : selectedModuls[0], 
-            soalTersimpan: soalMabarFinal, // SOAL RACIKAN DISIMPAN DI SINI
+            soalTersimpan: soalMabarFinal, 
             jadwal_mulai: waktuMulaiMilis,
             status: 'waiting', 
             currentIdx: 0,
             players: {
-                [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
+                // 🛑 SISIPKAN FOTO HOST DI SINI 🛑
+                [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
             },
             messages: [],
             createdAt: new Date()
@@ -2577,7 +2567,6 @@ let kawahSoal = [];
         
         PROTAMA.close();
         
-        // Lempar ke UI Waiting Room
         window.tampilkanWaitingRoom(kodeRoom, isHost, selectedModuls.length > 1 ? "latihan_campuran" : selectedModuls[0]); 
         window.pantauRoom(kodeRoom);
 
@@ -2586,6 +2575,7 @@ let kawahSoal = [];
         PROTAMA.alert("Error", "Gagal membuat soal: " + e.message, "error");
     }
 };
+
 // ==========================================================
 // 2. PESERTA: GABUNG KE ROOM (MANUAL DARI KODE)
 // ==========================================================
@@ -2621,8 +2611,6 @@ window.gabungRoomLatihan = async () => {
         }
 
         const dataRoom = roomSnap.data();
-        
-        // 🛑 JURUS REJOIN: Cek apakah user ini udah ada di dalam daftar peserta?
         const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
 
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
@@ -2631,15 +2619,18 @@ window.gabungRoomLatihan = async () => {
         }
 
         if (!isPemainLama) {
-            // Kalau peserta murni baru, set skor dari 0
+            // 🛑 SISIPKAN FOTO PESERTA JOIN MANUAL DI SINI 🛑
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
             });
         } else {
+            // Kalau dia udah ada, sekalian kita timpa fotonya (jaga-jaga kalau kemarin fotonya kosong)
+            await updateDoc(roomRef, {
+                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null
+            });
             console.log("Pemain lama reconnect. Welcome back!");
         }
 
-        // 🛑 CEK STATUS HOST: Biar kalau host yang refresh, kendalinya gak hilang!
         window.isHost = (dataRoom.hostUid === currentUser.uid);
         isHost = window.isHost;
         
@@ -2649,7 +2640,6 @@ window.gabungRoomLatihan = async () => {
         PROTAMA.close();
         
         if (dataRoom.status === 'waiting') {
-            // 👇 BUMBU RAHASIA: Lempar modulId dari Firebase ke UI peserta 👇
             window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
         }
         window.pantauRoom(kodeRoom);
@@ -2678,8 +2668,6 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         }
 
         const dataRoom = roomSnap.data();
-        
-        // 🛑 JURUS REJOIN
         const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
 
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
@@ -2689,12 +2677,17 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         }
 
         if (!isPemainLama) {
+            // 🛑 SISIPKAN FOTO PESERTA JOIN LINK DI SINI 🛑
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null }
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
+            });
+        } else {
+            // Kalau dia udah ada, sekalian kita timpa fotonya
+            await updateDoc(roomRef, {
+                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null
             });
         }
 
-        // 🛑 CEK STATUS HOST
         window.isHost = (dataRoom.hostUid === currentUser.uid);
         isHost = window.isHost;
         
@@ -2704,7 +2697,6 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         PROTAMA.close();
         
         if (dataRoom.status === 'waiting') {
-            // 👇 BUMBU RAHASIA JUGA DI SINI: Lempar modulId ke UI auto-join 👇
             window.tampilkanWaitingRoom(kodeRoom, isHost, dataRoom.modulId); 
         }
         window.pantauRoom(kodeRoom);
@@ -3875,7 +3867,7 @@ window.switchTabLobby = function(tab) {
     }
 };
 // ========================================================
-// 🏆 FUNGSI KLASEMEN AKHIR MABAR (INFO ROOM DI KIRI ATAS)
+// 🏆 FUNGSI KLASEMEN AKHIR MABAR (LAYOUT PRO & FOTO GOOGLE)
 // ========================================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     try {
@@ -3902,21 +3894,25 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         let p2 = arr[1] || null;
         let p3 = arr[2] || null;
 
+        // 🛑 FUNGSI PODIUM DENGAN FOTO GOOGLE & FALLBACK INISIAL
         const buatPodium = (player, posisi, tinggi, warna, ikon, delay) => {
             if (!player) return `<div class="podium-kosong" style="width:140px;"></div>`;
             
             let namaPendek = player.nama.split(" ")[0]; 
             let skor = Math.round(player.skor || 0);
-            let isMe = window.currentUser && player.nama === window.currentUser.displayName ? '<div class="me-badge">KAMU</div>' : '';
+            let isMe = window.currentUser && player.nama === window.currentUser.displayName;
+            let badgeKamu = isMe ? '<div class="me-badge">KAMU</div>' : '';
             
-            let urlFoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPendek)}&background=random&color=fff&bold=true&size=150`;
+            // Prioritaskan Foto Google, kalau gagal/kosong baru pakai Inisial
+            let fotoUser = player.photoURL || (isMe ? window.currentUser.photoURL : null);
+            let urlFoto = fotoUser ? fotoUser : `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPendek)}&background=random&color=fff&bold=true&size=150`;
 
             return `
             <div class="podium-wrapper" style="animation: slideUp 0.8s ease ${delay}s backwards;">
                 <div class="podium-avatar" style="border: 4px solid ${warna}; background: #fff;">
-                    <img src="${urlFoto}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+                    <img src="${urlFoto}" referrerpolicy="no-referrer" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                 </div>
-                ${isMe}
+                ${badgeKamu}
                 <div class="podium-name">${namaPendek}</div>
                 <div class="podium-score">${skor} Pts</div>
                 <div class="podium-block" style="height:${tinggi}px; background:linear-gradient(to top, ${warna}, #ffffff33); border-top: 4px solid ${warna};">
@@ -3949,16 +3945,18 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             `;
             for (let i = 3; i < arr.length; i++) {
                 let p = arr[i];
-                let isMe = window.currentUser && p.nama === window.currentUser.displayName ? 'background: #e3f2fd; border-left: 4px solid #3498db;' : 'background: white; border-left: 4px solid transparent;';
+                let isMe = window.currentUser && p.nama === window.currentUser.displayName;
+                let bgRow = isMe ? 'background: #e3f2fd; border-left: 4px solid #3498db;' : 'background: white; border-left: 4px solid transparent;';
                 
-                let urlFotoSisa = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nama.split(" ")[0])}&background=random&color=fff&bold=true&size=50`;
+                let fotoUserSisa = p.photoURL || (isMe ? window.currentUser.photoURL : null);
+                let urlFotoSisa = fotoUserSisa ? fotoUserSisa : `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nama.split(" ")[0])}&background=random&color=fff&bold=true&size=50`;
 
                 htmlSisaPemain += `
-                    <tr style="${isMe} border-bottom: 1px solid #f0f0f0;">
+                    <tr style="${bgRow} border-bottom: 1px solid #f0f0f0;">
                         <td style="padding:12px 10px; font-weight:bold; color:#7f8c8d;">${i + 1}</td>
                         <td style="padding:12px 10px; display:flex; align-items:center; font-weight:600; color:#2c3e50;">
-                            <img src="${urlFotoSisa}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; margin-right:10px; border:1px solid #ddd;">
-                            ${p.nama} ${window.currentUser && p.nama === window.currentUser.displayName ? '<span style="color:#3498db; font-size:0.8rem; margin-left:5px;">(Kamu)</span>' : ''}
+                            <img src="${urlFotoSisa}" referrerpolicy="no-referrer" style="width:30px; height:30px; border-radius:50%; object-fit:cover; margin-right:10px; border:1px solid #ddd;">
+                            ${p.nama} ${isMe ? '<span style="color:#3498db; font-size:0.8rem; margin-left:5px;">(Kamu)</span>' : ''}
                         </td>
                         <td style="padding:12px 10px; text-align:right; font-weight:bold; color:#e67e22;">${Math.round(p.skor || 0)} <small style="color:#888;">Pts</small></td>
                     </tr>
@@ -3978,10 +3976,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
 
         bgOverlay.innerHTML = `
-            <div class="result-card">
-                <div class="confetti-bg"></div>
-
-                <!-- 🛑 INFO ROOM & PESERTA PINDAH KE POJOK KIRI ATAS -->
+            <div class="result-card" style="z-index:2147483648;">
                 <div style="position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; text-align: left;">
                     <div style="background: rgba(52, 152, 219, 0.1); color: #2980b9; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: 1px solid rgba(52, 152, 219, 0.3);">
                         <i class="fas fa-door-open" style="margin-right: 5px;"></i> Room: ${kodeRoom}
@@ -3990,6 +3985,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                         <i class="fas fa-users" style="margin-right: 5px;"></i> Peserta: ${arr.length}
                     </div>
                 </div>
+
+                <button id="btnPlaySoundManual" style="display:none; position:absolute; top:20px; right:20px; background:#f39c12; color:white; border:none; padding:8px 15px; border-radius:20px; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2); animation: pulseReady 1s infinite;"><i class="fas fa-volume-up"></i> Putar Musik</button>
 
                 <h1 class="result-title"><i class="fas fa-trophy"></i> LEADERBOARD <i class="fas fa-trophy"></i></h1>
                 
@@ -4005,26 +4002,28 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             <style>
                 @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
                 @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                @keyframes pulseReady { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-                .result-card {
-                    background: #ffffff;
-                    width: 100%;
+                /* 🛑 LAYOUT DINAMIS: Pake Flexbox, No More Obat Nyundul */
+                .result-card { 
+                    background: #ffffff; 
+                    width: 100%; 
                     max-width: 850px; 
-                    border-radius: 20px;
-                    padding: 40px 40px 30px 40px; /* Bawahnya dirapihin dikit */
-                    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-                    text-align: center;
-                    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                    position: relative;
-                    overflow: hidden;
+                    border-radius: 20px; 
+                    padding: 40px 40px 30px 40px; 
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+                    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+                    position: relative; 
                     margin: auto; 
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 30px; /* Jarak natural yang konsisten */
                 }
                 
-                /* Teksnya dikasih margin bawah ekstra biar lega sama podium */
-                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin-bottom: 50px; margin-top: 10px; text-transform: uppercase; }
+                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin: 0; padding-top: 15px; text-transform: uppercase; text-align: center; }
 
-                .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; height: 280px; border-bottom: 3px solid #eee; }
-                
+                .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 280px; border-bottom: 3px solid #eee; margin: 0; width: 100%; }
                 .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
                 .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
                 .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
@@ -4035,9 +4034,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; background: rgba(255,255,255,0.8); padding: 2px 8px; border-radius: 10px;}
                 .me-badge { position: absolute; top: -25px; background: #e74c3c; color: white; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 15px; z-index: 11; box-shadow: 0 2px 6px rgba(231,76,60,0.4); border: 2px solid white;}
 
-                .other-players-list { max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 5px; margin-bottom: 30px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+                .other-players-list { width: 100%; max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 5px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
                 
-                .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+                .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 10px; width: 100%; }
                 .result-actions button { padding: 12px 25px; border: none; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
                 .btn-review { background: #3498db; color: white; box-shadow: 0 4px 15px rgba(52,152,219,0.4); }
                 .btn-review:hover { background: #2980b9; transform: translateY(-2px); }
@@ -4047,8 +4046,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 @media (max-width: 600px) {
                     .podium-wrapper { width: 90px; }
                     .podium-rank { font-size: 2rem; }
-                    .result-card { padding: 20px; border-radius: 10px; }
-                    .result-title { font-size: 1.5rem; margin-top: 40px; margin-bottom: 30px; } /* Di HP judulnya diturunin dikit biar ga nabrak badge */
+                    .result-card { padding: 20px; border-radius: 10px; gap: 20px; }
+                    .result-title { font-size: 1.5rem; padding-top: 40px; }
                     .podium-avatar { width: 60px; height: 60px; margin-bottom: -30px;}
                     .podium-name { font-size: 0.9rem;}
                 }
@@ -4057,10 +4056,48 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
         document.body.appendChild(bgOverlay);
 
+        const jalankanKembangApi = () => {
+            let durasi = 5 * 1000;
+            let animationEnd = Date.now() + durasi;
+            let defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2147483649 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+            let interval = setInterval(function() {
+                let timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                let particleCount = 50 * (timeLeft / durasi);
+                window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        };
+
+        if (!window.confetti) {
+            let script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js";
+            script.onload = jalankanKembangApi;
+            document.head.appendChild(script);
+        } else {
+            jalankanKembangApi();
+        }
+
         try {
             const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
             victorySound.volume = 0.7; 
-            victorySound.play().catch(e => console.log('Suara keblokir browser:', e));
+            
+            let playPromise = victorySound.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Audio diblokir browser, menampilkan tombol manual.");
+                    const btnAudio = document.getElementById('btnPlaySoundManual');
+                    if (btnAudio) {
+                        btnAudio.style.display = 'block';
+                        btnAudio.onclick = () => {
+                            victorySound.play();
+                            btnAudio.style.display = 'none'; 
+                        };
+                    }
+                });
+            }
         } catch(e) { console.log(e); }
 
         window.isAnswerLocked = true;
