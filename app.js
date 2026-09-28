@@ -4149,27 +4149,41 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-       window.reviewHasilMabar = () => {
-            // 1. Hapus overlay podiumnya sampai bersih
-            bgOverlay.remove();
-            
-            // 2. Buka kuncian tombol-tombol yang tadi mati rasa
-            document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
-                btn.style.pointerEvents = 'auto'; // Kuncian dibuka
-                btn.style.opacity = '1';
-            });
-            window.isAnswerLocked = false; // Buka status kuncian jawaban
+      window.reviewHasilMabar = () => {
+            // 1. Hapus layar podium Kahoot
+            const bgOverlay = document.getElementById('kahootResultOverlay');
+            if (bgOverlay) bgOverlay.remove();
 
-            // 3. Eksekusi fungsi review aslinya
+            // 2. Eksekusi fungsi review bawaan sistem
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
-            if(btnReviewReal) btnReviewReal.click();
+            if (btnReviewReal) btnReviewReal.click();
+
+            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms biar nggak ketimpa sistem bawaan)
+            setTimeout(() => {
+                // Sembunyikan popup nilai bawaan (jaga-jaga kalo muncul lagi)
+                const popUpBiasa = document.getElementById('resultOverlay');
+                if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
+
+                // Buka paksa akses klik untuk seluruh area sidebar kanan
+                const sidebarKanan = document.querySelector('.sidebar-right');
+                if (sidebarKanan) sidebarKanan.style.setProperty('pointer-events', 'auto', 'important');
+
+                const navContainer = document.querySelector('.nav-container');
+                if (navContainer) navContainer.style.setProperty('pointer-events', 'auto', 'important');
+
+                // Buka paksa akses klik untuk semua kotak nomor soal (1, 2, 3, dst)
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.style.setProperty('pointer-events', 'auto', 'important');
+                    btn.style.setProperty('cursor', 'pointer', 'important');
+                });
+                
+                // Buka kuncian tombol action lainnya
+                document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+                    btn.style.setProperty('pointer-events', 'auto', 'important');
+                    btn.style.opacity = '1';
+                });
+            }, 300);
         };
-
-    } catch (e) {
-        console.error("Gagal memuat hasil mabar:", e);
-    }
-};
-
 // ==========================================
 // FUNGSI KONFIRMASI & BERSIH-BERSIH ROOM
 // ==========================================
