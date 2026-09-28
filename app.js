@@ -3449,7 +3449,7 @@ window.pantauRoom = (kodeRoom) => {
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
-                let sisaWaktuRoom = 30; 
+                let sisaWaktuRoom = 45; 
                 
                 const setLayarTimer = (detik) => {
                     let txt = "00:00:" + String(detik).padStart(2, '0');
