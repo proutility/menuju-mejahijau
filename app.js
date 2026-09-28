@@ -2990,7 +2990,7 @@ window.mulaiUjianRoom = async (kode) => {
     
     if (!yakin) return;
 
-    PROTAMA.loading("Menyiapkan Matchmaking...");
+    PROTAMA.loading("Menyiapkan LEADERBOARD...");
     try {
         const roomRef = doc(window.db || db, "rooms", kode);
         const snap = await getDoc(roomRef);
@@ -3991,7 +3991,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     </div>
                 </div>
 
-                <h1 class="result-title"><i class="fas fa-trophy"></i> HASIL MATCHMAKING <i class="fas fa-trophy"></i></h1>
+                <h1 class="result-title"><i class="fas fa-trophy"></i> LEADERBOARD <i class="fas fa-trophy"></i></h1>
                 
                 ${htmlTop3}
                 ${htmlSisaPemain}
