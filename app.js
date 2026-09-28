@@ -3013,7 +3013,9 @@ window.mulaiUjianRoom = async (kode) => {
 
 // Fungsi saat peserta nge-klik tombol "KLIK READY"
 window.klikReadyMabar = (kodeRoom) => {
-    const uidGue = window.currentUser ? window.currentUser.uid : null;
+    // 🛑 FIX: Cari data user pake cara super kebal
+    let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
+    const uidGue = myUser ? myUser.uid : null;
     if(!uidGue) return;
     
     try { new Audio('https://www.myinstants.com/media/sounds/button-3.mp3').play(); } catch(e){}
@@ -3022,7 +3024,6 @@ window.klikReadyMabar = (kodeRoom) => {
         [`players.${uidGue}.isReady`]: true
     }).catch(e => console.log(e));
 };
-
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
     window.currentRoomCode = kodeRoom; 
@@ -3266,8 +3267,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // 👇👇👇 FUNGSI READY CHECK BARU DI SINI 👇👇👇
-        // --- B. FASE READY CHECK (ALA ML/PUBG) ---
+       // --- B. FASE READY CHECK (ALA ML/PUBG) ---
         else if (data.status === 'ready_check') {
             let bgOverlay = document.getElementById('readyCheckOverlay');
             if (!bgOverlay) {
@@ -3277,8 +3277,13 @@ window.pantauRoom = (kodeRoom) => {
                 document.body.appendChild(bgOverlay);
             }
 
-            const uidGue = window.currentUser ? window.currentUser.uid : null;
-            if(!uidGue) return;
+            // 🛑 FIX BUG LAYAR GELAP: Tarik data user dengan cara kebal
+            let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
+            if (!myUser || !myUser.uid) {
+                console.log("Menunggu data user...");
+                return;
+            }
+            const uidGue = myUser.uid;
             
             // 🛑 SISTEM DETEKSI KICK OTOMATIS
             if (data.players && !data.players[uidGue]) {
@@ -3291,7 +3296,6 @@ window.pantauRoom = (kodeRoom) => {
             let totalPemain = Object.keys(data.players).length;
             let totalReady = Object.values(data.players).filter(p => p.isReady).length;
 
-            // BIKIN LIST PEMAIN & STATUS READY
             let htmlDaftarPemain = '<div style="margin-top: 30px; width: 100%; max-width: 400px; max-height: 250px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.1);">';
             
             for (let uid in data.players) {
@@ -3343,6 +3347,7 @@ window.pantauRoom = (kodeRoom) => {
             `;
 
             // 🛑 SISTEM TIMER & EKSEKUTOR KICK 
+            let amIHost = (data.hostUid === uidGue);
             if (amIHost && !window.hostReadyTimerInterval) {
                 let sisaWaktu = 20;
                 window.hostReadyTimerInterval = setInterval(() => {
@@ -3389,7 +3394,6 @@ window.pantauRoom = (kodeRoom) => {
                 }, 1000);
             }
         }
-        // 👆👆👆 FUNGSI READY CHECK SELESAI 👆👆👆
 
         // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
