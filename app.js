@@ -747,31 +747,59 @@ window.switchDatabase = async function(key) {
     const docRef = doc(db, "bank_soal", key);
         const docSnap = await getDoc(docRef);
         
-        // 🔥 CARA OTOMATIS: Ambil teks langsung dari tombol menu sebelah kiri
+       try {
         let judulModul = "Modul Latihan";
         const tombolMenu = document.getElementById('btn-' + key);
-        if (tombolMenu) {
-            judulModul = tombolMenu.innerText.trim(); 
+        if (tombolMenu) judulModul = tombolMenu.innerText.trim(); 
+
+        let rawQuestions = [];
+        let jumlahSoalServer = 0;
+
+        // 🛑 JURUS BYPASS MABAR: Kalau lagi mabar, ambil dari brankas Room! 🛑
+        if (currentAppMode === 'room' && window.currentRoomCode) {
+            const roomRef = doc(db, "rooms", window.currentRoomCode);
+            const roomSnap = await getDoc(roomRef);
+            
+            if (roomSnap.exists() && roomSnap.data().soalTersimpan) {
+                // Sedot soal yang udah diracik sama Host tadi
+                rawQuestions = JSON.parse(JSON.stringify(roomSnap.data().soalTersimpan)); 
+                jumlahSoalServer = rawQuestions.length;
+                judulModul = roomSnap.data().nama || judulModul; // Pake nama Tryout
+                console.log(`🎮 Mode Mabar: Menyedot ${jumlahSoalServer} soal proporsional dari Room!`);
+            } else {
+                alert("⚠️ Data soal room tidak ditemukan!");
+                return;
+            }
+        } 
+        // 🛑 MODE SINGLEPLAYER BIASA (Cara Lama) 🛑
+        else {
+            const docRef = doc(db, "bank_soal", key);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().title) {
+                judulModul = docSnap.data().title;
+            }
+
+            const qRef = collection(db, "bank_soal", key, "daftar_soal");
+            const qSnap = await getDocs(qRef);
+
+            if (qSnap.empty) {
+                alert("⚠️ Soal untuk modul ini belum di-upload ke server!");
+                if(qText) qText.innerText = "Belum ada soal.";
+                return;
+            }
+            
+            jumlahSoalServer = qSnap.size;
+            // Cuci cetakan
+            qSnap.forEach((doc) => { 
+                let d = JSON.parse(JSON.stringify(doc.data())); 
+                d.id = doc.id; 
+                rawQuestions.push(d); 
+            });
         }
 
-        // Tapi kalau suatu saat lu iseng ngisi field 'title' di Firebase, dia bakal memprioritaskan yang dari Firebase
-        if (docSnap.exists() && docSnap.data().title) {
-            judulModul = docSnap.data().title;
-        }
+        const dataLama = loadProgresLokal(key);
 
-        const qRef = collection(db, "bank_soal", key, "daftar_soal");
-        const qSnap = await getDocs(qRef);
-
-        if (qSnap.empty) {
-            alert("⚠️ Soal untuk modul ini belum di-upload ke server!");
-            if(qText) qText.innerText = "Belum ada soal.";
-            return;
-        }
-
-      const dataLama = loadProgresLokal(key);
-        const jumlahSoalServer = qSnap.size; // Hitung jumlah soal fresh dari Firebase
-
-        // SYARAT PAKAI CACHE: Mode bukan room, data lokal ada, DAN jumlah soalnya SAMA PERSIS dengan di Firebase
+        // SYARAT PAKAI CACHE: Mode bukan room, data lokal ada, DAN jumlah soalnya SAMA PERSIS
         if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room' && dataLama.soalAcak.length === jumlahSoalServer) {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
             currentQuestions = dataLama.soalAcak;
@@ -780,17 +808,9 @@ window.switchDatabase = async function(key) {
             totalExamTime = currentQuestions.length * 30; 
             timeRemaining = dataLama.waktuSisa !== undefined ? dataLama.waktuSisa : totalExamTime;
         } else {
-            console.log(`🆕 Mulai ujian baru (Server punya ${jumlahSoalServer} soal) untuk modul: ${key}`);
-            let rawQuestions = []; 
+            console.log(`🆕 Mulai ujian baru...`);
             
-            // 🛑 CUCI CETAKAN SOAL: Bikin salinan mentah (Deep Clone) biar 100% perawan!
-            qSnap.forEach((doc) => { 
-                let d = JSON.parse(JSON.stringify(doc.data())); 
-                d.id = doc.id; 
-                rawQuestions.push(d); 
-            });
-            
-            // JANGAN DIACAK KALO MODE ROOM!
+            // 🛑 JANGAN DIACAK KALO MODE ROOM (Biar soal semua peserta URUTANNYA SAMA)
             if (currentAppMode !== 'room') {
                 shuffleArray(rawQuestions); 
             }
@@ -798,11 +818,10 @@ window.switchDatabase = async function(key) {
             rawQuestions.forEach(q => {
                 if(q.options && q.answer < q.options.length) {
                     let correctText = q.options[q.answer]; 
-                    
+                    // JANGAN ACAK OPSI DI ROOM (Karena opsi udah diacak saat Host bikin room)
                     if (currentAppMode !== 'room') {
                         shuffleArray(q.options); 
                     }
-                    
                     q.answer = q.options.indexOf(correctText); 
                 }
             });
@@ -2491,16 +2510,35 @@ window.eksekusiBikinRoom = async () => {
     document.getElementById('modalBikinRoom').style.display = 'none';
     PROTAMA.loading("Meracik Soal Mabar...");
     
-    let kawahSoal = [];
+let kawahSoal = [];
     try {
-        // 1. Tarik semua soal dari modul yang dicentang secara paralel
-        const tarikanServer = selectedModuls.map(modId => getDocs(collection(window.db, "bank_soal", modId, "daftar_soal")));
+        // 👇 1. MATEMATIKA PROPORSIONAL SOAL 👇
+        let totalSoalTarget = 100;
+        let jumlahModul = selectedModuls.length;
+        let baseJatah = Math.floor(totalSoalTarget / jumlahModul);
+        let sisaJatah = totalSoalTarget % jumlahModul; // Jaga-jaga kalo ganjil
+
+        // Tarik semua soal dari modul yang dicentang secara paralel
+        const tarikanServer = selectedModuls.map(async (modId, index) => {
+            const qSnap = await getDocs(collection(window.db, "bank_soal", modId, "daftar_soal"));
+            let soalModulIni = [];
+            qSnap.forEach(docSnap => {
+                let d = docSnap.data(); d.id = docSnap.id; soalModulIni.push(d);
+            });
+            
+            // Acak dulu per modul biar dapet soal terbaik
+            shuffleArray(soalModulIni);
+            
+            // Potong sesuai jatah (Modul terakhir dapet jatah tambahan kalau ada sisa pembagian)
+            let jatah = baseJatah + (index === jumlahModul - 1 ? sisaJatah : 0);
+            return soalModulIni.slice(0, jatah);
+        });
+
         const hasilTarikan = await Promise.all(tarikanServer);
         
-        hasilTarikan.forEach(qSnap => {
-            qSnap.forEach(docSnap => {
-                let d = docSnap.data(); d.id = docSnap.id; kawahSoal.push(d);
-            });
+        // Gabungin ke kawah besar
+        hasilTarikan.forEach(kumpulan => {
+            kawahSoal = kawahSoal.concat(kumpulan);
         });
 
         if(kawahSoal.length === 0) {
@@ -2508,11 +2546,11 @@ window.eksekusiBikinRoom = async () => {
             return PROTAMA.alert("Kosong", "Modul yang dipilih belum ada soalnya!", "error");
         }
 
-        // 2. Acak semua soal & ambil maksimal 100 soal
+        // 👇 2. ACAK KESELURUHAN (Biar campur aduk: Hukum, Asas, Hukum lagi, dst) 👇
         shuffleArray(kawahSoal);
-        let soalMabarFinal = kawahSoal.slice(0, 100); 
+        let soalMabarFinal = kawahSoal; 
 
-        // 3. Acak Opsi Jawabannya
+        // 3. Acak Opsi Jawabannya (Biar A, B, C, D nya beda tiap room)
         soalMabarFinal.forEach(q => {
             if(q.options && q.answer < q.options.length) {
                 let jawabanBenar = q.options[q.answer]; 
