@@ -3146,6 +3146,7 @@ window.pantauRoom = (kodeRoom) => {
         listContainer.innerHTML = html;
     };
 
+// 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     const roomRef = doc(window.db || db, "rooms", kodeRoom); 
     
@@ -3156,6 +3157,25 @@ window.pantauRoom = (kodeRoom) => {
         }
         
         const data = snap.data();
+        
+        // 👇 OBAT PIKUN: Simpan data terbaru ke global memori biar timer selalu update
+        window.latestRoomData = data; 
+        
+        let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
+        let myUid = myUser ? myUser.uid : null;
+
+        // 🛑 FIX BUG 1: GLOBAL KICK DETECTION (KEBAL BYPASS)
+        if (myUid && data.players && !data.players[myUid]) {
+            // Kalau namaku tiba-tiba hilang dari database pas room udah mulai jalan
+            if (data.status === 'ready_check' || data.status === 'soal' || data.status === 'pembahasan') {
+                const overlayReady = document.getElementById('readyCheckOverlay');
+                if (overlayReady) overlayReady.remove();
+                
+                PROTAMA.alert("Kena Kick!", "Kamu dikeluarkan dari Room karena AFK / tidak klik Ready.", "error");
+                if (roomListenerUnsubscribe) roomListenerUnsubscribe();
+                return window.keluarDariRoom(); // 🛑 BLOKIR TOTAL AKSES SOAL!
+            }
+        }
 
         // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
@@ -3267,7 +3287,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-       // --- B. FASE READY CHECK (ALA ML/PUBG) ---
+     // --- B. FASE READY CHECK (ALA ML/PUBG) ---
         else if (data.status === 'ready_check') {
             let bgOverlay = document.getElementById('readyCheckOverlay');
             if (!bgOverlay) {
@@ -3277,31 +3297,29 @@ window.pantauRoom = (kodeRoom) => {
                 document.body.appendChild(bgOverlay);
             }
 
-            // 🛑 FIX BUG LAYAR GELAP: Tarik data user dengan cara kebal
-            let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
-            if (!myUser || !myUser.uid) {
-                console.log("Menunggu data user...");
-                return;
-            }
-            const uidGue = myUser.uid;
-            
-            // 🛑 SISTEM DETEKSI KICK OTOMATIS
-            if (data.players && !data.players[uidGue]) {
-                bgOverlay.remove();
-                PROTAMA.alert("Kena Kick!", "Kamu dikeluarkan karena AFK / Tidak menekan tombol Ready.", "error");
-                return window.keluarDariRoom();
-            }
+            const uidGue = myUid; // Ngambil variabel anti-error dari atas
+            if(!uidGue) return;
 
             const isGueReady = data.players[uidGue].isReady === true;
             let totalPemain = Object.keys(data.players).length;
             let totalReady = Object.values(data.players).filter(p => p.isReady).length;
+            
+            // 👇 FIX BUG 2: CEK KESIAPAN DI LUAR TIMER BIAR HOST LANGSUNG MASUK SOAL
+            let amIHost = (data.hostUid === uidGue);
+            if (amIHost && totalReady === totalPemain && totalPemain > 0) {
+                if (window.hostReadyTimerInterval) {
+                    clearInterval(window.hostReadyTimerInterval);
+                    window.hostReadyTimerInterval = null;
+                }
+                updateDoc(roomRef, { status: 'soal', currentIdx: 0 });
+                return; // Langsung hajar masuk soal!
+            }
 
             let htmlDaftarPemain = '<div style="margin-top: 30px; width: 100%; max-width: 400px; max-height: 250px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.1);">';
             
             for (let uid in data.players) {
                 let p = data.players[uid];
                 let iconMahkota = (data.hostUid === uid) ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '';
-                
                 let statusSiap = p.isReady ? 
                     `<span style="color:#2ecc71; font-weight:bold; font-size:0.85rem;"><i class="fas fa-check-circle"></i> SIAP</span>` : 
                     `<span style="color:#f1c40f; font-weight:bold; font-size:0.85rem; animation: blinkWait 1s infinite;"><i class="fas fa-spinner fa-spin"></i> NUNGGU</span>`;
@@ -3325,17 +3343,11 @@ window.pantauRoom = (kodeRoom) => {
                 <div style="animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align:center; display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px;">
                     <h1 style="font-size:3.5rem; color:var(--gold); margin-bottom:5px; text-shadow: 0 0 25px rgba(241,196,15,0.6); font-weight:900;">MATCH FOUND!</h1>
                     <p style="font-size:1.2rem; margin-bottom:20px; color:#aaa;">Menunggu peserta siap... <b style="color:white;">(${totalReady}/${totalPemain})</b></p>
-
                     <div style="font-size:5rem; font-weight:900; color:#e74c3c; margin-bottom:30px; text-shadow: 0 0 30px rgba(231,76,60,0.6); font-variant-numeric: tabular-nums;" id="readyTxtCountdown">${currentTimerVal}</div>
-
                     ${isGueReady ?
-                        `<button style="background:#27ae60; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(39,174,96,0.6); cursor:not-allowed;" disabled>
-                            <i class="fas fa-check-circle"></i> SUDAH SIAP
-                        </button>`
+                        `<button style="background:#27ae60; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(39,174,96,0.6); cursor:not-allowed;" disabled><i class="fas fa-check-circle"></i> SUDAH SIAP</button>`
                         :
-                        `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;">
-                            <i class="fas fa-bolt"></i> KLIK READY!
-                        </button>`
+                        `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;"><i class="fas fa-bolt"></i> KLIK READY!</button>`
                     }
                     ${htmlDaftarPemain}
                 </div>
@@ -3346,8 +3358,7 @@ window.pantauRoom = (kodeRoom) => {
                 </style>
             `;
 
-            // 🛑 SISTEM TIMER & EKSEKUTOR KICK 
-            let amIHost = (data.hostUid === uidGue);
+            // 🛑 SISTEM TIMER KICK (Penyakit pikun udah diobatin)
             if (amIHost && !window.hostReadyTimerInterval) {
                 let sisaWaktu = 20;
                 window.hostReadyTimerInterval = setInterval(() => {
@@ -3355,22 +3366,16 @@ window.pantauRoom = (kodeRoom) => {
                     const txt = document.getElementById('readyTxtCountdown');
                     if (txt) txt.innerText = sisaWaktu;
 
-                    let skrgTotalReady = Object.values(data.players).filter(p => p.isReady).length;
-                    let skrgTotalPemain = Object.keys(data.players).length;
-
-                    if (skrgTotalReady === skrgTotalPemain && skrgTotalPemain > 0) {
-                        clearInterval(window.hostReadyTimerInterval);
-                        window.hostReadyTimerInterval = null;
-                        updateDoc(roomRef, { status: 'soal', currentIdx: 0 }); 
-                    }
-                    else if (sisaWaktu <= 0) {
+                    if (sisaWaktu <= 0) {
                         clearInterval(window.hostReadyTimerInterval);
                         window.hostReadyTimerInterval = null;
 
+                        // 👇 PAKAI DATA TERBARU DARI MEMORI GLOBAL 👇
+                        let latestData = window.latestRoomData; 
                         let pemainValid = {};
-                        for (let uid in data.players) {
-                            if (data.players[uid].isReady) {
-                                pemainValid[uid] = data.players[uid]; 
+                        for (let uid in latestData.players) {
+                            if (latestData.players[uid].isReady) {
+                                pemainValid[uid] = latestData.players[uid]; 
                             }
                         }
                         updateDoc(roomRef, {
@@ -3394,7 +3399,6 @@ window.pantauRoom = (kodeRoom) => {
                 }, 1000);
             }
         }
-
         // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             
