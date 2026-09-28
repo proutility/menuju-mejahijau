@@ -3557,7 +3557,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         } // Penutup blok soal
             
-        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
+       // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             
@@ -3569,16 +3569,23 @@ window.pantauRoom = (kodeRoom) => {
                 const q = currentQuestions[data.currentIdx];
                 if (!q) return;
 
-                const jawabanGue = data.players && data.players[window.currentUser.uid] ? data.players[window.currentUser.uid].jawabanSekarang : null;
+                // 🛑 FIX KRISIS IDENTITAS JILID 2: Deteksi User yang Kebal Bug
+                let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
+                let myUid = myUser ? myUser.uid : null;
+                let gueBeneranHost = (myUser && data.hostUid === myUid);
+
+                if (!myUid) return;
+
+                const jawabanGue = data.players && data.players[myUid] ? data.players[myUid].jawabanSekarang : null;
                 
                 // 🏆 LOGIKA LIVE SCORE
                 if (jawabanGue === q.answer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
                         let bobotSoal = 100 / currentQuestions.length; 
-                        let skorSekarang = parseFloat(data.players[window.currentUser.uid].skor || 0);
+                        let skorSekarang = parseFloat(data.players[myUid].skor || 0);
                         updateDoc(roomRef, {
-                            [`players.${window.currentUser.uid}.skor`]: skorSekarang + bobotSoal
+                            [`players.${myUid}.skor`]: skorSekarang + bobotSoal
                         }).catch(e => console.log(e));
                     }
                 } else {
@@ -3600,7 +3607,7 @@ window.pantauRoom = (kodeRoom) => {
                     } else if (jawabanGue !== null && i === jawabanGue) {
                         el.classList.add('review-wrong');
                         if (!el.innerHTML.includes('❌')) el.innerHTML += ' ❌ (Jawabanmu Salah)';
-                    } else if (jawabanGue === null) {
+                    } else if (jawabanGue === null || jawabanGue === -1) {
                         el.style.opacity = '0.5';
                     }
                 });
@@ -3613,7 +3620,7 @@ window.pantauRoom = (kodeRoom) => {
                     
                     let fText = document.getElementById('feedbackText');
                     if (fText) {
-                        if (jawabanGue === null || jawabanGue === undefined) {
+                        if (jawabanGue === null || jawabanGue === undefined || jawabanGue === -1) {
                             fText.innerHTML = "<b style='color:red; font-size:1.1rem;'>❌ WAKTU HABIS! ANDA TIDAK MENJAWAB (DIANGGAP SALAH)</b><br><br>" + (q.explanation || "-");
                         } else {
                             fText.innerHTML = q.explanation || "Tidak ada pembahasan spesifik.";
@@ -3623,7 +3630,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (fCite) fCite.innerText = "Sumber: " + (q.cite || "-");
                 }
 
-                if (jawabanGue === null || jawabanGue === undefined) {
+                if (jawabanGue === null || jawabanGue === undefined || jawabanGue === -1) {
                     const optContainer = document.getElementById('optionsContainer');
                     if (optContainer && !document.getElementById('warningTidakJawab')) {
                         const warningBox = document.createElement('div');
@@ -3641,7 +3648,8 @@ window.pantauRoom = (kodeRoom) => {
                 badgeHtml.id = 'roomBadgeKhusus';
                 badgeHtml.style.cssText = "margin-top:20px; padding:15px; background:#e3f2fd; border-radius:8px; text-align:center; border:2px dashed #90caf9;";
                 
-                if (amIHost) {
+                // 👇 PASTIKAN HOST DAPET KENDALI "LANJUT SOAL" 👇
+                if (gueBeneranHost) {
                     badgeHtml.innerHTML = `
                         <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Silakan baca pembahasan, lalu klik Lanjut.</div>
                         <button id="btnNextHostRoom" style="background:#1565c0; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -3657,7 +3665,7 @@ window.pantauRoom = (kodeRoom) => {
                     optContForBadge.parentNode.appendChild(badgeHtml);
                 }
 
-                if (amIHost) {
+                if (gueBeneranHost) {
                     const btnNextHost = document.getElementById('btnNextHostRoom');
                     if (btnNextHost) {
                         btnNextHost.onclick = function() {
@@ -3683,11 +3691,18 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- E. SELESAI ---
+       // --- E. SELESAI ---
         else if (data.status === 'selesai') {
+            // 👇 1. SAPU BERSIH SEMUA TIMER MABAR BIAR GA BERAT 👇
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+            if (window.hostReadyTimerInterval) clearInterval(window.hostReadyTimerInterval);
+            if (window.clientReadyTimerInterval) clearInterval(window.clientReadyTimerInterval);
             
+            // 👇 2. BERSIHKAN OVERLAY READY (Jaga-jaga kalau nyangkut) 👇
+            const overlayReady = document.getElementById('readyCheckOverlay');
+            if (overlayReady) overlayReady.remove();
+
             window.currentAppMode = 'ujian'; 
 
             let oldBadge = document.getElementById('roomBadgeKhusus');
@@ -3698,19 +3713,26 @@ window.pantauRoom = (kodeRoom) => {
                 btn.style.opacity = '1';
             });
             
+            // Putus koneksi pantauan Firebase biar hemat kuota/memori
             if (roomListenerUnsubscribe) roomListenerUnsubscribe();
             
+            // Blokir Pop-up UI Singleplayer
             const popUpBiasa = document.getElementById('resultOverlay');
             if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
             
-            if (typeof window.submitQuiz === 'function') window.submitQuiz(); 
+            // Eksekusi perhitungan nilai di balik layar
+            if (typeof window.submitQuiz === 'function') {
+                window.isSubmitted = true; // Bypass kalau ada sistem cegat di submitQuiz
+                window.submitQuiz(); 
+            }
             
+            // Tampilkan Podium Juara Mabar!
             if (typeof window.tampilkanHasilMultiplayer === 'function') {
                 window.tampilkanHasilMultiplayer(kodeRoom);
             }
         }
-    }); 
-};
+    }); // 👈 Penutup fungsi onSnapshot
+}; // 👈 Penutup fungsi window.pantauRoom
 // ==========================================================
 // FUNGSI INJEKSI TOMBOL KELUAR ROOM DI HASIL UJIAN
 // ==========================================================
