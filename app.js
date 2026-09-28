@@ -2979,28 +2979,48 @@ window.hapusRoomJadwal = async (roomId) => {
     }
 };
 // ==========================================================
-// FUNGSI MULAI UJIAN (YANG TADI HILANG)
+// FUNGSI MULAI UJIAN (DIUBAH JADI TRIGGER MATCHMAKING)
 // ==========================================================
 window.mulaiUjianRoom = async (kode) => {
     // Pake PROTAMA.confirm biar popup modern dan gak diblokir browser
     const yakin = await PROTAMA.confirm(
-        "MULAI LATIHAN?", 
-        "Pastikan semua peserta sudah masuk room"
+        "MULAI MATCH?", 
+        "Semua peserta akan diminta menekan tombol READY dalam 20 detik."
     );
     
     if (!yakin) return;
 
-    PROTAMA.loading("Menyiapkan sinkronisasi soal...");
+    PROTAMA.loading("Menyiapkan Matchmaking...");
     try {
-        await updateDoc(doc(window.db, "rooms", kode), { 
-            status: 'soal', 
-            currentIdx: 0 
-        });
+        const roomRef = doc(window.db || db, "rooms", kode);
+        const snap = await getDoc(roomRef);
+        let data = snap.data();
+
+        let updates = { status: 'ready_check' };
+        
+        // Paksa status semua player di database jadi "Belum Ready"
+        for (let uid in data.players) {
+            updates[`players.${uid}.isReady`] = false;
+        }
+
+        await updateDoc(roomRef, updates);
         PROTAMA.close();
     } catch(e) {
         PROTAMA.close();
         PROTAMA.alert("Gagal Mulai", "Error: " + e.message, "error");
     }
+};
+
+// Fungsi saat peserta nge-klik tombol "KLIK READY"
+window.klikReadyMabar = (kodeRoom) => {
+    const uidGue = window.currentUser ? window.currentUser.uid : null;
+    if(!uidGue) return;
+    
+    try { new Audio('https://www.myinstants.com/media/sounds/button-3.mp3').play(); } catch(e){}
+
+    updateDoc(doc(window.db || db, "rooms", kodeRoom), {
+        [`players.${uidGue}.isReady`]: true
+    }).catch(e => console.log(e));
 };
 
 window.pantauRoom = (kodeRoom) => {
@@ -3011,12 +3031,10 @@ window.pantauRoom = (kodeRoom) => {
     if (!hideBtnStyle) {
         hideBtnStyle = document.createElement('style');
         hideBtnStyle.id = 'hide-kembali-mabar';
-        // !important maksa tombol ini ga bisa dimunculin sama fungsi singleplayer manapun
         hideBtnStyle.innerHTML = `#btnSidebarKembali { display: none !important; }`;
         document.head.appendChild(hideBtnStyle);
     }
 
-    // 🛑 BERSIHKAN SEMUA TIMER GANDA (OBAT ISSUE 4 - TIMER KEBUT)
     if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
@@ -3032,9 +3050,7 @@ window.pantauRoom = (kodeRoom) => {
             chatInp.parentNode.replaceChild(newChatInp, chatInp); 
             
             newChatInp.addEventListener('keydown', (e) => {
-                // 🛑 OBAT MUJARAB ISSUE 5: Blokir huruf nembus ke jawaban soal pas ngetik Chat!
                 e.stopPropagation(); 
-                
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     window.kirimPesanChat();
@@ -3066,11 +3082,9 @@ window.pantauRoom = (kodeRoom) => {
     // 🏆 FUNGSI RENDER LIVE SCORE (PINDAH KE KANAN & TAMPIL SEMUA)
     // ========================================================
     window.renderLiveScore = (playersObj) => {
-        // 1. Sapu bersih sisa klasemen lama di area chat (biar chat kiri lega total)
         const oldContainer = document.getElementById('liveScoreContainer');
         if (oldContainer) oldContainer.remove();
 
-        // 2. Siapkan rumah baru di Sidebar Kanan (FIX POSISI DI BAWAH)
         let rightLb = document.getElementById('rightSidebarLeaderboard');
         if (!rightLb) {
             const navGrid = document.getElementById('navGrid');
@@ -3084,11 +3098,10 @@ window.pantauRoom = (kodeRoom) => {
                 <div id="liveLeaderboardList" style="display:flex; flex-direction:column; gap:8px; max-height: 480px; overflow-y:auto; padding-right:5px;"></div>
             </div>`;
             
-            // 🛑 Taruh persis di bawah kotak nomor (yang lagi di-hide), bukan di paling atas!
             if (navGrid) {
                 navGrid.insertAdjacentHTML('afterend', lbHtml);
             } else if (sidebarRight) {
-                sidebarRight.insertAdjacentHTML('beforeend', lbHtml); // Cadangan ditaruh paling bawah
+                sidebarRight.insertAdjacentHTML('beforeend', lbHtml);
             } else {
                 return;
             }
@@ -3099,14 +3112,12 @@ window.pantauRoom = (kodeRoom) => {
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
 
-        // 3. Olah Data (Tampil SEBANYAK-BANYAKNYA)
         let arr = Object.values(playersObj);
         arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
 
         let html = '';
         
         arr.forEach((p, i) => { 
-            // Ranking 1, 2, 3 dapet medali. Sisanya angka biasa (contoh: #4, #5)
             let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:22px; display:inline-block; text-align:center;">#${i+1}</span>`));
             
             let namaDepan = p.nama.split(" ")[0]; 
@@ -3114,7 +3125,6 @@ window.pantauRoom = (kodeRoom) => {
             let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
             let skorTampil = Math.round(p.skor || 0);
 
-            // Indikator psikologis: Kelihatan mana peserta yg udah jawab, mana yg masih mikir
             let isUdahJawab = p.jawabanSekarang !== null && p.jawabanSekarang !== undefined;
             let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
 
@@ -3134,7 +3144,7 @@ window.pantauRoom = (kodeRoom) => {
         
         listContainer.innerHTML = html;
     };
-    // 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
+
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
     const roomRef = doc(window.db || db, "rooms", kodeRoom); 
     
@@ -3145,30 +3155,23 @@ window.pantauRoom = (kodeRoom) => {
         }
         
         const data = snap.data();
-       // ========================================================
+
+        // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
         if (data.players && data.hostUid) {
             const hostMasihAda = data.players[data.hostUid];
             
-            // Jika Host terdeteksi hilang/keluar dari room!
             if (!hostMasihAda) {
                 const sisaPemain = Object.keys(data.players);
-                
-                // Pastikan kita ada di dalam room
                 if (sisaPemain.length > 0 && window.currentUser && sisaPemain.includes(window.currentUser.uid)) {
-                    sisaPemain.sort(); // Urutkan UID biar adil
+                    sisaPemain.sort(); 
                     const myIndex = sisaPemain.indexOf(window.currentUser.uid);
                     
-                    // 🛑 STRATA VIP (LOGIKA BALAPAN WAKTU)
-                    // Jika VIP: Rebut posisi host dalam waktu 0 - 3 detik
-                    // Jika Non-VIP: Disuruh nunggu 6 - 9 detik (Ngalah sama VIP)
                     let delayClaim = window.isVIPUser ? (myIndex * 1500) : 6000 + (myIndex * 1500);
                     
-                    // Bersihkan timer klaim kalau sebelumnya udah ada
                     if (window.hostClaimTimer) clearTimeout(window.hostClaimTimer);
                     
-                    // Mulai menghitung mundur untuk merebut posisi Host
                     window.hostClaimTimer = setTimeout(() => {
                         console.log("Mengambil alih posisi Host...");
                         updateDoc(roomRef, { hostUid: window.currentUser.uid }).then(() => {
@@ -3179,7 +3182,6 @@ window.pantauRoom = (kodeRoom) => {
                     }, delayClaim);
                 }
             } else {
-                // 🛑 JIKA HOST BARU UDAH TERPILIH, BATALKAN SEMUA NIAT KUDETA!
                 if (window.hostClaimTimer) {
                     clearTimeout(window.hostClaimTimer);
                     window.hostClaimTimer = null;
@@ -3222,7 +3224,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        const amIHost = (currentUser && data.hostUid === currentUser.uid);
+        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
@@ -3264,8 +3266,140 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- B. MENJAWAB SOAL (TIMER 30 DETIK) ---
+        // 👇👇👇 FUNGSI READY CHECK BARU DI SINI 👇👇👇
+        // --- B. FASE READY CHECK (ALA ML/PUBG) ---
+        else if (data.status === 'ready_check') {
+            let bgOverlay = document.getElementById('readyCheckOverlay');
+            if (!bgOverlay) {
+                bgOverlay = document.createElement('div');
+                bgOverlay.id = 'readyCheckOverlay';
+                bgOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); z-index:9999999; display:flex; flex-direction:column; align-items:center; justify-content:center; color:white; font-family:'Poppins', sans-serif; backdrop-filter:blur(5px);";
+                document.body.appendChild(bgOverlay);
+            }
+
+            const uidGue = window.currentUser ? window.currentUser.uid : null;
+            if(!uidGue) return;
+            
+            // 🛑 SISTEM DETEKSI KICK OTOMATIS
+            if (data.players && !data.players[uidGue]) {
+                bgOverlay.remove();
+                PROTAMA.alert("Kena Kick!", "Kamu dikeluarkan karena AFK / Tidak menekan tombol Ready.", "error");
+                return window.keluarDariRoom();
+            }
+
+            const isGueReady = data.players[uidGue].isReady === true;
+            let totalPemain = Object.keys(data.players).length;
+            let totalReady = Object.values(data.players).filter(p => p.isReady).length;
+
+            // BIKIN LIST PEMAIN & STATUS READY
+            let htmlDaftarPemain = '<div style="margin-top: 30px; width: 100%; max-width: 400px; max-height: 250px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.1);">';
+            
+            for (let uid in data.players) {
+                let p = data.players[uid];
+                let iconMahkota = (data.hostUid === uid) ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '';
+                
+                let statusSiap = p.isReady ? 
+                    `<span style="color:#2ecc71; font-weight:bold; font-size:0.85rem;"><i class="fas fa-check-circle"></i> SIAP</span>` : 
+                    `<span style="color:#f1c40f; font-weight:bold; font-size:0.85rem; animation: blinkWait 1s infinite;"><i class="fas fa-spinner fa-spin"></i> NUNGGU</span>`;
+
+                htmlDaftarPemain += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <div style="text-align: left; font-size: 0.95rem; font-weight: 500;">
+                            ${iconMahkota}${p.nama}
+                        </div>
+                        <div>${statusSiap}</div>
+                    </div>
+                `;
+            }
+            htmlDaftarPemain += '</div>';
+
+            let currentTimerVal = "20";
+            let existingTimerEl = document.getElementById('readyTxtCountdown');
+            if (existingTimerEl) currentTimerVal = existingTimerEl.innerText;
+
+            bgOverlay.innerHTML = `
+                <div style="animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align:center; display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px;">
+                    <h1 style="font-size:3.5rem; color:var(--gold); margin-bottom:5px; text-shadow: 0 0 25px rgba(241,196,15,0.6); font-weight:900;">MATCH FOUND!</h1>
+                    <p style="font-size:1.2rem; margin-bottom:20px; color:#aaa;">Menunggu peserta siap... <b style="color:white;">(${totalReady}/${totalPemain})</b></p>
+
+                    <div style="font-size:5rem; font-weight:900; color:#e74c3c; margin-bottom:30px; text-shadow: 0 0 30px rgba(231,76,60,0.6); font-variant-numeric: tabular-nums;" id="readyTxtCountdown">${currentTimerVal}</div>
+
+                    ${isGueReady ?
+                        `<button style="background:#27ae60; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(39,174,96,0.6); cursor:not-allowed;" disabled>
+                            <i class="fas fa-check-circle"></i> SUDAH SIAP
+                        </button>`
+                        :
+                        `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;">
+                            <i class="fas fa-bolt"></i> KLIK READY!
+                        </button>`
+                    }
+                    ${htmlDaftarPemain}
+                </div>
+                <style>
+                    @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                    @keyframes pulseReady { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+                    @keyframes blinkWait { 50% { opacity: 0.3; } }
+                </style>
+            `;
+
+            // 🛑 SISTEM TIMER & EKSEKUTOR KICK 
+            if (amIHost && !window.hostReadyTimerInterval) {
+                let sisaWaktu = 20;
+                window.hostReadyTimerInterval = setInterval(() => {
+                    sisaWaktu--;
+                    const txt = document.getElementById('readyTxtCountdown');
+                    if (txt) txt.innerText = sisaWaktu;
+
+                    let skrgTotalReady = Object.values(data.players).filter(p => p.isReady).length;
+                    let skrgTotalPemain = Object.keys(data.players).length;
+
+                    if (skrgTotalReady === skrgTotalPemain && skrgTotalPemain > 0) {
+                        clearInterval(window.hostReadyTimerInterval);
+                        window.hostReadyTimerInterval = null;
+                        updateDoc(roomRef, { status: 'soal', currentIdx: 0 }); 
+                    }
+                    else if (sisaWaktu <= 0) {
+                        clearInterval(window.hostReadyTimerInterval);
+                        window.hostReadyTimerInterval = null;
+
+                        let pemainValid = {};
+                        for (let uid in data.players) {
+                            if (data.players[uid].isReady) {
+                                pemainValid[uid] = data.players[uid]; 
+                            }
+                        }
+                        updateDoc(roomRef, {
+                            players: pemainValid,
+                            status: 'soal',
+                            currentIdx: 0
+                        });
+                    }
+                }, 1000);
+            }
+            else if (!amIHost && !window.clientReadyTimerInterval) {
+                let sisaWaktuClient = 20;
+                window.clientReadyTimerInterval = setInterval(() => {
+                    sisaWaktuClient--;
+                    const txt = document.getElementById('readyTxtCountdown');
+                    if (txt) txt.innerText = sisaWaktuClient;
+                    if (sisaWaktuClient <= 0) {
+                        clearInterval(window.clientReadyTimerInterval);
+                        window.clientReadyTimerInterval = null;
+                    }
+                }, 1000);
+            }
+        }
+        // 👆👆👆 FUNGSI READY CHECK SELESAI 👆👆👆
+
+        // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
+            
+            // 👇 PEMBERSIH LAYAR READY CHECK 👇
+            const overlayReady = document.getElementById('readyCheckOverlay');
+            if (overlayReady) overlayReady.remove();
+            if (window.hostReadyTimerInterval) { clearInterval(window.hostReadyTimerInterval); window.hostReadyTimerInterval = null; }
+            if (window.clientReadyTimerInterval) { clearInterval(window.clientReadyTimerInterval); window.clientReadyTimerInterval = null; }
+            
             currentAppMode = 'room'; 
             window.activePembahasanIdx = -1; 
             
@@ -3360,7 +3494,6 @@ window.pantauRoom = (kodeRoom) => {
                 });
 
                 // 🛑 OBAT ISSUE 1 (LAG/BUG BEBERAPA DETIK)
-                // Ini dipindah ke DALAM if(window.activeRoomIdx...) biar cuma 1x dipasang tiap ganti soal
                 setTimeout(() => {
                     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
                     opsiElements.forEach((el, i) => {
@@ -3379,11 +3512,10 @@ window.pantauRoom = (kodeRoom) => {
                 }, 300);
             }
 
-        if (data.players) {
-            // 🛑 Panggil klasemen kanan yang baru dirombak!
-            if (typeof window.renderLiveScore === 'function') {
-                window.renderLiveScore(data.players);
-            }
+            if (data.players) {
+                if (typeof window.renderLiveScore === 'function') {
+                    window.renderLiveScore(data.players);
+                }
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
                 for (let uid in data.players) {
@@ -3408,7 +3540,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         } 
         
-        // --- C. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
+        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
             
@@ -3420,16 +3552,16 @@ window.pantauRoom = (kodeRoom) => {
                 const q = currentQuestions[data.currentIdx];
                 if (!q) return;
 
-                const jawabanGue = data.players && data.players[currentUser.uid] ? data.players[currentUser.uid].jawabanSekarang : null;
+                const jawabanGue = data.players && data.players[window.currentUser.uid] ? data.players[window.currentUser.uid].jawabanSekarang : null;
                 
                 // 🏆 LOGIKA LIVE SCORE
                 if (jawabanGue === q.answer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
                         let bobotSoal = 100 / currentQuestions.length; 
-                        let skorSekarang = parseFloat(data.players[currentUser.uid].skor || 0);
+                        let skorSekarang = parseFloat(data.players[window.currentUser.uid].skor || 0);
                         updateDoc(roomRef, {
-                            [`players.${currentUser.uid}.skor`]: skorSekarang + bobotSoal
+                            [`players.${window.currentUser.uid}.skor`]: skorSekarang + bobotSoal
                         }).catch(e => console.log(e));
                     }
                 } else {
@@ -3458,7 +3590,6 @@ window.pantauRoom = (kodeRoom) => {
 
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
-                    // 🛑 OBAT ISSUE 2 (Pembahasan Ilang): Paksa tembus blokir CSS
                     fb.style.setProperty('display', 'block', 'important');
                     fb.style.setProperty('visibility', 'visible', 'important');
                     fb.classList.add('show');
@@ -3535,7 +3666,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        // --- D. SELESAI ---
+        // --- E. SELESAI ---
         else if (data.status === 'selesai') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
