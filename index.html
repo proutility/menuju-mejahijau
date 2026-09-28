@@ -44,10 +44,40 @@
 
     <div id="floatingTimer">00:00:00</div>
     
-    <div id="mobileFooter">
-        <button class="mobile-nav-btn" onclick="window.toggleMobileModul()"><i class="fas fa-book"></i> Daftar Modul</button>
-        <button class="mobile-nav-btn" onclick="window.toggleMobileSidebar()"><i class="fas fa-th"></i> Daftar Soal</button>
+<!-- ========================================== -->
+<!-- UI KHUSUS MOBILE (AKAN HILANG DI LAPTOP) -->
+<!-- ========================================== -->
+<div class="mobile-only-ui">
+    <div class="mobile-app-header">
+        <div class="user-info">
+            <img id="mobileAvatar" src="https://ui-avatars.com/api/?name=Peserta&background=random&color=fff" alt="User" referrerpolicy="no-referrer">
+            <div>
+                <div style="font-size: 0.8rem; opacity: 0.9;">Selamat Malam,</div>
+                <div id="mobileUserName" style="font-size: 1.2rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Peserta Cakim</div>
+            </div>
+        </div>
+        <div class="mobile-score-badge">
+            <i class="fas fa-gem" style="color: #f1c40f;"></i> <span id="mobileTotalScore">100 Pts</span>
+        </div>
     </div>
+
+    <!-- Bottom Nav Pengganti mobileFooter -->
+    <div class="bottom-nav-app">
+        <!-- Tombol ini tetep ngejalanin fungsi lu yang lama, cuma wujudnya jadi modern -->
+        <a href="#" class="nav-item active" onclick="window.toggleMobileModul()">
+            <i class="fas fa-book"></i><span>Modul</span>
+        </a>
+        <a href="#" class="nav-item" onclick="window.toggleMobileSidebar()">
+            <i class="fas fa-th"></i><span>Soal</span>
+        </a>
+        <a href="#" class="nav-item" onclick="window.bikinRoomLatihan()">
+            <i class="fas fa-gamepad"></i><span>Mabar</span>
+        </a>
+        <a href="#" class="nav-item" onclick="showLeaderboard()">
+            <i class="fas fa-trophy"></i><span>Ranking</span>
+        </a>
+    </div>
+</div>
 
     <div id="loginOverlay">
         <nav class="landing-nav">
