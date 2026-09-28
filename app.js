@@ -3875,11 +3875,10 @@ window.switchTabLobby = function(tab) {
     }
 };
 // ========================================================
-// 🏆 FUNGSI KLASEMEN AKHIR MABAR (PODIUM KAHOOT V2 - FOTO PROFIL)
+// 🏆 FUNGSI KLASEMEN AKHIR MABAR (INFO ROOM DI KIRI ATAS)
 // ========================================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     try {
-        // 🛑 Blokir paksa Pop-up Singleplayer kalau dia muncul!
         const popUpBiasa = document.getElementById('resultOverlay');
         if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
 
@@ -3897,14 +3896,12 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
         bgOverlay = document.createElement('div');
         bgOverlay.id = 'kahootResultOverlay';
-        // 🛑 Z-INDEX MAKSIMAL BIAR MENGUASAI LAYAR
         bgOverlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(20, 30, 48, 0.95); z-index:2147483647; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Poppins', sans-serif; backdrop-filter:blur(10px); overflow-y:auto; padding: 20px; box-sizing: border-box; margin:0;";
 
         let p1 = arr[0] || null;
         let p2 = arr[1] || null;
         let p3 = arr[2] || null;
 
-        // 🛑 FUNGSI PODIUM DENGAN FOTO PROFIL GOOGLE
         const buatPodium = (player, posisi, tinggi, warna, ikon, delay) => {
             if (!player) return `<div class="podium-kosong" style="width:140px;"></div>`;
             
@@ -3912,15 +3909,12 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             let skor = Math.round(player.skor || 0);
             let isMe = window.currentUser && player.nama === window.currentUser.displayName ? '<div class="me-badge">KAMU</div>' : '';
             
-            // Tarik foto Google, kalau kosong pake Ikon
-            let fotoHtml = player.photoURL ? 
-                `<img src="${player.photoURL}" alt="Foto" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : 
-                `<i class="fas fa-user-astronaut" style="color:${warna};"></i>`;
+            let urlFoto = `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPendek)}&background=random&color=fff&bold=true&size=150`;
 
             return `
             <div class="podium-wrapper" style="animation: slideUp 0.8s ease ${delay}s backwards;">
-                <div class="podium-avatar" style="border-color:${warna};">
-                    ${fotoHtml}
+                <div class="podium-avatar" style="border: 4px solid ${warna}; background: #fff;">
+                    <img src="${urlFoto}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
                 </div>
                 ${isMe}
                 <div class="podium-name">${namaPendek}</div>
@@ -3939,7 +3933,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             </div>
         `;
 
-        // 🛑 TABEL PERINGKAT 4 KE BAWAH (RAPIH KE BAWAH)
         let htmlSisaPemain = '';
         if (arr.length > 3) {
             htmlSisaPemain += `
@@ -3957,15 +3950,15 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             for (let i = 3; i < arr.length; i++) {
                 let p = arr[i];
                 let isMe = window.currentUser && p.nama === window.currentUser.displayName ? 'background: #e3f2fd; border-left: 4px solid #3498db;' : 'background: white; border-left: 4px solid transparent;';
-                let fotoHtml = p.photoURL ? 
-                    `<img src="${p.photoURL}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; margin-right:10px; border:1px solid #ddd;">` : 
-                    `<div style="width:30px; height:30px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; margin-right:10px; color:#aaa;"><i class="fas fa-user"></i></div>`;
+                
+                let urlFotoSisa = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.nama.split(" ")[0])}&background=random&color=fff&bold=true&size=50`;
 
                 htmlSisaPemain += `
                     <tr style="${isMe} border-bottom: 1px solid #f0f0f0;">
                         <td style="padding:12px 10px; font-weight:bold; color:#7f8c8d;">${i + 1}</td>
                         <td style="padding:12px 10px; display:flex; align-items:center; font-weight:600; color:#2c3e50;">
-                            ${fotoHtml} ${p.nama} ${window.currentUser && p.nama === window.currentUser.displayName ? '<span style="color:#3498db; font-size:0.8rem; margin-left:5px;">(Kamu)</span>' : ''}
+                            <img src="${urlFotoSisa}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; margin-right:10px; border:1px solid #ddd;">
+                            ${p.nama} ${window.currentUser && p.nama === window.currentUser.displayName ? '<span style="color:#3498db; font-size:0.8rem; margin-left:5px;">(Kamu)</span>' : ''}
                         </td>
                         <td style="padding:12px 10px; text-align:right; font-weight:bold; color:#e67e22;">${Math.round(p.skor || 0)} <small style="color:#888;">Pts</small></td>
                     </tr>
@@ -3988,8 +3981,17 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             <div class="result-card">
                 <div class="confetti-bg"></div>
 
+                <!-- 🛑 INFO ROOM & PESERTA PINDAH KE POJOK KIRI ATAS -->
+                <div style="position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; text-align: left;">
+                    <div style="background: rgba(52, 152, 219, 0.1); color: #2980b9; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: 1px solid rgba(52, 152, 219, 0.3);">
+                        <i class="fas fa-door-open" style="margin-right: 5px;"></i> Room: ${kodeRoom}
+                    </div>
+                    <div style="background: rgba(46, 204, 113, 0.1); color: #27ae60; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: 1px solid rgba(46, 204, 113, 0.3);">
+                        <i class="fas fa-users" style="margin-right: 5px;"></i> Peserta: ${arr.length}
+                    </div>
+                </div>
+
                 <h1 class="result-title"><i class="fas fa-trophy"></i> HASIL MATCHMAKING <i class="fas fa-trophy"></i></h1>
-                <p class="result-subtitle">Room: <b>${kodeRoom}</b> | Peserta: <b>${arr.length}</b></p>
                 
                 ${htmlTop3}
                 ${htmlSisaPemain}
@@ -4007,31 +4009,35 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 .result-card {
                     background: #ffffff;
                     width: 100%;
-                    max-width: 850px; /* Diperlebar dikit biar tabel lega */
+                    max-width: 850px; 
                     border-radius: 20px;
-                    padding: 40px;
+                    padding: 40px 40px 30px 40px; /* Bawahnya dirapihin dikit */
                     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
                     text-align: center;
                     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     position: relative;
                     overflow: hidden;
-                    margin: auto; /* Memaksa kartu ke tengah layar */
+                    margin: auto; 
                 }
-                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
-                .result-subtitle { color: #7f8c8d; font-size: 1.1rem; margin-bottom: 40px; }
+                
+                /* Teksnya dikasih margin bawah ekstra biar lega sama podium */
+                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin-bottom: 50px; margin-top: 10px; text-transform: uppercase; }
 
                 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; height: 280px; border-bottom: 3px solid #eee; }
+                
                 .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
                 .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
                 .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
-                .podium-avatar { width: 75px; height: 75px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -35px; z-index: 10; overflow:hidden; }
+                
+                .podium-avatar { width: 80px; height: 80px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -40px; z-index: 10; padding:3px; overflow:hidden;}
+                
                 .podium-name { background: white; padding: 4px 15px; border-radius: 20px; font-weight: 800; color: #333; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; border: 1px solid #eee; }
                 .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; background: rgba(255,255,255,0.8); padding: 2px 8px; border-radius: 10px;}
                 .me-badge { position: absolute; top: -25px; background: #e74c3c; color: white; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 15px; z-index: 11; box-shadow: 0 2px 6px rgba(231,76,60,0.4); border: 2px solid white;}
 
                 .other-players-list { max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 5px; margin-bottom: 30px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
                 
-                .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+                .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
                 .result-actions button { padding: 12px 25px; border: none; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
                 .btn-review { background: #3498db; color: white; box-shadow: 0 4px 15px rgba(52,152,219,0.4); }
                 .btn-review:hover { background: #2980b9; transform: translateY(-2px); }
@@ -4042,7 +4048,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     .podium-wrapper { width: 90px; }
                     .podium-rank { font-size: 2rem; }
                     .result-card { padding: 20px; border-radius: 10px; }
-                    .result-title { font-size: 1.5rem; }
+                    .result-title { font-size: 1.5rem; margin-top: 40px; margin-bottom: 30px; } /* Di HP judulnya diturunin dikit biar ga nabrak badge */
                     .podium-avatar { width: 60px; height: 60px; margin-bottom: -30px;}
                     .podium-name { font-size: 0.9rem;}
                 }
