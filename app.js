@@ -3875,10 +3875,14 @@ window.switchTabLobby = function(tab) {
     }
 };
 // ========================================================
-// 🏆 FUNGSI KLASEMEN AKHIR MABAR (STYLE PODIUM KAHOOT + SUARA EPIC)
+// 🏆 FUNGSI KLASEMEN AKHIR MABAR (PODIUM KAHOOT V2 - FOTO PROFIL)
 // ========================================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     try {
+        // 🛑 Blokir paksa Pop-up Singleplayer kalau dia muncul!
+        const popUpBiasa = document.getElementById('resultOverlay');
+        if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
+
         const roomRef = doc(window.db || db, "rooms", kodeRoom);
         const snap = await getDoc(roomRef);
         if (!snap.exists()) return;
@@ -3893,23 +3897,30 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
         bgOverlay = document.createElement('div');
         bgOverlay.id = 'kahootResultOverlay';
-        bgOverlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(20, 30, 48, 0.95); z-index:9999999; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Poppins', sans-serif; backdrop-filter:blur(10px); overflow-y:auto; padding: 20px;";
+        // 🛑 Z-INDEX MAKSIMAL BIAR MENGUASAI LAYAR
+        bgOverlay.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(20, 30, 48, 0.95); z-index:2147483647; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'Poppins', sans-serif; backdrop-filter:blur(10px); overflow-y:auto; padding: 20px; box-sizing: border-box; margin:0;";
 
         let p1 = arr[0] || null;
         let p2 = arr[1] || null;
         let p3 = arr[2] || null;
 
+        // 🛑 FUNGSI PODIUM DENGAN FOTO PROFIL GOOGLE
         const buatPodium = (player, posisi, tinggi, warna, ikon, delay) => {
             if (!player) return `<div class="podium-kosong" style="width:140px;"></div>`;
             
             let namaPendek = player.nama.split(" ")[0]; 
             let skor = Math.round(player.skor || 0);
             let isMe = window.currentUser && player.nama === window.currentUser.displayName ? '<div class="me-badge">KAMU</div>' : '';
+            
+            // Tarik foto Google, kalau kosong pake Ikon
+            let fotoHtml = player.photoURL ? 
+                `<img src="${player.photoURL}" alt="Foto" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : 
+                `<i class="fas fa-user-astronaut" style="color:${warna};"></i>`;
 
             return `
             <div class="podium-wrapper" style="animation: slideUp 0.8s ease ${delay}s backwards;">
-                <div class="podium-avatar">
-                    <i class="fas fa-user-astronaut" style="color:${warna};"></i>
+                <div class="podium-avatar" style="border-color:${warna};">
+                    ${fotoHtml}
                 </div>
                 ${isMe}
                 <div class="podium-name">${namaPendek}</div>
@@ -3928,25 +3939,41 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             </div>
         `;
 
+        // 🛑 TABEL PERINGKAT 4 KE BAWAH (RAPIH KE BAWAH)
         let htmlSisaPemain = '';
         if (arr.length > 3) {
-            htmlSisaPemain += `<div class="other-players-list">`;
+            htmlSisaPemain += `
+            <div class="other-players-list">
+                <table style="width:100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background:#e0e0e0; color:#555; font-size:0.9rem;">
+                            <th style="padding:10px; border-radius:8px 0 0 0;">Rank</th>
+                            <th style="padding:10px;">Peserta</th>
+                            <th style="padding:10px; text-align:right; border-radius:0 8px 0 0;">Skor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
             for (let i = 3; i < arr.length; i++) {
                 let p = arr[i];
-                let isMe = window.currentUser && p.nama === window.currentUser.displayName ? 'border-left: 5px solid #3498db; background: #f0f8ff;' : '';
+                let isMe = window.currentUser && p.nama === window.currentUser.displayName ? 'background: #e3f2fd; border-left: 4px solid #3498db;' : 'background: white; border-left: 4px solid transparent;';
+                let fotoHtml = p.photoURL ? 
+                    `<img src="${p.photoURL}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; margin-right:10px; border:1px solid #ddd;">` : 
+                    `<div style="width:30px; height:30px; border-radius:50%; background:#eee; display:flex; align-items:center; justify-content:center; margin-right:10px; color:#aaa;"><i class="fas fa-user"></i></div>`;
+
                 htmlSisaPemain += `
-                    <div class="list-row" style="${isMe}">
-                        <div class="list-rank">${i + 1}</div>
-                        <div class="list-avatar"><i class="fas fa-user"></i></div>
-                        <div class="list-name">${p.nama} ${isMe ? '<b>(Kamu)</b>' : ''}</div>
-                        <div class="list-score">${Math.round(p.skor || 0)} <small>Pts</small></div>
-                    </div>
+                    <tr style="${isMe} border-bottom: 1px solid #f0f0f0;">
+                        <td style="padding:12px 10px; font-weight:bold; color:#7f8c8d;">${i + 1}</td>
+                        <td style="padding:12px 10px; display:flex; align-items:center; font-weight:600; color:#2c3e50;">
+                            ${fotoHtml} ${p.nama} ${window.currentUser && p.nama === window.currentUser.displayName ? '<span style="color:#3498db; font-size:0.8rem; margin-left:5px;">(Kamu)</span>' : ''}
+                        </td>
+                        <td style="padding:12px 10px; text-align:right; font-weight:bold; color:#e67e22;">${Math.round(p.skor || 0)} <small style="color:#888;">Pts</small></td>
+                    </tr>
                 `;
             }
-            htmlSisaPemain += `</div>`;
+            htmlSisaPemain += `</tbody></table></div>`;
         }
 
-        // 🤖 STRING UNTUK PENGUMUMAN BOT
         let botMessageText = `🎉 HASIL MULTIPLAYER [ROOM: ${kodeRoom}] 🎉\n`;
         arr.forEach((p, i) => {
             let skorBot = Math.round(p.skor || 0);
@@ -3980,7 +4007,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 .result-card {
                     background: #ffffff;
                     width: 100%;
-                    max-width: 800px;
+                    max-width: 850px; /* Diperlebar dikit biar tabel lega */
                     border-radius: 20px;
                     padding: 40px;
                     box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -3988,61 +4015,55 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                     position: relative;
                     overflow: hidden;
+                    margin: auto; /* Memaksa kartu ke tengah layar */
                 }
-                .result-title { font-size: 2.5rem; color: #2c3e50; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
+                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; }
                 .result-subtitle { color: #7f8c8d; font-size: 1.1rem; margin-bottom: 40px; }
 
                 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; margin-bottom: 40px; height: 280px; border-bottom: 3px solid #eee; }
                 .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
                 .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
-                .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.8); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
-                .podium-avatar { width: 70px; height: 70px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -35px; z-index: 10; }
-                .podium-name { background: white; padding: 4px 15px; border-radius: 20px; font-weight: 800; color: #333; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-                .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; }
-                .me-badge { position: absolute; top: -20px; background: #e74c3c; color: white; font-size: 0.7rem; font-weight: bold; padding: 3px 8px; border-radius: 10px; z-index: 11; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+                .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
+                .podium-avatar { width: 75px; height: 75px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -35px; z-index: 10; overflow:hidden; }
+                .podium-name { background: white; padding: 4px 15px; border-radius: 20px; font-weight: 800; color: #333; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; border: 1px solid #eee; }
+                .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; background: rgba(255,255,255,0.8); padding: 2px 8px; border-radius: 10px;}
+                .me-badge { position: absolute; top: -25px; background: #e74c3c; color: white; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 15px; z-index: 11; box-shadow: 0 2px 6px rgba(231,76,60,0.4); border: 2px solid white;}
 
-                .other-players-list { max-height: 200px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 10px; margin-bottom: 30px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
-                .list-row { display: flex; align-items: center; background: white; padding: 12px 20px; margin-bottom: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; }
-                .list-row:hover { transform: scale(1.01); }
-                .list-rank { font-size: 1.2rem; font-weight: 900; color: #7f8c8d; width: 40px; text-align: left; }
-                .list-avatar { width: 35px; height: 35px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #aaa; margin-right: 15px; }
-                .list-name { flex-grow: 1; text-align: left; font-weight: 600; color: #2c3e50; font-size: 1rem; }
-                .list-score { font-weight: 800; color: #e67e22; font-size: 1.1rem; }
-
+                .other-players-list { max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 5px; margin-bottom: 30px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
+                
                 .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
-                .result-actions button { padding: 15px 30px; border: none; border-radius: 30px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: 0.3s; }
+                .result-actions button { padding: 12px 25px; border: none; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
                 .btn-review { background: #3498db; color: white; box-shadow: 0 4px 15px rgba(52,152,219,0.4); }
                 .btn-review:hover { background: #2980b9; transform: translateY(-2px); }
                 .btn-tutup { background: #e74c3c; color: white; box-shadow: 0 4px 15px rgba(231,76,60,0.4); }
                 .btn-tutup:hover { background: #c0392b; transform: translateY(-2px); }
 
                 @media (max-width: 600px) {
-                    .podium-wrapper { width: 100px; }
-                    .podium-rank { font-size: 2.5rem; }
-                    .result-card { padding: 20px; }
-                    .result-title { font-size: 1.8rem; }
+                    .podium-wrapper { width: 90px; }
+                    .podium-rank { font-size: 2rem; }
+                    .result-card { padding: 20px; border-radius: 10px; }
+                    .result-title { font-size: 1.5rem; }
+                    .podium-avatar { width: 60px; height: 60px; margin-bottom: -30px;}
+                    .podium-name { font-size: 0.9rem;}
                 }
             </style>
         `;
 
         document.body.appendChild(bgOverlay);
 
-        // 🛑 EFEK SUARA EPIC KEMENANGAN (MULTIPLAYER)
         try {
             const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
-            victorySound.volume = 0.7; // Volume 70% biar pas
+            victorySound.volume = 0.7; 
             victorySound.play().catch(e => console.log('Suara keblokir browser:', e));
         } catch(e) { console.log(e); }
 
         window.isAnswerLocked = true;
 
-        // 🛑 1. FREEZE PANEL KANAN ATAS
         document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
             btn.style.pointerEvents = 'none';
             btn.style.opacity = '0.4';
         });
 
-        // 🛑 2. BUAT TOMBOL NGAMBANG
         if (!document.getElementById('roomFloatingMenu')) {
             const floatMenu = document.createElement('div');
             floatMenu.id = 'roomFloatingMenu';
@@ -4066,7 +4087,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             document.body.appendChild(floatMenu);
         }
         
-        // 🤖 3. TRIGGER BOT MENGIRIM PESAN PENGUMUMAN
         const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
         if (amIHost) {
             setTimeout(async () => {
