@@ -3399,7 +3399,7 @@ window.pantauRoom = (kodeRoom) => {
                 }, 1000);
             }
         }
-        // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
+       // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
             
             // 👇 PEMBERSIH LAYAR READY CHECK 👇
@@ -3414,6 +3414,10 @@ window.pantauRoom = (kodeRoom) => {
             isSubmitted = false;
             window.isSubmitted = false;
             
+            // 🛑 FIX KRISIS IDENTITAS HOST: Deteksi pakai cara kebal!
+            let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
+            let gueBeneranHost = (myUser && data.hostUid === myUser.uid);
+
             if (!currentQuestions || currentQuestions.length === 0 || window.currentDatabaseId !== data.modulId) {
                 if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Menyiapkan Ruang Ujian...");
                 if (typeof window.switchDatabase === 'function') await window.switchDatabase(data.modulId); 
@@ -3476,7 +3480,8 @@ window.pantauRoom = (kodeRoom) => {
                     
                     if (sisaWaktuRoom <= 0) {
                         clearInterval(window.roomSyncTimer);
-                        if (amIHost) {
+                        // 👇 CEK OTORITAS HOST PAS WAKTU HABIS 👇
+                        if (gueBeneranHost) { 
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         } else {
                             let t1 = document.getElementById('timerDisplay');
@@ -3514,7 +3519,10 @@ window.pantauRoom = (kodeRoom) => {
                             el.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                             
                             userAnswers[currentIdx] = i;
-                            updateDoc(roomRef, { [`players.${currentUser.uid}.jawabanSekarang`]: i });
+                            let uidSekarang = myUser ? myUser.uid : null;
+                            if (uidSekarang) {
+                                updateDoc(roomRef, { [`players.${uidSekarang}.jawabanSekarang`]: i });
+                            }
                         };
                     });
                 }, 300);
@@ -3536,18 +3544,19 @@ window.pantauRoom = (kodeRoom) => {
                 let txtProgress = document.getElementById('progressText');
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && amIHost) {
+                // 👇 CEK AUTO SKIP DENGAN VARIABEL HOST YANG BENAR 👇
+                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && gueBeneranHost) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
-                        }, 1000);
+                        }, 1000); // Ngasih jeda 1 detik biar puas liat kuningnya sebelum skip
                     }
                 }
             }
-        } 
-        
+        } // Penutup blok soal
+            
         // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
