@@ -1952,8 +1952,8 @@ window.tendangNonVIP = () => {
     
     // Munculkan peringatan dan tendang ke halaman awal
     Swal.fire({
-        title: 'Sesi Selesai',
-        text: 'Akses Latihan Mandiri (Singleplayer) hanya tersedia untuk akun VIP. Silakan login kembali dengan Kode VIP.',
+        title: 'KELUAR',
+        text: 'Karena tidak klik READY, Anda otomatis dikeluarkan sistem',
         icon: 'info',
         confirmButtonColor: '#d32f2f',
         confirmButtonText: 'Keluar',
