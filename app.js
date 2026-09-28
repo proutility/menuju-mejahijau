@@ -1034,7 +1034,7 @@ function triggerPembahasanLatihan(idxPilihan) {
     const opsiElements = document.querySelectorAll('#optionsContainer .option-label');
     opsiElements.forEach((el, i) => {
         el.style.pointerEvents = 'none'; 
-        el.innerHTML = el.innerHTML.replace(' ⏳ Menunggu...', '');
+        el.innerHTML = el.innerHTML.replace(' ⏳ Me...', '');
         
         if (i === q.answer) {
             el.classList.add('review-correct');
@@ -1124,7 +1124,7 @@ window.skipTrainingCountdown = async function() {
                 console.error("Gagal ganti soal otomatis: ", e); 
             }
         } else {
-            if (badge) badge.innerHTML = `⏳ Menunggu Host memuat soal berikutnya...`;
+            if (badge) badge.innerHTML = `⏳ Me Host memuat soal berikutnya...`;
         }
     } else {
         if (badge) badge.style.display = 'none';
@@ -3171,7 +3171,7 @@ window.pantauRoom = (kodeRoom) => {
                 const overlayReady = document.getElementById('readyCheckOverlay');
                 if (overlayReady) overlayReady.remove();
                 
-                PROTAMA.alert("KELUAR!", "Kamu KELUAR OTOMATIS dari Room karena klik Ready.", "error");
+                PROTAMA.alert("KELUAR!", "Kamu KELUAR OTOMATIS dari Room karena tidak klik Ready.", "error");
                 if (roomListenerUnsubscribe) roomListenerUnsubscribe();
                 return window.keluarDariRoom(); // 🛑 BLOKIR TOTAL AKSES SOAL!
             }
@@ -3322,7 +3322,7 @@ window.pantauRoom = (kodeRoom) => {
                 let iconMahkota = (data.hostUid === uid) ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '';
                 let statusSiap = p.isReady ? 
                     `<span style="color:#2ecc71; font-weight:bold; font-size:0.85rem;"><i class="fas fa-check-circle"></i> SIAP</span>` : 
-                    `<span style="color:#f1c40f; font-weight:bold; font-size:0.85rem; animation: blinkWait 1s infinite;"><i class="fas fa-spinner fa-spin"></i> NUNGGU</span>`;
+                    `<span style="color:#f1c40f; font-weight:bold; font-size:0.85rem; animation: blinkWait 1s infinite;"><i class="fas fa-spinner fa-spin"></i> MENUNGGU</span>`;
 
                 htmlDaftarPemain += `
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -3347,7 +3347,7 @@ window.pantauRoom = (kodeRoom) => {
                     ${isGueReady ?
                         `<button style="background:#27ae60; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(39,174,96,0.6); cursor:not-allowed;" disabled><i class="fas fa-check-circle"></i> SUDAH SIAP</button>`
                         :
-                        `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;"><i class="fas fa-bolt"></i> KLIK READY!</button>`
+                        `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;"><i class="fas fa-bolt"></i> READY!</button>`
                     }
                     ${htmlDaftarPemain}
                 </div>
@@ -3486,8 +3486,8 @@ window.pantauRoom = (kodeRoom) => {
                         } else {
                             let t1 = document.getElementById('timerDisplay');
                             let t2 = document.getElementById('floatingTimer');
-                            if(t1) { t1.innerText = "NUNGGU HOST..."; t1.className = 'timer-container timer-panic'; }
-                            if(t2) { t2.innerText = "NUNGGU HOST..."; t2.className = 'timer-panic'; }
+                            if(t1) { t1.innerText = "MENUNGGU HOST..."; t1.className = 'timer-container timer-panic'; }
+                            if(t2) { t2.innerText = "MENUNGGU HOST..."; t2.className = 'timer-panic'; }
                         }
                     }
                 }, 1000);
