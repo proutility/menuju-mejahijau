@@ -4161,17 +4161,17 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-        // 🛑 JURUS BUKA GEMBOK SIDEBAR SAAT REVIEW 🛑
+        // 🛑 JURUS BUKA GEMBOK SIDEBAR & FIX PODIUM HILANG 🛑
         window.reviewHasilMabar = () => {
-            // 1. Hapus layar podium Kahoot
+            // 1. SEMBUNYIKAN layar podium Kahoot (JANGAN DI-REMOVE BIAR BISA DIBUKA LAGI)
             const bgOverlay = document.getElementById('kahootResultOverlay');
-            if (bgOverlay) bgOverlay.remove();
+            if (bgOverlay) bgOverlay.style.display = 'none';
 
             // 2. Eksekusi fungsi review bawaan sistem
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms biar aman)
+            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms)
             setTimeout(() => {
                 // Sembunyikan popup nilai bawaan
                 const popUpBiasa = document.getElementById('resultOverlay');
@@ -4195,6 +4195,11 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     btn.style.setProperty('pointer-events', 'auto', 'important');
                     btn.style.opacity = '1';
                 });
+
+                // 👉 PASTIKAN TOMBOL MELAYANG (PODIUM & CSV) BISA DIKLIK 👈
+                const floatMenu = document.getElementById('roomFloatingMenu');
+                if (floatMenu) floatMenu.style.setProperty('pointer-events', 'auto', 'important');
+
             }, 300);
         };
 
