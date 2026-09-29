@@ -1953,7 +1953,7 @@ window.tendangNonVIP = () => {
     // Munculkan peringatan dan tendang ke halaman awal
     Swal.fire({
         title: 'KELUAR',
-        text: 'Karena tidak klik READY, Anda otomatis dikeluarkan sistem',
+        text: 'Anda otomatis dikeluarkan sistem',
         icon: 'info',
         confirmButtonColor: '#d32f2f',
         confirmButtonText: 'Keluar',
