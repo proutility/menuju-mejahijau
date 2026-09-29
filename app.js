@@ -1138,26 +1138,46 @@ window.skipTrainingCountdown = async function() {
     }
 };
 function loadQuestion(idx) {
-    // 🛑 SAFETY NET: Cetak ulang kotak nomor jika terhapus oleh proses Lobby / Selesai Ujian!
+    // 1. DETEKSI MODE
+    const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room');
+    const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted);
+
+    // 🛑 SAFETY NET: Cetak ulang kotak nomor jika terhapus
     const navG = document.getElementById('navGrid');
     if (navG && navG.innerHTML.trim() === '' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
         if (typeof renderSidebarGrid === 'function') renderSidebarGrid();
     }
 
-    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
+    // 🛑 LOGIKA TOMBOL SELESAI UJIAN (HILANG DI MABAR, MUNCUL DI SINGLEPLAYER) 🛑
     const wadahSelesai = document.querySelector('.finish-container');
     if (wadahSelesai) {
-        wadahSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
+        wadahSelesai.style.setProperty('display', (isSelesaiMode || isModeRoom) ? 'none' : 'block', 'important');
     }
 
     const tombolSelesaiDesktop = document.querySelector('.btn-finish');
-    if (tombolSelesaiDesktop && window.innerWidth > 768) {
-        tombolSelesaiDesktop.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
+    if (tombolSelesaiDesktop) {
+        tombolSelesaiDesktop.style.setProperty('display', (isSelesaiMode || isModeRoom) ? 'none' : 'block', 'important');
+        
+        // RESET GEMBOK SISA MABAR BIAR TOMBOL BISA DIKLIK LAGI
+        if (!isSelesaiMode && !isModeRoom) {
+            tombolSelesaiDesktop.disabled = false;
+            tombolSelesaiDesktop.removeAttribute('disabled');
+            tombolSelesaiDesktop.style.setProperty('pointer-events', 'auto', 'important');
+            tombolSelesaiDesktop.style.setProperty('opacity', '1', 'important');
+        }
     }
     
-    if (typeof isSubmitted !== 'undefined' && !isSubmitted) {
+    if (!isSelesaiMode) {
         const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); 
         if (menuKembaliBawah) menuKembaliBawah.remove(); 
+        
+        // RESET GEMBOK NOMOR SOAL (Biar nomor soal 1,2,3 gak warna hitam/abu-abu lagi!)
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('opacity', '1', 'important');
+        });
     }
     
     window.isAnswerLocked = false;
@@ -1175,7 +1195,7 @@ function loadQuestion(idx) {
     const mainContent = document.querySelector('.main-content');
     if(mainContent) mainContent.scrollTop = 0;
 
-    // 🛑 UX BARU: Ubah format nomor jadi "1 / 50"
+    // UX BARU: Ubah format nomor jadi "1 / 50"
     const elNum = document.getElementById('qNum');
     if (elNum) {
         if (currentQuestions && currentQuestions.length > 0) {
@@ -1187,17 +1207,15 @@ function loadQuestion(idx) {
 
     document.getElementById('questionText').innerText = q.q;
     
-    // 👇 FUNGSI INI YANG SUKA NGEGEMBOK OTOMATIS 👇
     updateSidebarStatus();
     updateProgress();
 
-    // 🛑 JURUS ANTI-KUNCI: BUKA GEMBOK SIDEBAR TIAP SOAL DIMUAT (SEMUA MODE REVIEW) 🛑
-    if (typeof isSubmitted !== 'undefined' && isSubmitted) {
+    // JURUS ANTI-KUNCI: BUKA GEMBOK SIDEBAR TIAP SOAL DIMUAT (KHUSUS MODE REVIEW)
+    if (isSelesaiMode) {
         setTimeout(() => {
             document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid').forEach(el => {
                 el.style.setProperty('pointer-events', 'auto', 'important');
             });
-            // Hapus atribut disabled dari semua nomor soal biar warnanya nyala & bisa diklik
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.disabled = false;
                 btn.removeAttribute('disabled');
@@ -1205,9 +1223,8 @@ function loadQuestion(idx) {
                 btn.style.setProperty('cursor', 'pointer', 'important');
                 btn.style.setProperty('opacity', '1', 'important');
             });
-        }, 50); // Kasih jeda 50ms biar fungsi bawaan updateSidebarStatus() kelar ngunci, baru kita dobrak lagi!
+        }, 50); 
     }
-    // ==============================================================================
     
     document.getElementById('prevBtn').disabled = (typeof isReviewMode !== 'undefined' && isReviewMode ? false : idx === 0);
     
@@ -1215,20 +1232,21 @@ function loadQuestion(idx) {
     btnNext.style.display = 'block'; 
     
     if (idx === currentQuestions.length - 1) {
-        if (isSubmitted) {
+        if (isSelesaiMode || isModeRoom) { // 🔥 Hilangkan juga tombol Selesai versi HP pas Mabar
             btnNext.style.display = 'none'; 
         } else {
             if (window.innerWidth <= 768) {
                 btnNext.innerHTML = "Selesai";
                 btnNext.className = "btn btn-finish"; 
                 btnNext.onclick = window.confirmFinish; 
+                btnNext.disabled = false; // Pastikan bisa diklik
             } else {
                 btnNext.style.display = 'none';
             }
         }
     } else {
         btnNext.innerHTML = typeof isReviewMode !== 'undefined' && isReviewMode ? "Lanjut (Salah) ❯" : "Selanjutnya ❯";
-        if(isSubmitted) btnNext.innerHTML = "Selanjutnya ❯"; 
+        if(isSelesaiMode) btnNext.innerHTML = "Selanjutnya ❯"; 
         
         btnNext.className = "btn btn-next"; 
         btnNext.onclick = () => window.changeQuestion(1);
@@ -1242,7 +1260,7 @@ function loadQuestion(idx) {
     }
 
     const fb = document.getElementById('feedbackBox');
-    if (isSubmitted) {
+    if (isSelesaiMode) {
         if(fb) { fb.style.display = 'block'; fb.classList.add('show'); }
         const teksPembahasan = q.explanation || ""; 
         const jawabanBenar = q.options && q.answer !== undefined ? q.options[q.answer] : ""; 
@@ -1276,7 +1294,7 @@ function loadQuestion(idx) {
     q.options.forEach((opt, i) => {
         const div = document.createElement('div');
         div.className = 'option-label';
-        if(isSubmitted) {
+        if(isSelesaiMode) {
             div.style.cursor = 'default';
             if(userAnswers[idx] === i) {
                 div.innerHTML = i === q.answer ? opt + ' ✅' : opt + ' ❌';
@@ -1291,9 +1309,9 @@ function loadQuestion(idx) {
         } else {
            div.innerHTML = opt;
            div.onclick = async () => { 
-                if(!isSubmitted && !isAnswerLocked) { 
+                if(!isSelesaiMode && !isAnswerLocked) { 
                     
-                    if (currentAppMode === 'room') {
+                    if (isModeRoom) {
                         isAnswerLocked = true; 
                         div.style.background = "#fff9c4"; 
                         div.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
@@ -1304,7 +1322,7 @@ function loadQuestion(idx) {
                             [`players.${currentUser.uid}.jawabanSekarang`]: i
                         });
                     } 
-                    else if (currentAppMode === 'latihan') {
+                    else if (typeof currentAppMode !== 'undefined' && currentAppMode === 'latihan') {
                         triggerPembahasanLatihan(i); 
                     } 
                     else {
@@ -1320,12 +1338,17 @@ function loadQuestion(idx) {
         cont.appendChild(div);
     });
 
+    // 🛑 MUNCULKAN KEMBALI CHECKBOX RAGU-RAGU DI SINGLEPLAYER 🛑
     const chk = document.getElementById('checkRagu');
     if(chk) {
         chk.checked = raguStatus[idx] || false;
-        chk.disabled = isSubmitted;
+        chk.disabled = isSelesaiMode;
+        
+        const raguWrapper = chk.closest('div') || chk.parentElement;
+        if (raguWrapper) {
+            raguWrapper.style.display = isModeRoom ? 'none' : ''; 
+        }
     }
-
     // ==========================================================
     // 🛑 LOGIKA UX: TUKAR POSISI KOTAK NOMOR VS KLASEMEN LIVE
     // ==========================================================
