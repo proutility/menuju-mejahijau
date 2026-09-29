@@ -3974,15 +3974,22 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         });
         botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
 
-        // 🛑 JURUS LOGIKA VIP UNTUK DOWNLOAD EXCEL EVALUASI 🛑
+        // 🛑 JURUS LOGIKA VIP UNTUK DOWNLOAD EXCEL EVALUASI (SINKRON DENGAN GATEKEEPER) 🛑
         window.triggerDownloadVIP = () => {
             let isUserVip = false;
             
-            // Cek status VIP atau Host
-            if (window.currentUser && (window.currentUser.isVip === true || window.currentUser.tier === 'VIP' || window.currentUser.role === 'VIP')) {
+            // 1. Cek dari variabel global Gatekeeper lu (isVIPUser)
+            if (window.isVIPUser === true) {
                 isUserVip = true;
             }
-            if (window.isHost || window.isAdmin) {
+            
+            // 2. Cek dari status Host (Host room bebas download)
+            if (window.isHost) {
+                isUserVip = true;
+            }
+
+            // 3. Cek dari class body (Kalau body punya class 'is-admin', berarti dia Admin/Editor)
+            if (document.body.classList.contains('is-admin')) {
                 isUserVip = true;
             }
 
@@ -3998,7 +4005,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 } else if(typeof Swal !== 'undefined') {
                     Swal.fire("VIP Only 👑", "Fitur Download Evaluasi & Pembahasan Soal hanya untuk Member VIP.", "warning");
                 } else {
-                    alert("🔒 Akses Terkunci!\nFitur Download Evaluasi khusus Member VIP.");
+                    alert("🔒 Akses Terkunci!\nFitur Download Evaluasi khusus Member VIP, Silahkan Hubungi Admin.");
                 }
             }
         };
