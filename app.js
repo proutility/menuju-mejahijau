@@ -1144,26 +1144,30 @@ function loadQuestion(idx) {
         if (typeof renderSidebarGrid === 'function') renderSidebarGrid();
     }
 
+    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
+        const wadahSelesai = document.querySelector('.finish-container');
+        if (wadahSelesai) {
+            wadahSelesai.style.setProperty('display', 'block', 'important');
+        }
+
+        const tombolSelesai = document.querySelector('.btn-finish');
+        if (tombolSelesai) {
+            tombolSelesai.style.setProperty('display', 'block', 'important');
+        }
+        
+        // (Opsional) Sembunyikan tombol "Kembali ke Menu Utama" melayang kalau masih nyangkut
+        const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); // Sesuaikan nama class jika ada
+        if (menuKembaliBawah) menuKembaliBawah.style.display = 'none';
+        
+        // Reset status kuncian jawaban
+        window.isAnswerLocked = false;
+
     window.speechSynthesis.cancel();
     const btnSpeakIcon = document.querySelector('#btnSpeak i');
     if(btnSpeakIcon) btnSpeakIcon.className = 'fas fa-volume-up';
 
     document.querySelector('.question-header').style.visibility = 'visible';
     document.querySelector('.footer-nav').style.visibility = 'visible';
-    
-    // 🛑 INJEKSI ANTI-ILANG: PAKSA MUNCULIN TOMBOL SELESAI UJIAN (DESKTOP) 🛑
-    const wadahSelesai = document.querySelector('.finish-container');
-    if (wadahSelesai) {
-        // Kalau statusnya isSubmitted (lagi review), sembunyiin. Kalau lagi ujian, MUNCULIN!
-        wadahSelesai.style.setProperty('display', typeof isSubmitted !== 'undefined' && isSubmitted ? 'none' : 'block', 'important');
-    }
-    
-    const tombolSelesaiDesktop = document.querySelector('.btn-finish');
-    if (tombolSelesaiDesktop && window.innerWidth > 768) {
-        tombolSelesaiDesktop.style.setProperty('display', typeof isSubmitted !== 'undefined' && isSubmitted ? 'none' : 'block', 'important');
-    }
-    // ======================================================================
-
     currentIdx = idx;
     const q = currentQuestions[idx];
     if (!q) return;
@@ -1308,7 +1312,6 @@ function loadQuestion(idx) {
         chk.checked = raguStatus[idx] || false;
         chk.disabled = isSubmitted;
     }
-}
 
     // ==========================================================
     // 🛑 LOGIKA UX: TUKAR POSISI KOTAK NOMOR VS KLASEMEN LIVE
