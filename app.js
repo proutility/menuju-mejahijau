@@ -1144,26 +1144,23 @@ function loadQuestion(idx) {
         if (typeof renderSidebarGrid === 'function') renderSidebarGrid();
     }
 
-  // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
-        const wadahSelesai = document.querySelector('.finish-container');
-        if (wadahSelesai) {
-            // Kalau isSubmitted true (Mode Pembahasan), HILANGKAN! Kalau false (Mode Ujian), MUNCULKAN!
-            wadahSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
-        }
+    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
+    const wadahSelesai = document.querySelector('.finish-container');
+    if (wadahSelesai) {
+        wadahSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
+    }
 
-        const tombolSelesai = document.querySelector('.btn-finish');
-        if (tombolSelesai) {
-            tombolSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
-        }
-        
-        // Hancurkan (remove) tombol Kembali ke Menu Utama melayang biar nggak ada jejak pas mulai ujian baru
-        if (typeof isSubmitted !== 'undefined' && !isSubmitted) {
-            const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); 
-            if (menuKembaliBawah) menuKembaliBawah.remove(); // Pakai remove() biar bener-bener musnah, bukan cuma disembunyikan
-        }
-        
-        // Reset status kuncian jawaban
-        window.isAnswerLocked = false;
+    const tombolSelesaiDesktop = document.querySelector('.btn-finish');
+    if (tombolSelesaiDesktop && window.innerWidth > 768) {
+        tombolSelesaiDesktop.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
+    }
+    
+    if (typeof isSubmitted !== 'undefined' && !isSubmitted) {
+        const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); 
+        if (menuKembaliBawah) menuKembaliBawah.remove(); 
+    }
+    
+    window.isAnswerLocked = false;
 
     window.speechSynthesis.cancel();
     const btnSpeakIcon = document.querySelector('#btnSpeak i');
@@ -1190,10 +1187,29 @@ function loadQuestion(idx) {
 
     document.getElementById('questionText').innerText = q.q;
     
+    // 👇 FUNGSI INI YANG SUKA NGEGEMBOK OTOMATIS 👇
     updateSidebarStatus();
     updateProgress();
+
+    // 🛑 JURUS ANTI-KUNCI: BUKA GEMBOK SIDEBAR TIAP SOAL DIMUAT (SEMUA MODE REVIEW) 🛑
+    if (typeof isSubmitted !== 'undefined' && isSubmitted) {
+        setTimeout(() => {
+            document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid').forEach(el => {
+                el.style.setProperty('pointer-events', 'auto', 'important');
+            });
+            // Hapus atribut disabled dari semua nomor soal biar warnanya nyala & bisa diklik
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.removeAttribute('disabled');
+                btn.style.setProperty('pointer-events', 'auto', 'important');
+                btn.style.setProperty('cursor', 'pointer', 'important');
+                btn.style.setProperty('opacity', '1', 'important');
+            });
+        }, 50); // Kasih jeda 50ms biar fungsi bawaan updateSidebarStatus() kelar ngunci, baru kita dobrak lagi!
+    }
+    // ==============================================================================
     
-    document.getElementById('prevBtn').disabled = (isReviewMode ? false : idx === 0);
+    document.getElementById('prevBtn').disabled = (typeof isReviewMode !== 'undefined' && isReviewMode ? false : idx === 0);
     
     const btnNext = document.getElementById('nextBtn');
     btnNext.style.display = 'block'; 
@@ -1211,14 +1227,14 @@ function loadQuestion(idx) {
             }
         }
     } else {
-        btnNext.innerHTML = isReviewMode ? "Lanjut (Salah) ❯" : "Selanjutnya ❯";
+        btnNext.innerHTML = typeof isReviewMode !== 'undefined' && isReviewMode ? "Lanjut (Salah) ❯" : "Selanjutnya ❯";
         if(isSubmitted) btnNext.innerHTML = "Selanjutnya ❯"; 
         
         btnNext.className = "btn btn-next"; 
         btnNext.onclick = () => window.changeQuestion(1);
     }
     
-    if (isReviewMode) {
+    if (typeof isReviewMode !== 'undefined' && isReviewMode) {
          btnNext.style.display = 'block';
          btnNext.innerHTML = "Lanjut (Salah) ❯";
          btnNext.className = "btn btn-next";
@@ -1239,7 +1255,6 @@ function loadQuestion(idx) {
             else { fCite.innerHTML = "Sumber: -"; }
         }
 
-        // --- INJEKSI TOMBOL EDIT KHUSUS ADMIN ---
         let adminDiv = document.getElementById('adminQuickEditDiv');
         if (!adminDiv && fb) {
             adminDiv = document.createElement('div');
@@ -1249,10 +1264,8 @@ function loadQuestion(idx) {
             fb.appendChild(adminDiv);
         }
         if (adminDiv) {
-            // Kalau dia admin/editor, tampilin. Kalau peserta biasa, sembunyiin.
             adminDiv.style.display = document.body.classList.contains('is-admin') ? 'block' : 'none';
         }
-        // ----------------------------------------
 
     } else { 
         if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
@@ -1281,15 +1294,12 @@ function loadQuestion(idx) {
                 if(!isSubmitted && !isAnswerLocked) { 
                     
                     if (currentAppMode === 'room') {
-                        // Kunci klik sementara & kasih efek nunggu
                         isAnswerLocked = true; 
                         div.style.background = "#fff9c4"; 
-                        // 🛑 TEKS HARUS SAMA PERSIS BIAR BISA DIHAPUS OLEH ROOM
                         div.innerHTML += ' ⏳ (Menunggu Waktu Habis...)';
                         
-                        userAnswers[idx] = i; // Simpan ke array lokal
+                        userAnswers[idx] = i; 
                         
-                        // Setor jawaban ke Firebase (Host & Peserta cuma nunggu)
                         await updateDoc(doc(window.db, "rooms", currentRoomCode), {
                             [`players.${currentUser.uid}.jawabanSekarang`]: i
                         });
