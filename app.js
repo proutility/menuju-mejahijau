@@ -4251,8 +4251,12 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 // 📥 DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL (FIXED & AMAN)
 // ==========================================================
 window.downloadEvaluasiPesertaExcel = function() {
-    // 1. Pastikan data soal ada
-    if (!window.currentQuestions || window.currentQuestions.length === 0) {
+    // 1. Tangkap variabel bawaan sistem lu secara aman (tanpa maksa pakai window.)
+    const soalUjian = typeof currentQuestions !== 'undefined' ? currentQuestions : window.currentQuestions;
+    const jawabanUser = typeof userAnswers !== 'undefined' ? userAnswers : window.userAnswers;
+
+    // Pastikan data soal ada
+    if (!soalUjian || soalUjian.length === 0) {
         return alert("Data evaluasi tidak tersedia. Selesaikan ujian dulu ya bro!");
     }
 
@@ -4295,9 +4299,9 @@ window.downloadEvaluasiPesertaExcel = function() {
                 </thead>
                 <tbody>`;
 
-    window.currentQuestions.forEach((q, i) => {
+    soalUjian.forEach((q, i) => {
         // Ambil data jawaban user dan kunci jawaban
-        const ansUserIdx = window.userAnswers ? window.userAnswers[i] : null;
+        const ansUserIdx = jawabanUser ? jawabanUser[i] : null;
         const ansKunciIdx = q.answer;
         
         // Cek teks opsinya (kalo kosong atau gak kejawab kasih tanda)
