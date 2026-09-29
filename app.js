@@ -1150,6 +1150,20 @@ function loadQuestion(idx) {
 
     document.querySelector('.question-header').style.visibility = 'visible';
     document.querySelector('.footer-nav').style.visibility = 'visible';
+    
+    // 🛑 INJEKSI ANTI-ILANG: PAKSA MUNCULIN TOMBOL SELESAI UJIAN (DESKTOP) 🛑
+    const wadahSelesai = document.querySelector('.finish-container');
+    if (wadahSelesai) {
+        // Kalau statusnya isSubmitted (lagi review), sembunyiin. Kalau lagi ujian, MUNCULIN!
+        wadahSelesai.style.setProperty('display', typeof isSubmitted !== 'undefined' && isSubmitted ? 'none' : 'block', 'important');
+    }
+    
+    const tombolSelesaiDesktop = document.querySelector('.btn-finish');
+    if (tombolSelesaiDesktop && window.innerWidth > 768) {
+        tombolSelesaiDesktop.style.setProperty('display', typeof isSubmitted !== 'undefined' && isSubmitted ? 'none' : 'block', 'important');
+    }
+    // ======================================================================
+
     currentIdx = idx;
     const q = currentQuestions[idx];
     if (!q) return;
@@ -1294,6 +1308,7 @@ function loadQuestion(idx) {
         chk.checked = raguStatus[idx] || false;
         chk.disabled = isSubmitted;
     }
+}
 
     // ==========================================================
     // 🛑 LOGIKA UX: TUKAR POSISI KOTAK NOMOR VS KLASEMEN LIVE
