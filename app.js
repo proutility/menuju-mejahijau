@@ -4194,52 +4194,50 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-        // 🛑 JURUS BUKA GEMBOK SIDEBAR & FIX PODIUM HILANG 🛑
+       // 🛑 JURUS BUKA GEMBOK SIDEBAR (VERSI PENDOBRAK BRUTAL) 🛑
         window.reviewHasilMabar = () => {
-            // 1. SEMBUNYIKAN layar podium Kahoot (JANGAN DI-REMOVE BIAR BISA DIBUKA LAGI)
+            // 1. SEMBUNYIKAN layar podium Kahoot
             const bgOverlay = document.getElementById('kahootResultOverlay');
             if (bgOverlay) bgOverlay.style.display = 'none';
 
-            // 2. Eksekusi fungsi review bawaan sistem
+            // 2. Eksekusi fungsi review bawaan sistem (yang ngetrigger "Review Salah")
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. JURUS BUKA GEMBOK LOGIKA & SIDEBAR KANAN (Dikasih jeda 300ms)
-            setTimeout(() => {
-                // 👉 INI KUNCI UTAMANYA: Buka Gembok Logika Sistem Bawaan Lu
-                window.isAnswerLocked = false; 
+            // 3. JURUS PENDOBRAK BERKALI-KALI (Memastikan gembok hancur walau sistem bawaan ngunci ulang)
+            let dobrakCount = 0;
+            const pendobrak = setInterval(() => {
+                // Buka gembok logika (isAnswerLocked)
+                window.isAnswerLocked = false;
 
-                // Sembunyikan popup nilai bawaan
+                // Tutup pop-up nilai bawaan yang mungkin muncul tiba-tiba
                 const popUpBiasa = document.getElementById('resultOverlay');
                 if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
 
-                // Buka paksa akses klik untuk seluruh area sidebar kanan
-                const sidebarKanan = document.querySelector('.sidebar-right');
-                if (sidebarKanan) sidebarKanan.style.setProperty('pointer-events', 'auto', 'important');
-
-                const navContainer = document.querySelector('.nav-container');
-                if (navContainer) navContainer.style.setProperty('pointer-events', 'auto', 'important');
+                // BUKA SEMUA KUNCIAN DI SIDEBAR KANAN & KIRI (Termasuk Kotak Nomor Soal)
+                document.querySelectorAll('.sidebar-right, .sidebar-left, .nav-container, .nav-grid, .nav-btn, .sidebar-right *, .sidebar-left *').forEach(el => {
+                    el.style.setProperty('pointer-events', 'auto', 'important');
+                });
                 
-                const navGrid = document.querySelector('.nav-grid');
-                if (navGrid) navGrid.style.setProperty('pointer-events', 'auto', 'important');
-
-                // Buka paksa akses klik untuk semua kotak nomor soal (1, 2, 3, dst)
+                // Pastikan kursor nomor soal balik jadi ikon tangan (bisa diklik)
                 document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.style.setProperty('pointer-events', 'auto', 'important');
                     btn.style.setProperty('cursor', 'pointer', 'important');
                 });
                 
-                // Buka kuncian tombol action lainnya
-                document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
+                // Buka tombol action navigasi bawah (Prev, Next, Finish)
+                document.querySelectorAll('.action-box button, .act-exit, .btn-finish, .footer-nav button').forEach(btn => {
                     btn.style.setProperty('pointer-events', 'auto', 'important');
                     btn.style.opacity = '1';
                 });
 
-                // 👉 PASTIKAN TOMBOL MELAYANG (PODIUM & CSV) TETAP BISA DIKLIK 👈
+                // Pastikan menu melayang VIP & Podium tetap kebal dan bisa diklik
                 const floatM = document.getElementById('roomFloatingMenu');
                 if (floatM) floatM.style.setProperty('pointer-events', 'auto', 'important');
 
-            }, 300);
+                dobrakCount++;
+                // Berhenti mendobrak setelah 5 detik (500ms x 10 kali) biar browser gak berat
+                if (dobrakCount > 10) clearInterval(pendobrak); 
+            }, 500);
         };
 
     } catch (e) {
