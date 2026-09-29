@@ -3867,7 +3867,7 @@ window.switchTabLobby = function(tab) {
     }
 };
 // ========================================================
-// 🏆 FUNGSI KLASEMEN AKHIR MABAR (LAYOUT PRO & FOTO GOOGLE)
+// 🏆 FUNGSI KLASEMEN AKHIR MABAR (LAYOUT PRO & EXCEL VIP)
 // ========================================================
 window.tampilkanHasilMultiplayer = async (kodeRoom) => {
     try {
@@ -3903,7 +3903,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             let isMe = window.currentUser && player.nama === window.currentUser.displayName;
             let badgeKamu = isMe ? '<div class="me-badge">KAMU</div>' : '';
             
-            // Prioritaskan Foto Google, kalau gagal/kosong baru pakai Inisial
             let fotoUser = player.photoURL || (isMe ? window.currentUser.photoURL : null);
             let urlFoto = fotoUser ? fotoUser : `https://ui-avatars.com/api/?name=${encodeURIComponent(namaPendek)}&background=random&color=fff&bold=true&size=150`;
 
@@ -3975,6 +3974,35 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         });
         botMessageText += `Selamat untuk para pemenang! Silakan saling review pembahasan.`;
 
+        // 🛑 JURUS LOGIKA VIP UNTUK DOWNLOAD EXCEL EVALUASI 🛑
+        window.triggerDownloadVIP = () => {
+            let isUserVip = false;
+            
+            // Cek status VIP atau Host
+            if (window.currentUser && (window.currentUser.isVip === true || window.currentUser.tier === 'VIP' || window.currentUser.role === 'VIP')) {
+                isUserVip = true;
+            }
+            if (window.isHost || window.isAdmin) {
+                isUserVip = true;
+            }
+
+            if (isUserVip) {
+                if(typeof window.downloadEvaluasiPesertaExcel === 'function') {
+                    window.downloadEvaluasiPesertaExcel();
+                } else {
+                    alert("Fungsi Excel Evaluasi belum dimuat!");
+                }
+            } else {
+                if(typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+                    PROTAMA.alert("VIP Only 👑", "Fitur Download Evaluasi & Pembahasan Soal hanya untuk Member VIP. Upgrade akunmu sekarang!", "warning");
+                } else if(typeof Swal !== 'undefined') {
+                    Swal.fire("VIP Only 👑", "Fitur Download Evaluasi & Pembahasan Soal hanya untuk Member VIP.", "warning");
+                } else {
+                    alert("🔒 Akses Terkunci!\nFitur Download Evaluasi khusus Member VIP.");
+                }
+            }
+        };
+
         bgOverlay.innerHTML = `
             <div class="result-card" style="z-index:2147483648;">
                 <div style="position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 5px; text-align: left;">
@@ -3995,10 +4023,10 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
                 <div class="result-actions">
                     <button class="btn-review" onclick="window.reviewHasilMabar()"><i class="fas fa-search"></i> Review Jawaban</button>
-                    <!-- 👉 TOMBOL CSV DI SINI 👈 -->
-                    <button onclick="window.downloadCSVMabar('${kodeRoom}')" style="background: #27ae60; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(39,174,96,0.4);"><i class="fas fa-file-csv"></i> Download CSV</button>
+                    <!-- 👉 TOMBOL EVALUASI VIP 👈 -->
+                    <button onclick="window.triggerDownloadVIP()" style="background: #2c3e50; color: white; border: 2px solid #f1c40f; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.4);"><i class="fas fa-crown" style="color:#f1c40f;"></i> Evaluasi (VIP)</button>
                     <!-- ================================ -->
-                    <button class="btn-tutup" onclick="document.getElementById('kahootResultOverlay').remove()"><i class="fas fa-times"></i> Tutup & Kembali</button>
+                    <button class="btn-tutup" onclick="document.getElementById('kahootResultOverlay').style.display='none'"><i class="fas fa-times"></i> Tutup & Kembali</button>
                 </div>
             </div>
 
@@ -4007,7 +4035,6 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                 @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
                 @keyframes pulseReady { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-                /* 🛑 LAYOUT DINAMIS: Pake Flexbox, No More Obat Nyundul */
                 .result-card { 
                     background: #ffffff; 
                     width: 100%; 
@@ -4021,24 +4048,19 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 30px; /* Jarak natural yang konsisten */
+                    gap: 30px; 
                 }
                 
                 .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin: 0; padding-top: 15px; text-transform: uppercase; text-align: center; }
-
                 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 280px; border-bottom: 3px solid #eee; margin: 0; width: 100%; }
                 .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
                 .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
                 .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }
-                
                 .podium-avatar { width: 80px; height: 80px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 8px 15px rgba(0,0,0,0.15); margin-bottom: -40px; z-index: 10; padding:3px; overflow:hidden;}
-                
                 .podium-name { background: white; padding: 4px 15px; border-radius: 20px; font-weight: 800; color: #333; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; border: 1px solid #eee; }
                 .podium-score { font-weight: 700; color: #555; margin-bottom: 15px; z-index: 10; background: rgba(255,255,255,0.8); padding: 2px 8px; border-radius: 10px;}
                 .me-badge { position: absolute; top: -25px; background: #e74c3c; color: white; font-size: 0.75rem; font-weight: bold; padding: 4px 10px; border-radius: 15px; z-index: 11; box-shadow: 0 2px 6px rgba(231,76,60,0.4); border: 2px solid white;}
-
                 .other-players-list { width: 100%; max-height: 220px; overflow-y: auto; background: #f8f9fa; border-radius: 12px; padding: 5px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); }
-                
                 .result-actions { display: flex; justify-content: center; gap: 15px; margin-top: 10px; width: 100%; }
                 .result-actions button { padding: 12px 25px; border: none; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
                 .btn-review { background: #3498db; color: white; box-shadow: 0 4px 15px rgba(52,152,219,0.4); }
@@ -4103,7 +4125,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }
         } catch(e) { console.log(e); }
 
-        // Kuncian jawaban biasa (hanya saat Mabar berlangsung)
+        // Kuncian jawaban fisik awal saat Mabar berlangsung
         window.isAnswerLocked = true;
 
         document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
@@ -4112,28 +4134,32 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         });
 
         // 🛑 FLOATING MENU UNTUK REVIEW DAN DOWNLOAD 🛑
-        if (!document.getElementById('roomFloatingMenu')) {
-            const floatMenu = document.createElement('div');
+        let floatMenu = document.getElementById('roomFloatingMenu');
+        if (!floatMenu) {
+            floatMenu = document.createElement('div');
             floatMenu.id = 'roomFloatingMenu';
-            floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:1000;";
+            floatMenu.style.cssText = "position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:10px; z-index:9999999; pointer-events:auto !important;";
 
             const btnRank = document.createElement('button');
             btnRank.innerHTML = '<i class="fas fa-trophy"></i> Lihat Podium';
-            btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+            btnRank.style.cssText = "background:var(--gold); color:#333; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s; pointer-events:auto !important;";
             btnRank.onclick = () => { 
                 const resO = document.getElementById('kahootResultOverlay');
-                if(resO) resO.style.display = 'flex'; 
+                if(resO) {
+                    resO.style.display = 'flex'; 
+                    resO.style.pointerEvents = 'auto';
+                }
             };
 
-            // 👉 TOMBOL CSV DI FLOATING MENU 👈
+            // 👉 TOMBOL EVALUASI VIP DI FLOATING MENU 👈
             const btnCsv = document.createElement('button');
-            btnCsv.innerHTML = '<i class="fas fa-file-csv"></i> Download CSV';
-            btnCsv.style.cssText = "background:#27ae60; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
-            btnCsv.onclick = () => window.downloadCSVMabar(kodeRoom);
+            btnCsv.innerHTML = '<i class="fas fa-crown" style="color:#f1c40f;"></i> Evaluasi (VIP)';
+            btnCsv.style.cssText = "background:#2c3e50; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border: 2px solid #f1c40f; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s; pointer-events:auto !important;";
+            btnCsv.onclick = window.triggerDownloadVIP;
 
             const btnExit = document.createElement('button');
             btnExit.innerHTML = '<i class="fas fa-sign-out-alt"></i> Keluar Room';
-            btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s;";
+            btnExit.style.cssText = "background:#c0392b; color:white; font-weight:bold; padding:12px 20px; border-radius:30px; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.3); cursor:pointer; transition:0.2s; pointer-events:auto !important;";
             btnExit.onclick = window.konfirmasiKeluarRoom;
 
             floatMenu.appendChild(btnRank);
@@ -4171,8 +4197,11 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. JURUS BUKA GEMBOK SIDEBAR KANAN (Dikasih jeda 300ms)
+            // 3. JURUS BUKA GEMBOK LOGIKA & SIDEBAR KANAN (Dikasih jeda 300ms)
             setTimeout(() => {
+                // 👉 INI KUNCI UTAMANYA: Buka Gembok Logika Sistem Bawaan Lu
+                window.isAnswerLocked = false; 
+
                 // Sembunyikan popup nilai bawaan
                 const popUpBiasa = document.getElementById('resultOverlay');
                 if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
@@ -4183,6 +4212,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
                 const navContainer = document.querySelector('.nav-container');
                 if (navContainer) navContainer.style.setProperty('pointer-events', 'auto', 'important');
+                
+                const navGrid = document.querySelector('.nav-grid');
+                if (navGrid) navGrid.style.setProperty('pointer-events', 'auto', 'important');
 
                 // Buka paksa akses klik untuk semua kotak nomor soal (1, 2, 3, dst)
                 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -4196,9 +4228,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     btn.style.opacity = '1';
                 });
 
-                // 👉 PASTIKAN TOMBOL MELAYANG (PODIUM & CSV) BISA DIKLIK 👈
-                const floatMenu = document.getElementById('roomFloatingMenu');
-                if (floatMenu) floatMenu.style.setProperty('pointer-events', 'auto', 'important');
+                // 👉 PASTIKAN TOMBOL MELAYANG (PODIUM & CSV) TETAP BISA DIKLIK 👈
+                const floatM = document.getElementById('roomFloatingMenu');
+                if (floatM) floatM.style.setProperty('pointer-events', 'auto', 'important');
 
             }, 300);
         };
@@ -4207,6 +4239,95 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         console.error("Gagal memuat hasil mabar:", e);
     }
 }; // INI TUTUP KURUNG UTAMA FUNGSI
+
+// ==========================================================
+// 📥 DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL (FIXED & AMAN)
+// ==========================================================
+window.downloadEvaluasiPesertaExcel = function() {
+    // 1. Pastikan data soal ada
+    if (!window.currentQuestions || window.currentQuestions.length === 0) {
+        return alert("Data evaluasi tidak tersedia. Selesaikan ujian dulu ya bro!");
+    }
+
+    // 2. Fungsi Helper untuk membersihkan tag HTML (<p>, <br>, dll) 
+    // biar teks rapi dan gak ngerusak susunan cell/tabel Excel
+    const bersihkanHTML = (teks) => {
+        if (!teks) return "-";
+        let div = document.createElement("div");
+        div.innerHTML = teks;
+        return div.textContent || div.innerText || "";
+    };
+
+    const namaPeserta = window.currentUser ? window.currentUser.displayName : "Peserta";
+    const modul = (window.currentDatabaseId || "Latihan").toUpperCase();
+    
+    let tableHTML = `
+        <html xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                td { vertical-align: top; padding: 5px; }
+            </style>
+        </head>
+        <body>
+            <h3>LEMBAR HASIL EVALUASI UJIAN - PRO-TAMA</h3>
+            <p><b>Nama Peserta:</b> ${namaPeserta}<br>
+            <b>Modul:</b> ${modul}<br>
+            <b>Tanggal:</b> ${new Date().toLocaleString('id-ID')}</p>
+            <table border="1" style="border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #004d00; color: white;">
+                        <th>No</th>
+                        <th>Pertanyaan</th>
+                        <th>Jawaban Anda</th>
+                        <th>Kunci Jawaban</th>
+                        <th>Status</th>
+                        <th>Pembahasan</th>
+                        <th>Dasar Hukum</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+    window.currentQuestions.forEach((q, i) => {
+        // Ambil data jawaban user dan kunci jawaban
+        const ansUserIdx = window.userAnswers ? window.userAnswers[i] : null;
+        const ansKunciIdx = q.answer;
+        
+        // Cek teks opsinya (kalo kosong atau gak kejawab kasih tanda)
+        const teksUser = (ansUserIdx !== null && ansUserIdx !== undefined && q.options) ? q.options[ansUserIdx] : "(Tidak Dijawab)";
+        const teksKunci = (q.options && q.options[ansKunciIdx]) ? q.options[ansKunciIdx] : "-";
+        
+        const isBenar = ansUserIdx === ansKunciIdx;
+        const status = isBenar ? "BENAR" : "SALAH";
+        const warnaRow = isBenar ? "#e8f5e9" : "#ffebee"; // Hijau muda buat benar, merah muda buat salah
+
+        // Masukkan ke baris tabel (HTML-nya dibersihkan dulu)
+        tableHTML += `
+            <tr style="background-color: ${warnaRow};">
+                <td style="text-align:center;">${i + 1}</td>
+                <td>${bersihkanHTML(q.q)}</td>
+                <td>${bersihkanHTML(teksUser)}</td>
+                <td>${bersihkanHTML(teksKunci)}</td>
+                <td style="text-align:center; font-weight:bold; color:${isBenar ? 'green' : 'red'};">${status}</td>
+                <td>${bersihkanHTML(q.explanation)}</td>
+                <td>${bersihkanHTML(q.cite)}</td>
+            </tr>`;
+    });
+
+    tableHTML += `</tbody></table></body></html>`;
+
+    // 3. Eksekusi Download 
+    // Tambahin BOM '\uFEFF' biar karakter spesial (Arab, Simbol Hukum) gak error di Excel
+    const blob = new Blob(['\uFEFF' + tableHTML], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    // Bikin nama file rapi, tanpa spasi
+    a.download = `Hasil_Evaluasi_${modul}_${namaPeserta.replace(/\s+/g, '_')}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
 // ==========================================
 // FUNGSI KONFIRMASI & BERSIH-BERSIH ROOM
 // ==========================================
@@ -5066,95 +5187,6 @@ window.downloadSoalJSON = async () => {
         console.error(e);
         alert("Gagal download JSON: " + e.message);
     }
-};
-
-// ==========================================================
-// 📥 DOWNLOAD HASIL EVALUASI PESERTA KE EXCEL (FIXED & AMAN)
-// ==========================================================
-window.downloadEvaluasiPesertaExcel = function() {
-    // 1. Pastikan data soal ada
-    if (!window.currentQuestions || window.currentQuestions.length === 0) {
-        return alert("Data evaluasi tidak tersedia. Selesaikan ujian dulu ya bro!");
-    }
-
-    // 2. Fungsi Helper untuk membersihkan tag HTML (<p>, <br>, dll) 
-    // biar teks rapi dan gak ngerusak susunan cell/tabel Excel
-    const bersihkanHTML = (teks) => {
-        if (!teks) return "-";
-        let div = document.createElement("div");
-        div.innerHTML = teks;
-        return div.textContent || div.innerText || "";
-    };
-
-    const namaPeserta = window.currentUser ? window.currentUser.displayName : "Peserta";
-    const modul = (window.currentDatabaseId || "Latihan").toUpperCase();
-    
-    let tableHTML = `
-        <html xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                td { vertical-align: top; padding: 5px; }
-            </style>
-        </head>
-        <body>
-            <h3>LEMBAR HASIL EVALUASI UJIAN - PRO-TAMA</h3>
-            <p><b>Nama Peserta:</b> ${namaPeserta}<br>
-            <b>Modul:</b> ${modul}<br>
-            <b>Tanggal:</b> ${new Date().toLocaleString('id-ID')}</p>
-            <table border="1" style="border-collapse: collapse;">
-                <thead>
-                    <tr style="background-color: #004d00; color: white;">
-                        <th>No</th>
-                        <th>Pertanyaan</th>
-                        <th>Jawaban Anda</th>
-                        <th>Kunci Jawaban</th>
-                        <th>Status</th>
-                        <th>Pembahasan</th>
-                        <th>Dasar Hukum</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-    window.currentQuestions.forEach((q, i) => {
-        // Ambil data jawaban user dan kunci jawaban
-        const ansUserIdx = window.userAnswers ? window.userAnswers[i] : null;
-        const ansKunciIdx = q.answer;
-        
-        // Cek teks opsinya (kalo kosong atau gak kejawab kasih tanda)
-        const teksUser = (ansUserIdx !== null && ansUserIdx !== undefined && q.options) ? q.options[ansUserIdx] : "(Tidak Dijawab)";
-        const teksKunci = (q.options && q.options[ansKunciIdx]) ? q.options[ansKunciIdx] : "-";
-        
-        const isBenar = ansUserIdx === ansKunciIdx;
-        const status = isBenar ? "BENAR" : "SALAH";
-        const warnaRow = isBenar ? "#e8f5e9" : "#ffebee"; // Hijau muda buat benar, merah muda buat salah
-
-        // Masukkan ke baris tabel (HTML-nya dibersihkan dulu)
-        tableHTML += `
-            <tr style="background-color: ${warnaRow};">
-                <td style="text-align:center;">${i + 1}</td>
-                <td>${bersihkanHTML(q.q)}</td>
-                <td>${bersihkanHTML(teksUser)}</td>
-                <td>${bersihkanHTML(teksKunci)}</td>
-                <td style="text-align:center; font-weight:bold; color:${isBenar ? 'green' : 'red'};">${status}</td>
-                <td>${bersihkanHTML(q.explanation)}</td>
-                <td>${bersihkanHTML(q.cite)}</td>
-            </tr>`;
-    });
-
-    tableHTML += `</tbody></table></body></html>`;
-
-    // 3. Eksekusi Download 
-    // Tambahin BOM '\uFEFF' biar karakter spesial (Arab, Simbol Hukum) gak error di Excel
-    const blob = new Blob(['\uFEFF' + tableHTML], { type: "application/vnd.ms-excel;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    // Bikin nama file rapi, tanpa spasi
-    a.download = `Hasil_Evaluasi_${modul}_${namaPeserta.replace(/\s+/g, '_')}.xls`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
 };
 // ==========================================
 // ANTI CHEAT & FUNGSI DETAIL (GABUNG DARI SCRIPT KEDUA)
