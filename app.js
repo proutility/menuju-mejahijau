@@ -4194,49 +4194,58 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-       // 🛑 JURUS BUKA GEMBOK SIDEBAR (VERSI PENDOBRAK BRUTAL) 🛑
+       // 🛑 JURUS BUKA GEMBOK SIDEBAR (KHUSUS NOMOR SOAL SAJA YANG NYALA) 🛑
         window.reviewHasilMabar = () => {
             // 1. SEMBUNYIKAN layar podium Kahoot
             const bgOverlay = document.getElementById('kahootResultOverlay');
             if (bgOverlay) bgOverlay.style.display = 'none';
 
-            // 2. Eksekusi fungsi review bawaan sistem (yang ngetrigger "Review Salah")
+            // 2. Eksekusi fungsi review bawaan sistem
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. JURUS PENDOBRAK BERKALI-KALI (Memastikan gembok hancur walau sistem bawaan ngunci ulang)
+            // 3. BERSAHKAN RAM BROWSER
+            if (window.dobrakInterval) clearInterval(window.dobrakInterval);
+
+            // 4. JURUS PENDOBRAK SPESIFIK
             let dobrakCount = 0;
-            const pendobrak = setInterval(() => {
-                // Buka gembok logika (isAnswerLocked)
+            window.dobrakInterval = setInterval(() => {
                 window.isAnswerLocked = false;
 
-                // Tutup pop-up nilai bawaan yang mungkin muncul tiba-tiba
                 const popUpBiasa = document.getElementById('resultOverlay');
                 if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
 
-                // BUKA SEMUA KUNCIAN DI SIDEBAR KANAN & KIRI (Termasuk Kotak Nomor Soal)
-                document.querySelectorAll('.sidebar-right, .sidebar-left, .nav-container, .nav-grid, .nav-btn, .sidebar-right *, .sidebar-left *').forEach(el => {
+                // Buka wadah utama sidebar kanan (hanya pointer-events, biar nomor soal bisa diklik)
+                document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid').forEach(el => {
                     el.style.setProperty('pointer-events', 'auto', 'important');
                 });
                 
-                // Pastikan kursor nomor soal balik jadi ikon tangan (bisa diklik)
+                // 👉 HANYA TOMBOL NOMOR SOAL (1, 2, 3) YANG DIBUKA DAN DIBIKIN NYALA FULL COLOR
                 document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.style.setProperty('cursor', 'pointer', 'important');
-                });
-                
-                // Buka tombol action navigasi bawah (Prev, Next, Finish)
-                document.querySelectorAll('.action-box button, .act-exit, .btn-finish, .footer-nav button').forEach(btn => {
+                    btn.disabled = false;
+                    btn.removeAttribute('disabled');
                     btn.style.setProperty('pointer-events', 'auto', 'important');
-                    btn.style.opacity = '1';
+                    btn.style.setProperty('cursor', 'pointer', 'important');
+                    btn.style.setProperty('opacity', '1', 'important'); 
                 });
 
-                // Pastikan menu melayang VIP & Podium tetap kebal dan bisa diklik
+                // 👉 PASTIKAN TOMBOL AKSI ATAS (Admin, Peringkat, Keluar) TETAP MATI DAN PUCAT
+                document.querySelectorAll('.right-header button, .action-box button, .act-exit, .btn-finish').forEach(btn => {
+                    btn.disabled = true;
+                    btn.setAttribute('disabled', 'true');
+                    btn.style.setProperty('pointer-events', 'none', 'important');
+                    btn.style.setProperty('opacity', '0.4', 'important');
+                });
+
+                // Pastikan menu melayang VIP & Podium tetap kebal
                 const floatM = document.getElementById('roomFloatingMenu');
-                if (floatM) floatM.style.setProperty('pointer-events', 'auto', 'important');
+                if (floatM) {
+                    floatM.style.setProperty('pointer-events', 'auto', 'important');
+                    floatM.style.setProperty('opacity', '1', 'important');
+                }
 
                 dobrakCount++;
-                // Berhenti mendobrak setelah 5 detik (500ms x 10 kali) biar browser gak berat
-                if (dobrakCount > 10) clearInterval(pendobrak); 
+                if (dobrakCount > 10) clearInterval(window.dobrakInterval); 
             }, 500);
         };
 
