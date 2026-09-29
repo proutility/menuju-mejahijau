@@ -4194,7 +4194,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             }, 1500);
         }
 
-       // 🛑 JURUS BUKA GEMBOK SIDEBAR (KHUSUS NOMOR SOAL SAJA YANG NYALA) 🛑
+      // 🛑 JURUS BUKA GEMBOK SIDEBAR (VERSI PERMANEN ANTI-PUCAT) 🛑
         window.reviewHasilMabar = () => {
             // 1. SEMBUNYIKAN layar podium Kahoot
             const bgOverlay = document.getElementById('kahootResultOverlay');
@@ -4204,35 +4204,38 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
             if (btnReviewReal) btnReviewReal.click();
 
-            // 3. BERSAHKAN RAM BROWSER
+            // 3. BERSIHKAN RAM BROWSER (Matikan interval lama jika masih nyangkut)
             if (window.dobrakInterval) clearInterval(window.dobrakInterval);
 
-            // 4. JURUS PENDOBRAK SPESIFIK
-            let dobrakCount = 0;
+            // 4. JURUS PENDOBRAK PERMANEN (Jalan terus tanpa batas waktu)
             window.dobrakInterval = setInterval(() => {
                 window.isAnswerLocked = false;
 
                 const popUpBiasa = document.getElementById('resultOverlay');
                 if (popUpBiasa) popUpBiasa.style.setProperty('display', 'none', 'important');
 
-                // Buka wadah utama sidebar kanan (hanya pointer-events, biar nomor soal bisa diklik)
+                // Buka wadah utama sidebar kanan 
                 document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid').forEach(el => {
                     el.style.setProperty('pointer-events', 'auto', 'important');
                 });
                 
-                // 👉 HANYA TOMBOL NOMOR SOAL (1, 2, 3) YANG DIBUKA DAN DIBIKIN NYALA FULL COLOR
+                // 👉 NOMOR SOAL (1, 2, 3) DIPAKSA NYALA TERUS-MENERUS
                 document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.disabled = false;
-                    btn.removeAttribute('disabled');
+                    if (btn.disabled) {
+                        btn.disabled = false;
+                        btn.removeAttribute('disabled');
+                    }
                     btn.style.setProperty('pointer-events', 'auto', 'important');
                     btn.style.setProperty('cursor', 'pointer', 'important');
                     btn.style.setProperty('opacity', '1', 'important'); 
                 });
 
-                // 👉 PASTIKAN TOMBOL AKSI ATAS (Admin, Peringkat, Keluar) TETAP MATI DAN PUCAT
+                // 👉 TOMBOL AKSI ATAS (Admin, Peringkat, Keluar) TETAP DIPAKSA MATI
                 document.querySelectorAll('.right-header button, .action-box button, .act-exit, .btn-finish').forEach(btn => {
-                    btn.disabled = true;
-                    btn.setAttribute('disabled', 'true');
+                    if (!btn.disabled) {
+                        btn.disabled = true;
+                        btn.setAttribute('disabled', 'true');
+                    }
                     btn.style.setProperty('pointer-events', 'none', 'important');
                     btn.style.setProperty('opacity', '0.4', 'important');
                 });
@@ -4244,9 +4247,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     floatM.style.setProperty('opacity', '1', 'important');
                 }
 
-                dobrakCount++;
-                if (dobrakCount > 10) clearInterval(window.dobrakInterval); 
-            }, 500);
+                // Gak ada lagi batas waktu (dobrakCount dihapus), sistem jalan terus ngebantah kuncian bawaan
+            }, 500); // Dieksekusi tiap 0.5 detik
         };
 
     } catch (e) {
