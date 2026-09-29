@@ -4112,25 +4112,36 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             jalankanKembangApi();
         }
 
+// 🛑 JURUS AUDIO ANTI-BLOKIR (PAKAI FILE GITHUB SENDIRI) 🛑
         try {
-            const victorySound = new Audio('https://www.myinstants.com/media/sounds/victory-ff.mp3');
-            victorySound.volume = 0.7; 
+            // Panggil file MP3 lokal yang udah lu upload di folder yang sama
+            const audioUrl = './menang.mp3'; 
+            
+            const victorySound = new Audio(audioUrl);
+            victorySound.volume = 0.8; 
             
             let playPromise = victorySound.play();
+            
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    console.log("Audio diblokir browser, menampilkan tombol manual.");
+                    console.log("Autoplay diblokir Chrome. Menunggu klik manual user...");
                     const btnAudio = document.getElementById('btnPlaySoundManual');
                     if (btnAudio) {
-                        btnAudio.style.display = 'block';
+                        btnAudio.style.display = 'block'; // Munculkan tombol oranye
+                        
                         btnAudio.onclick = () => {
-                            victorySound.play();
+                            // Tembak audio baru tepat saat diklik
+                            const manualSound = new Audio(audioUrl);
+                            manualSound.volume = 0.8;
+                            manualSound.play().catch(err => console.log("Klik manual gagal:", err));
+                            
+                            // Sembunyikan tombol setelah diklik
                             btnAudio.style.display = 'none'; 
                         };
                     }
                 });
             }
-        } catch(e) { console.log(e); }
+        } catch(e) { console.error("Error Sistem Audio:", e); }
 
         // Kuncian jawaban fisik awal saat Mabar berlangsung
         window.isAnswerLocked = true;
