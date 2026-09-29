@@ -1144,20 +1144,23 @@ function loadQuestion(idx) {
         if (typeof renderSidebarGrid === 'function') renderSidebarGrid();
     }
 
-    // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
+  // 🛑 KEMBALIKAN TOMBOL SELESAI UJIAN SAAT MULAI MODUL BARU 🛑
         const wadahSelesai = document.querySelector('.finish-container');
         if (wadahSelesai) {
-            wadahSelesai.style.setProperty('display', 'block', 'important');
+            // Kalau isSubmitted true (Mode Pembahasan), HILANGKAN! Kalau false (Mode Ujian), MUNCULKAN!
+            wadahSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
         }
 
         const tombolSelesai = document.querySelector('.btn-finish');
         if (tombolSelesai) {
-            tombolSelesai.style.setProperty('display', 'block', 'important');
+            tombolSelesai.style.setProperty('display', (typeof isSubmitted !== 'undefined' && isSubmitted) ? 'none' : 'block', 'important');
         }
         
-        // (Opsional) Sembunyikan tombol "Kembali ke Menu Utama" melayang kalau masih nyangkut
-        const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); // Sesuaikan nama class jika ada
-        if (menuKembaliBawah) menuKembaliBawah.style.display = 'none';
+        // Hancurkan (remove) tombol Kembali ke Menu Utama melayang biar nggak ada jejak pas mulai ujian baru
+        if (typeof isSubmitted !== 'undefined' && !isSubmitted) {
+            const menuKembaliBawah = document.querySelector('.mobile-only-ui-review'); 
+            if (menuKembaliBawah) menuKembaliBawah.remove(); // Pakai remove() biar bener-bener musnah, bukan cuma disembunyikan
+        }
         
         // Reset status kuncian jawaban
         window.isAnswerLocked = false;
