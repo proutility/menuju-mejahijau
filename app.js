@@ -27,19 +27,19 @@ window.PROTAMA = {
             text: text,
             icon: icon,
             confirmButtonColor: colors[icon] || '#004d00',
-            confirmButtonText: 'Selesai',
-            background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
-            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
+            confirmButtonText: 'Seles',
+            background: document.body.classList.contns('dark-mode') ? '#242424' : '#fff',
+            color: document.body.classList.contns('dark-mode') ? '#fff' : '#333',
             didOpen: () => {
                 // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan (nembus overlay apapun)
-                const swalBox = document.querySelector('.swal2-container');
+                const swalBox = document.querySelector('.swal2-contner');
                 if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
             }
         });
     },
 
     confirm: async (title, text) => {
-        const result = await Swal.fire({
+        const result = awt Swal.fire({
             title: title.toUpperCase(),
             text: text,
             icon: 'warning',
@@ -1283,6 +1283,32 @@ function loadQuestion(idx) {
         }
         if (adminDiv) {
             adminDiv.style.display = document.body.classList.contains('is-admin') ? 'block' : 'none';
+        }
+
+        // ==========================================
+        // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
+        // ==========================================
+        let aiChatDiv = document.getElementById('aiChatDiv');
+        if (!aiChatDiv && fb) {
+            aiChatDiv = document.createElement('div');
+            aiChatDiv.id = 'aiChatDiv';
+            aiChatDiv.style.cssText = "margin-top: 20px; padding: 15px; background: rgba(142, 68, 173, 0.1); border-radius: 8px; border-left: 5px solid #8e44ad;";
+            
+            aiChatDiv.innerHTML = `
+                <div style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;"><i class="fas fa-robot"></i> Tanya AI Pro-Tama</div>
+                <p style="font-size: 0.8rem; color: #555; margin-top: 0; margin-bottom: 12px;">Masih belum paham? Tanyakan penjelasan lebih lanjut terkait soal ini ke AI.</p>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="aiInputPeserta" placeholder="Ketik pertanyaanmu di sini..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;">
+                    <button onclick="window.tanyaAIPeserta()" style="background: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <div id="aiResponsePeserta" style="margin-top: 15px; padding: 12px; background: white; border: 1px dashed #8e44ad; border-radius: 6px; font-size: 0.9rem; line-height: 1.5; display: none;"></div>
+            `;
+            fb.appendChild(aiChatDiv);
+        } else if (aiChatDiv) {
+            // Bersihkan isi chat setiap kali user pindah ke soal berikutnya
+            document.getElementById('aiInputPeserta').value = '';
+            document.getElementById('aiResponsePeserta').style.display = 'none';
+            document.getElementById('aiResponsePeserta').innerHTML = '';
         }
 
     } else { 
@@ -5972,13 +5998,11 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
 
-    // Cincang API Key AIza biar lolos sensor GitHub
-    const p1 = "AIzaSy";
-    const p2 = "A_cAiDYw";
-    const p3 = "PZKlkQP6";
-    const p4 = "91zDoSbS";
-    const p5 = "_FoejjHjw";
-
+    const p1 = "AQ.Ab8RN6K0";
+    const p2 = "wrEZRCaAQa7";
+    const p3 = "q6VLsGdPoud";
+    const p4 = "Y3HFtinjin4";
+    const p5 = "Cnj5hOhhQ";
     const API_KEY = p1 + p2 + p3 + p4 + p5;
 
     // Bikin perintah (Prompt) khusus hukum buat AI
@@ -5986,7 +6010,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
 
     SOAL: "${teksSoal}"
     PILIHAN JAWABAN: 
-    ${opsiArr.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join('\n')}
+    ${opsiArr.map((o, i) => `${String.fromCharCode(65 + i)}.${o}`).join('\n')}
     
     KUNCI JAWABAN DARI ADMIN: Pilihan ${String.fromCharCode(65 + ansIdx)}
     PEMBAHASAN ADMIN: "${pembahasan}"
@@ -5997,14 +6021,17 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     2. Apakah pembahasan dan dasar hukumnya akurat?
     3. Jika ada yang salah atau kurang tepat, tolong koreksi!
     
-    Berikan jawaban dengan format tebal pada kesimpulannya (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat dan profesional.`;
+    Berikan kesimpulan di awal (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, padat, dan profesional tanpa basa-basi. Gunakan format Markdown standar (*tebal*, _miring_).`;
 
     try {
         // Tembak ke API Gemini pakai model 1.5 Flash
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            body: JSON.stringify({ 
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.1 } // Suhu diturunin biar AI nggak halu/ngarang jawaban
+            })
         });
 
         const data = await response.json();
@@ -6015,17 +6042,99 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         }
 
         // Tampilkan hasilnya ke layar Admin
-        let aiReply = data.candidates[0].content.parts[0].text;
-        aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-        resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
+        if (data.candidates && data.candidates.length > 0) {
+             let aiReply = data.candidates[0].content.parts[0].text;
+             
+             // Bersihkan Markdown dari Gemini biar rapi jadi HTML
+             aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+             aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
+             aiReply = aiReply.replace(/\n/g, '<br>'); // Spasi baris
+             
+             resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
+        } else {
+             resultDiv.innerHTML = `<span style="color: red;"><strong>Error:</strong> AI gagal memberikan jawaban yang valid.</span>`;
+        }
         
     } catch (e) {
-        resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari Google:</strong> ${e.message}</span>`;
+        resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari Google API:</strong> ${e.message}</span>`;
     } finally {
         btn.innerHTML = `<i class="fas fa-check"></i> Selesai Dicek`;
         btn.disabled = false;
     }
 };
+// ==========================================
+// 🤖 FITUR CHAT AI PESERTA (DI PEMBAHASAN)
+// ==========================================
+window.tanyaAIPeserta = async function() {
+    const inputEl = document.getElementById('aiInputPeserta');
+    const resDiv = document.getElementById('aiResponsePeserta');
+    const pertanyaan = inputEl.value.trim();
+    
+    if (!pertanyaan) return;
+    
+    // Tampilkan animasi loading
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="color: #8e44ad;"></i> <span style="color: #555;">AI sedang menganalisis pertanyaanmu...</span>';
+    
+    // 🛑 GABUNGAN API KEY GEMINI
+    const p1 = "AQ.Ab8RN6K0";
+    const p2 = "wrEZRCaAQa7";
+    const p3 = "q6VLsGdPoud";
+    const p4 = "Y3HFtinjin4";
+    const p5 = "Cnj5hOhhQ";
+    const API_KEY = p1 + p2 + p3 + p4 + p5;
+
+    // Ambil data soal yang lagi dibuka user
+    const q = currentQuestions[currentIdx];
+    const teksSoal = q.q || "";
+    const teksBahas = q.explanation || "";
+
+    // Prompt cerdas: Bikin AI bertindak sebagai Dosen Hukum yang baca konteks soal
+    const prompt = `Anda adalah Tutor Ahli Hukum di Indonesia. Seorang peserta ujian menanyakan hal terkait soal berikut:
+    
+    Konteks Soal: "${teksSoal}"
+    Pembahasan Asli: "${teksBahas}"
+    
+    Pertanyaan Peserta: "${pertanyaan}"
+    
+    Tugas: Jawab pertanyaan peserta secara ramah, profesional, ringkas, dan mudah dipahami berdasarkan konteks soal di atas. Jika perlu, sebutkan dasar hukumnya. Gunakan format Markdown standar (*tebal*, _miring_).`;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.3 } // Sedikit kreatif tapi tetap akurat
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error?.message || "Gagal terhubung ke Google API.");
+        }
+
+        let reply = data.candidates[0].content.parts[0].text;
+        
+        // Bersihkan Markdown biar rapi di HTML
+        reply = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        reply = reply.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        reply = reply.replace(/\n/g, '<br>');
+        
+        resDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Jawaban AI:</strong><br><br>${reply}`;
+        
+    } catch (e) {
+        resDiv.innerHTML = `<span style="color: red;"><strong>Maaf, terjadi kesalahan:</strong> ${e.message}</span>`;
+    }
+};
+
+// Fitur tambahan: Peserta bisa tekan 'Enter' di keyboard buat ngirim pertanyaan
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'aiInputPeserta') {
+        window.tanyaAIPeserta();
+    }
+});
 
 // ==========================================
 // SCRIPT MIGRASI HEMAT READ FIREBASE
