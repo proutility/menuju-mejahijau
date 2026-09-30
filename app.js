@@ -1138,10 +1138,9 @@ window.skipTrainingCountdown = async function() {
     }
 };
 function loadQuestion(idx) {
-    // 1. DETEKSI MODE
-    const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room');
+// 1. DETEKSI MODE LEBIH KUAT (Cek juga apakah ada currentRoomCode)
+    const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
     const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted);
-
     // 🛑 SAFETY NET: Cetak ulang kotak nomor jika terhapus
     const navG = document.getElementById('navGrid');
     if (navG && navG.innerHTML.trim() === '' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
@@ -1285,41 +1284,47 @@ function loadQuestion(idx) {
             adminDiv.style.display = document.body.classList.contains('is-admin') ? 'block' : 'none';
         }
 
-     // ==========================================
+    // ==========================================
         // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
         // ==========================================
         let aiChatDiv = document.getElementById('aiChatDiv');
-        if (!aiChatDiv && fb) {
-            aiChatDiv = document.createElement('div');
-            aiChatDiv.id = 'aiChatDiv';
-            aiChatDiv.style.cssText = "margin-top: 20px; padding: 15px; background: rgba(142, 68, 173, 0.1); border-radius: 8px; border-left: 5px solid #8e44ad;";
-            
-            aiChatDiv.innerHTML = `
-                <div style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;"><i class="fas fa-robot"></i> Tanya AI Pro-Tama</div>
-                <p style="font-size: 0.8rem; color: #555; margin-top: 0; margin-bottom: 12px;">Masih belum paham? Tanyakan penjelasan lebih lanjut terkait soal ini ke AI.</p>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="aiInputPeserta" placeholder="Ketik pertanyaanmu di sini..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;">
-                    <button onclick="window.tanyaAIPeserta()" style="background: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;"><i class="fas fa-paper-plane"></i></button>
-                </div>
-                <div id="aiResponsePeserta" style="margin-top: 15px; padding: 12px; background: white; border: 1px dashed #8e44ad; border-radius: 6px; font-size: 0.9rem; line-height: 1.5; display: none;"></div>
-            `;
-            fb.appendChild(aiChatDiv);
-        } 
         
-        if (aiChatDiv) {
-            // 🔥 INI KUNCINYA: Sembunyikan kalau lagi mode Room/Mabar! Munculkan di Singleplayer!
-            aiChatDiv.style.display = isModeRoom ? 'none' : 'block';
-
-            // Bersihkan isi chat setiap kali user pindah ke soal berikutnya
-            const aiInput = document.getElementById('aiInputPeserta');
-            const aiRes = document.getElementById('aiResponsePeserta');
-            if (aiInput) aiInput.value = '';
-            if (aiRes) {
-                aiRes.style.display = 'none';
-                aiRes.innerHTML = '';
+        if (isModeRoom) {
+            // 🔥 KALAU MABAR: HANCURKAN KOTAK AI SAMPAI KE AKARNYA (Anti Nyangkut) 🔥
+            if (aiChatDiv) aiChatDiv.remove();
+        } else {
+            // 🟢 KALAU SINGLEPLAYER: BIKIN ATAU MUNCULKAN
+            if (!aiChatDiv && fb) {
+                aiChatDiv = document.createElement('div');
+                aiChatDiv.id = 'aiChatDiv';
+                aiChatDiv.style.cssText = "margin-top: 20px; padding: 15px; background: rgba(142, 68, 173, 0.1); border-radius: 8px; border-left: 5px solid #8e44ad;";
+                
+                aiChatDiv.innerHTML = `
+                    <div style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;"><i class="fas fa-robot"></i> Tanya AI Pro-Tama</div>
+                    <p style="font-size: 0.8rem; color: #555; margin-top: 0; margin-bottom: 12px;">Masih belum paham? Tanyakan penjelasan lebih lanjut terkait soal ini ke AI.</p>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="aiInputPeserta" placeholder="Ketik pertanyaanmu di sini..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;">
+                        <button onclick="window.tanyaAIPeserta()" style="background: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                    <div id="aiResponsePeserta" style="margin-top: 15px; padding: 12px; background: white; border: 1px dashed #8e44ad; border-radius: 6px; font-size: 0.9rem; line-height: 1.5; display: none;"></div>
+                `;
+                fb.appendChild(aiChatDiv);
             }
-        }
-
+            
+            // Pastikan tampil & bersihkan sisa ketikan soal sebelumnya
+            aiChatDiv = document.getElementById('aiChatDiv');
+            if (aiChatDiv) {
+                aiChatDiv.style.display = 'block';
+                
+                const aiInput = document.getElementById('aiInputPeserta');
+                const aiRes = document.getElementById('aiResponsePeserta');
+                if (aiInput) aiInput.value = '';
+                if (aiRes) {
+                    aiRes.style.display = 'none';
+                    aiRes.innerHTML = '';
+                }
+            }
+        
     } else { 
         if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
     }
@@ -4797,19 +4802,34 @@ window.loadReviewPembahasan = async () => {
             }
             opsiHtml += `</div>`;
 
-            // --- 2. SIAPIN TOMBOL AI ---
-            const btnAI = `<button onclick="window.cekValiditasAI(this, '${docSnap.id}', '${encodeURIComponent(data.q)}', '${encodeURIComponent(JSON.stringify(data.options || []))}', ${data.answer}, '${encodeURIComponent(pembahasan)}', '${encodeURIComponent(sumber)}')" style="background: #8e44ad; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; float: right;"><i class="fas fa-robot"></i> Cek AI</button>`;
-
-            // --- 3. MASUKIN SEMUANYA KE DALAM ITEM HTML LO ---
-            item.innerHTML = `
-                <div style="font-weight:bold; color:var(--primary); margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                    Soal No. ${index + 1}
-                    ${btnAI}
-                </div>
-                <p style="margin-top:0;">${data.q}</p>
+            // --- 2. BIKIN TOMBOL AI (CARA AMAN TANPA STRING ONCLICK) ---
+            const btnAI = document.createElement('button');
+            btnAI.style.cssText = "background: #8e44ad; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; float: right;";
+            btnAI.innerHTML = `<i class="fas fa-robot"></i> Cek AI`;
+            
+            // Simpan data mentah langsung ke tombolnya (lebih aman dari kutip-kutipan)
+            btnAI.onclick = function() {
+                // Encode datanya di dalam JS, bukan di dalam HTML
+                const qTeksEsc = encodeURIComponent(data.q || "");
+                const optStrEsc = encodeURIComponent(JSON.stringify(data.options || []));
+                const expEsc = encodeURIComponent(pembahasan);
+                const citeEsc = encodeURIComponent(sumber);
+                const ansIdx = data.answer;
                 
-                ${opsiHtml}
+                // Panggil fungsi AI global lu
+                window.cekValiditasAI(this, docSnap.id, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc);
+            };
 
+            // --- 3. BIKIN KERANGKA ITEMNYA ---
+            const divHeader = document.createElement('div');
+            divHeader.style.cssText = "font-weight:bold; color:var(--primary); margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 8px;";
+            divHeader.innerHTML = `Soal No. ${index + 1} `;
+            divHeader.appendChild(btnAI); // Tempelin tombol aman lu di sini
+
+            const divContent = document.createElement('div');
+            divContent.innerHTML = `
+                <p style="margin-top:0;">${data.q}</p>
+                ${opsiHtml}
                 <div style="background:#f1f8e9; padding:15px; border-radius:8px; border-left:5px solid var(--success); margin-top: 15px;">
                     <strong>💡 Pembahasan:</strong><br>
                     <div style="margin-top:5px; line-height:1.5;">${pembahasan}</div>
@@ -4817,9 +4837,12 @@ window.loadReviewPembahasan = async () => {
                         <i class="fas fa-book"></i> Sumber: ${sumber}
                     </div>
                 </div>
-
                 <div id="ai-result-${docSnap.id}" style="display: none; margin-top: 15px; padding: 12px; background: #f3e5f5; border-left: 4px solid #9b59b6; border-radius: 6px; font-size: 0.9rem; line-height: 1.5;"></div>
             `;
+
+            // Gabungin header dan konten ke item
+            item.appendChild(divHeader);
+            item.appendChild(divContent);
             container.appendChild(item);
         });
     } catch(e) { 
