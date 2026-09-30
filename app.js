@@ -1285,7 +1285,7 @@ function loadQuestion(idx) {
             adminDiv.style.display = document.body.classList.contains('is-admin') ? 'block' : 'none';
         }
 
-        // ==========================================
+     // ==========================================
         // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
         // ==========================================
         let aiChatDiv = document.getElementById('aiChatDiv');
@@ -1304,11 +1304,20 @@ function loadQuestion(idx) {
                 <div id="aiResponsePeserta" style="margin-top: 15px; padding: 12px; background: white; border: 1px dashed #8e44ad; border-radius: 6px; font-size: 0.9rem; line-height: 1.5; display: none;"></div>
             `;
             fb.appendChild(aiChatDiv);
-        } else if (aiChatDiv) {
+        } 
+        
+        if (aiChatDiv) {
+            // 🔥 INI KUNCINYA: Sembunyikan kalau lagi mode Room/Mabar! Munculkan di Singleplayer!
+            aiChatDiv.style.display = isModeRoom ? 'none' : 'block';
+
             // Bersihkan isi chat setiap kali user pindah ke soal berikutnya
-            document.getElementById('aiInputPeserta').value = '';
-            document.getElementById('aiResponsePeserta').style.display = 'none';
-            document.getElementById('aiResponsePeserta').innerHTML = '';
+            const aiInput = document.getElementById('aiInputPeserta');
+            const aiRes = document.getElementById('aiResponsePeserta');
+            if (aiInput) aiInput.value = '';
+            if (aiRes) {
+                aiRes.style.display = 'none';
+                aiRes.innerHTML = '';
+            }
         }
 
     } else { 
