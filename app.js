@@ -39,7 +39,7 @@ window.PROTAMA = {
     },
 
     confirm: async (title, text) => {
-        const result = awt Swal.fire({
+        const result = await Swal.fire({
             title: title.toUpperCase(),
             text: text,
             icon: 'warning',
