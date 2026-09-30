@@ -5982,7 +5982,7 @@ function hapusProgresModul(idModul) {
     }
 }
 // ==========================================
-// FITUR VALIDASI AI (GEMINI)
+// FITUR VALIDASI AI (ADMIN - MENGGUNAKAN GROQ LLAMA 3)
 // ==========================================
 window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc) => {
     // Decode data yang dikirim dari tombol
@@ -5996,14 +5996,9 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Mikir...`;
     btn.disabled = true;
     resultDiv.style.display = 'block';
-    resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> Gemini sedang menganalisis akurasi hukum...</span>`;
+    resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> AI sedang menganalisis akurasi hukum...</span>`;
 
-    const p1 = "AQ.Ab8RN6K0";
-    const p2 = "wrEZRCaAQa7";
-    const p3 = "q6VLsGdPoud";
-    const p4 = "Y3HFtinjin4";
-    const p5 = "Cnj5hOhhQ";
-    const API_KEY = p1 + p2 + p3 + p4 + p5;
+    const GROQ_API_KEY = "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";
 
     // Bikin perintah (Prompt) khusus hukum buat AI
     const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
@@ -6021,48 +6016,51 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     2. Apakah pembahasan dan dasar hukumnya akurat?
     3. Jika ada yang salah atau kurang tepat, tolong koreksi!
     
-    Berikan kesimpulan di awal (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, padat, dan profesional tanpa basa-basi. Gunakan format Markdown standar (*tebal*, _miring_).`;
+    Berikan kesimpulan di awal (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, padat, dan profesional. Gunakan format Markdown standar (*tebal*, _miring_).`;
 
     try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
             body: JSON.stringify({ 
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.1 } // Suhu diturunin biar AI nggak halu/ngarang jawaban
+                model: 'llama3-8b-8192', 
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.1 
             })
         });
 
         const data = await response.json();
 
-        // Kalau ditolak, tampilkan alasan aslinya
         if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal terhubung ke Google API.");
+            throw new Error(data.error?.message || "Gagal terhubung ke API Groq.");
         }
 
-        // Tampilkan hasilnya ke layar Admin
-        if (data.candidates && data.candidates.length > 0) {
-             let aiReply = data.candidates[0].content.parts[0].text;
+        if (data.choices && data.choices.length > 0) {
+             let aiReply = data.choices[0].message.content;
              
-             // Bersihkan Markdown dari Gemini biar rapi jadi HTML
-             aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
-             aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Italic
-             aiReply = aiReply.replace(/\n/g, '<br>'); // Spasi baris
+             // Bersihkan Markdown biar rapi jadi HTML
+             aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+             aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
+             aiReply = aiReply.replace(/\n/g, '<br>'); 
              
-             resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Analisis Gemini:</strong><br><br>${aiReply}`;
+             resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-gavel"></i> Analisis Hakim AI:</strong><br><br>${aiReply}`;
         } else {
              resultDiv.innerHTML = `<span style="color: red;"><strong>Error:</strong> AI gagal memberikan jawaban yang valid.</span>`;
         }
         
     } catch (e) {
-        resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari Google API:</strong> ${e.message}</span>`;
+        resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari API:</strong> ${e.message}</span>`;
     } finally {
         btn.innerHTML = `<i class="fas fa-check"></i> Selesai Dicek`;
         btn.disabled = false;
     }
 };
+
 // ==========================================
-// 🤖 FITUR CHAT AI PESERTA (DI PEMBAHASAN)
+// 🤖 FITUR CHAT AI PESERTA (DI PEMBAHASAN - MENGGUNAKAN GROQ LLAMA 3)
 // ==========================================
 window.tanyaAIPeserta = async function() {
     const inputEl = document.getElementById('aiInputPeserta');
@@ -6073,22 +6071,15 @@ window.tanyaAIPeserta = async function() {
     
     // Tampilkan animasi loading
     resDiv.style.display = 'block';
-    resDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="color: #8e44ad;"></i> <span style="color: #555;">AI sedang menganalisis pertanyaanmu...</span>';
+    resDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="color: #8e44ad;"></i> <span style="color: #555;">AI sedang mencari dasar hukum...</span>';
     
-    // 🛑 GABUNGAN API KEY GEMINI
-    const p1 = "AQ.Ab8RN6K0";
-    const p2 = "wrEZRCaAQa7";
-    const p3 = "q6VLsGdPoud";
-    const p4 = "Y3HFtinjin4";
-    const p5 = "Cnj5hOhhQ";
-    const API_KEY = p1 + p2 + p3 + p4 + p5;
+    const GROQ_API_KEY = "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";
 
     // Ambil data soal yang lagi dibuka user
     const q = currentQuestions[currentIdx];
     const teksSoal = q.q || "";
     const teksBahas = q.explanation || "";
 
-    // Prompt cerdas: Bikin AI bertindak sebagai Dosen Hukum yang baca konteks soal
     const prompt = `Anda adalah Tutor Ahli Hukum di Indonesia. Seorang peserta ujian menanyakan hal terkait soal berikut:
     
     Konteks Soal: "${teksSoal}"
@@ -6099,29 +6090,32 @@ window.tanyaAIPeserta = async function() {
     Tugas: Jawab pertanyaan peserta secara ramah, profesional, ringkas, dan mudah dipahami berdasarkan konteks soal di atas. Jika perlu, sebutkan dasar hukumnya. Gunakan format Markdown standar (*tebal*, _miring_).`;
 
     try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GROQ_API_KEY}`
+            },
             body: JSON.stringify({ 
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { temperature: 0.3 } // Sedikit kreatif tapi tetap akurat
+                model: 'llama3-8b-8192', 
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.3 
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal terhubung ke Google API.");
+            throw new Error(data.error?.message || "Gagal terhubung ke API Groq.");
         }
 
-        let reply = data.candidates[0].content.parts[0].text;
+        let reply = data.choices[0].message.content;
         
-        // Bersihkan Markdown biar rapi di HTML
         reply = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         reply = reply.replace(/\*(.*?)\*/g, '<em>$1</em>');
         reply = reply.replace(/\n/g, '<br>');
         
-        resDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Jawaban AI:</strong><br><br>${reply}`;
+        resDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Jawaban AI Pro-Tama:</strong><br><br>${reply}`;
         
     } catch (e) {
         resDiv.innerHTML = `<span style="color: red;"><strong>Maaf, terjadi kesalahan:</strong> ${e.message}</span>`;
@@ -6134,7 +6128,6 @@ document.addEventListener('keypress', function(e) {
         window.tanyaAIPeserta();
     }
 });
-
 // ==========================================
 // SCRIPT MIGRASI HEMAT READ FIREBASE
 // ==========================================
