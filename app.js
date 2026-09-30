@@ -1324,6 +1324,7 @@ function loadQuestion(idx) {
                     aiRes.innerHTML = '';
                 }
             }
+        }
         
     } else { 
         if(fb) { fb.style.display = 'none'; fb.classList.remove('show'); } 
