@@ -1212,23 +1212,39 @@ div.swal2-container {
 .kitab-wrapper .search { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 11px; margin-bottom: 15px; font-family: inherit; outline: none; }
 .kitab-wrapper .hidden { display: none!important; }
 
-/* MODALS KITAB */
-.modal-kitab { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,59,74,0.7); backdrop-filter: blur(3px); z-index: 2500000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: .3s; }
+/* ========================================= */
+/* MODALS KITAB & SEMUA FIX TAMPILANNYA      */
+/* ========================================= */
+.modal-kitab { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(18,59,74,0.7); backdrop-filter: blur(3px); 
+    z-index: 2500000; display: flex; align-items: center; justify-content: center; 
+    opacity: 0; pointer-events: none; transition: .3s; 
+    /* Suntik ulang warna khusus untuk dalam modal */
+    --navy:#123b4a; --green:#087f5b; --mint:#dff5eb; --cream:#f7f4ec; 
+    --ink:#18323a; --muted:#718087; --line:#dce7e3; --gold:#d99a2b; 
+    --red:#c94c4c; --blue:#2b8bd9;
+}
 .modal-kitab.active { opacity: 1; pointer-events: auto; }
+
 .modal-kitab-card { background: #fff; width: 90%; max-width: 450px; border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: translateY(20px); transition: .3s; max-height: 90vh; overflow-y: auto; }
 .modal-kitab.active .modal-kitab-card { transform: translateY(0); }
+
 .modal-kitab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
 .modal-kitab-header h3 { margin: 0; color: var(--navy); font-family: inherit !important; }
 .modal-kitab .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
-.modal-kitab select.select-mode { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; margin-bottom: 15px; font-family: inherit; }
 
-@media(max-width:800px){ .kitab-wrapper .layout{grid-template-columns:1fr} .kitab-wrapper .app{padding:10px} .kitab-wrapper .hero{padding:21px} .kitab-wrapper .tabs{overflow-x:auto;white-space:nowrap} }
+/* FIX ELEMEN BOCOR (Kotak Putih Hantu) */
+.modal-kitab .hidden { display: none !important; }
 
-/* ========================================= */
-/* FIX TAMPILAN MODAL KUIS KITAB KUNING      */
-/* ========================================= */
+/* Styling Opsi Jawaban (Gabungan UI & Fix Gak Bisa Diklik) */
 .modal-kitab .options { display: grid; gap: 10px; margin-top: 15px; }
-.modal-kitab .opt { border: 2px solid #dce7e3; background: #fff; padding: 14px 18px; border-radius: 12px; text-align: left; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; color: #18323a; }
+.modal-kitab .opt { 
+    border: 2px solid #dce7e3; background: #fff; padding: 14px 18px; 
+    border-radius: 12px; text-align: left; cursor: pointer; 
+    font-size: 14px; font-weight: 600; transition: 0.2s; color: #18323a;
+    position: relative; z-index: 10; user-select: none;
+}
 .modal-kitab .opt:hover { border-color: #087f5b; background: #f3f9f6; }
 .modal-kitab .opt.correct { background: #e6f7ef !important; border-color: #087f5b !important; color: #087f5b; }
 .modal-kitab .opt.wrong { background: #fff0ef !important; border-color: #c94c4c !important; color: #c94c4c; }
@@ -1236,10 +1252,9 @@ div.swal2-container {
 /* Styling Tombol Mulai & Select Mode */
 .modal-kitab .btn-kitab { border: 0; border-radius: 12px; padding: 14px; background: #087f5b; color: #fff; font-weight: 800; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(8,127,91,0.2); }
 .modal-kitab .btn-kitab:hover { background: #066649; }
-.modal-kitab select.select-mode { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #dce7e3; font-size: 14px; margin-bottom: 15px; outline: none; cursor: pointer; color: #18323a; }
+
+.modal-kitab select.select-mode { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #dce7e3; font-size: 14px; margin-bottom: 15px; outline: none; cursor: pointer; color: #18323a; font-family: inherit; }
 .modal-kitab select.select-mode:focus { border-color: #087f5b; }
 
-/* FIX UNTUK MENYEMBUNYIKAN ELEMEN YANG BELUM WAKTUNYA MUNCUL DI MODAL */
-.modal-kitab .hidden { 
-    display: none !important; 
-}
+/* Responsive Dashboard Kitab Kuning */
+@media(max-width:800px){ .kitab-wrapper .layout{grid-template-columns:1fr} .kitab-wrapper .app{padding:10px} .kitab-wrapper .hero{padding:21px} .kitab-wrapper .tabs{overflow-x:auto;white-space:nowrap} }
