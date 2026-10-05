@@ -1019,9 +1019,9 @@ div.swal2-container {
 /* CSS KHUSUS MASTER CHECKLIST CAKIM 2026    */
 /* ========================================= */
 .cakim-wrapper {
-  --navy: #0f172a;     /* Slate 900 - Elegan */
-  --green: #059669;    /* Emerald 600 - Modern */
-  --green2: #10b981;   /* Emerald 500 */
+  --navy: #123b4a;     /* Hijau Gelap Khas MA */
+  --green: #087f5b;    /* Hijau Daun MA */
+  --green2: #0ca678;   
   --ink: #334155;      /* Slate 700 - Teks tebal */
   --muted: #64748b;    /* Slate 500 - Teks pudar */
   --line: #e2e8f0;     /* Slate 200 - Garis halus */
@@ -1032,7 +1032,8 @@ div.swal2-container {
   color: var(--ink) !important;
 }
 
-.cakim-wrapper *, .cakim-wrapper button, .cakim-wrapper input {
+/* FIX ICON ILANG: Jangan paksakan font Poppins ke tag <i> (icon) */
+.cakim-wrapper *:not(i), .cakim-wrapper button:not(i), .cakim-wrapper input {
     font-family: 'Poppins', sans-serif !important;
     box-sizing: border-box;
 }
@@ -1044,22 +1045,23 @@ div.swal2-container {
     color: var(--ink) !important;
 }
 
-/* Hero Section (Banner Atas) */
-.hero-cakim { background: linear-gradient(135deg, #0f172a, #1e293b) !important; color: #fff !important; border-radius: 24px; padding: 40px; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); margin-bottom: 25px; }
+/* Hero Section (Banner Atas) - KEMBALI KE WARNA HIJAU MA */
+.hero-cakim { background: linear-gradient(135deg, #123b4a, #0d655b) !important; color: #fff !important; border-radius: 24px; padding: 40px; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); margin-bottom: 25px; }
 .hero-cakim * { color: #f8fafc !important; }
+.hero-cakim::after { content: "⚖"; position: absolute; right: 25px; bottom: -45px; font-size: 220px; opacity: 0.07; color: white !important; font-family: sans-serif !important; }
 .kicker-cakim { font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 10px; }
 .title-cakim { font-size: clamp(28px, 5vw, 42px); margin: 0 0 10px; line-height: 1.1; font-weight: 800; }
 .topbar-cakim { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 25px; }
-.pill-cakim { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; display:flex; align-items:center; gap:8px;}
-.progress-cakim { margin-top: 25px; background: rgba(255,255,255,0.15); border-radius: 99px; height: 12px; overflow: hidden; width: 100%; }
-.bar-cakim { height: 100%; width: 0; background: #34d399; border-radius: 99px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.pill-cakim { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; display:flex; align-items:center; gap:8px;}
+.progress-cakim { margin-top: 25px; background: rgba(255,255,255,0.2); border-radius: 99px; height: 12px; overflow: hidden; width: 100%; }
+.bar-cakim { height: 100%; width: 0; background: #8ce3bd; border-radius: 99px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 .progressline-cakim { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 10px; font-weight: 700; }
 
 /* Navigasi Tab */
 .nav-cakim { display: flex; gap: 12px; margin-bottom: 25px; position: sticky; top: 0; z-index: 10; background: #f4f7f6; padding: 10px 0; }
 .nav-cakim button { border: 2px solid transparent !important; background: #fff !important; color: var(--muted) !important; padding: 12px 24px !important; border-radius: 12px !important; font-weight: 700 !important; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; font-size: 0.95rem; }
 .nav-cakim button:hover { background: #f1f5f9 !important; color: var(--navy) !important; }
-.nav-cakim button.active { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3); }
+.nav-cakim button.active { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; box-shadow: 0 10px 15px -3px rgba(8, 127, 91, 0.3); }
 
 /* Grid & Cards */
 .section-cakim { display: none; }
@@ -1099,11 +1101,11 @@ div.swal2-container {
 .stat-cakim span { font-size: 0.8rem !important; color: var(--muted) !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 .quote-cakim { border-left: 4px solid var(--gold) !important; padding: 15px 20px; background: #fffbeb !important; border-radius: 0 12px 12px 0; font-style: italic; color: #b45309 !important; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; font-weight: 500;}
 
-/* Tabel Mingguan */
-.schedule-cakim { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line) !important; border-radius: 16px; font-size: 0.9rem !important; overflow: hidden; background: #fff !important;}
-.schedule-cakim th { background: #f1f5f9 !important; color: var(--navy) !important; padding: 15px; text-align: left; font-weight: 800 !important; font-size: 0.85rem; letter-spacing: 0.5px; }
-.schedule-cakim td { padding: 15px; border-top: 1px solid var(--line) !important; vertical-align: top; color: var(--ink) !important; line-height: 1.6; font-weight: 500;}
-.schedule-cakim tr:hover td { background: #f8fafc !important; }
+/* Tabel Mingguan DENGAN BAYANGAN HIJAU */
+.schedule-cakim { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--green) !important; border-radius: 16px; font-size: 0.9rem !important; overflow: hidden; background: #fff !important; box-shadow: 0 10px 25px -5px rgba(8, 127, 91, 0.2); }
+.schedule-cakim th { background: #ebfbee !important; color: var(--green) !important; padding: 15px; text-align: left; font-weight: 800 !important; font-size: 0.85rem; letter-spacing: 0.5px; border-bottom: 2px solid var(--green) !important;}
+.schedule-cakim td { padding: 15px; border-top: 1px solid #e2e8f0 !important; vertical-align: top; color: var(--ink) !important; line-height: 1.6; font-weight: 500;}
+.schedule-cakim tr:hover td { background: #f1fdf5 !important; }
 
 /* Reset Button */
 .reset-cakim { border: 0; background: #fef2f2 !important; color: var(--danger) !important; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 0.95rem !important; font-weight: 700 !important; width: 100%; transition: 0.2s; }
