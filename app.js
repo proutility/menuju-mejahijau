@@ -6408,3 +6408,130 @@ document.addEventListener('click', (e) => {
         }
     }
 });
+// ==========================================
+// 📅 FITUR JADWAL SELEKSI CAKIM
+// ==========================================
+window.initJadwalCakim = () => {
+    // 1. Data Timeline Utama
+    const phases = [
+        ["1","Finalisasi Administrasi","Batas akhir: 2 Nov 2026 • 23.59 WIB","Cetak SKP 1 tahun terakhir..."],
+        ["2","Eksekusi TOEFL ITP","Kamis, 8 Okt 2026","Amankan skor minimal 450..."],
+        // (Copy paste full data phases lu dari html tadi ke sini)
+    ];
+    
+    // Render Timeline
+    const tlWadah = document.getElementById('renderTimelineCakim');
+    if (tlWadah) {
+        tlWadah.innerHTML = phases.map((p,i)=>`<div class="item-cakim" data-task="phase${i}"><div class="num-cakim">${p[0]}</div><div><h3 class="h3-cakim">${p[1]}</h3><div class="date-cakim">${p[2]}</div><div class="desc-cakim">${p[3]}</div></div><input class="check-cakim" type="checkbox" onchange="window.saveCakim()" aria-label="Selesai"></div>`).join("");
+    }
+
+    // 2. Data Admin Checklist
+    const admin = [
+        ["5 Okt","Bikin akun portal pendaftaran..."],
+        ["6 Okt","Cetak dan mintakan legalisasi..."],
+        // (Copy paste full data admin lu ke sini)
+    ];
+    
+    // Render Admin
+    const admWadah = document.getElementById('renderAdminCakim');
+    if (admWadah) {
+        admWadah.innerHTML = admin.map((x,i)=>`<label class="task-cakim"><input type="checkbox" class="check-cakim" onchange="window.saveCakim()" data-admin="${i}"><span><b>${x[0]}</b> — ${x[1]}</span></label>`).join("");
+    }
+
+    // Load data ceklis yang tersimpan
+    window.loadCakim();
+};
+
+window.saveCakim = () => {
+    const KEY="cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY)||"{}");
+    document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
+        const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
+        if(k) saved[k] = el.checked;
+    });
+    localStorage.setItem(KEY, JSON.stringify(saved)); 
+    window.updateProgressCakim();
+};
+
+window.loadCakim = () => {
+    const KEY="cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY)||"{}");
+    document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
+        const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
+        if(k && saved[k]) {
+            el.checked = true;
+            const item = el.closest('.item-cakim');
+            if(item) item.classList.add('done-cakim');
+        }
+    });
+    window.updateProgressCakim();
+};
+
+window.updateProgressCakim = () => {
+    const all = [...document.querySelectorAll('.cakim-wrapper input[type=checkbox]')];
+    const done = all.filter(x=>x.checked).length;
+    const total = all.length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    
+    document.getElementById("barCakim").style.width = pct+"%";
+    document.getElementById("progressTextCakim").textContent = pct+"% selesai";
+    document.getElementById("countTextCakim").textContent = done+" / "+total+" tugas";
+    document.getElementById("doneCakim").textContent = done;
+    document.getElementById("remainCakim").textContent = total-done;
+    document.getElementById("pctCakim").textContent = pct+"%";
+    
+    document.querySelectorAll('.item-cakim').forEach(i => {
+        const c = i.querySelector('.check-cakim');
+        if(c) i.classList.toggle('done-cakim', c.checked);
+    });
+};
+
+window.showTabCakim = (id, btn) => {
+    document.querySelectorAll('.section-cakim').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.nav-cakim button').forEach(b => b.classList.remove('active')); 
+    btn.classList.add('active');
+};
+
+window.resetCakimAll = () => {
+    if(confirm("Yakin mau ngereset semua checklist?")) {
+        localStorage.removeItem("cakim2026-checklist-v1");
+        document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(x => x.checked = false);
+        window.updateProgressCakim();
+    }
+};
+
+// Panggil init saat halaman diload
+document.addEventListener('DOMContentLoaded', () => {
+    if(document.getElementById('renderTimelineCakim')) {
+        window.initJadwalCakim();
+    }
+});
+window.bukaJadwalCakim = () => {
+    // 1. Sembunyikan card soal ujian dan intro lobby (kalau ada)
+    const cardSoal = document.getElementById('cardSoalUjian');
+    if(cardSoal) cardSoal.style.display = 'none';
+    
+    // (Opsional) Kalau lu punya halaman "Selamat Datang" di tengah pas baru login, sembunyiin juga di sini
+    const lobbyWelcome = document.getElementById('welcomeScreen'); // Sesuaikan id-nya kalau ada
+    if(lobbyWelcome) lobbyWelcome.style.display = 'none';
+
+    // 2. Munculkan halaman Jadwal Cakim
+    const halJadwal = document.getElementById('halamanJadwalCakim');
+    if(halJadwal) halJadwal.style.display = 'block';
+
+    // 3. Jalankan fungsi render checklistnya (Kodingan JS yang gue kasih di chat sebelumnya)
+    if(typeof window.initJadwalCakim === 'function') {
+        window.initJadwalCakim();
+    }
+};
+
+// Jangan lupa tambahin fungsi buat nge-close jadwal dan balik ke mode ujian/lobby
+window.tutupJadwalCakim = () => {
+    const halJadwal = document.getElementById('halamanJadwalCakim');
+    if(halJadwal) halJadwal.style.display = 'none';
+
+    // Munculkan lagi card ujian atau halaman welcome lu
+    const cardSoal = document.getElementById('cardSoalUjian');
+    if(cardSoal) cardSoal.style.display = 'block'; // atau sesuaikan dengan flow aplikasi lu
+};
