@@ -291,9 +291,12 @@
         </div>
         <!-- AKHIR MAIN CONTENT -->
 
-        <!-- SIDEBAR KANAN (STATISTIK & TOMBOL) -->
+     <!-- SIDEBAR KANAN (STATISTIK & TOMBOL) -->
         <div class="sidebar-right">
+            
+            <!-- 1. LOBBY SIDEBAR -->
             <div id="lobbySidebarContent" style="padding: 20px; display: flex; flex-direction: column; height: 100%; gap: 15px; overflow-y: auto;">
+                
                 <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); position: relative;">
                     <h5 style="margin: 0 0 10px 0; color: #555; font-size: 0.9rem;">Rata-Rata Nilai Kamu</h5>
                     <div style="position: relative; height: 130px; width: 100%; display: flex; justify-content: center;">
@@ -318,27 +321,23 @@
                         <i class="fas fa-users" style="color: var(--primary);"></i> Latihan Bareng (Room)
                     </h5>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <!-- Tombol Bikin Room (Biru/Primary) -->
                         <button onclick="window.bikinRoomLatihan()" style="background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <i class="fas fa-plus-circle"></i> Bikin Room Baru
                         </button>
-                        <!-- Tombol Gabung Room (Kuning/Warning) -->
                         <button onclick="window.gabungRoomLatihan()" style="background: #f39c12; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                             <i class="fas fa-sign-in-alt"></i> Gabung Room
                         </button>
                     </div>
                 </div>
 
-                <!-- 👇 TOMBOL BARU BUAT BUKA JADWAL CAKIM 👇 -->
                 <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                     <button onclick="window.bukaJadwalCakim()" style="width: 100%; background: #087f5b; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;">
                         <i class="fas fa-calendar-check"></i> Master Checklist Cakim
                     </button>
                 </div>
-                <!-- 👆 ================================== 👆 -->
-            </div>
 
-                <div style="margin-top: auto; padding-bottom: 60px;">
+                <!-- Bagian tombol admin/keluar INI HARUSNYA DI DALAM lobbySidebarContent -->
+                <div style="margin-top: auto; padding-bottom: 60px; padding-top: 15px;">
                     <button id="btnAdminLobby" class="btn" onclick="window.openAdminPanel()" style="display:none; width: 100%; margin-bottom: 10px; background: #2c3e50; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                         <i class="fas fa-cogs"></i> Panel Admin
                      </button>
@@ -349,8 +348,9 @@
                         <i class="fas fa-sign-out-alt"></i> Keluar
                      </button>
                 </div>
-            </div>
+            </div> <!-- AKHIR DARI lobbySidebarContent -->
 
+            <!-- 2. EXAM SIDEBAR -->
             <div id="examSidebarContent" style="display: none; flex-direction: column; height: 100%;">
                 <div class="right-header">
                     <button class="btn-action act-admin" id="btnAdminPanel" onclick="window.openAdminPanel()" style="display:none;">
@@ -391,10 +391,10 @@
                         <i class="fas fa-home" style="font-size: 1.1rem; color: #94a3b8;"></i> Kembali ke Menu Utama
                     </button>
                 </div>
-            </div>
+            </div> <!-- AKHIR DARI examSidebarContent -->
+
         </div>
         <!-- AKHIR SIDEBAR KANAN -->
-    </div>
 
     <!-- OVERLAYS (TETAP SAMA) -->
     <div id="resultOverlay" class="result-overlay">
