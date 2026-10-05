@@ -672,22 +672,31 @@
                 </div>
             </section>
 
-            <section id="weeklyCakim" class="section-cakim">
+           <section id="weeklyCakim" class="section-cakim">
                 <div class="card-cakim span12-cakim">
                     <h2 class="h2-cakim">Master Jadwal Mingguan — Belajar & Rutinitas</h2>
-                    <div class="sub-cakim">Fase ini menuntut konsistensi: SKB dan Kitab Kuning dijepit waktu subuh dan malam, sementara jam istirahat kantor digunakan untuk administrasi.</div>
+                    <div class="sub-cakim">Fase ini menuntut konsistensi: SKB dan Kitab Kuning dijepit waktu subuh dan malam. Sesuaikan jadwal di bawah ini dengan rutinitasmu sendiri.</div>
+                    
                     <table class="schedule-cakim">
-                        <thead><tr><th>Waktu</th><th>Senin–Kamis</th><th>Jumat</th><th>Sabtu</th><th>Minggu</th></tr></thead>
-                        <tbody>
-                        <tr><td><b>05.00–06.00</b></td><td>Simulasi CAT (PRO-TAMA): 1 set soal TI & Hukum Acara PA tiap subuh.</td><td>Simulasi CAT: latihan soal studi kasus kewarisan.</td><td>Istirahat / bebas.</td><td>Olahraga/Gym (jaga stamina & sehat).</td></tr>
-                        <tr><td><b>08.00–12.00</b></td><td>Kerja rutin PA Serang.</td><td>Kerja rutin PA Serang.</td><td>Kuliah S2 (pagi): materi S2.</td><td>Free time / nugas S2.</td></tr>
-                        <tr><td><b>12.00–13.00</b></td><td>1 jam krusial: urus admin / hafalan vocab.</td><td>Jumatan & istirahat.</td><td>Kuliah S2 (siang).</td><td>Deep Work: bedah aturan hukum.</td></tr>
-                        <tr><td><b>13.00–16.30</b></td><td>Kerja rutin PA Serang.</td><td>Kerja rutin / izin kampus.</td><td>Pulang / istirahat.</td><td>Cicil scan dokumen & cek PDF.</td></tr>
-                        <tr><td><b>16.30–19.30</b></td><td>Perjalanan pulang, makan malam.</td><td>Kuliah S2 (sore).</td><td>Istirahat / quality time.</td><td>Istirahat / makan malam.</td></tr>
-                        <tr><td><b>19.30–21.30</b></td><td>Crash Course Kitab Kuning: Fiqh as-Sunnah.</td><td>Kuliah S2 (malam): istirahat.</td><td>Review soal salah seminggu.</td><td>Crash Course Kitab Kuning.</td></tr>
-                        <tr><td><b>21.30–22.00</b></td><td>Review hafalan vocab hari itu.</td><td>Istirahat pemulihan.</td><td>Review hafalan vocab.</td><td>Review hafalan vocab.</td></tr>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">No</th>
+                                <th style="width: 15%;">Waktu</th>
+                                <th style="width: 20%;">Senin–Kamis</th>
+                                <th style="width: 20%;">Jumat</th>
+                                <th style="width: 20%;">Sabtu</th>
+                                <th style="width: 15%;">Minggu</th>
+                                <th style="width: 5%;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="renderJadwalMingguan">
+                            <!-- Tabel akan diisi secara dinamis oleh JavaScript -->
                         </tbody>
                     </table>
+                    
+                    <button onclick="window.tambahJadwalMingguan()" style="margin-top: 15px; background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem;">
+                        <i class="fas fa-plus"></i> Tambah Jadwal
+                    </button>
                 </div>
             </section>
 
