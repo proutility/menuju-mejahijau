@@ -6663,25 +6663,32 @@ window.initKitabKuning = () => {
         };
     }
 
-    window.playTextKitab = (text) => {
+   window.playTextKitab = (text) => {
+        try {
+            // Cara paling ampuh: Tembak langsung ke API Google Translate TTS
+            // Suara dijamin keluar, pelafalan fasih, dan bypass sistem OS yang gak support Arab
+            const audio = new Audio(`https://translate.google.com/translate_tts?ie=UTF-8&tl=ar&client=tw-ob&q=${encodeURIComponent(text)}`);
+            audio.play().catch(e => {
+                // Fallback kalau seandainya diblokir browser
+                fallbackTTSKitab(text);
+            });
+        } catch (error) {
+            fallbackTTSKitab(text);
+        }
+    };
+
+    // Fungsi cadangan pakai mesin suara bawaan perangkat
+    function fallbackTTSKitab(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             let msg = new SpeechSynthesisUtterance(text);
-            let voices = window.speechSynthesis.getVoices();
-            let arabicVoice = voices.find(voice => voice.lang.includes('ar'));
-            
-            if (arabicVoice) msg.voice = arabicVoice;
-            else msg.lang = 'ar-SA';
-            
+            msg.lang = 'ar-SA'; // Paksa dialek Arab Saudi
             msg.rate = 0.85;
-            msg.onerror = function(event) {
-                console.log("TTS Error: ", event);
-            };
             window.speechSynthesis.speak(msg);
         } else {
-            alert("Maaf, fitur suara tidak didukung di browser ini.");
+            alert("Maaf, fitur suara tidak didukung di perangkat/browser ini.");
         }
-    };
+    }
 
     // --- DATA ---
     const vocabM=[["الزواج","az-zawāj","pernikahan"],["النكاح","an-nikāḥ","perkawinan"],["الزوج","az-zauj","suami"],["الزوجة","az-zaujah","istri"],["الخِطبة","al-khiṭbah","peminangan"],["العقد","al-‘aqd","akad"],["الإيجاب","al-ījāb","ijab"],["القبول","al-qabūl","kabul"],["الولي","al-waliyy","wali"],["الشاهدان","asy-syāhidān","dua saksi"],["الصداق","aṣ-ṣadāq","mahar/maskawin"],["الكفاءة","al-kafā’ah","kesepadanan"],["المتعة","al-mut‘ah","pemberian mut'ah"],["النفقة","an-nafaqah","nafkah"],["الوليمة","al-walīmah","pesta pernikahan"],["القسم","al-qasm","pembagian giliran"],["النشوز","an-nusyūz","pembangkangan istri"],["الفسخ","al-faskh","pembatalan akad"],["الطلاق","aṭ-ṭalāq","talak"],["الرجعة","ar-raj‘ah","rujuk"],["الخلع","al-khul‘","gugat cerai (tebus talak)"],["الإيلاء","al-īlā’","sumpah tak menggauli"],["الظهار","aẓ-ẓihār","menyamakan punggung ibu"],["اللِّعان","al-li‘ān","sumpah saling melaknat"],["العدة","al-‘iddah","masa tunggu"],["الحضانة","al-ḥaḍānah","hak asuh anak"]];
