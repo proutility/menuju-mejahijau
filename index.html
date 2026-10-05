@@ -619,17 +619,26 @@
             </div>
 
             <div style="padding: 20px;">
-                <header class="hero-cakim">
-                  <div class="kicker-cakim">Master Checklist • Bismillahirrahmanirrahim Calon Hakim Pengadilan Agama 2026</div>
-                  <h1 class="title-cakim">Disiplin hari ini,<br>Hakim di masa depan.</h1>
-                  <p class="subtitle-cakim">Dashboard interaktif untuk memantau administrasi, SKB, wawancara, Kitab Kuning, dan rutinitas belajar.</p>
-                  <div class="topbar-cakim">
-                      <div class="pill-cakim">👤 Ilham Nur Pratama</div>
-                      <div class="pill-cakim">🏛️ PA Serang</div>
-                      <div class="pill-cakim">📅 2026</div>
+               <header class="hero-cakim" style="background: linear-gradient(135deg, #123b4a, #0d655b); color: #fff; border-radius: 28px; padding: 30px; position: relative; overflow: hidden; box-shadow: 0 12px 35px rgba(18,59,74,.10);">
+                  <!-- Dekorasi Kicker -->
+                  <div style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; opacity: .8; color: #fff; margin-bottom: 8px;">Master Checklist • Bismillahirrahmanirrahim Calon Hakim Pengadilan Agama 2026</div>
+                  
+                  <!-- Judul Utama -->
+                  <h1 style="font-size: 2.2rem; margin: 0 0 10px 0; line-height: 1.1; color: #fff; font-weight: 800;">Disiplin hari ini,<br>Hakim di masa depan.</h1>
+                  <p style="margin: 0; opacity: .9; max-width: 700px; color: #fff; font-size: 0.95rem;">Dashboard interaktif untuk memantau administrasi, SKB, wawancara, Kitab Kuning, dan rutinitas belajar.</p>
+                  
+                  <!-- Info User -->
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px;">
+                      <div style="background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #fff;">👤 Ilham Nur Pratama</div>
+                      <div style="background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #fff;">🏛️ PA Serang</div>
+                      <div style="background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.3); padding: 8px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; color: #fff;">📅 2026</div>
                   </div>
-                  <div class="progress-cakim"><div class="bar-cakim" id="barCakim"></div></div>
-                  <div class="progressline-cakim">
+                  
+                  <!-- Progress Bar -->
+                  <div style="margin-top: 25px; background: rgba(255,255,255,.2); border-radius: 20px; height: 12px; overflow: hidden; width: 100%;">
+                      <div id="barCakim" style="height: 100%; width: 0%; background: #8ce3bd; border-radius: 20px; transition: 0.3s;"></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 8px; color: #fff; font-weight: bold;">
                       <span id="progressTextCakim">0% selesai</span>
                       <span id="countTextCakim">0 / 0 tugas</span>
                   </div>
