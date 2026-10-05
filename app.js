@@ -6664,37 +6664,24 @@ window.initKitabKuning = () => {
     }
 
    window.playTextKitab = (text) => {
-        // Cek apakah browser mendukung fitur suara (Speech Synthesis)
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Matikan suara yang lagi jalan sebelumnya
-            
-            let msg = new SpeechSynthesisUtterance(text);
-            
-            // KUNCI UTAMA: Paksa bahasa ke Arab (Saudi Arabia) biar fasih
-            msg.lang = 'ar-SA'; 
-            msg.rate = 0.8; // Diperlambat sedikit (0.8) biar makhraj dan harokatnya terdengar jelas
-            
-            // Deteksi *voice pack* Arab yang ada di laptop/HP lo
-            let voices = window.speechSynthesis.getVoices();
-            let arabicVoice = voices.find(voice => voice.lang.includes('ar'));
-            if (arabicVoice) {
-                msg.voice = arabicVoice;
+        // Trik jitu pakai server API Google Translate (client=gtx) bebas blokir
+        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ar&q=${encodeURIComponent(text)}`;
+        const audio = new Audio(url);
+        
+        audio.play().catch(err => {
+            console.log("Google TTS diblokir, pakai suara bawaan laptop", err);
+            // Fallback suara bawaan laptop (Sama persis kayak sistem e-TAMA)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'ar-SA'; // Paksa makhraj Arab Saudi
+                msg.rate = 0.8; // Diperlambat dikit biar tajwidnya jelas
+                window.speechSynthesis.speak(msg);
+            } else {
+                alert("Fitur suara tidak didukung di perangkat ini.");
             }
-            
-            msg.onerror = function(event) {
-                console.log("Error Suara: ", event);
-            };
-            
-            window.speechSynthesis.speak(msg);
-        } else {
-            alert("Maaf, fitur suara tidak didukung di perangkat atau browser ini.");
-        }
+        });
     };
-
-    // Pancing load suara di awal biar nggak delay pas diklik pertama kali
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
-    }
     // --- DATA ---
     const vocabM=[["الزواج","az-zawāj","pernikahan"],["النكاح","an-nikāḥ","perkawinan"],["الزوج","az-zauj","suami"],["الزوجة","az-zaujah","istri"],["الخِطبة","al-khiṭbah","peminangan"],["العقد","al-‘aqd","akad"],["الإيجاب","al-ījāb","ijab"],["القبول","al-qabūl","kabul"],["الولي","al-waliyy","wali"],["الشاهدان","asy-syāhidān","dua saksi"],["الصداق","aṣ-ṣadāq","mahar/maskawin"],["الكفاءة","al-kafā’ah","kesepadanan"],["المتعة","al-mut‘ah","pemberian mut'ah"],["النفقة","an-nafaqah","nafkah"],["الوليمة","al-walīmah","pesta pernikahan"],["القسم","al-qasm","pembagian giliran"],["النشوز","an-nusyūz","pembangkangan istri"],["الفسخ","al-faskh","pembatalan akad"],["الطلاق","aṭ-ṭalāq","talak"],["الرجعة","ar-raj‘ah","rujuk"],["الخلع","al-khul‘","gugat cerai (tebus talak)"],["الإيلاء","al-īlā’","sumpah tak menggauli"],["الظهار","aẓ-ẓihār","menyamakan punggung ibu"],["اللِّعان","al-li‘ān","sumpah saling melaknat"],["العدة","al-‘iddah","masa tunggu"],["الحضانة","al-ḥaḍānah","hak asuh anak"]];
     const vocabW=[["الفرائض","al-farā’iḍ","ilmu waris"],["الميراث","al-mīrāṡ","warisan"],["الوارثون","al-wāriṡūn","ahli waris laki-laki"],["الوارثات","al-wāriṡāt","ahli waris perempuan"],["التركة","at-tarikah","harta peninggalan"],["النصف","an-niṣf","seperdua (1/2)"],["الربع","ar-rub‘","seperempat (1/4)"],["الثمن","aṡ-ṡumun","seperdelapan (1/8)"],["الثلثان","aṡ-ṡuluṡān","dua pertiga (2/3)"],["الثلث","aṡ-ṡuluṡ","sepertiga (1/3)"],["السدس","as-sudus","seperenam (1/6)"],["العصبة","al-‘aṣabah","penerima sisa harta"],["الحجب","al-ḥajb","terhalang dari warisan"],["الجد","al-jadd","kakek"],["الجدة","al-jaddah","nenek"],["الكلالة","al-kalālah","wafat tanpa asal & keturunan"],["الحمل","al-ḥaml","janin"],["المفقود","al-mafqūd","orang hilang"],["الوصية","al-waṣiyyah","wasiat"],["الدين","ad-dayn","utang"]];
