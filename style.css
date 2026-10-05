@@ -1134,3 +1134,92 @@ div.swal2-container {
   .desc-cakim { font-size: 0.85rem !important; }
   .num-cakim { width: 34px; height: 34px; font-size: 1rem; }
 }
+
+/* ========================================= */
+/* CSS KHUSUS 60 HARI KITAB KUNING           */
+/* ========================================= */
+.kitab-wrapper {
+  --navy:#123b4a; --green:#087f5b; --mint:#dff5eb; --cream:#f7f4ec; 
+  --ink:#18323a; --muted:#718087; --line:#dce7e3; --gold:#d99a2b; 
+  --red:#c94c4c; --blue:#2b8bd9;
+  font-family: Inter, Segoe UI, Arial, sans-serif !important;
+  color: var(--ink);
+  background: linear-gradient(135deg,#edf6f1,#faf6ed);
+  min-height: 100%;
+}
+.kitab-wrapper * { box-sizing: border-box; }
+.kitab-wrapper .app { max-width: 1100px; margin: auto; padding: 16px; }
+.kitab-wrapper .hero { background: linear-gradient(135deg,var(--navy),#0b6a5c); color: #fff; padding: 27px; border-radius: 25px; box-shadow: 0 15px 40px #123b4a20; }
+.kitab-wrapper .kicker { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; opacity: .8; }
+.kitab-wrapper .hero h1 { font-size: clamp(24px,5vw,40px); margin: 7px 0; line-height: 1.1; color: white !important; }
+.kitab-wrapper .hero p { opacity: .85; max-width: 700px; font-size: 14px; color: white !important; }
+.kitab-wrapper .meta { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+.kitab-wrapper .pill { padding: 8px 12px; border-radius: 999px; background: #ffffff18; border: 1px solid #ffffff22; font-size: 12px; color: white !important;}
+.kitab-wrapper .progress { height: 12px; background: #ffffff20; border-radius: 99px; overflow: hidden; }
+.kitab-wrapper .bar { height: 100%; width: 0; background: #8be0bb; transition: .3s; }
+.kitab-wrapper .proline { display: flex; justify-content: space-between; font-size: 12px; margin-top: 8px; color: white !important;}
+.kitab-wrapper .tabs { display: flex; gap: 10px; margin: 20px 0; border-bottom: 2px solid var(--line); padding-bottom: 10px; }
+.kitab-wrapper .tab-btn { background: none; border: none; font-size: 15px; font-weight: 800; color: var(--muted); cursor: pointer; padding: 10px 15px; border-radius: 12px; transition: .2s; }
+.kitab-wrapper .tab-btn:hover { background: #fff; color: var(--navy); }
+.kitab-wrapper .tab-btn.active { background: var(--navy); color: #fff; box-shadow: 0 5px 15px #123b4a20; }
+.kitab-wrapper .controls { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.kitab-wrapper .btn-kitab { border: 0; border-radius: 10px; padding: 9px 13px; background: #fff; color: var(--navy); font-weight: 800; cursor: pointer; box-shadow: 0 5px 15px #123b4a0d; font-size: 13px; transition: .2s; }
+.kitab-wrapper .btn-kitab:hover { background: #f3f9f6; }
+.kitab-wrapper .btn-kitab.active { background: var(--green); color: #fff; }
+.kitab-wrapper .layout { display: grid; grid-template-columns: 1fr 310px; gap: 16px; }
+.kitab-wrapper .card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px #123b4a0b; }
+.kitab-wrapper .card h2 { margin: 0 0 5px; color: var(--navy); font-size: 18px; }
+.kitab-wrapper .sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+.kitab-wrapper .day { border: 1px solid var(--line); border-radius: 17px; margin-bottom: 12px; overflow: hidden; background: #fcfefd; }
+.kitab-wrapper .dayhead { padding: 15px; display: flex; justify-content: space-between; gap: 10px; align-items: center; background: #f3f9f6; }
+.kitab-wrapper .dayhead b { color: var(--navy); font-size: 14px; }
+.kitab-wrapper .daynum { background: var(--green); color: #fff; border-radius: 9px; padding: 6px 9px; font-size: 11px; font-weight: 900; }
+.kitab-wrapper .task { display: flex; gap: 11px; padding: 13px 15px; border-top: 1px solid var(--line); font-size: 13px; line-height: 1.45; align-items: flex-start; }
+.kitab-wrapper .task input { width: 19px; height: 19px; accent-color: var(--green); flex: none; margin-top: 2px; }
+.kitab-wrapper .task.done span.text-content { text-decoration: line-through; color: #89979b; }
+.kitab-wrapper .arabic-word { font-family: "Amiri", "Noto Naskh Arabic", "Scheherazade New", serif; font-weight: 700; direction: rtl; unicode-bidi: isolate; color: var(--navy); }
+.kitab-wrapper .latin { color: #087f5b; font-style: italic; font-weight: 600; font-size: .94em; white-space: nowrap; cursor: pointer; border-radius: 6px; padding: 2px 5px; transition: .2s; user-select: none; }
+.kitab-wrapper .latin:hover { background: #e6f7ef; }
+
+/* GHOST MODE & TOGGLE CSS */
+.kitab-wrapper .hidden-content { color: transparent !important; background: #dce7e3 !important; text-shadow: none !important; display: inline-block; border-radius: 4px; min-width: 40px; }
+.kitab-wrapper .hidden-content:hover { background: #cbdad5 !important; }
+.kitab-wrapper.ghost-mode .latin, .kitab-wrapper .day.ghost-mode .latin, 
+.kitab-wrapper.ghost-mode .arti, .kitab-wrapper .day.ghost-mode .arti,
+.kitab-wrapper.ghost-mode .arabic-harokat, .kitab-wrapper .day.ghost-mode .arabic-harokat { color: transparent !important; background: #dce7e3 !important; text-shadow: none !important; display: inline-block; border-radius: 4px; pointer-events: auto; }
+.kitab-wrapper.ghost-mode .latin:hover, .kitab-wrapper .day.ghost-mode .latin:hover, 
+.kitab-wrapper.ghost-mode .arti:hover, .kitab-wrapper .day.ghost-mode .arti:hover,
+.kitab-wrapper.ghost-mode .arabic-harokat:hover, .kitab-wrapper .day.ghost-mode .arabic-harokat:hover { background: #cbdad5 !important; }
+
+.kitab-wrapper .btn-audio { background: none; border: none; cursor: pointer; font-size: 1.2em; margin: 0 4px; padding: 2px; border-radius: 50%; transition: .2s; }
+.kitab-wrapper .btn-audio:hover { background: var(--mint); transform: scale(1.1); }
+.kitab-wrapper .btn-audio:active { transform: scale(0.9); }
+.kitab-wrapper .badge { font-size: 10px; background: #fff1d4; color: #80580d; border-radius: 8px; padding: 4px 7px; font-weight: 800; }
+.kitab-wrapper .shorof-box { background: #f5faf8; border-left: 4px solid var(--blue); padding: 12px; border-radius: 8px; margin-top: 8px; font-size: 12px; color: var(--ink); }
+.kitab-wrapper .quizbox { margin-top: 0; background: #fffaf0; border-top: 1px solid #f0dfb9; padding: 13px; }
+.kitab-wrapper .quizbox h4 { margin: 0 0 7px; }
+.kitab-wrapper .options { display: grid; gap: 7px; margin-top: 9px; }
+.kitab-wrapper .opt { border: 1px solid #d7e2de; background: #fff; padding: 9px; border-radius: 10px; text-align: left; cursor: pointer; font-size: 13px; font-weight: 600; transition: .2s; }
+.kitab-wrapper .opt:hover { border-color: var(--green); }
+.kitab-wrapper .opt.correct { background: #e6f7ef!important; border-color: #79caa9!important; color: var(--green); }
+.kitab-wrapper .opt.wrong { background: #fff0ef!important; border-color: #e19a95!important; color: var(--red); }
+.kitab-wrapper .feedback { font-size: 11px; margin-top: 8px; color: #52656b; font-weight: 600; }
+.kitab-wrapper .sidebox { display: grid; gap: 10px; align-content: start; }
+.kitab-wrapper .stat { background: #f5faf8; padding: 13px; border-radius: 14px; }
+.kitab-wrapper .stat b { font-size: 25px; color: var(--green); display: block; }
+.kitab-wrapper .stat span { font-size: 11px; color: var(--muted); }
+.kitab-wrapper .focus { padding: 13px; border-left: 4px solid var(--gold); background: #fffaf0; border-radius: 10px; font-size: 12px; line-height: 1.5; }
+.kitab-wrapper .search { width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 11px; margin-bottom: 15px; font-family: inherit; outline: none; }
+.kitab-wrapper .hidden { display: none!important; }
+
+/* MODALS KITAB */
+.modal-kitab { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18,59,74,0.7); backdrop-filter: blur(3px); z-index: 2500000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: .3s; }
+.modal-kitab.active { opacity: 1; pointer-events: auto; }
+.modal-kitab-card { background: #fff; width: 90%; max-width: 450px; border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); transform: translateY(20px); transition: .3s; max-height: 90vh; overflow-y: auto; }
+.modal-kitab.active .modal-kitab-card { transform: translateY(0); }
+.modal-kitab-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.modal-kitab-header h3 { margin: 0; color: var(--navy); font-family: inherit !important; }
+.modal-kitab .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+.modal-kitab select.select-mode { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; margin-bottom: 15px; font-family: inherit; }
+
+@media(max-width:800px){ .kitab-wrapper .layout{grid-template-columns:1fr} .kitab-wrapper .app{padding:10px} .kitab-wrapper .hero{padding:21px} .kitab-wrapper .tabs{overflow-x:auto;white-space:nowrap} }
