@@ -6639,3 +6639,380 @@ window.hapusJadwalMingguan = (index) => {
         window.renderJadwalMingguan();
     }
 };
+// ==========================================
+// 📖 FITUR 60 HARI KITAB KUNING
+// ==========================================
+window.bukaKitabKuning = () => {
+    const overlay = document.getElementById('kitabOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        // Inisialisasi awal saat modal dibuka
+        if(typeof window.initKitabKuning === 'function') {
+            window.initKitabKuning();
+        }
+    } else {
+        alert("HTML Overlay Kitab Kuning belum dipasang!");
+    }
+};
+
+window.initKitabKuning = () => {
+    // --- AUDIO PLAYBACK FUNCTION (TTS) ---
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = function() {
+            window.speechSynthesis.getVoices();
+        };
+    }
+
+    window.playTextKitab = (text) => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let msg = new SpeechSynthesisUtterance(text);
+            let voices = window.speechSynthesis.getVoices();
+            let arabicVoice = voices.find(voice => voice.lang.includes('ar'));
+            
+            if (arabicVoice) msg.voice = arabicVoice;
+            else msg.lang = 'ar-SA';
+            
+            msg.rate = 0.85;
+            msg.onerror = function(event) {
+                console.log("TTS Error: ", event);
+            };
+            window.speechSynthesis.speak(msg);
+        } else {
+            alert("Maaf, fitur suara tidak didukung di browser ini.");
+        }
+    };
+
+    // --- DATA ---
+    const vocabM=[["الزواج","az-zawāj","pernikahan"],["النكاح","an-nikāḥ","perkawinan"],["الزوج","az-zauj","suami"],["الزوجة","az-zaujah","istri"],["الخِطبة","al-khiṭbah","peminangan"],["العقد","al-‘aqd","akad"],["الإيجاب","al-ījāb","ijab"],["القبول","al-qabūl","kabul"],["الولي","al-waliyy","wali"],["الشاهدان","asy-syāhidān","dua saksi"],["الصداق","aṣ-ṣadāq","mahar/maskawin"],["الكفاءة","al-kafā’ah","kesepadanan"],["المتعة","al-mut‘ah","pemberian mut'ah"],["النفقة","an-nafaqah","nafkah"],["الوليمة","al-walīmah","pesta pernikahan"],["القسم","al-qasm","pembagian giliran"],["النشوز","an-nusyūz","pembangkangan istri"],["الفسخ","al-faskh","pembatalan akad"],["الطلاق","aṭ-ṭalāq","talak"],["الرجعة","ar-raj‘ah","rujuk"],["الخلع","al-khul‘","gugat cerai (tebus talak)"],["الإيلاء","al-īlā’","sumpah tak menggauli"],["الظهار","aẓ-ẓihār","menyamakan punggung ibu"],["اللِّعان","al-li‘ān","sumpah saling melaknat"],["العدة","al-‘iddah","masa tunggu"],["الحضانة","al-ḥaḍānah","hak asuh anak"]];
+    const vocabW=[["الفرائض","al-farā’iḍ","ilmu waris"],["الميراث","al-mīrāṡ","warisan"],["الوارثون","al-wāriṡūn","ahli waris laki-laki"],["الوارثات","al-wāriṡāt","ahli waris perempuan"],["التركة","at-tarikah","harta peninggalan"],["النصف","an-niṣf","seperdua (1/2)"],["الربع","ar-rub‘","seperempat (1/4)"],["الثمن","aṡ-ṡumun","seperdelapan (1/8)"],["الثلثان","aṡ-ṡuluṡān","dua pertiga (2/3)"],["الثلث","aṡ-ṡuluṡ","sepertiga (1/3)"],["السدس","as-sudus","seperenam (1/6)"],["العصبة","al-‘aṣabah","penerima sisa harta"],["الحجب","al-ḥajb","terhalang dari warisan"],["الجد","al-jadd","kakek"],["الجدة","al-jaddah","nenek"],["الكلالة","al-kalālah","wafat tanpa asal & keturunan"],["الحمل","al-ḥaml","janin"],["المفقود","al-mafqūd","orang hilang"],["الوصية","al-waṣiyyah","wasiat"],["الدين","ad-dayn","utang"]];
+    const vocabE=[["البيع","al-bay‘","jual beli"],["الربا","ar-ribā","riba/tambahan haram"],["الخيار","al-khiyār","hak pilih pembatalan"],["السلم","as-salam","jual beli pesanan"],["الرهن","ar-rahn","gadai/agunan utang"],["الحوالة","al-ḥawālah","pengalihan utang"],["الضمان","aḍ-ḍamān","tanggungan utang"],["الكفالة","al-kafālah","penanggungan orang"],["الشركة","asy-syirkah","perseroan/kongsi"],["الوكالة","al-wakālah","perwakilan/kuasa"],["العارية","al-‘āriyah","pinjam pakai"],["الغصب","al-ghaṣb","merampas hak"],["الشفعة","asy-syuf‘ah","hak prioritas membeli"],["القراض","al-qirāḍ","bagi hasil (mudharabah)"],["الإجارة","al-ijārah","sewa-menyewa"],["المساقاة","al-musāqāh","bagi hasil kebun"],["الوقف","al-waqf","wakaf"],["الهبة","al-hibah","pemberian/hibah"],["اللقطة","al-luqaṭah","barang temuan"],["الوديعة","al-wadī‘ah","titipan barang"]];
+    const vocabQ=[["القاضي","al-qāḍī","hakim"],["الدعوى","ad-da‘wā","gugatan"],["المدعي","al-mudda‘ī","penggugat"],["المدعى عليه","al-mudda‘ā ‘alayh","tergugat"],["البينة","al-bayyinah","bukti (saksi/surat)"],["اليمين","al-yamīn","sumpah"],["النكول","an-nukūl","menolak bersumpah"],["الشاهد","asy-syāhid","saksi"],["الإقرار","al-iqrār","pengakuan sah"],["الحكم","al-ḥukm","putusan pengadilan"],["الصلح","aṣ-ṣulḥ","perdamaian/mediasi"],["الشهادة","asy-syahādah","kesaksian"],["التزكية","at-tazkiyah","pemeriksaan saksi"],["الحجر","al-ḥajr","pembatasan kewenangan"],["الرشد","ar-rusyd","dewasa & cakap hukum"]];
+
+    const stagesVocab=[
+        ["Khitbah & Akad","Munakahat",vocabM.slice(0,5)],["Rukun Nikah","Munakahat",vocabM.slice(5,10)],["Mahar & Hak","Munakahat",vocabM.slice(10,16)],["Talak & Khulu'","Munakahat",vocabM.slice(16,21)],["Iddah & Hadhanah","Munakahat",vocabM.slice(21,26)],
+        ["Dasar Waris","Mawaris",vocabW.slice(0,4)],["Furudh 1","Mawaris",vocabW.slice(4,8)],["Furudh 2","Mawaris",vocabW.slice(8,12)],["Asabah & Hijab","Mawaris",vocabW.slice(12,16)],["Kasus Waris","Mawaris",vocabW.slice(16,20)],
+        ["Jual Beli & Riba","Ekonomi Syariah",vocabE.slice(0,4)],["Gadai & Utang","Ekonomi Syariah",vocabE.slice(4,8)],["Syirkah & Kuasa","Ekonomi Syariah",vocabE.slice(8,12)],["Sewa & Bagi Hasil","Ekonomi Syariah",vocabE.slice(12,16)],["Wakaf & Hibah","Ekonomi Syariah",vocabE.slice(16,20)],
+        ["Hakim & Gugatan","Hukum Acara",vocabQ.slice(0,4)],["Saksi & Sumpah","Hukum Acara",vocabQ.slice(4,8)],["Putusan & Iqrar","Hukum Acara",vocabQ.slice(8,12)],["Kecakapan Hukum","Hukum Acara",vocabQ.slice(12,15)],["Simulasi Gabungan","Campuran",[...vocabM.slice(18,20), ...vocabE.slice(4,6)]]
+    ];
+
+    const kalimatData = [
+        ["النِّكَاحُ مُسْتَحَبٌّ لِمَنْ يَحْتَاجُ إِلَيْهِ", "النكاح مستحب لمن يحتاج إليه", "an-nikāḥu mustaḥabbun liman yaḥtāju ilayh", "Nikah itu disunnahkan bagi orang yang membutuhkannya.", "يَحْتَاجُ (yaḥtāju) = Fi'il Mudhari' (Sekarang/Akan datang). Menunjukkan kondisi yang berkesinambungan. Akar kata: ح-و-ج", "Munakahat"],
+        ["وَيَجُوزُ لِلْحُرِّ أَنْ يَجْمَعَ بَيْنَ أَرْبَعِ حَرَائِرَ", "ويجوز للحر أن يجمع بين أربع حرائر", "wa yajūzu lil-ḥurri an yajma‘a bayna arba‘i ḥarā’ir", "Diperbolehkan bagi laki-laki merdeka untuk mengumpulkan (memadu) maksimal empat wanita merdeka.", "يَجْمَعَ (yajma‘a) = Fi'il Mudhari' Manshub, karena didahului amil nashab 'an' (أَنْ).", "Munakahat"],
+        ["وَلَا يَصِحُّ عَقْدُ النِّكَاحِ إِلَّا بِوَلِيٍّ وَشَاهِدَيْ عَدْلٍ", "ولا يصح عقد النكاح إلا بولي وشاهدي عدل", "wa lā yaṣiḥḥu ‘aqdun-nikāḥi illā biwaliyyin wa syāhiday ‘adl", "Akad nikah tidak sah kecuali dengan (adanya) seorang wali dan dua saksi yang adil.", "يَصِحُّ (yaṣiḥḥu) = Fi'il Mudhari'. Didahului 'La' Nafi (meniadakan). Hukum nikah bertumpu pada kalimat ini.", "Munakahat"],
+        ["وَالْمُحَرَّمَاتُ بِالنَّصِّ أَرْبَعَ عَشْرَةَ", "والمحرمات بالنص أربع عشرة", "wal-muḥarramātu bin-naṣṣi arba‘a ‘asyrah", "Wanita yang haram dinikahi berdasarkan nash (Al-Qur'an) ada empat belas.", "الْمُحَرَّمَاتُ (al-muḥarramātu) = Isim Maf'ul (yang diharamkan), jamak muannats salim. Kedudukannya sebagai Mubtada'.", "Munakahat"],
+        ["وَيُسْتَحَبُّ تَسْمِيَةُ الْمَهْرِ فِي النِّكَاحِ", "ويستحب تسمية المهر في النكاح", "wa yustaḥabbu tasmiyatul-mahri fin-nikāḥ", "Disunnahkan untuk menyebutkan (nominal) mahar dalam akad nikah.", "يُسْتَحَبُّ (yustaḥabbu) = Fi'il Mudhari' Majhul (pasif). Artinya 'disunnahkan/dianjurkan'.", "Munakahat"],
+        ["وَالْوَلِيمَةُ عَلَى الْعُرْسِ مُسْتَحَبَّةٌ", "والوليمة على العرس مستحبة", "wal-walīmatu ‘alal-‘ursi mustaḥabbatun", "Mengadakan walimah (pesta) atas pernikahan itu hukumnya sunnah.", "مُسْتَحَبَّةٌ (mustaḥabbatun) = Khabar dari Mubtada' (al-walīmatu). Berbentuk Isim Maf'ul muannats.", "Munakahat"],
+        ["وَالتَّسْوِيَةُ فِي الْقَسْمِ بَيْنَ الزَّوْجَاتِ وَاجِبَةٌ", "والتسوية في القسم بين الزوجات واجبة", "wat-taswiyatu fil-qasmi baynaz-zawjāti wājibatun", "Menyamakan pembagian giliran (menginap) di antara para istri adalah wajib.", "وَاجِبَةٌ (wājibatun) = Isim Fa'il. Berkedudukan sebagai Khabar yang menetapkan kepastian hukum wajib.", "Munakahat"],
+        ["وَالْخُلْعُ جَائِزٌ عَلَى عِوَضٍ مَعْلُومٍ", "والخلع جائز على عوض معلوم", "wal-khul‘u jā’izun ‘alā ‘iwaḍin ma‘lūm", "Khulu' (gugat cerai istri) diperbolehkan dengan adanya tebusan yang nominalnya diketahui.", "مَعْلُومٍ (ma‘lūmin) = Isim Maf'ul, menjadi na'at (sifat) dari 'iwadh (tebusan). Artinya tebusan tersebut tidak boleh fiktif.", "Munakahat"],
+        ["وَالطَّلَاقُ ضَرْبَانِ صَرِيحٌ وَكِنَايَةٌ", "والطلاق ضربان صريح وكناية", "waṭ-ṭalāqu ḍarbāni: ṣarīḥun wa kināyatun", "Talak itu ada dua macam: talak sharih (tegas) dan talak kinayah (sindiran).", "ضَرْبَانِ (ḍarbāni) = Khabar dalam bentuk Mutsanna (dua). Kalimat ini murni Jumlah Ismiyyah (tanpa kata kerja).", "Munakahat"],
+        ["وَالْوَارِثُونَ مِنَ الرِّجَالِ عَشَرَةٌ", "والوارثون من الرجال عشرة", "wal-wāriṡūna minar-rijāli ‘asyaratun", "Ahli waris dari kaum laki-laki itu ada sepuluh (golongan).", "الْوَارِثُونَ (al-wāriṡūna) = Isim Fa'il jamak mudzakkar salim. Artinya 'orang-orang yang mewarisi'.", "Mawaris"],
+        ["وَالْوَارِثَاتُ مِنَ النِّسَاءِ سَبْعٌ", "والوارثات من النساء سبع", "wal-wāriṡātu minan-nisā’i sab‘un", "Ahli waris dari kaum perempuan itu ada tujuh (golongan).", "الْوَارِثَاتُ (al-wāriṡātu) = Isim Fa'il jamak muannats salim.", "Mawaris"],
+        ["وَمَنْ لَا يَسْقُطُ بِحَالٍ خَمْسَةٌ", "ومن لا يسقط بحال خمسة", "wa man lā yasquṭu biḥālin khamsatun", "Ahli waris yang tidak akan gugur (terhalang) dalam keadaan apapun ada lima.", "يَسْقُطُ (yasquṭu) = Fi'il Mudhari' Marfu'. Didahului 'La' Nafi. Menunjukkan ketetapan mutlak bagi 5 ahli waris inti.", "Mawaris"],
+        ["الْبُيُوعُ ثَلَاثَةُ أَشْيَاءَ بَيْعُ عَيْنٍ مُشَاهَدَةٍ فَجَائِزٌ", "البيوع ثلاثة أشياء بيع عين مشاهدة فجائز", "al-buyū‘u ṡalāṡatu asy-yā’a: bay‘u ‘aynin musyāhadatin fajā’izun", "Jual beli ada tiga jenis: menjual barang yang terlihat secara fisik hukumnya boleh.", "الْبُيُوعُ (al-buyū‘u) = Jamak taksir dari 'al-bay‘' (jual beli).", "Ekonomi Syariah"],
+        ["وَلَا يَصِحُّ بَيْعُ مَا لَمْ يَمْلِكْهُ", "ولا يصح بيع ما لم يملكه", "wa lā yaṣiḥḥu bai‘u mā lam yamlikhu", "Tidak sah menjual barang yang belum dimilikinya.", "يَمْلِكْهُ (yamlik-hu) = Fi'il Mudhari' Majzum karena didahului 'lam' (لَمْ). Dasar hukum larangan short-selling.", "Ekonomi Syariah"],
+        ["وَلَا يَجُوزُ بَيْعُ الثَّمَرَةِ مُطْلَقًا إِلَّا بَعْدَ بُدُوِّ صَلَاحِهَا", "ولا يجوز بيع الثمرة مطلقا إلا بعد بدو صلاحها", "wa lā yajūzu bai‘uṡ-ṡamarati muṭlaqan illā ba‘da budūwwi ṣalāḥihā", "Tidak boleh menjual buah-buahan secara mutlak kecuali setelah tampak kematangannya.", "يَجُوزُ (yajūzu) = Fi'il Mudhari'. Hukum pencegahan gharar (ketidakpastian) dalam transaksi pertanian.", "Ekonomi Syariah"],
+        ["وَكُلُّ مَا جَازَ بَيْعُهُ جَازَ رَهْنُهُ فِي الدُّيُونِ", "وكل ما جاز بيعه جاز رهنه في الديون", "wa kullu mā jāza bai‘uhu jāza rahnuhu fid-duyūn", "Setiap barang yang sah diperjualbelikan, sah pula digadaikan sebagai jaminan utang.", "جَازَ (jāza) = Fi'il Madhi. Artinya 'telah boleh/sah'. Kaidah emas dalam hukum jaminan (Rahn).", "Ekonomi Syariah"],
+        ["وَتَفْتَقِرُ صِحَّةُ الْإِقْرَارِ إِلَى ثَلَاثَةِ شَرَائِطَ البلوغ والعقل والاختيار", "وتفتقر صحة الإقرار إلى ثلاثة شرائط البلوغ والعقل والاختيار", "wa taftaqiru ṣiḥḥatul-iqrāri ilā ṡalāṡati syarā’iṭ: al-bulūgh, wal-‘aql, wal-ikhtiyār", "Sahnya ikrar (pengakuan) membutuhkan tiga syarat: baligh, berakal, dan atas kehendak sendiri.", "تَفْتَقِرُ (taftaqiru) = Fi'il Mudhari'. Artinya 'membutuhkan' atau 'bergantung pada'.", "Hukum Acara"],
+        ["وَيَصِحُّ الِاسْتِثْنَاءُ فِي الْإِقْرَارِ إِذَا وَصَلَهُ بِهِ", "ويصح الاستثناء في الإقرار إذا وصله به", "wa yaṣiḥḥul-istiṡnā’u fil-iqrāri iżā waṣalahu bih", "Pengecualian dalam ikrar (pengakuan) itu sah apabila diucapkan bersambung dengannya.", "وَصَلَهُ (waṣalahu) = Fi'il Madhi. Syarat sahnya ralat dalam pengadilan adalah diucapkan tanpa jeda.", "Hukum Acara"],
+        ["وَالصُّلْحُ جَائِزٌ مَعَ الْإِقْرَارِ فِي الْأَمْوَالِ", "والصلح جائز مع الإقرار في الأموال", "waṣ-ṣulḥu jā’izun ma‘al-iqrāri fil-amwāl", "Perdamaian (mediasi) itu boleh dilakukan bersamaan dengan pengakuan hak dalam masalah harta.", "جَائِزٌ (jā’izun) = Isim Fa'il yang berfungsi sebagai Khabar. Dasar mediasi perkara ekonomi di PA.", "Hukum Acara"],
+        ["وَلَا يُقْبَلُ كِتَابُ قَاضٍ إِلَى قَاضٍ فِي الْأَحْكَامِ إِلَّا بِشَاهِدَيْنِ", "ولا يقبل كتاب قاض إلى قاض في الأحكام إلا بشاهدين", "wa lā yuqbalu kitābu qāḍin ilā qāḍin fil-aḥkāmi illā bisyāhidayn", "Surat pengantar dari seorang hakim ke hakim lain mengenai putusan tidak diterima kecuali dengan dua saksi.", "يُقْبَلُ (yuqbalu) = Fi'il Mudhari' Majhul (pasif). Artinya 'diterima'. Hukum delegasi antar pengadilan.", "Hukum Acara"]
+    ];
+
+    const fiilData = [
+        { arab: "طَلَّقَ", latin: "ṭallaqa", arti: "Telah mentalak", jenis: "Madhi (Lampau)", konteks: "Biasa digunakan dalam ikrar talak yang sudah jatuh (sah)." },
+        { arab: "يُطَلِّقُ", latin: "yuṭalliqu", arti: "Sedang/akan mentalak", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Merujuk pada janji talak, secara fiqh belum menjatuhkan cerai." },
+        { arab: "زَوَّجْتُ", latin: "zawwajtu", arti: "Aku telah menikahkan", jenis: "Madhi (Lampau)", konteks: "Kalimat wajib bagi Wali dalam Ijab (menandakan penyerahan final)." },
+        { arab: "أُزَوِّجُ", latin: "uzawwiju", arti: "Aku akan menikahkan", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Jika diucapkan Wali, ini dianggap Khithbah (janji), bukan akad sah." },
+        { arab: "قَبِلْتُ", latin: "qabiltu", arti: "Aku telah menerima", jenis: "Madhi (Lampau)", konteks: "Kalimat wajib bagi Calon Suami dalam Kabul." },
+        { arab: "وَرِثَ", latin: "wariṡa", arti: "Telah mewarisi", jenis: "Madhi (Lampau)", konteks: "Digunakan ketika pewaris sudah meninggal dan harta telah beralih." },
+        { arab: "يَرِثُ", latin: "yariṡu", arti: "Berhak mewaris", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Menjelaskan kaidah hukum (siapa yang berhak mewaris secara umum)." },
+        { arab: "أَقَرَّ", latin: "aqarra", arti: "Telah mengakui", jenis: "Madhi (Lampau)", konteks: "Al-Iqrar dalam persidangan (Pengakuan) yang mengikat secara hukum." },
+        { arab: "اَنْفِقْ", latin: "anfiq", arti: "Berikanlah nafkah!", jenis: "Amr (Perintah)", konteks: "Bentuk perintah dalam teks yang menunjukkan hukum Wajib atas nafkah." },
+        { arab: "فَسَخَ", latin: "fasakha", arti: "Telah membatalkan akad", jenis: "Madhi (Lampau)", konteks: "Menunjukkan penetapan batalnya nikah oleh Hakim." }
+    ];
+    window.allVocabsKitab = [...vocabM, ...vocabW, ...vocabE, ...vocabQ];
+
+    // --- STATE MANAGEMENT ---
+    window.stateKitab = JSON.parse(localStorage.getItem("kitab60_v7") || "{}");
+    window.filterKitab = "all";
+    window.currentTabKitab = "vocab"; 
+    window.isGhostModeKitab = false;
+
+    window.stageForKitab = (d) => {
+        if(window.currentTabKitab === "vocab") {
+            return stagesVocab[Math.min(Math.floor((d-1)/3), stagesVocab.length-1)];
+        } else {
+            let s = kalimatData[(d-1) % kalimatData.length];
+            return [`Bedah Teks ${d}`, s[5], [s]]; 
+        }
+    };
+
+    window.toggleGlobalGhostKitab = () => {
+        window.isGhostModeKitab = !window.isGhostModeKitab;
+        document.querySelector('.kitab-wrapper').classList.toggle('ghost-mode', window.isGhostModeKitab);
+        let btn = document.getElementById('btn-ghost-kitab');
+        btn.innerText = window.isGhostModeKitab ? "👻 Ghost Global: ON" : "👻 Ghost Global";
+        btn.style.background = window.isGhostModeKitab ? "var(--navy)" : "#eef2f4";
+        btn.style.color = window.isGhostModeKitab ? "#fff" : "var(--navy)";
+    };
+
+    window.toggleLocalGhostKitab = (btn) => {
+        let dayDiv = btn.closest('.day');
+        let isActive = dayDiv.classList.toggle('ghost-mode');
+        btn.classList.toggle('active', isActive);
+        btn.innerText = isActive ? "👻 Ghost: ON" : "👻 Ghost";
+    };
+
+    window.toggleSecretKitab = (el) => { el.classList.toggle("hidden-content"); };
+
+    window.switchTabKitab = (tab) => {
+        window.currentTabKitab = tab;
+        document.querySelectorAll('.kitab-wrapper .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        
+        document.getElementById('main-title-kitab').innerHTML = tab === 'vocab' ? "📅 Kurikulum Vocab (Mufradat)" : "📖 Kurikulum Bedah Teks & Shorof";
+        document.getElementById('main-sub-kitab').innerHTML = tab === 'vocab' ? "Hafalkan kosa kata teknis pengadilan, tutupi terjemahan, dan klik ikon speaker 🔊 untuk mendengar makhraj-nya." : "Baca teks gundul Arab, dengarkan cara bacanya 🔊, pahami artinya, lalu bedah kedudukan <i>I'rab/Shorof</i>-nya.";
+        
+        window.filterKitab = "all";
+        document.querySelectorAll("#filter-controls-kitab .btn-kitab").forEach(x=>{
+            if(x.id!=='btn-ghost-kitab' && !x.innerText.includes('Drill') && !x.innerText.includes('Reset')) x.classList.remove("active");
+        });
+        document.querySelector("#filter-controls-kitab .btn-kitab").classList.add("active");
+        window.renderKitab();
+    };
+
+    window.renderKitab = () => {
+        const q=(document.getElementById("search-kitab").value||"").toLowerCase();
+        const box=document.getElementById("days-kitab");
+        box.innerHTML="";
+
+        for(let d=1;d<=60;d++){
+            let [topic,type,vs]=window.stageForKitab(d);
+            if(window.filterKitab!=="all" && type!==window.filterKitab && type!=="Campuran")continue;
+            let hay=`hari ${d} ${topic} ${type} ${vs.map(x=>x.join(" ")).join(" ")}`.toLowerCase();
+            if(q&&!hay.includes(q))continue;
+            
+            const key = window.currentTabKitab === 'vocab' ? `v_d${d}` : `t_d${d}`;
+            const done = !!window.stateKitab[key+"_done"];
+            const read = !!window.stateKitab[key+"_read"];
+            const quizScore = window.stateKitab[key+"_quizScore"];
+            
+            let el=document.createElement("div"); el.className="day";
+            let contentHTML = "";
+
+            if(window.currentTabKitab === 'vocab') {
+                contentHTML = `
+                <label class="task ${done?"done":""}"><input type="checkbox" ${done?"checked":""} onchange="window.toggleKitab('${key}_done',this)"><span class="text-content"><b>Hafalan Vocab:</b><br> ${vs.map(x=>`
+                    <span class="vocab-item" style="white-space:nowrap;display:inline-block;margin-right:15px;margin-top:5px">
+                        <span class="arabic-word" style="font-size:1.5em">${x[0]}</span> 
+                        <button class="btn-audio" onclick="window.playTextKitab('${x[0]}')" title="Dengarkan Suara">🔊</button>
+                        <span class="latin" title="Sembunyikan/Tampilkan" onclick="window.toggleSecretKitab(this)">(${x[1]})</span> = <span class="arti" onclick="window.toggleSecretKitab(this)" style="cursor:pointer;transition:.2s">${x[2]}</span>
+                    </span>`).join("")}</span>
+                </label>
+                <label class="task ${read?"done":""}"><input type="checkbox" ${read?"checked":""} onchange="window.toggleKitab('${key}_read',this)"><span class="text-content"><b>Uji Mandiri:</b> Aktifkan Ghost Mode, baca teks Arab-nya dan sebutkan artinya tanpa melihat.</span></label>
+                <div class="quizbox">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <h4>🧠 Kuis Harian</h4>
+                            <div class="feedback" style="margin-top:0">${quizScore !== undefined ? `Skor Terbaik: <b style="color:var(--green)">${quizScore}%</b>` : `Uji ${vs.length} vocab Hukum`}</div>
+                        </div>
+                        <button class="btn-kitab" style="font-size:12px;padding:8px 12px" onclick="window.openQuizModalKitab(${d})">${quizScore !== undefined ? '↻ Ulangi Kuis' : '▶ Mulai Kuis'}</button>
+                    </div>
+                </div>`;
+            } else {
+                let s = vs[0]; 
+                contentHTML = `
+                <div style="padding:15px;text-align:center">
+                    <div class="arabic-word" style="font-size:2.4em;margin-bottom:15px;line-height:1.6">${s[1]}</div>
+                    <div style="margin-bottom:10px; display:flex; justify-content:center; align-items:center; gap:10px">
+                        <button class="btn-audio" style="font-size:1.5em; padding:8px" onclick="window.playTextKitab('${s[0]}')" title="Dengarkan Suara">🔊</button>
+                        <div class="arabic-word arabic-harokat" style="font-size:1.6em;color:var(--green);cursor:pointer;transition:.2s" onclick="window.toggleSecretKitab(this)">${s[0]}</div> 
+                    </div>
+                    <div class="latin" style="font-size:14px;margin-bottom:5px" onclick="window.toggleSecretKitab(this)">${s[2]}</div>
+                    <div class="arti" style="font-size:15px;font-weight:600;color:var(--gold);cursor:pointer;transition:.2s" onclick="window.toggleSecretKitab(this)">"${s[3]}"</div>
+                </div>
+                <div class="shorof-box"><b>🔍 Bedah Shorof/Nahwu:</b><br>${s[4]}</div>
+                <label class="task ${done?"done":""}" style="border-top:none"><input type="checkbox" ${done?"checked":""} onchange="window.toggleKitab('${key}_done',this)"><span class="text-content">Saya sudah bisa membaca teks gundulnya dengan lancar.</span></label>
+                <label class="task ${read?"done":""}"><input type="checkbox" ${read?"checked":""} onchange="window.toggleKitab('${key}_read',this)"><span class="text-content">Saya memahami posisi i'rab/shorof pada kalimat di atas.</span></label>`;
+            }
+
+            el.innerHTML=`<div class="dayhead">
+                <div>
+                    <span class="daynum">HARI ${d}</span> <span class="badge">${type}</span><br>
+                    <b style="font-size:14px">${topic}</b>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:12px;color:#087f5b;font-weight:800;margin-bottom:8px">${done&&read?"✓ SELESAI":"BELUM"}</div>
+                    <button class="btn-kitab" style="font-size:10px;padding:5px 8px;border:1px solid var(--line);box-shadow:none" onclick="window.toggleLocalGhostKitab(this)">👻 Ghost</button>
+                </div>
+            </div>` + contentHTML;
+            box.appendChild(el);
+        }
+        window.updateKitab();
+    };
+
+    window.toggleKitab = (k,el) => { window.stateKitab[k]=el.checked; localStorage.setItem("kitab60_v7",JSON.stringify(window.stateKitab)); window.renderKitab(); };
+
+    window.updateKitab = () => {
+        let done=0, total=120;
+        for(let d=1;d<=60;d++){
+            const key = window.currentTabKitab === 'vocab' ? `v_d${d}` : `t_d${d}`;
+            if(window.stateKitab[`${key}_done`]) done++;
+            if(window.stateKitab[`${key}_read`]) done++;
+        }
+        let pct=Math.round((done/total)*100) || 0;
+        document.getElementById("kitab-bar").style.width=pct+"%";
+        document.getElementById("kitab-pct").textContent=pct+"%";
+        document.getElementById("kitab-count").textContent=done+" / "+total+" tugas selesai";
+        document.getElementById("kitab-done").textContent=done;
+        
+        let fullDaysDone = 0;
+        for(let d=1;d<=60;d++){
+            const key = window.currentTabKitab === 'vocab' ? `v_d${d}` : `t_d${d}`;
+            if(window.stateKitab[`${key}_done`] && window.stateKitab[`${key}_read`]) fullDaysDone++;
+        }
+        document.getElementById("kitab-remain").textContent=60 - fullDaysDone;
+    };
+
+    window.filterDaysKitab = (f,b) => {
+        window.filterKitab=f;
+        document.querySelectorAll("#filter-controls-kitab .btn-kitab").forEach(x=>{if(x.id!=='btn-ghost-kitab' && !x.innerText.includes('Drill') && !x.innerText.includes('Reset'))x.classList.remove("active")});
+        b.classList.add("active");
+        window.renderKitab();
+    };
+
+    window.resetAllKitab = () => {
+        if(confirm("Hapus semua progress 60 hari Kitab Kuning?")){
+            window.stateKitab={}; localStorage.removeItem("kitab60_v7"); window.renderKitab();
+        }
+    };
+
+    // --- KUIS HARIAN ---
+    window.activeDayKitab = 0; window.quizQuestionsKitab = []; window.currentQIndexKitab = 0; window.correctCountKitab = 0; window.isAnsweredKitab = false;
+    
+    window.openQuizModalKitab = (day) => {
+        window.activeDayKitab = day; 
+        document.getElementById("quiz-title-kitab").innerText = `Kuis Harian - Hari ${day}`;
+        document.getElementById("quiz-modal-kitab").classList.add("active");
+        document.getElementById("quiz-setup-kitab").classList.remove("hidden");
+        document.getElementById("quiz-engine-kitab").classList.add("hidden"); 
+        document.getElementById("quiz-result-kitab").classList.add("hidden");
+    };
+
+    window.closeQuizKitab = (save = false) => {
+        document.getElementById("quiz-modal-kitab").classList.remove("active");
+        if(save && window.correctCountKitab > 0) {
+            let pct = Math.round((window.correctCountKitab / window.quizQuestionsKitab.length) * 100), key = `v_d${window.activeDayKitab}_quizScore`;
+            if(pct > (window.stateKitab[key] || 0)) window.stateKitab[key] = pct; 
+            localStorage.setItem("kitab60_v7", JSON.stringify(window.stateKitab)); 
+            window.renderKitab();
+        }
+    };
+
+    window.startQuizKitab = () => {
+        let mode = document.getElementById("quiz-mode-kitab").value, vocabs = window.stageForKitab(window.activeDayKitab)[2];
+        window.quizQuestionsKitab = vocabs.map(v => {
+            let isA = mode === 'arab-arti' || (mode === 'mix' && Math.random() > 0.5);
+            let qText = isA ? `Apa arti dari <span class="arabic-word" style="font-size:1.8em;color:var(--navy);display:block;margin:15px 0">${v[0]}</span>` : `Sebutkan bahasa Arab dari:<br><b style="font-size:1.3em;color:var(--green);display:block;margin:15px 0">"${v[2]}"</b>`;
+            let corr = isA ? v[2] : v[0], wp = window.allVocabsKitab.filter(x => isA ? x[2] !== corr : x[0] !== corr).map(x => isA ? x[2] : x[0]);
+            return { qText, opts: [corr, ...wp.sort(() => .5 - Math.random()).slice(0, 3)].sort(() => .5 - Math.random()), correctAnswer: corr, isArab: !isA };
+        }).sort(() => .5 - Math.random());
+        window.currentQIndexKitab = 0; window.correctCountKitab = 0;
+        document.getElementById("quiz-setup-kitab").classList.add("hidden"); document.getElementById("quiz-engine-kitab").classList.remove("hidden");
+        window.showQuestionKitab();
+    };
+
+    window.showQuestionKitab = () => {
+        window.isAnsweredKitab = false; let q = window.quizQuestionsKitab[window.currentQIndexKitab];
+        document.getElementById("quiz-progress-kitab").innerText = `Soal ${window.currentQIndexKitab + 1} dari ${window.quizQuestionsKitab.length}`;
+        document.getElementById("quiz-score-live-kitab").innerText = `Benar: ${window.correctCountKitab}`;
+        document.getElementById("quiz-question-kitab").innerHTML = q.qText;
+        document.getElementById("quiz-options-kitab").innerHTML = q.opts.map(opt => `<button class="opt" style="${q.isArab ? "font-size:1.5em;text-align:center" : ""}" onclick="window.checkAnswerKitab('${opt.replace(/'/g,"\\'")}', this)"><span class="${q.isArab ? "arabic-word" : ""}">${opt}</span></button>`).join("");
+    };
+
+    window.checkAnswerKitab = (sel, btnEl) => {
+        if (window.isAnsweredKitab) return; window.isAnsweredKitab = true; let q = window.quizQuestionsKitab[window.currentQIndexKitab];
+        if (sel === q.correctAnswer) { btnEl.classList.add("correct"); window.correctCountKitab++; } 
+        else { btnEl.classList.add("wrong"); Array.from(document.getElementById("quiz-options-kitab").children).forEach(b => { if (b.innerText.trim() === q.correctAnswer || b.innerHTML.includes(q.correctAnswer)) b.classList.add("correct"); }); }
+        setTimeout(() => { window.currentQIndexKitab++; window.currentQIndexKitab < window.quizQuestionsKitab.length ? window.showQuestionKitab() : window.showResultKitab(); }, 1200);
+    };
+
+    window.showResultKitab = () => {
+        document.getElementById("quiz-engine-kitab").classList.add("hidden"); document.getElementById("quiz-result-kitab").classList.remove("hidden");
+        let pct = Math.round((window.correctCountKitab / window.quizQuestionsKitab.length) * 100);
+        document.getElementById("quiz-final-score-kitab").innerText = `${pct}%`; document.getElementById("quiz-final-score-kitab").style.color = pct >= 70 ? "var(--green)" : "var(--red)";
+        document.getElementById("quiz-feedback-text-kitab").innerText = `Antum menjawab benar ${window.correctCountKitab} dari ${window.quizQuestionsKitab.length} soal.\n${pct === 100 ? "Sempurna!" : pct >= 70 ? "Mantap, silakan lanjut." : "Coba ulangi hafalan hari ini."}`;
+    };
+
+    // --- DRILL SHOROF TENSES ---
+    window.shorofQuestionsKitab = []; window.shorofIndexKitab = 0; window.shorofScoreKitab = 0; window.shorofAnsweredKitab = false;
+    
+    window.openShorofModalKitab = () => {
+        document.getElementById("shorof-modal-kitab").classList.add("active");
+        document.getElementById("shorof-setup-kitab").classList.remove("hidden");
+        document.getElementById("shorof-engine-kitab").classList.add("hidden");
+        document.getElementById("shorof-result-kitab").classList.add("hidden");
+    };
+
+    window.closeShorofModalKitab = () => { document.getElementById("shorof-modal-kitab").classList.remove("active"); };
+
+    window.startShorofKitab = () => {
+        window.shorofQuestionsKitab = [...fiilData].sort(() => 0.5 - Math.random());
+        window.shorofIndexKitab = 0; window.shorofScoreKitab = 0;
+        document.getElementById("shorof-setup-kitab").classList.add("hidden");
+        document.getElementById("shorof-engine-kitab").classList.remove("hidden");
+        window.showShorofQuestionKitab();
+    };
+
+    window.showShorofQuestionKitab = () => {
+        window.shorofAnsweredKitab = false;
+        let q = window.shorofQuestionsKitab[window.shorofIndexKitab];
+        
+        document.getElementById("shorof-progress-kitab").innerText = `Fi'il ${window.shorofIndexKitab + 1} / ${window.shorofQuestionsKitab.length}`;
+        document.getElementById("shorof-score-live-kitab").innerText = `Benar: ${window.shorofScoreKitab}`;
+        document.getElementById("shorof-konteks-kitab").classList.add("hidden");
+        document.getElementById("shorof-next-btn-kitab").classList.add("hidden");
+        
+        document.getElementById("shorof-question-kitab").innerHTML = `
+            <div style="font-size:12px;color:var(--muted);margin-bottom:5px">Identifikasi Tenses fi'il ini:</div>
+            <div class="arabic-word" style="font-size:3em;color:var(--navy);margin:15px 0">${q.arab}</div>
+            <div style="font-size:15px;font-style:italic;color:var(--green);font-weight:600">"${q.arti}"</div>
+        `;
+        
+        let optionsHTML = ["Madhi (Lampau)", "Mudhari' (Sekarang/Akan Datang)", "Amr (Perintah)"].map(opt => `
+            <button class="opt" style="font-size:14px;text-align:center;padding:12px" onclick="window.checkShorofKitab('${opt}', this)">${opt}</button>
+        `).join("");
+        
+        document.getElementById("shorof-options-kitab").innerHTML = optionsHTML;
+    };
+
+    window.checkShorofKitab = (selected, btn) => {
+        if (window.shorofAnsweredKitab) return; window.shorofAnsweredKitab = true;
+        let q = window.shorofQuestionsKitab[window.shorofIndexKitab];
+        let isCorrect = selected === q.jenis;
+        
+        if(isCorrect) { btn.classList.add("correct"); window.shorofScoreKitab++; } 
+        else { btn.classList.add("wrong"); Array.from(document.getElementById("shorof-options-kitab").children).forEach(b => { if(b.innerText === q.jenis) b.classList.add("correct"); }); }
+        
+        let boxKonteks = document.getElementById("shorof-konteks-kitab");
+        boxKonteks.innerHTML = `<b>Penerapan Yurisprudensi PA:</b><br>${q.konteks}`;
+        boxKonteks.classList.remove("hidden");
+        document.getElementById("shorof-next-btn-kitab").classList.remove("hidden");
+    };
+
+    window.nextShorofKitab = () => {
+        window.shorofIndexKitab++;
+        if(window.shorofIndexKitab < window.shorofQuestionsKitab.length) { window.showShorofQuestionKitab(); } 
+        else {
+            document.getElementById("shorof-engine-kitab").classList.add("hidden");
+            document.getElementById("shorof-result-kitab").classList.remove("hidden");
+            let pct = Math.round((window.shorofScoreKitab / window.shorofQuestionsKitab.length) * 100);
+            document.getElementById("shorof-final-score-kitab").innerText = `${pct}%`;
+            document.getElementById("shorof-feedback-text-kitab").innerText = `Antum berhasil mengidentifikasi tenses ${window.shorofScoreKitab} dari ${window.shorofQuestionsKitab.length} fi'il krusial PA dengan tepat.`;
+        }
+    };
+
+    // Panggil render pertama kali saat modal dibuka
+    window.switchTabKitab('vocab');
+};
