@@ -6663,33 +6663,44 @@ window.initKitabKuning = () => {
         };
     }
 
-window.playTextKitab = (text) => {
-        // 1. Kita bikin elemen <audio> tersembunyi di dalam HTML kalau belum ada
-        let player = document.getElementById('kitabAudioPlayer');
-        if (!player) {
-            player = document.createElement('audio');
-            player.id = 'kitabAudioPlayer';
-            document.body.appendChild(player); // Tempel ke body aplikasi
-        }
+// 1. Taruh ini di LUAR fungsi biar datanya gak dihapus paksa sama Chrome (Fix Bug Memori)
+    window.suaraArabGlobal = null;
 
-        // 2. Bikin link khusus ke server Google Translate (Dijamin fasih)
-        const url = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=ar&q=${encodeURIComponent(text)}`;
-        
-        // 3. Masukin linknya ke player dan mainkan
-        player.src = url;
-        player.play().catch(error => {
-            console.log("Suara Google gagal diputar:", error);
+    window.playTextKitab = (text) => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Matikan suara yang numpuk
             
-            // 4. Kalau apes banget Google error, ini cadangan darurat pakai mesin Windows
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(text);
-                msg.lang = 'ar-SA';
-                msg.rate = 0.8;
-                window.speechSynthesis.speak(msg);
+            // 2. Gunakan variabel global yang kita bikin di atas
+            window.suaraArabGlobal = new SpeechSynthesisUtterance(text);
+            window.suaraArabGlobal.lang = 'ar-SA';
+            window.suaraArabGlobal.rate = 0.8;
+            window.suaraArabGlobal.volume = 1.0;
+
+            // 3. Deteksi suara Arab yang udah lo install di Windows
+            let voices = window.speechSynthesis.getVoices();
+            let arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
+            
+            if (arabicVoice) {
+                window.suaraArabGlobal.voice = arabicVoice;
             }
-        });
+
+            // 4. Kasih notif kalau ternyata Chrome lo yang nge-mute tab-nya
+            window.suaraArabGlobal.onerror = (event) => {
+                console.error("Error dari browser:", event);
+                alert("Gagal memutar! Pastikan Tab Chrome ini tidak di-Mute (Klik kanan tab > Unmute Site).");
+            };
+
+            // 5. Langsung play tepat setelah tombol diklik!
+            window.speechSynthesis.speak(window.suaraArabGlobal);
+        } else {
+            alert("Fitur suara tidak didukung browser ini.");
+        }
     };
+
+    // Pancingan awal biar daftar suara terbaca langsung pas web dibuka
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
     // --- DATA ---
     const vocabM=[["الزواج","az-zawāj","pernikahan"],["النكاح","an-nikāḥ","perkawinan"],["الزوج","az-zauj","suami"],["الزوجة","az-zaujah","istri"],["الخِطبة","al-khiṭbah","peminangan"],["العقد","al-‘aqd","akad"],["الإيجاب","al-ījāb","ijab"],["القبول","al-qabūl","kabul"],["الولي","al-waliyy","wali"],["الشاهدان","asy-syāhidān","dua saksi"],["الصداق","aṣ-ṣadāq","mahar/maskawin"],["الكفاءة","al-kafā’ah","kesepadanan"],["المتعة","al-mut‘ah","pemberian mut'ah"],["النفقة","an-nafaqah","nafkah"],["الوليمة","al-walīmah","pesta pernikahan"],["القسم","al-qasm","pembagian giliran"],["النشوز","an-nusyūz","pembangkangan istri"],["الفسخ","al-faskh","pembatalan akad"],["الطلاق","aṭ-ṭalāq","talak"],["الرجعة","ar-raj‘ah","rujuk"],["الخلع","al-khul‘","gugat cerai (tebus talak)"],["الإيلاء","al-īlā’","sumpah tak menggauli"],["الظهار","aẓ-ẓihār","menyamakan punggung ibu"],["اللِّعان","al-li‘ān","sumpah saling melaknat"],["العدة","al-‘iddah","masa tunggu"],["الحضانة","al-ḥaḍānah","hak asuh anak"]];
     const vocabW=[["الفرائض","al-farā’iḍ","ilmu waris"],["الميراث","al-mīrāṡ","warisan"],["الوارثون","al-wāriṡūn","ahli waris laki-laki"],["الوارثات","al-wāriṡāt","ahli waris perempuan"],["التركة","at-tarikah","harta peninggalan"],["النصف","an-niṣf","seperdua (1/2)"],["الربع","ar-rub‘","seperempat (1/4)"],["الثمن","aṡ-ṡumun","seperdelapan (1/8)"],["الثلثان","aṡ-ṡuluṡān","dua pertiga (2/3)"],["الثلث","aṡ-ṡuluṡ","sepertiga (1/3)"],["السدس","as-sudus","seperenam (1/6)"],["العصبة","al-‘aṣabah","penerima sisa harta"],["الحجب","al-ḥajb","terhalang dari warisan"],["الجد","al-jadd","kakek"],["الجدة","al-jaddah","nenek"],["الكلالة","al-kalālah","wafat tanpa asal & keturunan"],["الحمل","al-ḥaml","janin"],["المفقود","al-mafqūd","orang hilang"],["الوصية","al-waṣiyyah","wasiat"],["الدين","ad-dayn","utang"]];
