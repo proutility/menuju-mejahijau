@@ -311,11 +311,17 @@
                         </button>
                     </div>
                 </div>
-
+                
                 <div style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-                    <button onclick="window.bukaJadwalCakim()" style="width: 100%; background: #087f5b; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;">
-                        <i class="fas fa-calendar-check"></i> Master Checklist Cakim
-                    </button>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="window.bukaJadwalCakim()" style="width: 100%; background: #087f5b; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;">
+                            <i class="fas fa-calendar-check"></i> Master Checklist Cakim
+                        </button>
+                        <!-- TOMBOL BARU KITAB KUNING -->
+                        <button onclick="window.bukaKitabKuning()" style="width: 100%; background: #123b4a; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.2s;">
+                            <i class="fas fa-book-open"></i> 60 Hari Kitab Kuning
+                        </button>
+                    </div>
                 </div>
 
                 <div style="margin-top: auto; padding-bottom: 60px; padding-top: 15px;">
@@ -783,5 +789,135 @@
             <button onclick="document.getElementById('waitingRoomOverlay').style.display='none'" style="margin-top:15px; background:none; border:none; color:var(--danger); text-decoration:underline; cursor:pointer;">Keluar dari Antrean</button>
         </div>
     </div>
+    <!-- ========================================== -->
+<!-- OVERLAY KITAB KUNING (FULL SCREEN)         -->
+<!-- ========================================== -->
+<div id="kitabOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#edf6f1; z-index:2000000; flex-direction:column; overflow:hidden;">
+    
+    <!-- HEADER FIXED -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); z-index: 100;">
+        <h2 style="margin:0; color: #0f172a; font-size: 1.4rem; font-family:'Poppins', sans-serif; font-weight: 800;">
+            <i class="fas fa-book-open" style="color: #123b4a; margin-right: 8px;"></i> 60 Hari Kitab Kuning
+        </h2>
+        <button onclick="document.getElementById('kitabOverlay').style.display='none'" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- AREA KONTEN KITAB KUNING -->
+    <div class="kitab-wrapper" style="flex: 1; overflow-y: auto; width: 100%;">
+        <div class="app">
+            <header class="hero">
+                <div class="kicker">60-Day Intensive • Calon Hakim PA 2026</div>
+                <h1>Kitab Kuning<br>Training Dashboard</h1>
+                <p>Silabus berbasis kitab <i>At-Tadzhib fi Adillati Matan Al-Ghayah wa At-Taqrib</i>. Membedah 4 pilar utama yurisprudensi: Munakahat, Mawaris, Mu'amalat (Ekonomi Syariah), dan Hukum Acara/Qadha.</p>
+                <div class="meta"><span class="pill">📖 Matan Abu Syuja'</span><span class="pill">🗓 60 Hari</span><span class="pill">⚖️ 4 Pilar Yurisprudensi</span><span class="pill">🔊 Suara Arab Aktif</span></div>
+                <div class="progress"><div class="bar" id="kitab-bar"></div></div><div class="proline"><span id="kitab-pct">0%</span><span id="kitab-count">0 / 0 sesi selesai</span></div>
+            </header>
+
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-vocab" onclick="window.switchTabKitab('vocab')">📚 Program 60 Hari Vocab</button>
+                <button class="tab-btn" id="tab-teks" onclick="window.switchTabKitab('teks')">📖 Program 60 Hari Bedah Teks & Shorof</button>
+            </div>
+
+            <div class="controls" id="filter-controls-kitab">
+                <button class="btn-kitab active" onclick="window.filterDaysKitab('all',this)">Semua</button>
+                <button class="btn-kitab" onclick="window.filterDaysKitab('Munakahat',this)">Munakahat</button>
+                <button class="btn-kitab" onclick="window.filterDaysKitab('Mawaris',this)">Mawaris</button>
+                <button class="btn-kitab" onclick="window.filterDaysKitab('Ekonomi Syariah',this)">Eko. Syariah</button>
+                <button class="btn-kitab" onclick="window.filterDaysKitab('Hukum Acara',this)">Hukum Acara</button>
+                <button class="btn-kitab" onclick="window.toggleGlobalGhostKitab()" id="btn-ghost-kitab" style="background:#eef2f4;color:var(--navy)">👻 Ghost Global</button>
+                <button class="btn-kitab" style="background:var(--blue);color:white" onclick="window.openShorofModalKitab()">⚔ Game Drill Shorof</button>
+                <button class="btn-kitab" style="background:#ffebee;color:var(--red)" onclick="window.resetAllKitab()">↻ Reset Data</button>
+            </div>
+
+            <div class="layout">
+                <main class="card">
+                    <h2 id="main-title-kitab">📅 Kurikulum Vocab (Mufradat)</h2>
+                    <div class="sub" id="main-sub-kitab">Hafalkan kosa kata teknis pengadilan, tutupi terjemahan, dan klik ikon speaker 🔊 untuk mendengar makhraj-nya.</div>
+                    <input class="search" id="search-kitab" placeholder="Cari hari, topik, atau kata..." oninput="window.renderKitab()">
+                    <div id="days-kitab"></div>
+                </main>
+
+                <aside class="sidebox">
+                    <div class="card">
+                        <h2>📊 Statistik Mode Ini</h2>
+                        <div class="stat"><b id="kitab-done">0</b><span>Tugas selesai</span></div><br>
+                        <div class="stat"><b id="kitab-remain">60</b><span>Hari tersisa</span></div>
+                    </div>
+                    <div class="card">
+                        <h2>🎯 Peta Kurikulum</h2>
+                        <div class="focus"><b>Hari 1–15</b><br>Khitbah, Akad, Mahar, Putusnya Perkawinan.</div>
+                        <div class="focus"><b>Hari 16–30</b><br>Ahli Waris, Furudh, Asabah, Wasiat.</div>
+                        <div class="focus"><b>Hari 31–45</b><br>Ekonomi Syariah: Riba, Gadai, Sewa, Syirkah, Wakaf.</div>
+                        <div class="focus"><b>Hari 46–60</b><br>Hukum Acara: Gugatan, Bukti, Sumpah, Putusan.</div>
+                    </div>
+                </aside>
+            </div>
+            <div style="text-align:center;padding:25px;color:#718087;font-size:11px">Hak Cipta Kurikulum At-Tadzhib • Data tersimpan otomatis di browser</div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL KUIS HARIAN (KITAB) -->
+<div class="modal-kitab" id="quiz-modal-kitab">
+    <div class="modal-kitab-card">
+        <div class="modal-kitab-header">
+            <h3 id="quiz-title-kitab">Kuis Harian</h3>
+            <button class="close-btn" onclick="window.closeQuizKitab()">✖</button>
+        </div>
+        <div id="quiz-setup-kitab">
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px">Pilih Mode Drilling:</label>
+            <select id="quiz-mode-kitab" class="select-mode">
+                <option value="arab-arti">Arab ➔ Arti (Mengingat Makna)</option>
+                <option value="arti-arab">Arti ➔ Arab (Mengingat Istilah)</option>
+                <option value="mix">Acak / Bolak-Balik</option>
+            </select>
+            <button class="btn-kitab active" style="width:100%;padding:12px;font-size:14px" onclick="window.startQuizKitab()">Mulai Kuis</button>
+        </div>
+        <div id="quiz-engine-kitab" class="hidden">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:15px">
+                <span id="quiz-progress-kitab">Soal 1/5</span>
+                <span id="quiz-score-live-kitab">Skor: 0</span>
+            </div>
+            <div id="quiz-question-kitab" style="font-size:18px;text-align:center;margin-bottom:20px;font-weight:600;line-height:1.5"></div>
+            <div class="options" id="quiz-options-kitab"></div>
+        </div>
+        <div id="quiz-result-kitab" class="hidden" style="text-align:center;padding:10px 0">
+            <h2 id="quiz-final-score-kitab" style="font-size:36px;color:var(--green);margin:10px 0">100%</h2>
+            <p id="quiz-feedback-text-kitab" style="font-size:14px;color:var(--muted);margin-bottom:20px"></p>
+            <button class="btn-kitab active" style="width:100%" onclick="window.closeQuizKitab(true)">Simpan Progress</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SHOROF / TENSES (KITAB) -->
+<div class="modal-kitab" id="shorof-modal-kitab">
+    <div class="modal-kitab-card">
+        <div class="modal-kitab-header">
+            <h3 style="color:var(--blue)">⚔️ Game Drill Shorof</h3>
+            <button class="close-btn" onclick="window.closeShorofModalKitab()">✖</button>
+        </div>
+        <div id="shorof-setup-kitab">
+            <p style="font-size:13px;line-height:1.5;color:var(--muted);margin-top:0">Membedakan <b>Fi'il Madhi</b>, <b>Fi'il Mudhari'</b>, dan <b>Fi'il Amr</b> sangat fatal untuk legalitas hukum dalam naskah PA.</p>
+            <button class="btn-kitab" style="width:100%;padding:12px;font-size:14px;background:var(--blue);color:#fff" onclick="window.startShorofKitab()">Mulai Identifikasi Tenses</button>
+        </div>
+        <div id="shorof-engine-kitab" class="hidden">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:15px">
+                <span id="shorof-progress-kitab">Soal 1/10</span>
+                <span id="shorof-score-live-kitab">Skor: 0</span>
+            </div>
+            <div id="shorof-question-kitab" style="text-align:center;margin-bottom:20px;"></div>
+            <div class="options" id="shorof-options-kitab"></div>
+            <div id="shorof-konteks-kitab" class="hidden" style="margin-top:15px;padding:10px;background:#f5faf8;border-left:4px solid var(--blue);font-size:12px;border-radius:6px;line-height:1.4"></div>
+            <button id="shorof-next-btn-kitab" class="btn-kitab hidden" style="width:100%;margin-top:15px;background:var(--blue);color:white" onclick="window.nextShorofKitab()">Lanjut ➔</button>
+        </div>
+        <div id="shorof-result-kitab" class="hidden" style="text-align:center;padding:10px 0">
+            <h2 id="shorof-final-score-kitab" style="font-size:36px;color:var(--blue);margin:10px 0">100%</h2>
+            <p id="shorof-feedback-text-kitab" style="font-size:14px;color:var(--muted);margin-bottom:20px"></p>
+            <button class="btn-kitab" style="width:100%;background:var(--blue);color:white" onclick="window.closeShorofModalKitab()">Selesai</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
