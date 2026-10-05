@@ -1238,3 +1238,8 @@ div.swal2-container {
 .modal-kitab .btn-kitab:hover { background: #066649; }
 .modal-kitab select.select-mode { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #dce7e3; font-size: 14px; margin-bottom: 15px; outline: none; cursor: pointer; color: #18323a; }
 .modal-kitab select.select-mode:focus { border-color: #087f5b; }
+
+/* FIX UNTUK MENYEMBUNYIKAN ELEMEN YANG BELUM WAKTUNYA MUNCUL DI MODAL */
+.modal-kitab .hidden { 
+    display: none !important; 
+}
