@@ -1223,3 +1223,18 @@ div.swal2-container {
 .modal-kitab select.select-mode { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line); font-size: 14px; margin-bottom: 15px; font-family: inherit; }
 
 @media(max-width:800px){ .kitab-wrapper .layout{grid-template-columns:1fr} .kitab-wrapper .app{padding:10px} .kitab-wrapper .hero{padding:21px} .kitab-wrapper .tabs{overflow-x:auto;white-space:nowrap} }
+
+/* ========================================= */
+/* FIX TAMPILAN MODAL KUIS KITAB KUNING      */
+/* ========================================= */
+.modal-kitab .options { display: grid; gap: 10px; margin-top: 15px; }
+.modal-kitab .opt { border: 2px solid #dce7e3; background: #fff; padding: 14px 18px; border-radius: 12px; text-align: left; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; color: #18323a; }
+.modal-kitab .opt:hover { border-color: #087f5b; background: #f3f9f6; }
+.modal-kitab .opt.correct { background: #e6f7ef !important; border-color: #087f5b !important; color: #087f5b; }
+.modal-kitab .opt.wrong { background: #fff0ef !important; border-color: #c94c4c !important; color: #c94c4c; }
+
+/* Styling Tombol Mulai & Select Mode */
+.modal-kitab .btn-kitab { border: 0; border-radius: 12px; padding: 14px; background: #087f5b; color: #fff; font-weight: 800; cursor: pointer; font-size: 14px; transition: 0.2s; width: 100%; margin-top: 10px; box-shadow: 0 4px 10px rgba(8,127,91,0.2); }
+.modal-kitab .btn-kitab:hover { background: #066649; }
+.modal-kitab select.select-mode { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #dce7e3; font-size: 14px; margin-bottom: 15px; outline: none; cursor: pointer; color: #18323a; }
+.modal-kitab select.select-mode:focus { border-color: #087f5b; }
