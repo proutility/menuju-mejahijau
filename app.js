@@ -6423,10 +6423,10 @@ window.initJadwalCakim = () => {
         ["7","Pengumuman Kelulusan","31 Des 2026","Pantau hasil kelulusan akhir pengadaan Calon Hakim 2026."]
     ];
     
-    // Render Timeline
+    // Render Timeline (PERBAIKAN: data-task SEKARANG ADA DI DALAM TAG <input>)
     const tlWadah = document.getElementById('renderTimelineCakim');
     if (tlWadah) {
-        tlWadah.innerHTML = phases.map((p,i)=>`<div class="item-cakim" data-task="phase${i}"><div class="num-cakim">${p[0]}</div><div><h3 class="h3-cakim">${p[1]}</h3><div class="date-cakim">${p[2]}</div><div class="desc-cakim">${p[3]}</div></div><input class="check-cakim" type="checkbox" onchange="window.saveCakim()" aria-label="Selesai"></div>`).join("");
+        tlWadah.innerHTML = phases.map((p,i)=>`<div class="item-cakim"><div class="num-cakim">${p[0]}</div><div><h3 class="h3-cakim">${p[1]}</h3><div class="date-cakim">${p[2]}</div><div class="desc-cakim">${p[3]}</div></div><input class="check-cakim" type="checkbox" onchange="window.saveCakim()" data-task="phase${i}" aria-label="Selesai"></div>`).join("");
     }
 
     // 2. Data Admin Checklist
@@ -6447,31 +6447,40 @@ window.initJadwalCakim = () => {
         admWadah.innerHTML = admin.map((x,i)=>`<label class="task-cakim"><input type="checkbox" class="check-cakim" onchange="window.saveCakim()" data-admin="${i}"><span><b>${x[0]}</b> — ${x[1]}</span></label>`).join("");
     }
 
+    // Tarik data yang udah disimpen sebelumnya
     window.loadCakim();
 };
 
 window.saveCakim = () => {
-    const KEY="cakim2026-checklist-v1";
-    let saved = JSON.parse(localStorage.getItem(KEY)||"{}");
+    const KEY = "cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    
+    // Looping semua kotak centang dan simpan state-nya
     document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
         const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
         if(k) saved[k] = el.checked;
     });
+    
     localStorage.setItem(KEY, JSON.stringify(saved)); 
     window.updateProgressCakim();
 };
 
 window.loadCakim = () => {
-    const KEY="cakim2026-checklist-v1";
-    let saved = JSON.parse(localStorage.getItem(KEY)||"{}");
+    const KEY = "cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    
     document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
         const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
-        if(k && saved[k]) {
-            el.checked = true;
+        if(k) {
+            // Set centangan sesuai data memori
+            el.checked = saved[k] === true; 
+            
+            // Atur animasi background warna hijau
             const item = el.closest('.item-cakim');
-            if(item) item.classList.add('done-cakim');
+            if(item) item.classList.toggle('done-cakim', el.checked);
         }
     });
+    
     window.updateProgressCakim();
 };
 
@@ -6520,16 +6529,15 @@ window.resetCakimAll = () => {
     }
 };
 
-// FUNGSI PEMBUKA POP-UP JADWAL CAKIM (VERSI AMAN ANTI BLANK SCREEN)
 window.bukaJadwalCakim = () => {
     const overlay = document.getElementById('jadwalOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
-        // Jalankan fungsi data checklist-nya
+        // Render ulang data tiap kali pop-up dibuka
         if(typeof window.initJadwalCakim === 'function') {
             window.initJadwalCakim();
         }
     } else {
-        alert("ERROR: HTML Overlay Master Cakim belum dipasang di index.html!");
+        alert("HTML Overlay Master Cakim belum dipasang!");
     }
 };
