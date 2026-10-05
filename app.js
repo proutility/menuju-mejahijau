@@ -6673,7 +6673,10 @@ window.initKitabKuning = () => {
             // 2. Gunakan variabel global yang kita bikin di atas
             window.suaraArabGlobal = new SpeechSynthesisUtterance(text);
             window.suaraArabGlobal.lang = 'ar-SA';
-            window.suaraArabGlobal.rate = 0.8;
+            
+            // 👇 INI YANG DIGANTI: Angka 0.4 bikin suaranya jadi pelan dan jelas
+            window.suaraArabGlobal.rate = 0.4; 
+            
             window.suaraArabGlobal.volume = 1.0;
 
             // 3. Deteksi suara Arab yang udah lo install di Windows
