@@ -6412,7 +6412,7 @@ document.addEventListener('click', (e) => {
 // 📅 FITUR JADWAL SELEKSI CAKIM (VERSI POP-UP OVERLAY)
 // ==========================================
 window.initJadwalCakim = () => {
-    // 1. Data Timeline Utama
+    // 1. Data Timeline Utama (Tidak ada perubahan)
     const phases = [
         ["1","Finalisasi Administrasi","Batas akhir: 2 Nov 2026 • 23.59 WIB","Cetak SKP 1 tahun terakhir (baik), SPT 1 tahun terakhir, dan urus Surat Izin Pimpinan PA Serang. Scan berwarna KTP, Ijazah S-1, Transkrip, dan SK PNS. Unggah seluruh dokumen ke portal."],
         ["2","Eksekusi TOEFL ITP","Kamis, 8 Okt 2026","Amankan skor minimal 450. Gunakan strategi scanning teks dan jangan biarkan ada jawaban kosong."],
@@ -6423,13 +6423,13 @@ window.initJadwalCakim = () => {
         ["7","Pengumuman Kelulusan","31 Des 2026","Pantau hasil kelulusan akhir pengadaan Calon Hakim 2026."]
     ];
     
-    // Render Timeline (PERBAIKAN: data-task SEKARANG ADA DI DALAM TAG <input>)
+    // Render Timeline (PERBAIKAN: data-task diubah menjadi data-id agar seragam)
     const tlWadah = document.getElementById('renderTimelineCakim');
     if (tlWadah) {
-        tlWadah.innerHTML = phases.map((p,i)=>`<div class="item-cakim"><div class="num-cakim">${p[0]}</div><div><h3 class="h3-cakim">${p[1]}</h3><div class="date-cakim">${p[2]}</div><div class="desc-cakim">${p[3]}</div></div><input class="check-cakim" type="checkbox" onchange="window.saveCakim()" data-task="phase${i}" aria-label="Selesai"></div>`).join("");
+        tlWadah.innerHTML = phases.map((p,i)=>`<div class="item-cakim"><div class="num-cakim">${p[0]}</div><div><h3 class="h3-cakim">${p[1]}</h3><div class="date-cakim">${p[2]}</div><div class="desc-cakim">${p[3]}</div></div><input class="check-cakim" type="checkbox" onchange="window.saveCakim()" data-id="phase_${i}" aria-label="Selesai"></div>`).join("");
     }
 
-    // 2. Data Admin Checklist
+    // 2. Data Admin Checklist (Tidak ada perubahan)
     const admin = [
         ["5 Okt","Bikin akun portal pendaftaran. Temui pimpinan satker saat istirahat untuk Surat Izin Pimpinan dan Surat Keterangan Tidak Sedang Cuti."],
         ["6 Okt","Cetak dan mintakan legalisasi/tanda tangan basah SKP 1 tahun terakhir (predikat baik) dan tanda bukti lapor SPT 1 tahun terakhir."],
@@ -6441,11 +6441,14 @@ window.initJadwalCakim = () => {
         ["19–21 Okt","Upload berkala ke portal. Pastikan PDF terbaca jelas dan tidak corrupt. Klik submit final."]
     ];
     
-    // Render Admin
+    // Render Admin (PERBAIKAN: data-admin diubah menjadi data-id agar seragam)
     const admWadah = document.getElementById('renderAdminCakim');
     if (admWadah) {
-        admWadah.innerHTML = admin.map((x,i)=>`<label class="task-cakim"><input type="checkbox" class="check-cakim" onchange="window.saveCakim()" data-admin="${i}"><span><b>${x[0]}</b> — ${x[1]}</span></label>`).join("");
+        admWadah.innerHTML = admin.map((x,i)=>`<label class="task-cakim"><input type="checkbox" class="check-cakim" onchange="window.saveCakim()" data-id="admin_${i}"><span><b>${x[0]}</b> — ${x[1]}</span></label>`).join("");
     }
+
+    // Panggil render jadwal mingguan yang dinamis
+    window.renderJadwalMingguan();
 
     // Tarik data yang udah disimpen sebelumnya
     window.loadCakim();
@@ -6455,9 +6458,9 @@ window.saveCakim = () => {
     const KEY = "cakim2026-checklist-v1";
     let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     
-    // Looping semua kotak centang dan simpan state-nya
+    // Looping semua kotak centang menggunakan data-id atau data-extra
     document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
-        const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
+        const k = el.getAttribute('data-id') || el.getAttribute('data-extra');
         if(k) saved[k] = el.checked;
     });
     
@@ -6470,12 +6473,11 @@ window.loadCakim = () => {
     let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     
     document.querySelectorAll('.cakim-wrapper input[type=checkbox]').forEach(el => {
-        const k = el.dataset.task || el.dataset.admin || el.dataset.extra;
+        const k = el.getAttribute('data-id') || el.getAttribute('data-extra');
         if(k) {
-            // Set centangan sesuai data memori
             el.checked = saved[k] === true; 
             
-            // Atur animasi background warna hijau
+            // Atur animasi background warna hijau khusus timeline
             const item = el.closest('.item-cakim');
             if(item) item.classList.toggle('done-cakim', el.checked);
         }
@@ -6558,5 +6560,82 @@ window.bukaJadwalCakim = () => {
         }
     } else {
         alert("HTML Overlay Master Cakim belum dipasang!");
+    }
+};
+
+// Default jadwal jika user belum pernah mengatur sama sekali
+const defaultJadwalMingguan = [
+    { waktu: "05.00–06.00", senkam: "Simulasi CAT (PRO-TAMA): 1 set soal TI & Hukum Acara PA tiap subuh.", jumat: "Simulasi CAT: latihan soal studi kasus kewarisan.", sabtu: "Istirahat / bebas.", minggu: "Olahraga/Gym (jaga stamina & sehat)." },
+    { waktu: "08.00–12.00", senkam: "Kerja rutin PA Serang.", jumat: "Kerja rutin PA Serang.", sabtu: "Kuliah S2 (pagi): materi S2.", minggu: "Free time / nugas S2." },
+    { waktu: "12.00–13.00", senkam: "1 jam krusial: urus admin / hafalan vocab.", jumat: "Jumatan & istirahat.", sabtu: "Kuliah S2 (siang).", minggu: "Deep Work: bedah aturan hukum." },
+    { waktu: "13.00–16.30", senkam: "Kerja rutin PA Serang.", jumat: "Kerja rutin / izin kampus.", sabtu: "Pulang / istirahat.", minggu: "Cicil scan dokumen & cek PDF." },
+    { waktu: "16.30–19.30", senkam: "Perjalanan pulang, makan malam.", jumat: "Kuliah S2 (sore).", sabtu: "Istirahat / quality time.", minggu: "Istirahat / makan malam." },
+    { waktu: "19.30–21.30", senkam: "Crash Course Kitab Kuning: Fiqh as-Sunnah.", jumat: "Kuliah S2 (malam): istirahat.", sabtu: "Review soal salah seminggu.", minggu: "Crash Course Kitab Kuning." },
+    { waktu: "21.30–22.00", senkam: "Review hafalan vocab hari itu.", jumat: "Istirahat pemulihan.", sabtu: "Review hafalan vocab.", minggu: "Review hafalan vocab." }
+];
+
+window.renderJadwalMingguan = () => {
+    const KEY = "cakim2026-jadwal-dinamis";
+    // Tarik data jadwal dari localStorage, jika kosong gunakan default
+    let savedJadwal = JSON.parse(localStorage.getItem(KEY));
+    if (!savedJadwal || savedJadwal.length === 0) {
+        savedJadwal = [...defaultJadwalMingguan];
+        localStorage.setItem(KEY, JSON.stringify(savedJadwal));
+    }
+
+    const tbody = document.getElementById('renderJadwalMingguan');
+    if (!tbody) return;
+
+    tbody.innerHTML = savedJadwal.map((j, index) => `
+        <tr>
+            <td style="text-align:center; font-weight:bold; color:var(--muted);">${index + 1}</td>
+            <td contenteditable="true" onblur="window.updateJadwalMingguan(${index}, 'waktu', this.innerText)" style="font-weight:bold;">${j.waktu}</td>
+            <td contenteditable="true" onblur="window.updateJadwalMingguan(${index}, 'senkam', this.innerText)">${j.senkam}</td>
+            <td contenteditable="true" onblur="window.updateJadwalMingguan(${index}, 'jumat', this.innerText)">${j.jumat}</td>
+            <td contenteditable="true" onblur="window.updateJadwalMingguan(${index}, 'sabtu', this.innerText)">${j.sabtu}</td>
+            <td contenteditable="true" onblur="window.updateJadwalMingguan(${index}, 'minggu', this.innerText)">${j.minggu}</td>
+            <td style="text-align:center;">
+                <button onclick="window.hapusJadwalMingguan(${index})" style="background:var(--danger); color:white; border:none; padding:5px 8px; border-radius:4px; cursor:pointer;" title="Hapus Baris">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join("");
+};
+
+window.updateJadwalMingguan = (index, field, value) => {
+    const KEY = "cakim2026-jadwal-dinamis";
+    let savedJadwal = JSON.parse(localStorage.getItem(KEY) || "[]");
+    
+    if (savedJadwal[index]) {
+        savedJadwal[index][field] = value;
+        localStorage.setItem(KEY, JSON.stringify(savedJadwal));
+    }
+};
+
+window.tambahJadwalMingguan = () => {
+    const KEY = "cakim2026-jadwal-dinamis";
+    let savedJadwal = JSON.parse(localStorage.getItem(KEY) || "[]");
+    
+    savedJadwal.push({
+        waktu: "00.00-00.00",
+        senkam: "Klik untuk mengedit...",
+        jumat: "Klik untuk mengedit...",
+        sabtu: "Klik untuk mengedit...",
+        minggu: "Klik untuk mengedit..."
+    });
+    
+    localStorage.setItem(KEY, JSON.stringify(savedJadwal));
+    window.renderJadwalMingguan();
+};
+
+window.hapusJadwalMingguan = (index) => {
+    if(confirm("Yakin ingin menghapus jadwal di baris ini?")) {
+        const KEY = "cakim2026-jadwal-dinamis";
+        let savedJadwal = JSON.parse(localStorage.getItem(KEY) || "[]");
+        
+        savedJadwal.splice(index, 1); // Hapus 1 elemen pada index tersebut
+        localStorage.setItem(KEY, JSON.stringify(savedJadwal));
+        window.renderJadwalMingguan();
     }
 };
