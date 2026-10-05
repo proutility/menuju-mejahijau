@@ -1019,83 +1019,109 @@ div.swal2-container {
 /* CSS KHUSUS MASTER CHECKLIST CAKIM 2026    */
 /* ========================================= */
 .cakim-wrapper {
-  --navy: #123b4a; --green: #087f5b; --green2: #0ca678; --cream: #f7f4ec;
-  --ink: #17313b; --muted: #6c7d83; --line: #dfe8e5; --card: #fff;
-  --gold: #d89b32; --danger: #d9534f; --shadow: 0 12px 35px rgba(18,59,74,.10);
-  font-family: Inter, Segoe UI, Arial, sans-serif;
-  color: var(--ink);
+  --navy: #0f172a;     /* Slate 900 - Elegan */
+  --green: #059669;    /* Emerald 600 - Modern */
+  --green2: #10b981;   /* Emerald 500 */
+  --ink: #334155;      /* Slate 700 - Teks tebal */
+  --muted: #64748b;    /* Slate 500 - Teks pudar */
+  --line: #e2e8f0;     /* Slate 200 - Garis halus */
+  --card: #ffffff;
+  --gold: #d97706;     /* Amber 600 */
+  --danger: #ef4444;   /* Red 500 */
+  font-family: 'Poppins', sans-serif !important;
+  color: var(--ink) !important;
 }
 
-.cakim-wrapper * { box-sizing: border-box; }
-.cakim-wrapper button { font: inherit; }
+.cakim-wrapper *, .cakim-wrapper button, .cakim-wrapper input {
+    font-family: 'Poppins', sans-serif !important;
+    box-sizing: border-box;
+}
 
-.hero-cakim { background: linear-gradient(135deg, var(--navy), #0d655b); color: #fff; border-radius: 28px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
-.hero-cakim:after { content: "⚖"; position: absolute; right: 25px; bottom: -35px; font-size: 190px; opacity: .07; }
-.kicker-cakim { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; opacity: .8; }
-.title-cakim { font-size: clamp(28px, 5vw, 48px); margin: 7px 0 5px; line-height: 1.05; }
-.subtitle-cakim { margin: 0; opacity: .82; max-width: 700px; }
-.topbar-cakim { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
-.pill-cakim { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); padding: 9px 13px; border-radius: 999px; font-size: 13px; }
-.progress-cakim { margin-top: 22px; background: rgba(255,255,255,.14); border-radius: 999px; height: 13px; overflow: hidden; }
-.bar-cakim { height: 100%; width: 0; background: #8ce3bd; border-radius: 999px; transition: .3s; }
-.progressline-cakim { display: flex; justify-content: space-between; font-size: 13px; margin-top: 8px; }
+/* JURUS ANTI DARK-MODE KETABRAK */
+.cakim-wrapper h1, .cakim-wrapper h2, .cakim-wrapper h3, 
+.cakim-wrapper div, .cakim-wrapper span, .cakim-wrapper p, 
+.cakim-wrapper td, .cakim-wrapper th {
+    color: var(--ink) !important;
+}
 
-.nav-cakim { display: flex; gap: 10px; margin: 20px 0; position: sticky; top: 10px; z-index: 5; }
-.nav-cakim button { border: 0; background: #fff; color: var(--navy); padding: 12px 18px; border-radius: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 18px rgba(18,59,74,.07); }
-.nav-cakim button.active { background: var(--green); color: #fff; }
+/* Hero Section (Banner Atas) */
+.hero-cakim { background: linear-gradient(135deg, #0f172a, #1e293b) !important; color: #fff !important; border-radius: 24px; padding: 40px; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); margin-bottom: 25px; }
+.hero-cakim * { color: #f8fafc !important; }
+.kicker-cakim { font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; opacity: 0.8; margin-bottom: 10px; }
+.title-cakim { font-size: clamp(28px, 5vw, 42px); margin: 0 0 10px; line-height: 1.1; font-weight: 800; }
+.topbar-cakim { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 25px; }
+.pill-cakim { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 600; display:flex; align-items:center; gap:8px;}
+.progress-cakim { margin-top: 25px; background: rgba(255,255,255,0.15); border-radius: 99px; height: 12px; overflow: hidden; width: 100%; }
+.bar-cakim { height: 100%; width: 0; background: #34d399; border-radius: 99px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.progressline-cakim { display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 10px; font-weight: 700; }
 
+/* Navigasi Tab */
+.nav-cakim { display: flex; gap: 12px; margin-bottom: 25px; position: sticky; top: 0; z-index: 10; background: #f4f7f6; padding: 10px 0; }
+.nav-cakim button { border: 2px solid transparent !important; background: #fff !important; color: var(--muted) !important; padding: 12px 24px !important; border-radius: 12px !important; font-weight: 700 !important; cursor: pointer; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: all 0.2s; font-size: 0.95rem; }
+.nav-cakim button:hover { background: #f1f5f9 !important; color: var(--navy) !important; }
+.nav-cakim button.active { background: var(--green) !important; color: #fff !important; border-color: var(--green) !important; box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3); }
+
+/* Grid & Cards */
 .section-cakim { display: none; }
-.section-cakim.active { display: block; }
-
-.grid-cakim { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
-.card-cakim { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+.section-cakim.active { display: block; animation: fadeIn 0.4s ease; }
+.grid-cakim { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+.card-cakim { background: var(--card) !important; border: 1px solid var(--line) !important; border-radius: 20px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
 .span8-cakim { grid-column: span 8; }
 .span4-cakim { grid-column: span 4; }
 .span12-cakim { grid-column: span 12; }
 
-.h2-cakim { margin: 0 0 5px; color: var(--navy); font-size: 21px; font-weight:bold; }
-.sub-cakim { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-.timeline-cakim { display: grid; gap: 12px; }
+/* Tipografi Card */
+.h2-cakim { margin: 0 0 8px !important; color: var(--navy) !important; font-size: 1.3rem !important; font-weight: 800 !important; }
+.sub-cakim { color: var(--muted) !important; font-size: 0.9rem !important; margin-bottom: 20px !important; line-height: 1.5; }
 
-.item-cakim { display: grid; grid-template-columns: 42px 1fr auto; gap: 13px; align-items: start; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: #fbfdfc; transition: .2s; }
-.item-cakim.done-cakim { background: #effaf4; border-color: #bce5d2; }
-.num-cakim { width: 38px; height: 38px; border-radius: 12px; background: #e8f4ef; color: var(--green); display: grid; place-items: center; font-weight: 900; }
-.h3-cakim { font-size: 16px; margin: 0 0 3px; font-weight:bold; }
-.date-cakim { font-weight: 800; color: var(--green); font-size: 13px; }
-.desc-cakim { font-size: 13px; color: #52666d; line-height: 1.45; margin-top: 6px; }
-.check-cakim { width: 26px; height: 26px; accent-color: var(--green); cursor: pointer; }
+/* Timeline List */
+.timeline-cakim { display: grid; gap: 16px; }
+.item-cakim { display: grid; grid-template-columns: 46px 1fr auto; gap: 16px; align-items: start; padding: 20px; border: 1px solid var(--line) !important; border-radius: 16px; background: #fff !important; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.item-cakim:hover { border-color: #cbd5e1 !important; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); transform: translateY(-2px); }
+.item-cakim.done-cakim { background: #ecfdf5 !important; border-color: #a7f3d0 !important; }
+.num-cakim { width: 42px; height: 42px; border-radius: 12px; background: #f1f5f9 !important; color: var(--navy) !important; display: grid; place-items: center; font-weight: 800; font-size: 1.1rem; }
+.done-cakim .num-cakim { background: var(--green) !important; color: #fff !important; }
+.h3-cakim { font-size: 1.1rem !important; margin: 0 0 5px !important; font-weight: 800 !important; color: var(--navy) !important; }
+.date-cakim { font-weight: 700 !important; color: var(--green) !important; font-size: 0.85rem !important; background: #ecfdf5 !important; display: inline-block; padding: 4px 10px; border-radius: 6px; margin-bottom: 6px; }
+.desc-cakim { font-size: 0.9rem !important; color: var(--muted) !important; line-height: 1.6 !important; margin-top: 5px !important; }
+.check-cakim { width: 28px; height: 28px; accent-color: var(--green); cursor: pointer; }
 
-.mini-cakim { display: grid; gap: 9px; }
-.task-cakim { display: flex; gap: 10px; align-items: flex-start; padding: 11px 12px; background: #f7faf9; border-radius: 13px; font-size: 13px; line-height: 1.4; }
-.task-cakim input { margin-top: 2px; accent-color: var(--green); width: 18px; height: 18px; }
+/* Admin Tasks */
+.mini-cakim { display: grid; gap: 12px; }
+.task-cakim { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; background: #f8fafc !important; border: 1px solid var(--line) !important; border-radius: 14px; font-size: 0.9rem !important; line-height: 1.5; cursor: pointer; transition: 0.2s; }
+.task-cakim:hover { background: #f1f5f9 !important; border-color: #cbd5e1 !important;}
+.task-cakim input { margin-top: 3px; accent-color: var(--green); width: 20px; height: 20px; flex-shrink:0; cursor:pointer;}
 
-.stats-cakim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.stat-cakim { background: #f6faf8; padding: 15px; border-radius: 15px; }
-.stat-cakim b { display: block; font-size: 24px; color: var(--green); }
-.stat-cakim span { font-size: 11px; color: var(--muted); }
-.quote-cakim { border-left: 4px solid var(--gold); padding: 12px 15px; background: #fffaf0; border-radius: 10px; font-style: italic; color: #665332; }
+/* Stats & Quotes */
+.stats-cakim { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-cakim { background: #f8fafc !important; padding: 18px; border-radius: 16px; text-align: center; border: 1px solid var(--line) !important; }
+.stat-cakim b { display: block; font-size: 2rem !important; color: var(--green) !important; font-weight: 800 !important; line-height: 1; margin-bottom: 5px; }
+.stat-cakim span { font-size: 0.8rem !important; color: var(--muted) !important; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.quote-cakim { border-left: 4px solid var(--gold) !important; padding: 15px 20px; background: #fffbeb !important; border-radius: 0 12px 12px 0; font-style: italic; color: #b45309 !important; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; font-weight: 500;}
 
-/* CSS UNTUK TABEL MINGGUAN */
-.schedule-cakim { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; font-size: 12px; }
-.schedule-cakim th { background: var(--navy); color: #fff; padding: 10px; text-align: left; }
-.schedule-cakim td { padding: 10px; border-top: 1px solid var(--line); vertical-align: top; }
-.schedule-cakim tr:nth-child(even) td { background: #f8fbfa; }
+/* Tabel Mingguan */
+.schedule-cakim { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--line) !important; border-radius: 16px; font-size: 0.9rem !important; overflow: hidden; background: #fff !important;}
+.schedule-cakim th { background: #f1f5f9 !important; color: var(--navy) !important; padding: 15px; text-align: left; font-weight: 800 !important; font-size: 0.85rem; letter-spacing: 0.5px; }
+.schedule-cakim td { padding: 15px; border-top: 1px solid var(--line) !important; vertical-align: top; color: var(--ink) !important; line-height: 1.6; font-weight: 500;}
+.schedule-cakim tr:hover td { background: #f8fafc !important; }
 
-.reset-cakim { border: 0; background: #fff3f2; color: var(--danger); padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight:bold; width:100%; }
+/* Reset Button */
+.reset-cakim { border: 0; background: #fef2f2 !important; color: var(--danger) !important; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 0.95rem !important; font-weight: 700 !important; width: 100%; transition: 0.2s; }
+.reset-cakim:hover { background: #fee2e2 !important; }
 
+/* Mobile Layout */
 @media(max-width: 800px) {
-  .cakim-wrapper { padding: 12px; }
   .span8-cakim, .span4-cakim, .span12-cakim { grid-column: span 12; }
-  .item-cakim { grid-template-columns: 36px 1fr 26px; }
-  .schedule-cakim { font-size: 10px; display: block; overflow: auto; }
-  .nav-cakim { position: static; overflow-x: auto; white-space: nowrap; }
-  .hero-cakim { padding: 23px; }
-  .stats-cakim { grid-template-columns: 1fr 1fr 1fr; }
+  .item-cakim { grid-template-columns: 36px 1fr 26px; padding: 15px; }
+  .schedule-cakim { display: block; overflow-x: auto; white-space: nowrap; }
+  .nav-cakim { overflow-x: auto; white-space: nowrap; padding-bottom: 5px; }
+  .hero-cakim { padding: 25px; border-radius: 20px; }
 }
+
 @media(max-width: 500px) {
   .stats-cakim { grid-template-columns: 1fr; }
-  .item-cakim { grid-template-columns: 34px 1fr 24px; }
-  .h3-cakim { font-size: 14px; }
-  .desc-cakim { font-size: 12px; }
+  .item-cakim { grid-template-columns: 34px 1fr 24px; padding: 12px; }
+  .h3-cakim { font-size: 1rem !important; }
+  .desc-cakim { font-size: 0.85rem !important; }
+  .num-cakim { width: 34px; height: 34px; font-size: 1rem; }
 }
-</style>
