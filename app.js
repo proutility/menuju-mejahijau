@@ -6409,14 +6409,18 @@ document.addEventListener('click', (e) => {
     }
 });
 // ==========================================
-// 📅 FITUR JADWAL SELEKSI CAKIM
+// 📅 FITUR JADWAL SELEKSI CAKIM (VERSI POP-UP OVERLAY)
 // ==========================================
 window.initJadwalCakim = () => {
     // 1. Data Timeline Utama
     const phases = [
-        ["1","Finalisasi Administrasi","Batas akhir: 2 Nov 2026 • 23.59 WIB","Cetak SKP 1 tahun terakhir..."],
-        ["2","Eksekusi TOEFL ITP","Kamis, 8 Okt 2026","Amankan skor minimal 450..."],
-        // (Copy paste full data phases lu dari html tadi ke sini)
+        ["1","Finalisasi Administrasi","Batas akhir: 2 Nov 2026 • 23.59 WIB","Cetak SKP 1 tahun terakhir (baik), SPT 1 tahun terakhir, dan urus Surat Izin Pimpinan PA Serang. Scan berwarna KTP, Ijazah S-1, Transkrip, dan SK PNS. Unggah seluruh dokumen ke portal."],
+        ["2","Eksekusi TOEFL ITP","Kamis, 8 Okt 2026","Amankan skor minimal 450. Gunakan strategi scanning teks dan jangan biarkan ada jawaban kosong."],
+        ["3","Medical & Legal Clearance","9–16 Okt 2026","Tes kesehatan jasmani, rohani, dan bebas narkoba di RS Pemerintah. Ajukan Surat Keterangan Tidak Pernah Dijatuhi Hukuman Disiplin ke Bawas MA."],
+        ["4","SKB: Tes CAT","9–10 Nov 2026","Hadapi Tes Substansi Hukum & Teknologi Informasi berbasis komputer. Maksimalkan simulasi harian di PRO-TAMA."],
+        ["5","SKB: Tes Tertulis","11–12 Nov 2026","Ujian analisis kasus hukum peradilan. Gunakan insting minutasi harian di PA Serang untuk merangkai argumen hukum."],
+        ["6","Wawancara & Kitab Kuning","7–11 Des 2026","Ujian lisan membaca dan memahami Kitab Kuning serta psikotes (sistem gugur). Fokus pemaparan business logic dari teks hukum keluarga."],
+        ["7","Pengumuman Kelulusan","31 Des 2026","Pantau hasil kelulusan akhir pengadaan Calon Hakim 2026."]
     ];
     
     // Render Timeline
@@ -6427,9 +6431,14 @@ window.initJadwalCakim = () => {
 
     // 2. Data Admin Checklist
     const admin = [
-        ["5 Okt","Bikin akun portal pendaftaran..."],
-        ["6 Okt","Cetak dan mintakan legalisasi..."],
-        // (Copy paste full data admin lu ke sini)
+        ["5 Okt","Bikin akun portal pendaftaran. Temui pimpinan satker saat istirahat untuk Surat Izin Pimpinan dan Surat Keterangan Tidak Sedang Cuti."],
+        ["6 Okt","Cetak dan mintakan legalisasi/tanda tangan basah SKP 1 tahun terakhir (predikat baik) dan tanda bukti lapor SPT 1 tahun terakhir."],
+        ["7 Okt","Drafting Surat Lamaran dan dua Surat Pernyataan (kesediaan penempatan & diangkat Hakim Pratama). Siapkan meterai Rp10.000."],
+        ["8 Okt","Eksekusi TOEFL ITP. Fokus total pada ujian dan pastikan skor menyentuh angka aman di atas 450."],
+        ["9 Okt","Izin untuk tes ke RS Pemerintah: Surat Keterangan Sehat Jasmani, Rohani, dan Bebas Narkoba."],
+        ["12 Okt","Ajukan Surat Keterangan Tidak Pernah Dijatuhi Hukuman Disiplin (Sedang/Berat) ke Bawas MA."],
+        ["18 Okt","Scan berwarna seluruh dokumen: KTP, pas foto latar merah, Ijazah S-1, Transkrip, SK PNS, dan surat yang terkumpul."],
+        ["19–21 Okt","Upload berkala ke portal. Pastikan PDF terbaca jelas dan tidak corrupt. Klik submit final."]
     ];
     
     // Render Admin
@@ -6438,7 +6447,6 @@ window.initJadwalCakim = () => {
         admWadah.innerHTML = admin.map((x,i)=>`<label class="task-cakim"><input type="checkbox" class="check-cakim" onchange="window.saveCakim()" data-admin="${i}"><span><b>${x[0]}</b> — ${x[1]}</span></label>`).join("");
     }
 
-    // Load data ceklis yang tersimpan
     window.loadCakim();
 };
 
@@ -6473,12 +6481,23 @@ window.updateProgressCakim = () => {
     const total = all.length;
     const pct = total ? Math.round(done/total*100) : 0;
     
-    document.getElementById("barCakim").style.width = pct+"%";
-    document.getElementById("progressTextCakim").textContent = pct+"% selesai";
-    document.getElementById("countTextCakim").textContent = done+" / "+total+" tugas";
-    document.getElementById("doneCakim").textContent = done;
-    document.getElementById("remainCakim").textContent = total-done;
-    document.getElementById("pctCakim").textContent = pct+"%";
+    const bar = document.getElementById("barCakim");
+    if(bar) bar.style.width = pct+"%";
+    
+    const pText = document.getElementById("progressTextCakim");
+    if(pText) pText.textContent = pct+"% selesai";
+    
+    const cText = document.getElementById("countTextCakim");
+    if(cText) cText.textContent = done+" / "+total+" tugas";
+    
+    const elDone = document.getElementById("doneCakim");
+    if(elDone) elDone.textContent = done;
+    
+    const elRem = document.getElementById("remainCakim");
+    if(elRem) elRem.textContent = total-done;
+    
+    const elPct = document.getElementById("pctCakim");
+    if(elPct) elPct.textContent = pct+"%";
     
     document.querySelectorAll('.item-cakim').forEach(i => {
         const c = i.querySelector('.check-cakim');
@@ -6501,37 +6520,16 @@ window.resetCakimAll = () => {
     }
 };
 
-// Panggil init saat halaman diload
-document.addEventListener('DOMContentLoaded', () => {
-    if(document.getElementById('renderTimelineCakim')) {
-        window.initJadwalCakim();
-    }
-});
+// FUNGSI PEMBUKA POP-UP JADWAL CAKIM (VERSI AMAN ANTI BLANK SCREEN)
 window.bukaJadwalCakim = () => {
-    // 1. Sembunyikan card soal ujian dan intro lobby (kalau ada)
-    const cardSoal = document.getElementById('cardSoalUjian');
-    if(cardSoal) cardSoal.style.display = 'none';
-    
-    // (Opsional) Kalau lu punya halaman "Selamat Datang" di tengah pas baru login, sembunyiin juga di sini
-    const lobbyWelcome = document.getElementById('welcomeScreen'); // Sesuaikan id-nya kalau ada
-    if(lobbyWelcome) lobbyWelcome.style.display = 'none';
-
-    // 2. Munculkan halaman Jadwal Cakim
-    const halJadwal = document.getElementById('halamanJadwalCakim');
-    if(halJadwal) halJadwal.style.display = 'block';
-
-    // 3. Jalankan fungsi render checklistnya (Kodingan JS yang gue kasih di chat sebelumnya)
-    if(typeof window.initJadwalCakim === 'function') {
-        window.initJadwalCakim();
+    const overlay = document.getElementById('jadwalOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        // Jalankan fungsi data checklist-nya
+        if(typeof window.initJadwalCakim === 'function') {
+            window.initJadwalCakim();
+        }
+    } else {
+        alert("ERROR: HTML Overlay Master Cakim belum dipasang di index.html!");
     }
-};
-
-// Jangan lupa tambahin fungsi buat nge-close jadwal dan balik ke mode ujian/lobby
-window.tutupJadwalCakim = () => {
-    const halJadwal = document.getElementById('halamanJadwalCakim');
-    if(halJadwal) halJadwal.style.display = 'none';
-
-    // Munculkan lagi card ujian atau halaman welcome lu
-    const cardSoal = document.getElementById('cardSoalUjian');
-    if(cardSoal) cardSoal.style.display = 'block'; // atau sesuaikan dengan flow aplikasi lu
 };
