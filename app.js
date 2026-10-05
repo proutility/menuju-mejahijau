@@ -6533,6 +6533,25 @@ window.bukaJadwalCakim = () => {
     const overlay = document.getElementById('jadwalOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
+        
+        // --- INJEKSI NAMA USER DINAMIS ---
+        const namaPill = document.getElementById('cakimUserNameText');
+        if (namaPill) {
+            // Coba ambil dari variabel currentUser Firebase kalau ada
+            if (typeof currentUser !== 'undefined' && currentUser) {
+                namaPill.textContent = currentUser.displayName || currentUser.email.split('@')[0];
+            } else {
+                // Kalau nggak ketemu, copy dari nama yang udah tampil di sidebar kiri
+                const roleDisplay = document.getElementById('roleDisplay');
+                if (roleDisplay && roleDisplay.innerText !== "Memuat Nama...") {
+                    namaPill.textContent = roleDisplay.innerText;
+                } else {
+                    namaPill.textContent = "Peserta Ujian";
+                }
+            }
+        }
+        // ---------------------------------
+
         // Render ulang data tiap kali pop-up dibuka
         if(typeof window.initJadwalCakim === 'function') {
             window.initJadwalCakim();
