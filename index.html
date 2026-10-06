@@ -129,6 +129,7 @@
                         <button class="modul-btn" id="btn-modul_Asas Umum" onclick="window.switchDatabase('modul_Asas Umum')">Asas Umum</button>
                         <button class="modul-btn" id="btn-modul_Asas Peradilan Agama" onclick="window.switchDatabase('modul_Asas Peradilan Agama')">Asas Peradilan Agama</button>
                         <button class="modul-btn" id="btn-modul_Asas-Asas" onclick="window.switchDatabase('modul_Asas-Asas')">Asas-Asas</button>
+                        <button class="modul-btn" id="btn-modul_KEPPH" onclick="window.switchDatabase('modul_KEPPH')">KEPPH</button>
                         <button class="modul-btn" id="btn-modul1" onclick="window.switchDatabase('modul1')">Modul 1: Kekuasaan Kehakiman</button>
                         <button class="modul-btn" id="btn-modul2" onclick="window.switchDatabase('modul2')">Modul 2: Mahkamah Agung</button>
                         <button class="modul-btn" id="btn-modul3" onclick="window.switchDatabase('modul3')">Modul 3: Peradilan Agama</button>
@@ -204,13 +205,54 @@
                         
                         <div id="stikerMenu" style="display: none; position: absolute; bottom: 65px; left: 10px; background: white; border: 1px solid #ddd; border-radius: 12px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); padding: 12px; width: 240px; z-index: 10000; box-sizing: border-box;">
                             <h6 style="margin: 0 0 10px 0; color: #777; font-size: 0.75rem; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 5px;">Quick Stiker Mabar</h6>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                                <div onclick="window.kirimStiker('🔥 GAS TERUS!')" style="background:#fff3e0; border:1px solid #ffe0b2; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#e67e22; font-size:0.8rem; text-align:center;">🔥 Gas Terus!</div>
-                                <div onclick="window.kirimStiker('💪 SEMANGAT!')" style="background:#e8f5e9; border:1px solid #c8e6c9; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#2e7d32; font-size:0.8rem; text-align:center;">💪 Semangat!</div>
-                                <div onclick="window.kirimStiker('🤯 PUSING CUY')" style="background:#ffebee; border:1px solid #ffcdd2; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#c62828; font-size:0.8rem; text-align:center;">🤯 Pusing Cuy</div>
-                                <div onclick="window.kirimStiker('🏃 WAKTU HABIS!')" style="background:#f3e5f5; border:1px solid #e1bee7; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#6a1b9a; font-size:0.75rem; text-align:center;">🏃 Waktu Habis</div>
-                                <div onclick="window.kirimStiker('🙏 BISMILLAH LULUS')" style="background:#e3f2fd; border:1px solid #90caf9; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#1565c0; font-size:0.75rem; text-align:center;">🙏 Bismillah</div>
-                                <div onclick="window.kirimStiker('🤣 WKWKWK')" style="background:#f5f5f5; border:1px solid #e0e0e0; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#424242; font-size:0.8rem; text-align:center;">🤣 Wkwkwk</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 250px; overflow-y: auto; padding-right: 4px; scrollbar-width: thin;">
+                                <!-- Baris 1: Hype & Semangat -->
+                                <div onclick="window.kirimStiker('🔥 MENYALA ABANGKU!')" style="background:#fff3e0; border:1px solid #ffe0b2; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#ea580c; font-size:0.75rem; text-align:center; transition:0.2s;">🔥 Menyala!</div>
+                                <div onclick="window.kirimStiker('🌾 ILMU PADI PUH')" style="background:#f0fdf4; border:1px solid #bbf7d0; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#16a34a; font-size:0.75rem; text-align:center; transition:0.2s;">🌾 Ilmu Padi</div>
+                                
+                                <!-- Baris 2: Stress & Pusing -->
+                                <div onclick="window.kirimStiker('😮‍💨 CAPEK BANGET COY')" style="background:#fef3c7; border:1px solid #fde68a; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#d97706; font-size:0.75rem; text-align:center; transition:0.2s;">🫠 Capek Coy</div>
+                                <div onclick="window.kirimStiker('🧠 OTAK NGEBUL')" style="background:#f3e8ff; border:1px solid #e9d5ff; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#9333ea; font-size:0.75rem; text-align:center; transition:0.2s;">🧠 Otak Ngebul</div>
+                                
+                                <!-- Baris 3: Meme / Slang -->
+                                <div onclick="window.kirimStiker('🗿 AGAK LAEN EMANG')" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#475569; font-size:0.75rem; text-align:center; transition:0.2s;">🗿 Agak Laen</div>
+                                <div onclick="window.kirimStiker('💀 BUSET DAH')" style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#1e293b; font-size:0.75rem; text-align:center; transition:0.2s;">💀 Buset Dah</div>
+                                
+                                <!-- Baris 4: Panik & Mental -->
+                                <div onclick="window.kirimStiker('📉 KETAR KETIR')" style="background:#fef2f2; border:1px solid #fecaca; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#dc2626; font-size:0.75rem; text-align:center; transition:0.2s;">📉 Ketar Ketir</div>
+                                <div onclick="window.kirimStiker('🚑 INFO RSJ TERDEKAT')" style="background:#fff1f2; border:1px solid #ffe4e6; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#be123c; font-size:0.75rem; text-align:center; transition:0.2s;">🚑 Info RSJ</div>
+                                
+                                <!-- Baris 5: Minta Tolong & Fokus -->
+                                <div onclick="window.kirimStiker('🧎 PUH AJARIN PUH')" style="background:#eff6ff; border:1px solid #bfdbfe; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#2563eb; font-size:0.75rem; text-align:center; transition:0.2s;">🧎 Ajarin Puh</div>
+                                <div onclick="window.kirimStiker('🥶 MODE SERIUS')" style="background:#e0f2fe; border:1px solid #bae6fd; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#0284c7; font-size:0.75rem; text-align:center; transition:0.2s;">🥶 Mode Serius</div>
+                                
+                                <!-- Baris 6: Yakin & Lucu -->
+                                <div onclick="window.kirimStiker('💯 VALID NO DEBAT')" style="background:#ffe4e6; border:1px solid #fecdd3; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#e11d48; font-size:0.75rem; text-align:center; transition:0.2s;">💯 No Debat</div>
+                                <div onclick="window.kirimStiker('🤡 KOCAK GEMING')" style="background:#fdf4ff; border:1px solid #f5d0fe; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#c026d3; font-size:0.75rem; text-align:center; transition:0.2s;">🤡 Kocak Geming</div>
+                                
+                                <!-- Baris 7: Tambahan Gen Z Keluh Kesah -->
+                                <div onclick="window.kirimStiker('☕ BUTUH KOPI')" style="background:#fffbeb; border:1px solid #fde68a; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#b45309; font-size:0.75rem; text-align:center; transition:0.2s;">☕ Butuh Kopi</div>
+                                <div onclick="window.kirimStiker('🔋 LOWBATT COY')" style="background:#f3f4f6; border:1px solid #e5e7eb; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#4b5563; font-size:0.75rem; text-align:center; transition:0.2s;">🪫 Lowbatt Coy</div>
+
+                                <!-- Baris 8: Reaksi Soal Susah -->
+                                <div onclick="window.kirimStiker('🚩 RED FLAG SOALNYA')" style="background:#fee2e2; border:1px solid #fca5a5; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#b91c1c; font-size:0.75rem; text-align:center; transition:0.2s;">🚩 Red Flag!</div>
+                                <div onclick="window.kirimStiker('🏃‍♂️ KABURRR')" style="background:#e0f2fe; border:1px solid #bae6fd; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#0369a1; font-size:0.75rem; text-align:center; transition:0.2s;">🏃‍♂️ Kaburrr</div>
+
+                                <!-- Baris 9: Pasrah -->
+                                <div onclick="window.kirimStiker('🤲 JALUR LANGIT')" style="background:#ecfeff; border:1px solid #cffafe; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#0f766e; font-size:0.75rem; text-align:center; transition:0.2s;">🤲 Jalur Langit</div>
+                                <div onclick="window.kirimStiker('😭 NANGIS BGT')" style="background:#e0e7ff; border:1px solid #c7d2fe; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#4338ca; font-size:0.75rem; text-align:center; transition:0.2s;">😭 Nangis Bgt</div>
+                                
+                                <!-- Baris 10: Gaya & Pantau -->
+                                <div onclick="window.kirimStiker('✨ SLAYYY')" style="background:#fce7f3; border:1px solid #fbcfe8; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#be185d; font-size:0.75rem; text-align:center; transition:0.2s;">✨ Slayyy</div>
+                                <div onclick="window.kirimStiker('👀 NYIMAK')" style="background:#ecfdf5; border:1px solid #a7f3d0; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#047857; font-size:0.75rem; text-align:center; transition:0.2s;">👀 Nyimak</div>
+                                
+                                <!-- Baris 11: Bingung -->
+                                <div onclick="window.kirimStiker('🤔 TEORI KONSPIRASI')" style="background:#f3e8ff; border:1px solid #e9d5ff; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#7e22ce; font-size:0.75rem; text-align:center; transition:0.2s;">🤔 Konspirasi</div>
+                                <div onclick="window.kirimStiker('😴 NGANTUK PARAH')" style="background:#f8fafc; border:1px solid #cbd5e1; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#334155; font-size:0.75rem; text-align:center; transition:0.2s;">😴 Ngantuk</div>
+                                
+                                <!-- Baris 12: Visi Misi Utama -->
+                                <div onclick="window.kirimStiker('💪 S2 DULU BOS')" style="background:#fef08a; border:1px solid #fde047; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#854d0e; font-size:0.75rem; text-align:center; transition:0.2s;">💪 S2 Dulu Bos</div>
+                                <div onclick="window.kirimStiker('👨‍⚖️ BISMILLAH HAKIM')" style="background:#ccfbf1; border:1px solid #99f6e4; padding:8px; border-radius:8px; cursor:pointer; font-weight:bold; color:#0d9488; font-size:0.75rem; text-align:center; transition:0.2s;">👨‍⚖️ Bismillah</div>
                             </div>
                         </div>
             
@@ -497,6 +539,7 @@
                             <option value="modul_Asas Umum">Asas Umum</option>
                             <option value="modul_Asas Peradilan Agama">Asas Peradilan Agama</option>
                             <option value="modul_Asas-Asas">Asas-Asas</option>
+                            <option value="modul_KEPPH">KEPPH</option>
                             <option value="modul1">Modul 1: Kekuasaan Kehakiman</option>
                             <option value="modul2">Modul 2: Mahkamah Agung</option>
                             <option value="modul3">Modul 3: Peradilan Agama</option>
