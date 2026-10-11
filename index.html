@@ -831,6 +831,71 @@
         </div>
     </div>
     <!-- ========================================== -->
+<!-- OVERLAY PUSAT STUDI CAKIM (DASHBOARD)      -->
+<!-- ========================================== -->
+<div id="pusatStudiOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f4f7f6; z-index:2000000; flex-direction:column; overflow:hidden;">
+    
+    <!-- HEADER FIXED -->
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); z-index: 100;">
+        <h2 style="margin:0; color: #0f172a; font-size: 1.4rem; font-family:'Poppins', sans-serif; font-weight: 800;">
+            <i class="fas fa-graduation-cap" style="color: #123b4a; margin-right: 8px;"></i> Pusat Studi Cakim PA 2026
+        </h2>
+        <button onclick="document.getElementById('pusatStudiOverlay').style.display='none'" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- KONTEN GRID MENU -->
+    <div style="flex: 1; overflow-y: auto; padding: 40px 30px; width: 100%; max-width: 1000px; margin: 0 auto;">
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="color: #123b4a; font-size: 2.2rem; margin-bottom: 10px; font-weight: 900;">Khazanah Materi & Strategi</h1>
+            <p style="color: #64748b; font-size: 1.1rem;">Pilih modul pembelajaran untuk memulai sesi drilling hari ini.</p>
+        </div>
+
+        <!-- GRID KOTAK-KOTAK ALA STARTUP -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
+            
+            <!-- MENU 1: KITAB KUNING (BISA DILIHAT SEMUA ORANG) -->
+            <div onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaKitabKuning();" style="background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#123b4a'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                <div style="background: #eef2f4; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-book-open" style="font-size: 2rem; color: #123b4a;"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">60 Hari Kitab Kuning</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Bedah Matan Abu Syuja' (4 Pilar Yurisprudensi PA)</p>
+            </div>
+
+            <!-- MENU 2: MASTER CHECKLIST (MENU SILUMAN - ADMIN ONLY) -->
+            <div class="menu-rahasia-admin" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaJadwalCakim();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#087f5b'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                <div style="background: #e6f2ef; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-calendar-check" style="font-size: 2rem; color: #087f5b;"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Master Checklist</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Timeline Eksekusi Administrasi & Jadwal Mingguan</p>
+            </div>
+
+            <!-- MENU 3: BUKU II MA (MENU SILUMAN - ADMIN ONLY) -->
+            <div class="menu-rahasia-admin" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaBukuDua();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#d99a2b'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                <div style="background: #fdf5e6; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-gavel" style="font-size: 2rem; color: #d99a2b;"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Bedah Buku II MA</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Pedoman Teknis Administrasi & Persidangan</p>
+            </div>
+
+            <!-- MENU 4: HAFALAN UU (MENU SILUMAN - ADMIN ONLY) -->
+            <div class="menu-rahasia-admin" onclick="alert('Fitur Hafalan UU segera hadir bro!');" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#2b8bd9'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                <div style="background: #e9f3fb; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-balance-scale" style="font-size: 2rem; color: #2b8bd9;"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Hafalan UU & Perma</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling Pasal-pasal Krusial Kompetensi PA</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+ <!-- ========================================== -->
 <!-- OVERLAY KITAB KUNING (FULL SCREEN)         -->
 <!-- ========================================== -->
 <div id="kitabOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#edf6f1; z-index:2000000; flex-direction:column; overflow:hidden;">
@@ -961,67 +1026,260 @@
     </div>
 </div>
     <!-- ========================================== -->
-<!-- OVERLAY PUSAT STUDI CAKIM (DASHBOARD)      -->
+<!-- OVERLAY BUKU II MA (FULL SCREEN)           -->
 <!-- ========================================== -->
-<div id="pusatStudiOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f4f7f6; z-index:2000000; flex-direction:column; overflow:hidden;">
+<style>
+    #bukuDuaOverlay {
+        --primary: #115e59;
+        --secondary: #0f766e;
+        --bg-light: #f0fdf4;
+        --text-dark: #1f2937;
+        --border: #d1d5db;
+        --correct: #10b981;
+        --wrong: #ef4444;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f3f4f6;
+        color: var(--text-dark);
+    }
+
+    #bukuDuaOverlay .buku2-layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    #bukuDuaOverlay .sidebar {
+        width: 340px;
+        background: var(--primary);
+        color: white;
+        padding: 20px 0;
+        overflow-y: auto;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+
+    #bukuDuaOverlay .sidebar h2 {
+        text-align: center;
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        padding: 0 15px;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+        padding-bottom: 15px;
+        margin-top: 0;
+    }
+
+    #bukuDuaOverlay .nav-item {
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+        border-left: 4px solid transparent;
+        line-height: 1.4;
+    }
+
+    #bukuDuaOverlay .nav-item:hover, #bukuDuaOverlay .nav-item.active {
+        background: var(--secondary);
+        border-left: 4px solid #facc15;
+    }
+
+    #bukuDuaOverlay .main-content {
+        flex: 1;
+        padding: 30px 40px;
+        overflow-y: auto;
+        background: #f9fafb;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    #bukuDuaOverlay .header-action {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 15px;
+    }
+
+    #bukuDuaOverlay .header-action h1 {
+        margin: 0;
+        color: var(--primary);
+        font-size: 1.8rem;
+    }
+
+    #bukuDuaOverlay .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: bold;
+        background: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    #bukuDuaOverlay .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    #bukuDuaOverlay .switch input { opacity: 0; width: 0; height: 0; }
     
-    <!-- HEADER FIXED -->
+    #bukuDuaOverlay .slider {
+        position: absolute; cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc; transition: .4s; border-radius: 34px;
+    }
+    
+    #bukuDuaOverlay .slider:before {
+        position: absolute; content: ""; height: 16px; width: 16px;
+        left: 4px; bottom: 4px; background-color: white;
+        transition: .4s; border-radius: 50%;
+    }
+    
+    #bukuDuaOverlay input:checked + .slider { background-color: var(--primary); }
+    #bukuDuaOverlay input:checked + .slider:before { transform: translateX(26px); }
+
+    #bukuDuaOverlay .card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    #bukuDuaOverlay .card-header {
+        padding: 15px 20px;
+        background: white;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1.1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
+    }
+
+    #bukuDuaOverlay .card-header:hover { background: var(--bg-light); }
+
+    #bukuDuaOverlay .card-body {
+        padding: 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-in-out, padding 0.3s ease;
+        background: #fff;
+        color: #374151;
+        line-height: 1.6;
+    }
+
+    #bukuDuaOverlay .card.open .card-body {
+        padding: 20px;
+        max-height: 9000px; /* Nilai maksimum agar animasi mulus */
+        border-top: 1px solid var(--bg-light);
+    }
+
+    #bukuDuaOverlay ul { margin-top: 5px; padding-left: 20px; }
+    #bukuDuaOverlay ol { margin-top: 5px; margin-bottom: 10px; padding-left: 20px; }
+    #bukuDuaOverlay li { margin-bottom: 8px; }
+    #bukuDuaOverlay strong { color: var(--primary); }
+
+    #bukuDuaOverlay .study-hint { display: none; color: #9ca3af; font-size: 0.85rem; font-style: italic; }
+    #bukuDuaOverlay.mode-hafalan-active .study-hint { display: inline; }
+
+    #bukuDuaOverlay .quiz-container {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px dashed var(--border);
+        background-color: #fafafa;
+        padding: 15px;
+        border-radius: 8px;
+    }
+
+    #bukuDuaOverlay .quiz-title {
+        font-size: 1.05rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 10px;
+    }
+
+    #bukuDuaOverlay .quiz-question {
+        margin-bottom: 15px;
+        font-weight: 500;
+    }
+
+    #bukuDuaOverlay .quiz-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #bukuDuaOverlay .quiz-option {
+        padding: 10px 15px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        cursor: pointer;
+        background: white;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+    }
+
+    #bukuDuaOverlay .quiz-option:hover:not(.disabled) {
+        background: var(--bg-light);
+        border-color: var(--primary);
+    }
+
+    #bukuDuaOverlay .quiz-option.disabled { cursor: not-allowed; opacity: 0.7; }
+    #bukuDuaOverlay .quiz-option.correct { background: var(--correct); color: white; border-color: var(--correct); }
+    #bukuDuaOverlay .quiz-option.wrong { background: var(--wrong); color: white; border-color: var(--wrong); }
+
+    #bukuDuaOverlay .quiz-explanation {
+        display: none;
+        margin-top: 15px;
+        padding: 12px;
+        background: #eef2ff;
+        border-left: 4px solid #4f46e5;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div id="bukuDuaOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f3f4f6; z-index:2000000; flex-direction:column; overflow:hidden;">
+    
+    <!-- HEADER FIXED (Tombol X Kembali ke Pusat Studi) -->
     <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); z-index: 100;">
         <h2 style="margin:0; color: #0f172a; font-size: 1.4rem; font-family:'Poppins', sans-serif; font-weight: 800;">
-            <i class="fas fa-graduation-cap" style="color: #123b4a; margin-right: 8px;"></i> Pusat Studi Cakim PA 2026
+            <i class="fas fa-gavel" style="color: #115e59; margin-right: 8px;"></i> Bedah Buku II MA
         </h2>
-        <button onclick="document.getElementById('pusatStudiOverlay').style.display='none'" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+        <button onclick="document.getElementById('bukuDuaOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
             <i class="fas fa-times"></i>
         </button>
     </div>
 
-    <!-- KONTEN GRID MENU -->
-    <div style="flex: 1; overflow-y: auto; padding: 40px 30px; width: 100%; max-width: 1000px; margin: 0 auto;">
-        
-        <div style="text-align: center; margin-bottom: 40px;">
-            <h1 style="color: #123b4a; font-size: 2.2rem; margin-bottom: 10px; font-weight: 900;">Khazanah Materi & Strategi</h1>
-            <p style="color: #64748b; font-size: 1.1rem;">Pilih modul pembelajaran untuk memulai sesi drilling hari ini.</p>
+    <!-- ISI KONTEN BUKU 2 -->
+    <div class="buku2-layout">
+        <div class="sidebar">
+            <h2>📚 BUKU II PA 2026</h2>
+            <div id="buku2-nav-container"></div>
         </div>
 
-        <!-- GRID KOTAK-KOTAK ALA STARTUP -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
-            
-            <!-- MENU 1: KITAB KUNING (BISA DILIHAT SEMUA ORANG) -->
-            <div onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaKitabKuning();" style="background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#123b4a'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
-                <div style="background: #eef2f4; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                    <i class="fas fa-book-open" style="font-size: 2rem; color: #123b4a;"></i>
+        <div class="main-content">
+            <div class="header-action">
+                <h1 id="buku2-category-title">Pilih Materi...</h1>
+                <div class="toggle-container">
+                    <label for="buku2-hafalanToggle">Mode Hafalan</label>
+                    <label class="switch">
+                        <input type="checkbox" id="buku2-hafalanToggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">60 Hari Kitab Kuning</h3>
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Bedah Matan Abu Syuja' (4 Pilar Yurisprudensi PA)</p>
             </div>
-
-            <!-- MENU 2: MASTER CHECKLIST (MENU SILUMAN - ADMIN ONLY) -->
-            <div class="menu-rahasia-admin" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaJadwalCakim();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#087f5b'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
-                <div style="background: #e6f2ef; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                    <i class="fas fa-calendar-check" style="font-size: 2rem; color: #087f5b;"></i>
-                </div>
-                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Master Checklist</h3>
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Timeline Eksekusi Administrasi & Jadwal Mingguan</p>
+            <div id="buku2-cards-container">
+                <!-- Cards will be injected here via JS -->
             </div>
-
-            <!-- MENU 3: BUKU II MA (MENU SILUMAN - ADMIN ONLY) -->
-            <div class="menu-rahasia-admin" onclick="alert('Fitur Buku II MA segera hadir bro!');" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#d99a2b'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
-                <div style="background: #fdf5e6; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                    <i class="fas fa-gavel" style="font-size: 2rem; color: #d99a2b;"></i>
-                </div>
-                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Bedah Buku II MA</h3>
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Pedoman Teknis Administrasi & Persidangan</p>
-            </div>
-
-            <!-- MENU 4: HAFALAN UU (MENU SILUMAN - ADMIN ONLY) -->
-            <div class="menu-rahasia-admin" onclick="alert('Fitur Hafalan UU segera hadir bro!');" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#2b8bd9'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
-                <div style="background: #e9f3fb; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
-                    <i class="fas fa-balance-scale" style="font-size: 2rem; color: #2b8bd9;"></i>
-                </div>
-                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Hafalan UU & Perma</h3>
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling Pasal-pasal Krusial Kompetensi PA</p>
-            </div>
-
         </div>
     </div>
 </div>
