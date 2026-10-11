@@ -202,6 +202,18 @@ if(auth) {
 
             // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM (PESERTA BIASA) ---
             try {
+                // 1. CEK DULU DI CACHE BROWSER (GRATIS, GAK PAKAI FIREBASE READ)
+                let cachedRole = sessionStorage.getItem("userRole_v1");
+                
+                if (cachedRole === "VIP" || cachedRole === "SUPER_ADMIN" || cachedRole === "EDITOR") {
+                    console.log("Akses dari Cache! Hemat 1 Read Firebase.");
+                    window.isVIPUser = true;
+                    window.userRoleCakim = cachedRole;
+                    lanjutKeAplikasi();
+                    return; // BERHENTI DI SINI, GAK JADI MANGGIL FIREBASE
+                }
+
+                // 2. KALAU GAK ADA DI CACHE, BARU MINTA KE FIREBASE (BAYAR 1 READ)
                 const accessRef = doc(db, "vip_access", user.email);
                 const accessSnap = await getDoc(accessRef);
             
@@ -209,6 +221,10 @@ if(auth) {
                     if (accessSnap.data().isVerified === true) {
                         window.isVIPUser = true; 
                         window.userRoleCakim = "VIP"; // Tandai VIP
+                        
+                        // SIMPAN KE BROWSER BIAR BESOK-BESOK GAK USAH FETCH LAGI
+                        sessionStorage.setItem("userRole_v1", "VIP");
+                        
                         lanjutKeAplikasi();
                     } else {
                         showGateInput(user.displayName, user.email);
@@ -248,6 +264,7 @@ if(auth) {
         } else {
             // STATE LOGOUT
             window.userRoleCakim = null;
+            sessionStorage.removeItem("userRole_v1"); // Hapus cache saat logout
             document.body.classList.remove('is-admin');
             document.getElementById('loginOverlay').style.setProperty('display', 'block', 'important');
             document.getElementById('appSection').style.display = 'none';
