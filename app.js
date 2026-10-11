@@ -7037,3 +7037,46 @@ window.initKitabKuning = () => {
     // Panggil render pertama kali saat modal dibuka
     window.switchTabKitab('vocab');
 };
+// ==========================================
+// 🎓 FITUR PUSAT STUDI CAKIM (MODE SILUMAN)
+// ==========================================
+window.bukaPusatStudi = () => {
+    const overlay = document.getElementById('pusatStudiOverlay');
+    if (!overlay) {
+        alert("HTML Overlay Pusat Studi belum dipasang!");
+        return;
+    }
+    
+    // Tampilkan layar penuh Pusat Studi
+    overlay.style.display = "flex";
+
+    // KUNCI SILUMAN: Cek apakah user yang login adalah Admin (Lo sendiri)
+    // Di sistem PRO-TAMA, status admin biasanya kelihatan di elemen dengan class .user-role atau p di sidebar
+    let isAdmin = false;
+    let roleTextElements = document.querySelectorAll('.user-info p, .user-role'); 
+    
+    roleTextElements.forEach(el => {
+        if (el.innerText.toLowerCase().includes("administrator") || el.innerText.toLowerCase().includes("admin")) {
+            isAdmin = true;
+        }
+    });
+
+    // Cara backup paling brutal: Ngecek nama Ilham Nur Pratama
+    if (!isAdmin && document.body.innerHTML.includes("Ilham Nur Pratama")) {
+        isAdmin = true; 
+    }
+
+    let menuRahasia = document.querySelectorAll('.menu-rahasia-admin');
+    
+    if (isAdmin) {
+        // Kalau Admin: Sulap menu rahasia jadi kelihatan!
+        menuRahasia.forEach(menu => {
+            menu.style.display = "block";
+        });
+    } else {
+        // Kalau VIP/Member biasa: Sembunyikan tanpa jejak
+        menuRahasia.forEach(menu => {
+            menu.style.display = "none";
+        });
+    }
+};
