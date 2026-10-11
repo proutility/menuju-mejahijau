@@ -7054,3 +7054,1346 @@ window.bukaPusatStudi = () => {
         menuRahasia.forEach(menu => { menu.style.display = "none"; });
     }
 };
+// ==========================================
+// 📖 FITUR BUKU II MA 
+// ==========================================
+window.bukaBukuDua = () => {
+    const overlay = document.getElementById('bukuDuaOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        // Hanya diinisialisasi sekali saat pertama kali dibuka
+        if(typeof window.initBukuDua === 'function') {
+            window.initBukuDua();
+        }
+    } else {
+        alert("HTML Overlay Buku II MA belum dipasang!");
+    }
+};
+
+window.initBukuDua = () => {
+    // Cegah render ulang berkali-kali jika sudah pernah diinisialisasi
+    if (window.bukuDuaSudahRender) return;
+    window.bukuDuaSudahRender = true;
+
+    // DATA MATERI + KUIS MULTIPLE HOTS PER CARD
+    const bankMateri = [
+        {
+            kategori: "1. Pelayanan Terpadu Satu Pintu (PTSP)",
+            materi: [
+                {
+                    judul: "Sistem One Stop Service & Rincian Loket PTSP",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>PTSP Pengadilan Agama mencakup fungsi layanan utama yang terbagi dalam loket-loket berikut:</strong>
+                                <ol>
+                                    <li><strong>Loket administrasi perkara:</strong> melayani verifikasi berkas, e-Court, pendaftaran, pengembalian sisa panjar, hingga penerbitan produk/salinan putusan/e-AC.</li>
+                                    <li><strong>Loket pelayanan informasi.</strong></li>
+                                    <li><strong>Loket pengaduan.</strong></li>
+                                    <li><strong>Loket pelayanan gugatan mandiri.</strong></li>
+                                    <li><strong>Loket Pos Bantuan Hukum (Posbakum).</strong></li>
+                                    <li><strong>Loket pelayanan kelompok rentan:</strong> dikhususkan untuk Lansia, anak, warga miskin, wanita hamil, dan penyandang disabilitas.</li>
+                                    <li><strong>Loket pelayanan bank.</strong></li>
+                                    <li><strong>Loket pelayanan pos.</strong></li>
+                                </ol>
+                            </li>
+                            <li>
+                                <strong>Penggabungan Layanan:</strong> Apabila terjadi keterbatasan Sumber Daya Manusia (SDM) atau ruang pelayanan, loket-loket PTSP tersebut dapat digabung sesuai dengan kebutuhan masing-masing pengadilan.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang warga negara datang ke Pengadilan Agama untuk membuat surat gugatan perceraian karena ia tidak memiliki kemampuan menyusun gugatan sendiri, namun ia bukan warga miskin. Ke loket PTSP manakah petugas seharusnya mengarahkan warga tersebut?",
+                            pilihan: [
+                                "A. Loket Pos Bantuan Hukum (Posbakum)",
+                                "B. Loket Pelayanan Gugatan Mandiri",
+                                "C. Loket Pelayanan Informasi",
+                                "D. Loket Administrasi Perkara"
+                            ],
+                            jawaban: 1, 
+                            pembahasan: "Warga yang tidak memiliki surat gugatan dan bukan termasuk warga miskin penerima Prodeo diarahkan ke Loket Pelayanan Gugatan Mandiri untuk menyusun gugatannya via sarana elektronik pengadilan. Posbakum khusus untuk layanan bantuan hukum cuma-cuma."
+                        },
+                        {
+                            soal: "Jika suatu Pengadilan Agama di daerah kepulauan mengalami kekurangan SDM di bagian PTSP, tindakan prosedural yang tepat sesuai ketentuan Buku II MA adalah...",
+                            pilihan: [
+                                "A. Menghapus sementara layanan Posbakum dan Gugatan Mandiri",
+                                "B. Membatasi jam pendaftaran perkara menjadi setengah hari kerja",
+                                "C. Menggabungkan loket-loket layanan PTSP sesuai dengan kebutuhan pengadilan",
+                                "D. Mengalihkan proses pendaftaran ke pengadilan terdekat"
+                            ],
+                            jawaban: 2, 
+                            pembahasan: "Apabila terjadi keterbatasan SDM atau ruang pelayanan, pengadilan diperbolehkan melakukan penggabungan loket layanan PTSP sesuai dengan kebutuhan tanpa menghapus fungsi layanan tersebut."
+                        }
+                    ]
+                },
+                {
+                    judul: "Identifikasi & Layanan Kelompok Rentan",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Kewajiban Identifikasi Awal:</strong> Petugas PTSP diwajibkan melakukan identifikasi awal terhadap setiap pihak beperkara yang masuk ke dalam kategori kelompok rentan (Lansia, anak, miskin, hamil, disabilitas).
+                            </li>
+                            <li>
+                                <strong>Akomodasi yang Layak:</strong> Tujuan identifikasi ini adalah agar pengadilan dapat segera memberikan layanan akomodasi yang layak, termasuk aksesibilitas selama pendaftaran hingga proses persidangan berlangsung.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Di bawah ini, manakah yang <strong>tidak</strong> termasuk dalam kategori spesifik Kelompok Rentan yang wajib diidentifikasi di loket layanan PTSP Pengadilan Agama?",
+                            pilihan: [
+                                "A. Warga negara lanjut usia (Lansia)",
+                                "B. Penyandang disabilitas",
+                                "C. Perempuan yang sedang hamil",
+                                "D. Pejabat publik atau aparatur negara"
+                            ],
+                            jawaban: 3, 
+                            pembahasan: "Kelompok rentan di pengadilan dikhususkan bagi pihak yang secara fisik atau sosial membutuhkan akomodasi khusus: Lansia, anak, warga miskin, wanita hamil, dan penyandang disabilitas."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "2. Administrasi & Alur Perkara",
+            materi: [
+                {
+                    judul: "Pendaftaran, e-Filing & Ketidakhadiran Sidang",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Batas Jam e-Filing:</strong> Pendaftaran perkara elektronik diproses oleh petugas administrasi paling lambat pukul 15.00 waktu setempat. Jika masuk di atas jam tersebut, diproses pada hari kerja berikutnya.
+                            </li>
+                            <li>
+                                <strong>Batas Upaya Hukum e-Court:</strong> Khusus pada hari terakhir tenggat waktu upaya hukum (Banding, Kasasi, PK, Verzet), pengajuan dan pembayaran panjar via e-SKUM diterima paling lambat <strong>pukul 23.59</strong> waktu setempat.
+                            </li>
+                            <li>
+                                <strong>Kesalahan Pilih Pengadilan:</strong> Jika Pemohon/Penggugat salah memilih lokasi pengadilan saat mendaftar via e-Court, panjar biaya dikembalikan secara elektronik dan biaya pengembalian ditanggung oleh Pemohon/Penggugat.
+                            </li>
+                            <li>
+                                <strong>Ketidakhadiran Pihak:</strong> Apabila Penggugat/Pemohon yang telah dipanggil secara sah dan patut tidak hadir pada sidang pertama atau sidang berikutnya tanpa alasan yang sah, Majelis Hakim bermusyawarah dan menjatuhkan <strong>Penetapan Gugur</strong>.
+                            </li>
+                            <li>
+                                <strong>Kendala Akun / Cabut Kuasa:</strong> Apabila Advokat/Pengguna Terdaftar tidak dapat menunjukkan surat kuasa asli di persidangan, persidangan tidak dapat dilanjutkan. Jika Penggugat/Pemohon tetap ingin melanjutkan sidang secara mandiri, ia harus menyatakan mencabut surat kuasa dan sidang diskors untuk memberi kesempatan mendaftar akun sebagai <em>Pengguna Lain</em> di PTSP.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Pada sidang pertama perkara cerai, Kuasa Hukum Penggugat (Advokat) hadir namun lupa membawa fisik Surat Kuasa Asli. Penggugat (Prinsipal) yang juga hadir menyatakan ingin sidang tetap dilanjutkan hari itu juga tanpa pengacaranya. Prosedur apa yang wajib dilakukan Majelis Hakim?",
+                            pilihan: [
+                                "A. Memerintahkan Advokat mengambil surat kuasa asli dan menunda sidang minggu depan",
+                                "B. Mengizinkan sidang dilanjut dengan catatan Advokat dilarang bicara",
+                                "C. Menskors sidang, memerintahkan Penggugat mencabut kuasa, lalu mendaftarkan akun Pengguna Lain di PTSP",
+                                "D. Menjatuhkan Putusan Niet Ontvankelijke Verklaard (NO)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Aturan e-Court tegas: Tanpa Surat Kuasa Asli, sidang tak bisa lanjut. Jika prinsipal ngotot lanjut sendiri, ia harus mencabut kuasa advokatnya, lalu diskors untuk membuat akun 'Pengguna Lain' agar status pendaftaran perkaranya diubah jadi mandiri."
+                        },
+                        {
+                            soal: "Penggugat telah dipanggil secara sah dan patut oleh Juru Sita untuk menghadiri sidang perdana. Namun pada hari sidang yang ditentukan, Penggugat tidak hadir tanpa alasan yang sah. Tindakan Majelis Hakim yang tepat adalah...",
+                            pilihan: [
+                                "A. Memanggil Penggugat untuk kedua kalinya",
+                                "B. Bermusyawarah dan menjatuhkan Penetapan Gugur",
+                                "C. Memutus perkara secara Verstek",
+                                "D. Menunda sidang dan mengupayakan pemanggilan via media massa"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Sesuai hukum acara perdata, apabila Penggugat/Pemohon tidak hadir di sidang pertama (atau sidang berikutnya) tanpa alasan sah meski dipanggil patut, perkaranya dijatuhkan Penetapan Gugur (Gugatan Gugur)."
+                        },
+                        {
+                            soal: "Seorang Kuasa Hukum menyadari hari ini adalah hari ke-14 (terakhir) batas pengajuan banding e-Court. Ia baru menyelesaikan e-Payment pada pukul 23.45 waktu setempat. Status hukum pengajuannya adalah...",
+                            pilihan: [
+                                "A. Kedaluwarsa karena melewati jam operasional kepaniteraan pukul 15.00",
+                                "B. Diterima secara sah, karena batas upaya hukum elektronik di hari terakhir adalah pukul 23.59",
+                                "C. Ditolak karena validasi bank tidak beroperasi tengah malam",
+                                "D. Diterima dengan dispensasi Ketua Pengadilan"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Khusus untuk hari terakhir tenggat waktu upaya hukum (Banding, Kasasi, PK, Verzet) via e-Court, penerimaan dan pembayaran panjar dilayani hingga pukul 23.59 waktu setempat."
+                        }
+                    ]
+                },
+                {
+                    judul: "Komponen Panjar Biaya Perkara",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Terdapat 7 komponen biaya penaksiran panjar tingkat pertama:</strong> 
+                                (1) Biaya pendaftaran.
+                                (2) PNBP surat kuasa dan panggilan.
+                                (3) Alat Tulis Kantor (ATK).
+                                (4) Biaya penggandaan berkas.
+                                (5) Biaya Panggilan.
+                                (6) Meterai.
+                                (7) Redaksi.
+                            </li>
+                            <li>
+                                <strong>Rincian Perhitungan Panggilan:</strong>
+                                <ul>
+                                    <li>Panggilan Penggugat/Pemohon: Nihil jika didaftarkan secara elektronik (e-Court); atau 4x panggilan jika manual.</li>
+                                    <li>Panggilan Tergugat/Termohon: 5x panggilan (2x mediasi + 3x sidang).</li>
+                                    <li>Khusus Perkara Cerai Talak: panggilan Tergugat/Termohon dihitung sebanyak <strong>6x panggilan</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam menghitung penaksiran panjar biaya perkara pada tingkat pertama untuk perkara Cerai Talak manual, petugas kasir harus mengalokasikan biaya panggilan untuk pihak Termohon sebanyak...",
+                            pilihan: [
+                                "A. 4 kali panggilan",
+                                "B. 5 kali panggilan",
+                                "C. 6 kali panggilan",
+                                "D. 7 kali panggilan"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Estimasi panggilan pihak Termohon (Istri) dihitung 6 kali khusus untuk perkara Cerai Talak, guna mengakomodasi panggilan khusus Sidang Ikrar Talak pasca putusan inkracht."
+                        }
+                    ]
+                },
+                {
+                    judul: "Pendistribusian Perkara & Pemanggilan",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>PMH (Penetapan Majelis Hakim):</strong> Ditentukan oleh Ketua Pengadilan paling lambat 1 (satu) hari kerja setelah perkara didaftarkan.
+                            </li>
+                            <li>
+                                <strong>PPP, PJS, PHS:</strong> Panitera menunjuk Panitera Sidang & Juru Sita pada hari yang sama dengan PMH. PHS (Penetapan Hari Sidang) ditetapkan paling lambat 1 hari setelah PMH.
+                            </li>
+                            <li>
+                                <strong>Panggilan e-Summon:</strong> Dikirimkan kepada para pihak melalui aplikasi e-Court paling lambat 3 (tiga) hari kerja sebelum hari/jadwal sidang.
+                            </li>
+                            <li>
+                                <strong>Panggilan Surat Tercatat:</strong> Bagi tergugat yang tidak punya akun elektronik, surat panggilan harus dikirimkan paling lambat 6 (enam) hari sebelum sidang dan <strong>harus diterima di alamat tergugat paling lambat 3 (tiga) hari kerja sebelum hari sidang.</strong>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Tergugat tidak memiliki domisili elektronik. Juru Sita memanggil via pos Surat Tercatat untuk sidang tanggal 10 November. Kapan paling lambat surat tersebut harus sudah diterima secara fisik oleh Tergugat?",
+                            pilihan: [
+                                "A. Tanggal 4 November (6 hari sebelum sidang)",
+                                "B. Tanggal 7 November (3 hari kerja sebelum sidang)",
+                                "C. Tanggal 9 November (1 hari kerja sebelum sidang)",
+                                "D. Tanggal 1 November (14 hari sebelum sidang)"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Panggilan pos surat tercatat wajib dikirim 6 hari sebelumnya, dan disyaratkan harus sudah DITERIMA secara fisik oleh Tergugat paling lambat 3 hari kerja sebelum hari persidangan."
+                        }
+                    ]
+                },
+                {
+                    judul: "Jangka Waktu Penyelesaian Perkara",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Perkara Biasa & Perlawanan (Verzet/Derden/Partij):</strong> Jangka waktu maksimal penyelesaiannya adalah sama dengan perkara perdata umum, yaitu paling lambat <strong>5 (lima) bulan</strong> terhitung sejak perkara didaftarkan.
+                            </li>
+                            <li>
+                                <strong>Gugatan Rekonvensi:</strong> Diperiksa dan diputus bersama-sama dengan perkara utama, sehingga tenggat waktu penyelesaiannya mengikuti perkara utama tersebut (maksimal 5 bulan).
+                            </li>
+                            <li>
+                                <strong>Pengecualian Khusus:</strong> 
+                                <ul>
+                                    <li>Gugatan Sederhana Ekonomi Syariah: maksimal <strong>25 hari kerja</strong> sejak sidang pertama. Upaya Keberatan maks 7 hari kerja.</li>
+                                    <li>Dispensasi Kawin: diprioritaskan diselesaikan dalam waktu yang sangat singkat.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Batas waktu maksimal penyelesaian perkara Perlawanan Eksekusi (Derden Verzet maupun Partij Verzet) pada peradilan tingkat pertama adalah...",
+                            pilihan: [
+                                "A. 25 hari kerja",
+                                "B. 30 hari kalender",
+                                "C. 5 (lima) bulan",
+                                "D. 6 (enam) bulan"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Perkara perlawanan (Verzet, Derden, Partij) masuk ke dalam kategori perkara perdata biasa, sehingga tunduk pada asas penyelesaian paling lambat 5 (lima) bulan sejak didaftarkan."
+                        },
+                        {
+                            soal: "Batas waktu maksimal Majelis Hakim memutus perkara Gugatan Sederhana Ekonomi Syariah (Small Claims Court) pada peradilan tingkat pertama adalah...",
+                            pilihan: [
+                                "A. 25 hari kalender sejak perkara diregister",
+                                "B. 25 hari kerja sejak hari sidang pertama",
+                                "C. 30 hari kalender sejak hari sidang pertama",
+                                "D. 7 hari kerja sejak dibacakan replik"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Penyelesaian Gugatan Sederhana (GS) maksimal adalah 25 hari KERJA, yang argonya (dihitung) dimulai sejak hari sidang pertama dilaksanakan."
+                        }
+                    ]
+                },
+                {
+                    judul: "Persidangan, Putusan, & Minutasi",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Mulai Jam Persidangan:</strong> Pelaksanaan persidangan paling lambat dimulai pukul 09.00 waktu setempat.
+                            </li>
+                            <li>
+                                <strong>Minutasi Berkas:</strong> Dilakukan oleh Majelis Hakim dibantu Panitera Sidang paling lambat 1 hari setelah putusan diucapkan (<em>One Day Minutation</em>). Panitera Sidang menyerahkan berkas fisik ke Panmud Gugatan.
+                            </li>
+                            <li>
+                                <strong>Salinan Putusan:</strong> Pengucapan putusan dilakukan dengan mengunggah salinan putusan (PDF) ke SIP pada hari/tanggal yang sama (<em>One Day Publish</em>).
+                            </li>
+                            <li>
+                                <strong>Batas Inkracht:</strong> Putusan dinyatakan inkracht terhitung 14 hari setelah tanggal pengucapan atau pemberitahuan diterima.
+                            </li>
+                            <li>
+                                <strong>Penerbitan Akta Cerai (e-AC):</strong> 
+                                <ul>
+                                    <li>Cerai Gugat: Paling lambat 1 hari kerja setelah putusan inkracht.</li>
+                                    <li>Cerai Talak: Paling lambat 1 hari kerja <strong>setelah pelaksanaan sidang Ikrar Talak</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Majelis Hakim memutus perkara Cerai Gugat secara e-Court pada tanggal 1 Oktober. Sesuai asas One Day Publish, kewajiban apa yang harus segera ditunaikan pada tanggal 1 Oktober tersebut?",
+                            pilihan: [
+                                "A. Panitera mengantarkan salinan putusan cetak ke rumah para pihak",
+                                "B. Majelis Hakim menjahit dan menyegel berkas arsip secara fisik",
+                                "C. Salinan putusan (PDF) diunggah ke Sistem Informasi Pengadilan (SIP)",
+                                "D. Menerbitkan Akta Cerai elektronik (e-AC)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "One Day Publish mewajibkan salinan putusan format PDF diunggah ke SIPP/e-Court pada hari dan tanggal yang sama dengan waktu putusan tersebut diucapkan."
+                        }
+                    ]
+                },
+                {
+                    judul: "Pengarsipan, Keuangan & Digitalisasi Berkas",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Pemisahan Tanggung Jawab Kepaniteraan:</strong>
+                                <ul>
+                                    <li><strong>Panitera Muda Gugatan/Permohonan:</strong> Bertanggung jawab atas pengelolaan berkas yang masih berjalan.</li>
+                                    <li><strong>Panitera Muda Hukum:</strong> Bertanggung jawab mengelola arsip perkara yang sudah Berkekuatan Hukum Tetap (Inkracht).</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Autentikasi Arsip:</strong> Berkas elektronik dan manual (hasil scan) digabung menjadi 1 file PDF, diautentikasi dengan TTE (Tanda Tangan Elektronik) oleh Panitera, lalu diunggah ke SIPP. Berkas fisik kemudian dijahit dan diberi segel.
+                            </li>
+                            <li>
+                                <strong>Pemeriksaan Kas (Kas Opname):</strong>
+                                <ul>
+                                    <li><strong>Panitera:</strong> Wajib memeriksa kas minimal 1 (satu) kali per bulan pada akhir hari kerja.</li>
+                                    <li><strong>Ketua Pengadilan:</strong> Wajib melakukan pemeriksaan kas minimal 1 (satu) kali dalam 3 (tiga) bulan.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Pelaporan:</strong> Panitera mengirimkan laporan bulanan ke Badilag paling lambat tanggal 2 hari kerja di bulan berikutnya.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam tata kelola arsip, pihak yang bertanggung jawab secara manajerial mengelola berkas perkara yang sudah Berkekuatan Hukum Tetap (Inkracht) dan masuk ke rak pengarsipan adalah...",
+                            pilihan: [
+                                "A. Panitera Pengganti",
+                                "B. Panitera Muda Gugatan / Permohonan",
+                                "C. Panitera Muda Hukum",
+                                "D. Juru Sita Arsip"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Berkas perkara yang masih berjalan dikelola oleh Panmud Gugatan. Begitu inkracht/putus, berkas diserahkan dan dikelola murni oleh Panitera Muda Hukum sebagai penanggung jawab arsip."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "3. Upaya Hukum & Perlawanan",
+            materi: [
+                {
+                    judul: "Banding (Perkara Perdata Agama)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Tenggang Waktu Pengajuan:</strong> 14 (empat belas) hari kalender sejak putusan diucapkan secara elektronik / diberitahukan.
+                            </li>
+                            <li>
+                                <strong>Memori Banding:</strong> Paling lambat diajukan 7 (tujuh) hari kalender setelah pernyataan banding. Kontra memori maks 7 hari pasca pemberitahuan memori.
+                            </li>
+                            <li>
+                                <strong>Inzage (Pemeriksaan Berkas):</strong> Diberikan selama 3 (tiga) hari kalender sejak tanggal pemberitahuan.
+                            </li>
+                            <li>
+                                <strong>Pengiriman Berkas ke PTA:</strong> Paling lambat pada hari ke-30 (tiga puluh) setelah permohonan banding diajukan.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Berapa lama batas waktu maksimal bagi Panitera tingkat pertama untuk mengirimkan berkas permohonan banding ke Pengadilan Tinggi Agama?",
+                            pilihan: [
+                                "A. 14 hari setelah memori banding diterima",
+                                "B. 30 hari kalender setelah pernyataan permohonan banding diajukan",
+                                "C. 60 hari kalender setelah pernyataan permohonan banding diajukan",
+                                "D. Segera setelah masa Inzage selama 3 hari berakhir"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Pengiriman berkas perkara banding ke PTA wajib dilaksanakan selambat-lambatnya pada hari ke-30 terhitung sejak permohonan banding tersebut diregister."
+                        },
+                        {
+                            soal: "Pemohon banding baru menyerahkan Memori Bandingnya pada hari ke-10 sejak ia mengajukan pernyataan banding ke Kepaniteraan. Bagaimana sikap Pengadilan tingkat pertama?",
+                            pilihan: [
+                                "A. Tetap menerima memori tersebut selama belum dikirim ke PTA",
+                                "B. Meminta Termohon banding mengabaikan memori tersebut",
+                                "C. Menolak menerima karena penyerahan memori dibatasi maksimal 7 hari kalender sejak pernyataan banding",
+                                "D. Membebankan biaya tambahan atas keterlambatan"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Memori banding perdata wajib diajukan paling lambat 7 hari kalender setelah pernyataan banding. Jika terlambat, dokumen memorinya tidak dapat diakomodir/ditolak formil sebagai bagian dari berkas tepat waktu."
+                        }
+                    ]
+                },
+                {
+                    judul: "Kasasi & Peninjauan Kembali (PK)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Kasasi:</strong> Pemohon mengajukan memori kasasi paling lambat 14 hari terhitung setelah permohonan kasasi diterima. Masa inzage diberikan selama 7 hari.
+                            </li>
+                            <li>
+                                <strong>Pengiriman Berkas ke MA:</strong> Berkas permohonan Kasasi maupun Peninjauan Kembali wajib dikirim paling lambat <strong>60 (enam puluh) hari</strong> sejak permohonan diajukan.
+                            </li>
+                            <li>
+                                <strong>PK Alasan Novum:</strong> 
+                                Apabila PK diajukan atas dasar ditemukannya bukti baru (novum), sidang pengambilan sumpah penemuan novum wajib dilaksanakan pada <strong>hari yang sama</strong> dengan tanggal pengajuan permohonan PK. Berita Acara Pendapat Majelis Hakim tingkat pertama bersifat tertutup dan hanya dapat diakses oleh Majelis Hakim Agung.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang Pemohon mengajukan upaya hukum Peninjauan Kembali (PK) dengan alasan ditemukannya bukti baru (Novum). Kapan persidangan pengambilan sumpah penemuan novum tersebut wajib dilaksanakan?",
+                            pilihan: [
+                                "A. Selambat-lambatnya 14 hari kalender setelah permohonan PK diterima",
+                                "B. Pada saat berkas permohonan PK telah tiba di Mahkamah Agung",
+                                "C. Pada hari yang sama dengan tanggal pengajuan permohonan PK di pengadilan tingkat pertama",
+                                "D. Setelah Majelis tingkat pertama membaca Kontra Memori PK dari Termohon"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Syarat formal PK alasan Novum mengatur dengan ketat bahwa sidang sumpah penemuan novum wajib dilaksanakan pada HARI YANG SAMA dengan tanggal pendaftaran permohonan PK di tingkat pertama."
+                        }
+                    ]
+                },
+                {
+                    judul: "Perlawanan Atas Putusan Verstek (Verzet)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Status & Kode Register:</strong> Tidak didaftarkan sebagai perkara baru, melainkan tetap menggunakan nomor perkara semula (verstek) dengan tambahan kode <strong>(Pdt.Plw)</strong>.
+                            </li>
+                            <li>
+                                <strong>Jangka Waktu Pengajuan:</strong> 
+                                <ul>
+                                    <li>14 hari kalender sejak pemberitahuan putusan disampaikan secara sah kepada Tergugat secara langsung.</li>
+                                    <li>Jika tidak langsung: 14 hari setelah teguran (aanmaning), atau sampai dengan hari ke-8 pelaksanaan sita eksekusi.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Akibat Hukum:</strong> Pengajuan verzet secara otomatis <strong>menunda</strong> pelaksanaan eksekusi putusan verstek sampai perlawanan tersebut diputus.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Tergugat yang dijatuhi putusan verstek baru mengetahui putusan tersebut saat ia dipanggil untuk sidang Aanmaning. Tergugat kemudian mengajukan perlawanan (Verzet). Akibat hukum dari pengajuan Verzet tersebut terhadap proses eksekusi adalah...",
+                            pilihan: [
+                                "A. Eksekusi tetap dilanjutkan karena putusan verstek sudah Inkracht",
+                                "B. Eksekusi ditunda pelaksanaannya sampai perlawanan (Verzet) tersebut diputus",
+                                "C. Putusan verstek otomatis gugur seketika saat Verzet diregister",
+                                "D. Pelaksanaan eksekusi harus mendapat izin PTA"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Sifat utama perlawanan (Verzet) terhadap putusan Verstek adalah otomatis menunda (schorsende werking) pelaksanaan eksekusi putusan tersebut hingga perkara perlawanannya diputus."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "4. Sita & Eksekusi",
+            materi: [
+                {
+                    judul: "Jenis-Jenis Sita (Beslag)",
+                    isi: `
+                        <ul>
+                            <li><strong>Sita Jaminan (Conservatoir Beslag):</strong> Penyitaan terhadap benda milik Tergugat sebagai jaminan agar putusan pengadilan tidak illusoir (hampa). Syarat utamanya ada persangkaan beralasan Tergugat berupaya mengalihkan barangnya.</li>
+                            <li><strong>Sita Revindikasi (Revindicatoir Beslag):</strong> Penyitaan atas barang bergerak milik Penggugat yang dikuasai atau berada di tangan Tergugat untuk diminta kembali.</li>
+                            <li><strong>Sita Harta Bersama (Maritaal Beslag):</strong> Dimohonkan atas harta perkawinan untuk mencegah dialihkan selama sengketa. Bisa diajukan tanpa perceraian jika ada tindakan pengalihan sepihak.</li>
+                            <li><strong>Sita Buntut:</strong> Permohonan sita yang diajukan pasca putusan tingkat pertama (saat perkara proses Banding/Kasasi). Diteruskan ke PTA/MA untuk diterbitkan penetapannya.</li>
+                            <li><strong>Sita Persamaan:</strong> Penyitaan terhadap objek yang sudah disita instansi/pengadilan lain. Juru Sita hanya mencatat & membuat Berita Acara Sita Persamaan (tanpa fisik ulang). Jika sita utama dicabut, sita persamaan sesuai urutannya otomatis naik menjadi sita utama.</li>
+                            <li><strong>Sita Eksekusi (Executorial Beslag):</strong> Diletakkan atas barang Termohon Eksekusi untuk dilelang demi memenuhi pembayaran sejumlah uang sesuai putusan Inkracht.</li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Penggugat mendalilkan bahwa sebuah kendaraan operasional roda empat miliknya telah dikuasai secara melawan hukum oleh Tergugat. Jenis sita yang tepat untuk diajukan oleh Penggugat atas kendaraan tersebut adalah...",
+                            pilihan: [
+                                "A. Conservatoir Beslag",
+                                "B. Revindicatoir Beslag",
+                                "C. Maritaal Beslag",
+                                "D. Executoir Beslag"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Revindicatoir Beslag adalah sita yang secara spesifik ditujukan atas barang bergerak milik Penggugat sendiri yang secara fisik dikuasai/ditahan oleh Tergugat."
+                        },
+                        {
+                            soal: "Objek tanah telah diletakkan Sita Jaminan oleh PN. Tak lama, Pengadilan Agama meletakkan Sita Persamaan atas objek yang sama. Jika PN mencabut sita jaminannya karena damai, status sita Pengadilan Agama adalah...",
+                            pilihan: [
+                                "A. Gugur demi hukum mengikuti sita utama",
+                                "B. Otomatis naik kedudukannya menjadi Sita Utama tanpa penyitaan ulang",
+                                "C. Harus diajukan permohonan penyitaan fisik ulang",
+                                "D. Ditangguhkan sampai ada izin PTA"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Hukum Sita Persamaan: Apabila sita utama yang diletakkan lebih dulu dicabut, maka sita persamaan (sita sekunder) sesuai urutannya otomatis naik level menjadi sita utama."
+                        }
+                    ]
+                },
+                {
+                    judul: "Perlawanan Eksekusi (Derden & Partij Verzet)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Perlawanan Pihak Ketiga (Derden Verzet):</strong>
+                                <ul>
+                                    <li>Status: Didaftarkan sebagai perkara baru (Pdt.Bth).</li>
+                                    <li>Alasan: Hanya diajukan atas dasar hak kepemilikan. <strong>Suami/istri dilarang mengajukan derden verzet atas harta bersama</strong> (kecuali jika yang disita merupakan harta bawaan murni).</li>
+                                    <li>Akibat Hukum: Pada prinsipnya <strong>tidak menangguhkan eksekusi</strong>, kecuali didasarkan pada bukti otentik yang sangat jelas.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Perlawanan Termohon Eksekusi (Partij Verzet):</strong>
+                                <ul>
+                                    <li>Alasan: Mengajukan bahwa ia sudah membayar/memenuhi putusan, atau ada cacat hukum/prosedur sita.</li>
+                                    <li>Waktu pengajuan: Diajukan saat masa aanmaning s.d sebelum eksekusi selesai. Pada prinsipnya tidak menangguhkan eksekusi.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang istri mengajukan Derden Verzet ke PA karena rumah harta bersamanya dengan suami disita akibat hutang piutang suami. Mengacu pada Buku II MA, putusan Hakim seharusnya...",
+                            pilihan: [
+                                "A. Menerima perlawanan dan menetapkan separuh rumah hak istri",
+                                "B. Menolak perlawanan karena istri tidak punya legal standing mengajukan derden verzet atas harta bersama",
+                                "C. Menangguhkan eksekusi sampai harta bersama dibagi",
+                                "D. Mengabulkan karena nama istri ada di Kartu Keluarga"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Suami-istri berkedudukan sbg satu kesatuan dalam harta bersama, jadi dilarang mengajukan Derden Verzet atas sitaan harta bersama. Derden hanya dibolehkan murni untuk harta bawaan pribadi."
+                        }
+                    ]
+                },
+                {
+                    judul: "Eksekusi Hak Asuh Anak & Dwangsom (Uang Paksa)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Pendekatan Eksekusi Hadhanah:</strong> Pelaksanaan eksekusi penyerahan anak tidak diperbolehkan menggunakan tindakan kekerasan fisik. Diutamakan pendekatan persuasif dan humanis. Juru Sita dapat melibatkan KPAI atau Pekerja Sosial (Peksos).
+                            </li>
+                            <li>
+                                <strong>Dwangsom (Uang Paksa):</strong> Guna mengefektifkan pelaksanaan amar putusan hak asuh anak yang sering membangkang, Hakim dapat mengabulkan tuntutan uang paksa (dwangsom) terhadap orang tua yang menahan anak secara tidak sah pasca putusan inkracht.
+                            </li>
+                            <li>
+                                <strong>Sita Eksekusi Harta Bersama:</strong> Apabila Termohon Eksekusi tidak mau membagi/menyerahkan harta bersama secara sukarela setelah masa aanmaning (8 hari), Juru Sita melakukan pelelangan atas objek tersebut melalui Kantor Pelayanan Kekayaan Negara dan Lelang (KPKNL), dan hasilnya dibagi sesuai porsi amar putusan.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Mantan suami bersikeras menahan dan menolak menyerahkan anak balitanya meskipun putusan hak asuh telah dimenangkan oleh mantan istri dan sudah inkracht. Untuk memberi tekanan hukum agar anak segera diserahkan, tuntutan apa yang dapat dikabulkan oleh Hakim?",
+                            pilihan: [
+                                "A. Tuntutan sita marital atas aset perusahaan suami",
+                                "B. Tuntutan uang paksa (Dwangsom) per hari keterlambatan penyerahan",
+                                "C. Tuntutan pencabutan hak perdata suami",
+                                "D. Tuntutan ganti rugi imateriel"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Sesuai pedoman teknis peradilan agama, penerapan instrumen Dwangsom (Uang Paksa) dibenarkan untuk memaksakan eksekusi hukuman menyerahkan anak (Hadhanah) yang terus-menerus dibangkang oleh salah satu pihak."
+                        },
+                        {
+                            soal: "Setelah 8 hari Aanmaning, Termohon Eksekusi tetap enggan menyerahkan atau membagi tanah harta bersama. Langkah Juru Sita selanjutnya adalah...",
+                            pilihan: [
+                                "A. Membagi tanah tersebut secara fisik dengan patok BPN",
+                                "B. Menerbitkan akta perdamaian pembagian harta paksa",
+                                "C. Mengajukan penetapan izin lelang melalui KPKNL",
+                                "D. Membekukan sertifikat tanah tersebut di BPN"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Harta bersama yang sengketa dan tidak bisa dibagi secara riil/sukarela harus di-uangkan melalui mekanisme pelelangan umum via KPKNL. Uang hasil lelang baru dibagi ke para pihak sesuai putusan."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "5. Prosedur Formil & Persidangan",
+            materi: [
+                {
+                    judul: "Eksepsi & Kewenangan Mengadili (Sengketa Kepemilikan)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Eksepsi Kewenangan Absolut:</strong> Mengajukan bantahan terkait wewenang jenis/materi peradilan. Dapat diajukan <strong>kapan saja</strong>. Hakim wajib secara ex officio menyatakan dirinya tidak berwenang.
+                            </li>
+                            <li>
+                                <strong>Eksepsi Kewenangan Relatif:</strong> Terkait batas wilayah hukum. <strong>Wajib diajukan di sidang pertama</strong> bersamaan dengan penyerahan jawaban.
+                            </li>
+                            <li>
+                                <strong>Pengecualian Forum Rei Sitae:</strong> Jika sengketa harta bersama/waris melibatkan objek tanah/bangunan yang terletak di wilayah hukum PA yang berbeda dari domisili Tergugat, kompetensi relatifnya mengikuti letak objek tersebut khusus untuk keperluan pemeriksaan setempat (descente) dan pelaksanaan eksekusi.
+                            </li>
+                            <li>
+                                <strong>Sengketa Kewenangan Mengadili:</strong>
+                                <ul>
+                                    <li>Antara PA dalam satu wilayah PTA diputus oleh <strong>Pengadilan Tinggi Agama (PTA)</strong>.</li>
+                                    <li>Antara PA beda wilayah PTA atau beda Peradilan diputus oleh <strong>Mahkamah Agung (MA)</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Gugatan harta bersama diajukan ke Pengadilan Agama Serang (domisili Tergugat). Namun, salah satu objek sengketa adalah sebidang tanah luas yang terletak di Kabupaten Pandeglang. Terkait objek tanah tersebut, bagaimana aturan kompetensi relatifnya?",
+                            pilihan: [
+                                "A. Gugatan harus dipecah menjadi dua pengadilan yang berbeda",
+                                "B. PA Serang tetap berwenang mengadili, namun untuk descente dan eksekusi tanah mengikuti lokasi objek (Forum Rei Sitae) melalui bantuan PA Pandeglang",
+                                "C. PA Serang harus menyatakan diri tidak berwenang mengadili objek di Pandeglang",
+                                "D. Seluruh perkara harus dipindah ke PA Pandeglang"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Pengecualian asas Actor Sequitur Forum Rei diterapkan pada benda tak bergerak (tanah/rumah). PA asal tetap mengadili pokok perkaranya, namun proses lapangan (Descente & Eksekusi) mendelegasikan wewenang berdasarkan asas Forum Rei Sitae (letak barang berada)."
+                        },
+                        {
+                            soal: "Salah satu pihak baru mengajukan Eksepsi Kewenangan Absolut pada tahap pemeriksaan di tingkat Banding. Mengacu pada hukum acara, status eksepsi tersebut...",
+                            pilihan: [
+                                "A. Ditolak, karena eksepsi wajib diajukan bersamaan dengan jawaban tingkat pertama",
+                                "B. Diterima, karena Eksepsi Kewenangan Absolut dapat diajukan kapan saja dan diperiksa ex officio",
+                                "C. Nebis In Idem karena perkara sudah diputus",
+                                "D. Dikembalikan ke Pengadilan Agama untuk Putusan Sela"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Eksepsi absolut sangat fundamental (wewenang lembaga). Bisa diajukan kapan saja (termasuk tingkat Kasasi/Banding) dan Hakim wajib menyatakannya jika terbukti."
+                        }
+                    ]
+                },
+                {
+                    judul: "Prodeo & Pengunduran Diri Hakim (Recusal)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Prodeo (Cuma-cuma):</strong> Jika dana biaya perkara dari DIPA telah habis sebelum perkara diputus, proses selanjutnya dilanjutkan secara cuma-cuma tanpa memerlukan putusan sela. Putusan Prodeo Murni tidak perlu dibubuhi meterai.
+                            </li>
+                            <li>
+                                <strong>Kewajiban Pengunduran Diri Hakim (Recusal):</strong> Berdasarkan Kode Etik (KEPPH), Hakim atau Panitera Sidang wajib mengundurkan diri dari mengadili perkara apabila terikat hubungan keluarga sedarah atau semenda sampai dengan <strong>derajat ketiga</strong>, atau memiliki hubungan suami/istri <strong>(meskipun sudah bercerai)</strong> dengan:
+                                <ul>
+                                    <li>Sesama anggota Majelis Hakim atau Panitera Sidang.</li>
+                                    <li>Para pihak yang beperkara atau Penasihat Hukumnya.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Akibat Pelanggaran:</strong> Apabila ketentuan pengunduran diri dilanggar, perkara wajib diadili ulang dengan susunan Majelis Hakim yang baru.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam sebuah persidangan sengketa waris, salah satu Hakim Anggota menyadari bahwa Kuasa Hukum Penggugat adalah mantan istrinya yang telah bercerai 5 tahun lalu. Sesuai Buku II MA, sikap Hakim Anggota tersebut seharusnya...",
+                            pilihan: [
+                                "A. Tetap bersidang karena ikatan perkawinan telah sah terputus",
+                                "B. Meminta izin secara lisan kepada Tergugat untuk tetap memutus perkara",
+                                "C. Wajib mengundurkan diri (recusal) dari susunan Majelis Hakim perkara tersebut",
+                                "D. Melanjutkan sidang namun dilarang mengajukan pertanyaan kepada Penggugat"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Ketentuan pengunduran diri Hakim/Panitera (Recusal) sangat ketat. Hakim dilarang mengadili jika ada hubungan kekeluargaan, termasuk dengan mantan suami/istri (meskipun sudah bercerai) dari pihak yang berperkara atau pengacaranya."
+                        },
+                        {
+                            soal: "Seorang Pemohon berperkara secara prodeo. Di tengah persidangan, anggaran DIPA Prodeo Pengadilan telah habis total. Bagaimana tata cara persidangan selanjutnya?",
+                            pilihan: [
+                                "A. Hakim menjatuhkan Putusan Sela untuk membebankan sisa panjar ke Pemohon",
+                                "B. Sidang ditunda (Schorsing) berbulan-bulan menunggu pencairan DIPA",
+                                "C. Perkara tetap dilanjutkan pemeriksaannya secara cuma-cuma (Prodeo Murni) tanpa perlu Putusan Sela",
+                                "D. Perkara dicoret dari register (Doorhaling)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Hukum acara mengamanatkan, jika Prodeo DIPA habis di tengah jalan, Hakim tidak perlu ribet buat Putusan Sela. Perkara otomatis dikonversi jadi Prodeo Murni dan berjalan sampai putus secara cuma-cuma."
+                        }
+                    ]
+                },
+                {
+                    judul: "Surat Kuasa, Perubahan & Pencabutan Gugatan",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Surat Kuasa Khusus dari Luar Negeri:</strong> Dokumen bukti atau surat kuasa yang dibuat di luar negeri wajib mendapat pengesahan/legalisasi dari <strong>KBRI atau KJRI</strong> di negara bersangkutan, dan diterjemahkan oleh Penerjemah Tersumpah.
+                            </li>
+                            <li>
+                                <strong>Surat Kuasa di hadapan Notaris/Panitera:</strong> Wajib ditandatangani secara lengkap oleh pemberi kuasa, penerima kuasa, serta Notaris/Panitera yang bersangkutan.
+                            </li>
+                            <li>
+                                <strong>Surat Kuasa Istimewa:</strong> Diwajibkan khusus untuk kepentingan yang sifatnya personal, yaitu: 
+                                (1) Mewakili suami mengikrarkan talak, 
+                                (2) Mewakili pihak mengucapkan sumpah decisoir, 
+                                (3) Mewakili mediasi (harus ada klausul kewenangan memutus perdamaian).
+                            </li>
+                            <li>
+                                <strong>Perubahan/Perbaikan Gugatan:</strong> Sebelum jawaban Tergugat (bebas atas inisiatif Penggugat). Sesudah jawaban (<strong>wajib</strong> mendapat persetujuan Tergugat). Via e-Court, perbaikan diunggah maks 2 hari sebelum sidang jawaban.
+                            </li>
+                            <li>
+                                <strong>Pencabutan Gugatan:</strong> Apabila dicabut setelah jawaban Tergugat masuk, pencabutan <strong>wajib</strong> mendapat persetujuan Tergugat. Jika Tergugat menolak, Hakim menerbitkan penetapan menolak pencabutan dan sidang berlanjut.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Penggugat secara resmi mencabut gugatan cerainya saat sidang agenda replik (Tergugat sudah menjawab). Namun, Tergugat dengan tegas menolak pencabutan tersebut. Tindakan Majelis Hakim yang tepat adalah...",
+                            pilihan: [
+                                "A. Mengabulkan pencabutan karena itu hak absolut Penggugat",
+                                "B. Menerbitkan penetapan menolak permohonan pencabutan dan persidangan dilanjutkan",
+                                "C. Menjatuhkan putusan NO (Niet Ontvankelijke Verklaard)",
+                                "D. Memerintahkan para pihak kembali ke meja mediasi"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Jika Tergugat sudah memberikan jawaban materiil, maka pencabutan gugatan butuh persetujuan Tergugat. Jika ditolak, Majelis Hakim menerbitkan penetapan penolakan pencabutan, dan sidang jalan terus untuk memutus pokok perkara."
+                        },
+                        {
+                            soal: "Seorang TKI di Arab Saudi ingin menggugat cerai suaminya di Indonesia dan memberikan surat kuasa kepada pengacara lokal. Apa syarat formil mutlak agar surat kuasa yang dibuat di luar negeri tersebut sah di muka persidangan PA?",
+                            pilihan: [
+                                "A. Harus dilegalisasi oleh Kementerian Luar Negeri Arab Saudi",
+                                "B. Harus mendapat pengesahan/legalisasi dari KBRI atau KJRI setempat",
+                                "C. Cukup ditandatangani di atas meterai internasional",
+                                "D. Harus dikirim via email resmi instansi ketenagakerjaan"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Segala dokumen dan Surat Kuasa Khusus yang diterbitkan dan ditandatangani di luar negeri, wajib hukumnya dilegalisasi/disahkan oleh perwakilan negara RI (KBRI atau KJRI) di negara tersebut agar sah digunakan di Pengadilan Indonesia."
+                        },
+                        {
+                            soal: "Penggugat ingin melakukan perbaikan materiil/perubahan terhadap isi gugatannya pada sidang e-Court. Menurut pedoman Buku II, kapan paling lambat perbaikan tersebut harus sudah diunggah di SIP?",
+                            pilihan: [
+                                "A. Bebas kapan saja asalkan sebelum agenda pembuktian",
+                                "B. Paling lambat 2 (dua) hari sebelum jadwal sidang penyampaian jawaban Tergugat",
+                                "C. Pada hari H jadwal persidangan di Court Calendar",
+                                "D. Setelah proses mediasi dinyatakan gagal total"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Dalam tata cara e-Court, perubahan atau perbaikan gugatan harus diunggah ke Sistem Informasi Pengadilan (SIP) selambat-lambatnya 2 (dua) hari sebelum hari/jadwal Tergugat menyampaikan Jawabannya."
+                        }
+                    ]
+                },
+                {
+                    judul: "Sidang Jarak Jauh (Telekonferensi)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Pengawasan oleh Panitera (Tanpa Toga):</strong> Pada pengadilan tujuan yang mewilayahi tempat tinggal saksi/ahli, Ketua Pengadilan menunjuk seorang Panitera Pengganti (PP) untuk mengawasi jalannya sidang jarak jauh di ruangan tersebut. PP ini bertugas <strong>tanpa menggunakan atribut/toga</strong>.
+                            </li>
+                            <li>
+                                <strong>Mekanisme Penanganan Kendala Teknis:</strong>
+                                <ul>
+                                    <li>Apabila terjadi gangguan teknis (putus koneksi), sidang diskors.</li>
+                                    <li>Jika kendala tidak dapat diatasi dalam waktu <strong>60 (enam puluh) menit</strong>, demi hukum sidang ditunda dan dilanjutkan sesuai jadwal pada Court Calendar.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam telekonferensi, koneksi internet di pengadilan tempat saksi berada terputus total. Hakim menskors sidang, namun setelah ditunggu lebih dari 1 jam (60 menit), koneksi tidak pulih. Sesuai Buku II MA, Hakim harus...",
+                            pilihan: [
+                                "A. Melanjutkan sidang dengan mengabaikan keterangan saksi tersebut",
+                                "B. Meminta saksi dihadirkan secara fisik ke pengadilan pemeriksa",
+                                "C. Mencabut skorsing, menunda sidang, dan melanjutkannya sesuai Court Calendar",
+                                "D. Melanjutkan sidang via panggilan WhatsApp"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Batas toleransi maksimal mengatasi kendala teknis (jaringan putus) saat sidang online/telekonferensi adalah 60 menit. Lewat dari itu wajib ditunda agar tidak menelantarkan waktu pihak lain."
+                        }
+                    ]
+                },
+                {
+                    judul: "Bantuan Delegasi Panggilan & SIPP Delegasi",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>SIPP Delegasi (Dalam Negeri):</strong> Pengiriman permohonan bantuan panggilan antar pengadilan (beda yurisdiksi) wajib dilakukan secara elektronik melalui SIPP Delegasi. Pengadilan penerima wajib menunjuk Juru Sita maksimal 2 hari sejak permohonan dicatat.
+                            </li>
+                            <li>
+                                <strong>Koordinator Delegasi:</strong> Ketua Pengadilan menerbitkan SK Penetapan Koordinator Bantuan Delegasi (Panitera/Panmud) yang bertanggung jawab penuh mencatat, memonitor, dan melapor pelaksanaannya.
+                            </li>
+                            <li>
+                                <strong>Panggilan Luar Negeri (Rogatori):</strong> Panggilan lintas negara dikirimkan melalui Panitera Mahkamah Agung menggunakan menu <strong>VA Rogatori</strong> pada aplikasi Direktori Putusan MA. Jeda waktu pengiriman panggilan dan hari sidang minimal adalah <strong>4 (empat) bulan</strong>.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Untuk memanggil Tergugat yang berdomisili dan bekerja tetap di Kuala Lumpur, Malaysia, proses formil yang wajib ditempuh PA pemeriksa adalah...",
+                            pilihan: [
+                                "A. Mengirim surat fisik langsung via Pos Luar Negeri",
+                                "B. Meminta bantuan KBRI menyidangkan secara online",
+                                "C. Mengirim permohonan delegasi via menu VA Rogatori dengan jeda sidang minimal 4 bulan",
+                                "D. Melakukan panggilan gaib melalui RRI (Radio)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Pemanggilan Rogatori (luar negeri) difasilitasi MA melalui sistem aplikasi VA Rogatori. Karena menyeberang jalur diplomatik antar-negara, jeda hari sidangnya minimal 4 bulan."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "6. Hukum Pembuktian (Bewijslast)",
+            materi: [
+                {
+                    judul: "Asas Pembuktian, Saksi Keluarga & De Auditu",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Asas Beban Pembuktian (Pasal 163 HIR / 283 RBg):</strong> Siapa yang mendalilkan suatu hak, ia yang wajib membuktikannya. Hakim dilarang keras membebankan pembuktian pada hal yang telah diakui murni (<em>bekentenis</em>).
+                            </li>
+                            <li>
+                                <strong>Ketentuan Khusus Saksi Keluarga (Cerai):</strong> Meskipun hukum perdata umum (Pasal 145 HIR) melarang keluarga sedarah/semenda menjadi saksi, khusus perkara perceraian (alasan perselisihan/syiqaq), keluarga dekat dan orang dekat justru wajib didengar sebagai <strong>saksi kualitas</strong> yang sah.
+                            </li>
+                            <li>
+                                <strong>Saksi De Auditu (Mendengar dari Orang Lain):</strong> Di perdata umum tidak memiliki nilai saksi yang sah. Namun dalam sengketa keluarga/cerai, keterangan <em>de auditu</em> dapat dinilai dan dijadikan alat bukti <strong>persangkaan hakim (vermoeden)</strong> asalkan bersesuaian dengan fakta hukum lainnya.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam sidang cerai, pihak istri menghadirkan tetangganya sebagai saksi. Saksi tersebut mengaku tidak melihat langsung KDRT, namun sering mendengar cerita tangisan istri dan mendapat aduan dari anak mereka. Nilai kesaksian 'Mendengar dari orang lain' (De Auditu) ini dalam hukum keluarga adalah...",
+                            pilihan: [
+                                "A. Ditolak mentah-mentah karena saksi de auditu haram hukumnya di semua peradilan",
+                                "B. Bernilai sebagai saksi sempurna layaknya melihat langsung",
+                                "C. Dapat dijadikan alat bukti persangkaan hakim (Vermoeden) jika bersesuaian dengan alat bukti lain",
+                                "D. Mengikat Hakim untuk langsung menjatuhkan putusan cerai"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Terobosan hukum keluarga membenarkan bahwa kesaksian De Auditu (yang asalnya tak bernilai) dapat 'naik kasta' menjadi alat bukti Persangkaan (Vermoeden) apabila relevan dan bersambung dengan alat bukti lain."
+                        },
+                        {
+                            soal: "Tergugat di persidangan secara murni mengakui bahwa ia memang meminjam uang Rp 10 Juta dari Penggugat. Terhadap pengakuan murni tersebut, bagaimana beban pembuktian Penggugat?",
+                            pilihan: [
+                                "A. Penggugat tetap wajib menghadirkan minimal 2 saksi",
+                                "B. Penggugat harus mengucapkan sumpah suppletoir",
+                                "C. Penggugat tidak lagi dibebani pembuktian atas dalil hutang tersebut",
+                                "D. Harus dilengkapi bukti transfer"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Pengakuan murni adalah bukti mengikat yang membebaskan lawan dari segala bentuk beban pembuktian."
+                        }
+                    ]
+                },
+                {
+                    judul: "Alat Bukti Elektronik (WhatsApp, Email, Rekaman)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Legalitas:</strong> Dokumen atau informasi elektronik (termasuk chat WA, email, rekaman video) merupakan alat bukti petunjuk/surat elektronik yang sah di mata hukum perdata.
+                            </li>
+                            <li>
+                                <strong>Syarat Materiel Validasi Hakim:</strong> Agar sah diperiksa, bukti chat elektronik harus memenuhi ketiga syarat kumulatif ini di persidangan:
+                                <ol>
+                                    <li>Harus ditunjukkan hasil tangkapan layar (screenshot) yang dicetak di atas kertas.</li>
+                                    <li><strong>Diperlihatkan HP/perangkat aslinya</strong> secara langsung di depan persidangan untuk dicocokkan (divalidasi) oleh Majelis Hakim.</li>
+                                    <li>Ditandatangani/disahkan oleh Hakim dan dicatat oleh Panitera di dalam Berita Acara Sidang (BAS).</li>
+                                </ol>
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Penggugat menyerahkan setumpuk kertas hasil print-out (screenshot) chat WhatsApp yang berisi perselingkuhan Tergugat. Namun, Penggugat mengaku HP aslinya sudah hilang sehingga tidak bisa ditunjukkan di sidang. Bagaimana sikap Majelis Hakim terhadap bukti cetak tersebut?",
+                            pilihan: [
+                                "A. Menerimanya sebagai bukti surat yang sah asalkan dibubuhi meterai",
+                                "B. Mengesampingkannya karena syarat materiel pencocokan dengan perangkat asli (HP) di persidangan tidak terpenuhi",
+                                "C. Menerimanya sebagai bukti persangkaan yang berdiri sendiri",
+                                "D. Menunda sidang dan meminta provider seluler untuk mengembalikan data"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "SOP Hukum Acara Pembuktian Elektronik menegaskan: Bukti print-out chat/dokumen elektronik HANYA sah diakui jika pihak yang mengajukan mampu memperlihatkan device/perangkat aslinya (HP/Laptop) di depan Majelis untuk dicocokkan real-time, lalu dicatat di BAS."
+                        }
+                    ]
+                },
+                {
+                    judul: "Jenis-Jenis Sumpah",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Sumpah Suppletoir (Penambah):</strong> Sumpah yang diperintahkan oleh Hakim secara ex officio kepada salah satu pihak karena alat bukti yang dimilikinya kurang/tidak sempurna, namun bukti permulaannya (<em>begin van bewijs</em>) sudah ada.
+                            </li>
+                            <li>
+                                <strong>Sumpah Decisoir (Pemutus):</strong> Sumpah yang dimohonkan/dilemparkan oleh satu pihak ke pihak lawan ketika sama sekali <strong>tidak ada</strong> alat bukti (nihil). Bisa dikembalikan (<em>eedsverstoting</em>). Siapa yang berani bersumpah ia yang menang, dan yang menolak akan otomatis kalah.
+                            </li>
+                            <li>
+                                <strong>Sumpah Li'an:</strong> Sumpah yang dilakukan oleh Suami yang menuduh istrinya berzina namun tidak mampu menghadirkan 4 orang saksi, atau sumpah suami untuk menolak nasab anak yang dilahirkan/dikandung oleh istri.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Penggugat sama sekali tidak memiliki alat bukti surat maupun saksi untuk membuktikan dalil gugatannya. Penggugat memohon agar Tergugat diwajibkan bersumpah memutus sengketa ini. Sumpah yang dimaksud dalam kasus ini adalah...",
+                            pilihan: [
+                                "A. Sumpah Suppletoir",
+                                "B. Sumpah Decisoir",
+                                "C. Sumpah Syirkah",
+                                "D. Sumpah Novum"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Sumpah Decisoir (Pemutus) dilemparkan dari satu pihak ke pihak lawan di saat keadaan benar-benar nihil alat bukti, fungsinya murni untuk memutus sengketa."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "7. Hukum Keluarga, Waris, Wasiat & Hibah",
+            materi: [
+                {
+                    judul: "Sengketa Syiqaq & Lembaga Hakamain",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Syarat Formal Pengangkatan Hakamain:</strong> Apabila perselisihan rumah tangga sudah sangat tajam, saling benci, dan tidak bisa didamaikan lagi melalui tahap mediasi biasa (disebut <em>Syiqaq</em>), maka Majelis Hakim <strong>wajib (imperatif) mengangkat 2 orang Hakam</strong> (satu perwakilan utusan dari pihak suami, dan satu dari pihak istri).
+                            </li>
+                            <li>
+                                <strong>Tugas dan Wewenang Hakam:</strong> Hakam bertugas menasihati secara kekeluargaan. Jika tidak berhasil mendamaikan, para hakam bermusyawarah dan wajib melaporkan hasilnya berupa pertimbangan/rekomendasi akhir kepada Majelis Hakim (apakah rumah tangga masih bisa dipertahankan ataukah harus diputus lewat jalur cerai talak/khuluk).
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam sidang perceraian yang diliputi perselisihan tajam dan permusuhan ekstrem antar keluarga (Syiqaq), proses mediasi konvensional dinyatakan gagal total. Berdasarkan UU Peradilan Agama, instrumen apa yang selanjutnya WAJIB diangkat oleh Majelis Hakim?",
+                            pilihan: [
+                                "A. Pekerja Sosial untuk mengawasi anak",
+                                "B. Lembaga Hakamain (2 orang Hakam utusan masing-masing keluarga)",
+                                "C. Ahli Psikologi Perkawinan dari lembaga independen",
+                                "D. Mediator Non-Hakim bersertifikat Mahkamah Agung"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Dalam kondisi Syiqaq yang memuncak, Hukum Acara Peradilan Agama mewajibkan (imperatif) Majelis Hakim untuk membentuk dan mengangkat 2 orang Hakam (Hakamain) dari unsur keluarga pihak Suami dan Istri untuk mencari mufakat akhir."
+                        }
+                    ]
+                },
+                {
+                    judul: "Hak Perempuan Pasca Cerai (Ex Officio Hakim)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Definisi Hak:</strong> 
+                                <ul>
+                                    <li><em>Nafkah Iddah:</em> Nafkah biaya hidup masa tunggu istri (±90 hari).</li>
+                                    <li><em>Mut'ah:</em> Pemberian kenang-kenangan/pampasan perceraian.</li>
+                                    <li><em>Nafkah Madhiyah:</em> Nafkah masa lalu di dalam masa nikah yang dilalaikan pembayarannya oleh suami.</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>Kewenangan Ex Officio Hakim:</strong> Dalam perkara <strong>Cerai Talak</strong> (suami yang memohon), Hakim wajib menggunakan hak <em>ex officio</em>-nya (karena jabatan, tanpa perlu ada tuntutan rekonvensi) untuk menghukum suami membayar iddah, mut'ah, dan madhiyah, asalkan istri tidak terbukti <strong>Nusyuz (durhaka/pembangkang)</strong>.
+                            </li>
+                            <li>
+                                <strong>Penahanan Akta Cerai:</strong> Guna menjamin perlindungan eksekusi, SEMA & PERMA 1/2024 menetapkan penyerahan fisik Akta Cerai kepada pihak suami dapat <strong>ditangguhkan atau ditahan</strong> di Kepaniteraan sampai suami melunasi seluruh kewajiban mut'ah, iddah, dan madhiyah.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dalam perkara Cerai Talak, istri diam saja dan tidak menuntut nafkah mut'ah/iddah. Namun Hakim dalam putusannya tetap menghukum suami (Pemohon) membayarnya. Tindakan Hakim didasarkan pada...",
+                            pilihan: [
+                                "A. Asas Ultra Petita",
+                                "B. Kewenangan Ex Officio Hakim demi perlindungan perempuan",
+                                "C. Kesepakatan mediasi",
+                                "D. Asas Peradilan Cepat"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Berdasarkan pedoman PERMA, demi kepastian hak perempuan, Hakim wajib menerapkan kewenangan Ex Officio-nya di kasus Cerai Talak untuk langsung membebankan iddah & mut'ah meski tidak digugat istri, asalkan istri tidak terbukti nusyuz."
+                        },
+                        {
+                            soal: "Syarat utama yang membatalkan/menggugurkan kewajiban mantan suami untuk membayar Nafkah Iddah dan Mut'ah (baik yang dituntut maupun yang dibebankan via Ex Officio) kepada mantan istri adalah apabila...",
+                            pilihan: [
+                                "A. Mantan istri memiliki gaji yang lebih besar dari suami",
+                                "B. Mantan istri terbukti secara sah di persidangan telah bersikap Nusyuz (pembangkang)",
+                                "C. Perkawinan mereka belum dikaruniai keturunan",
+                                "D. Suami mengajukan surat keterangan miskin (SKTM) di tingkat kelurahan"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Nusyuz (pembangkangan kewajiban yang sah secara hukum) yang dibuktikan di sidang adalah satu-satunya alasan syar'i yang diperbolehkan untuk menggugurkan hak istri atas perlindungan nafkah iddah dan mut'ah."
+                        }
+                    ]
+                },
+                {
+                    judul: "Hak Asuh Anak: Shared Parenting & Pencabutan Hak",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Kenaikan Nafkah Anak:</strong> Amar putusan Hakim PA wajib secara spesifik mencantumkan klausul kewajiban penambahan/kenaikan nominal nafkah anak minimal sebesar <strong>10% per tahun</strong> (di luar biaya pendidikan dan kesehatan) guna merespons laju inflasi masa depan.
+                            </li>
+                            <li>
+                                <strong>Pengasuhan Bersama (Shared Parenting):</strong> Meskipun hak hadhanah absolut dimenangkan oleh salah satu pihak (misal: ibu), Hakim wajib mengakomodasi jadwal akses tetap (misal: akhir pekan/libur sekolah) bagi pihak ayah. Hal ini untuk memastikan tumbuh kembang psikologis anak tetap seimbang dengan kasih sayang utuh (<em>Joint Custody / Shared Parenting</em>).
+                            </li>
+                            <li>
+                                <strong>Gugatan Pencabutan Hak Asuh:</strong> Hak hadhanah bisa digugat balik untuk dicabut apabila sang pemegang hak terbukti: (1) Menelantarkan kewajibannya, (2) Sakit jiwa kronis/menular, (3) Melarang akses bertamu orang tua lainnya secara terus-menerus, atau (4) <strong>Berpindah agama (Murtad)</strong> yang terbukti akan membahayakan akidah si anak.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang Ibu memegang hak asuh penuh atas anaknya pasca cerai. Namun, ia secara sadar berpindah agama (Murtad) dan mulai memaksa anaknya mengikuti ritual agama barunya. Tindakan hukum paling tepat yang dapat diajukan oleh sang Ayah demi melindungi anak tersebut adalah...",
+                            pilihan: [
+                                "A. Melaporkan ibu ke kepolisian atas tuduhan penistaan agama",
+                                "B. Mengajukan Gugatan Pencabutan Hak Asuh Anak ke Pengadilan Agama",
+                                "C. Menculik anak tersebut secara diam-diam untuk diselamatkan",
+                                "D. Menghentikan pembayaran nafkah bulanan secara sepihak"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Kompilasi Hukum Islam dan Yurisprudensi MA menetapkan bahwa pemegang hadhanah diutamakan harus seagama dengan si anak. Jika pemegang hak menjadi murtad dan terbukti membahayakan/memaksa akidah si anak, hal itu menjadi alasan krusial dan mutlak untuk mengajukan gugatan Pencabutan Hak Asuh di PA."
+                        },
+                        {
+                            soal: "Dalam putusan pemberian hak asuh anak kepada pihak Ibu, Majelis Hakim juga memasukkan klausul kebebasan Ayah untuk turut serta mengasuh anak tersebut setiap akhir pekan dan pada masa libur sekolah. Pendekatan yudisial ini dikenal dengan prinsip...",
+                            pilihan: [
+                                "A. Pemisahan Harta dan Anak Berimbang",
+                                "B. Dwangsom Pemeliharaan Anak",
+                                "C. Joint Custody / Shared Parenting (Pengasuhan Bersama)",
+                                "D. Ultra Petita Psikologis Anak"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Perkembangan hukum keluarga peradilan agama modern mewajibkan Hakim mengakomodir prinsip 'Shared Parenting', untuk memastikan sang anak tidak merasa dihalangi dan kehilangan figur atau kasih sayang dari salah satu orang tuanya pasca perceraian."
+                        }
+                    ]
+                },
+                {
+                    judul: "Wasiat Wajibah, Hibah, dan Kewenangan Waris",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Wasiat Wajibah:</strong> Pemberian jatah harta peninggalan kepada kelompok orang yang secara hukum syariat terhalang menjadi ahli waris mutlak (misalnya: anak angkat/orang tua angkat, atau <strong>ahli waris beda agama</strong>). Pertimbangan pemberian ini atas dasar rasa keadilan Hakim dengan porsi maksimal tidak boleh lebih dari <strong>1/3 (satu pertiga)</strong> dari total harta tirkah.
+                            </li>
+                            <li>
+                                <strong>Hibah:</strong> Prinsip mutlak hukum hibah adalah benda yang sudah dihibahkan tidak dapat ditarik kembali secara paksa. Pengecualian satu-satunya adalah apabila hibah tersebut diberikan <strong>dari orang tua kepada anak kandungnya</strong>.
+                            </li>
+                            <li>
+                                <strong>Kewenangan Mengadili Beda Agama:</strong> Pengadilan Agama berwenang secara absolut mengadili sengketa kewarisan/hibah/wasiat yang diikat berdasarkan tata cara Hukum Islam pada saat pewarisnya meninggal dunia, <strong>meskipun</strong> pihak-pihak ahli warisnya (atau salah satunya) menganut agama non-Muslim.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Pewaris beragama Islam wafat, namun salah satu anak kandungnya telah lama murtad (beda agama) dan hidup sebagai non-Muslim. Terhadap bagian harta peninggalan anak tersebut, yurisprudensi Mahkamah Agung menetapkan bahwa ia...",
+                            pilihan: [
+                                "A. Kehilangan hak sepenuhnya atas segala bentuk harta peninggalan orang tuanya",
+                                "B. Tetap mendapat bagian hak asabah (sisa) setara dengan anak laki-laki Islam lainnya",
+                                "C. Mendapatkan bagian hak asuh asuransi melalui Wasiat Wajibah dengan batasan maksimal 1/3 dari total harta peninggalan",
+                                "D. Harus menyelesaikan sengketa pembagian warisnya di Pengadilan Negeri (Peradilan Umum)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Secara hukum kewarisan Islam klasik orang beda agama terhalang mutlak untuk mendapat waris. Namun, Yurisprudensi MA modern (berdasar asas HAM dan keadilan proporsional) menjembataninya lewat instrumen 'Wasiat Wajibah', yang besaran mentoknya adalah 1/3."
+                        }
+                    ]
+                },
+                {
+                    judul: "Pembatalan Perkawinan (Batal Nikah) vs Perceraian",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Alasan Pembatalan (Fasakh):</strong> Diajukan apabila syarat dan rukun nikah ternyata cacat atau tidak terpenuhi sejak awal proses perkawinan dilangsungkan (misalnya: menggunakan wali palsu/tidak berhak, adanya paksaan ekstrem, manipulasi/pemalsuan identitas perjaka/duda, atau baru diketahui ternyata masih terikat hubungan mahram/sedarah).
+                            </li>
+                            <li>
+                                <strong>Dampak dan Asas Tidak Berlaku Surut:</strong> Status batalnya ikatan nikah mulai berlaku efektif sejak putusan tersebut dibacakan dan berkekuatan hukum tetap (Inkracht). Namun, putusan batal nikah ini memegang teguh asas perlindungan anak, yaitu <strong>tidak berlaku surut ke masa lalu terhadap status anak</strong>.
+                            </li>
+                            <li>
+                                <strong>Artinya:</strong> Anak-anak yang telah terlanjur dilahirkan selama masa pernikahan yang cacat tersebut <strong>tetap diakui sebagai anak sah</strong> (bernasab sempurna secara keperdataan kepada ayah dan ibunya).
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang istri baru mengetahui secara medis dan bukti dokumen lama bahwa suaminya ternyata adalah saudara sepersusuannya sendiri. Menyadari hal tersebut setelah 3 tahun menikah dan dikaruniai 1 orang anak, sang istri memohon Pembatalan Perkawinan (fasakh). Jika dikabulkan Hakim, bagaimana nasib dan status hukum nasab anak hasil perkawinan tersebut?",
+                            pilihan: [
+                                "A. Berstatus sebagai anak luar kawin yang terputus nasab dari ayahnya",
+                                "B. Anak tersebut menjadi tidak sah secara hukum karena perkawinannya dianggap tidak pernah ada",
+                                "C. Status anak tersebut dilindungi tetap sah dan bernasab normal kepada kedua orang tuanya",
+                                "D. Anak tersebut secara otomatis gugur hak waris keperdataannya dari keluarga pihak ayah"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Pasal 28 UU Perkawinan dan norma KHI menegaskan asas fundamental perlindungan anak. Meskipun pondasi perkawinannya hancur dan dibatalkan, pembatalan tersebut sama sekali tidak berlaku surut merugikan anak yang telah dilahirkan. Anak itu tetap bersih, lahir dari rahim perkawinan yang dianggap sah, dan nasab bapaknya tidak boleh diputus."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            kategori: "8. Ekonomi Syariah, Jinayat & Aturan Khusus",
+            materi: [
+                {
+                    judul: "Ekonomi Syariah & Arbitrase Syariah (BASYARNAS)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Gugatan Sederhana (Small Claims Court):</strong> Untuk sengketa kerugian materiel berkapasitas maksimal Rp 500.000.000 (lima ratus juta rupiah). Diputus cepat oleh Hakim Tunggal maksimal 25 hari kerja. Pintu upaya hukum Banding dan Kasasi ditutup; satu-satunya jalan hukum hanyalah permohonan keberatan ("Keberatan") yang akan diputus oleh majelis hakim lain di PA yang bersangkutan.
+                            </li>
+                            <li>
+                                <strong>Klausul Arbitrase Syariah:</strong> Jika di dalam surat kontrak/akad perjanjian bisnis kedua belah pihak secara eksplisit menyepakati klausul arbitrase (penyelesaian damai melalui lembaga BASYARNAS/BANI), maka Pengadilan Agama langsung kehilangan yurisdiksinya. PA <strong>tidak berwenang mengadili materi sengketa tersebut</strong> dan gugatan harus dijatuhi vonis putusan NO.
+                            </li>
+                            <li>
+                                <strong>Kewenangan terhadap Putusan Arbitrase:</strong> Walaupun PA tidak boleh mengadili pokok sengketa ber-klausul arbitrase, Pengadilan Agama (sebagai organ eksekutor negara) merupakan satu-satunya lembaga yang berwenang untuk menerima pendaftaran, memeriksa permohonan pembatalan, dan menjalankan pelaksanaan eksekusi paksa (<em>Eksekuatur</em>) atas putusan yang dikeluarkan oleh lembaga Arbitrase Syariah.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Dua pengusaha muslim besar bersengketa bisnis murabahah. Dalam akad kerja sama fisik mereka tercantum klausul dengan huruf tebal: 'Segala sengketa bisnis akan diselesaikan melalui Badan Arbitrase Syariah Nasional (BASYARNAS)'. Salah satu pihak yang ingkar janji ternyata lebih memilih mendaftarkan gugatannya secara sepihak ke Pengadilan Agama. Putusan Hakim PA yang paling tepat adalah...",
+                            pilihan: [
+                                "A. Menerima gugatan karena Pengadilan Agama adalah lembaga negara yudikatif yang posisinya jauh lebih tinggi dari Basyarnas",
+                                "B. Mengalihkan perkara tersebut pelimpahannya ke Pengadilan Negeri Perdata",
+                                "C. Menyatakan Tidak Berwenang Mengadili secara absolut karena kewenangannya telah diikat oleh Klausula Arbitrase",
+                                "D. Memaksa kedua belah pihak mencabut klausul arbitrase sebelum memulai sidang mediasi"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Sesuai UU Arbitrase dan asas suci perjanjian 'Pacta Sunt Servanda', eksistensi klausul pilihan forum khusus (Arbitrase/Basyarnas) di dalam sebuah akad secara mutlak mendegradasi dan menggugurkan kewenangan mengadili Pengadilan Agama atas pokok perkara bisnis tersebut."
+                        },
+                        {
+                            soal: "Meskipun Pengadilan Agama terhalang dan tidak berwenang mengadili pokok materi sengketa bisnis yang di dalamnya memuat klausul arbitrase syariah (Basyarnas), kewenangan administratif dan eksekutorial apa yang secara eksklusif tetap dipegang oleh lembaga Pengadilan Agama terhadap hasil putusan BASYARNAS tersebut?",
+                            pilihan: [
+                                "A. Melakukan pemeriksaan ulang (sidang Banding) atas putusan Basyarnas jika ada pihak yang kalah",
+                                "B. Menerima pendaftaran, memutus permohonan pembatalan, dan memerintahkan pelaksanaan eksekusi (Eksekuatur) atas putusan arbitrase tersebut",
+                                "C. Menerbitkan fatwa kesesuaian syariah ulang berkolaborasi dengan DSN-MUI",
+                                "D. Mengeluarkan penetapan diskon atau remisi ganti rugi materiil sebelum putusan dieksekusi"
+                            ],
+                            jawaban: 1,
+                            pembahasan: "Berdasarkan pedoman Perma No. 14 Tahun 2016, lembaga peradilan agama (PA) bertugas murni sebagai tangan panjang paksa negara (eksekutor) untuk mengesahkan pendaftaran dan memaksakan turunnya eksekusi riil (Eksekuatur) atas putusan arbitrase syariah yang dimenangkan oleh salah satu pengusaha."
+                        }
+                    ]
+                },
+                {
+                    judul: "Teknis Beracara Khusus Jinayat (Mahkamah Syar'iyah Aceh)",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Pelimpahan dan Nomor Register:</strong> Berkas perkara pidana Islam (jinayat) dilimpahkan oleh lembaga Penuntut Umum secara elektronik ke sistem pengadilan (SIP). Nomor perkara resmi (untuk pemeriksaan kategori singkat) baru akan diterbitkan/diberikan <em>setelah</em> surat dakwaan dibacakan oleh Jaksa/Penuntut di depan meja persidangan.
+                            </li>
+                            <li>
+                                <strong>Aturan Ketat Banding & 'Uqubat:</strong> Batas waktu normal pernyataan banding pidana jinayat adalah 7 hari. Namun, apabila vonis hukuman (<em>'uqubat</em>) yang dijatuhkan sangat ringan atau batasannya paling lama <strong>12 bulan kurungan/penjara</strong> (atau cambuk/denda setaranya), maka permohonan banding dari Terdakwa <strong>wajib dan mutlak harus dinyatakan secara lisan secara langsung di hadapan Majelis Hakim</strong> tepat pada saat sidang pembacaan putusan berakhir.
+                            </li>
+                            <li>
+                                <strong>Kewajiban Memori Banding Jinayat:</strong> Dalam jinayat, berkas fisik Memori Banding bersifat mutlak wajib. Harus diserahkan ke kepaniteraan maksimal 7 hari (atau 3 hari jika tergolong uqubat <12 bln). Apabila Terdakwa menyatakan banding namun mengabaikan syarat penyerahan memori ini, maka berkas permohonan bandingnya otomatis akan dijatuhi putusan Tidak Dapat Diterima secara formalitas.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang Terdakwa pelanggar Qanun di Mahkamah Syar'iyah Banda Aceh baru saja dijatuhi vonis 'uqubat kurungan penjara selama 9 bulan oleh Majelis Hakim tingkat pertama. Mengingat putusan penjara tersebut di bawah 1 tahun, kapan sang terdakwa dan penasihat hukumnya harus secara formil mematangkan pernyataan permohonan bandingnya agar hak konstitusional bandingnya tidak lenyap dan kedaluwarsa?",
+                            pilihan: [
+                                "A. Harus tanpa jeda langsung menyatakan banding secara lisan sesaat setelah putusan tersebut selesai dibacakan di ruangan persidangan",
+                                "B. Diberi waktu berpikir paling lambat 7 hari kalender berturut-turut setelah putusan dibacakan",
+                                "C. Diberi kelonggaran paling lambat 14 hari kerja sejak salinan PDF putusan diterima secara patut via e-Court",
+                                "D. Bersamaan dengan tenggat waktu akhir penyerahan berkas draf memori banding di hari ke-7 di loket PTSP"
+                            ],
+                            jawaban: 0,
+                            pembahasan: "Hukum Acara Jinayat Aceh ini memiliki kekhususan yang sangat strict (Lex Specialis): Untuk semua vonis Hukuman/Uqubat ringan yang patokannya berada di bawah atau sama dengan 12 bulan penjara, prosedur banding tidak mentolerir adanya waktu menunda di rumah. Terdakwa diharuskan bertindak spontan menyatakan banding (secara lisan langsung) sesaat setelah hakim mengetuk palu penutup."
+                        },
+                        {
+                            soal: "Dalam sebuah perkara Jinayat yang berat, Terdakwa telah tepat waktu menyatakan permohonan banding pada hari ke-3 pasca putusan. Namun, hingga waktu pengiriman bundel berkas naik ke Mahkamah Syar'iyah Aceh (tingkat banding), Terdakwa tidak pernah merancang dan menyerahkan dokumen Memori Bandingnya. Akibat hukum prosedural dari kelalaian ini adalah...",
+                            pilihan: [
+                                "A. Proses persidangan Banding akan jalan terus dan hakim banding akan memutus layaknya sidang di perdata umum",
+                                "B. Jaksa Penuntut Umum yang diwajibkan secara jabatan mengambil alih untuk membuatkan draf Memori Banding kosong",
+                                "C. Berkas permohonan banding tersebut di ujungnya akan dinyatakan cacat formil dan Tidak Dapat Diterima karena memori banding bersifat wajib mutlak (imperatif) di sistem Jinayat",
+                                "D. Sengketa Banding akan langsung diputus kembar dan bernilai Nebis In Idem"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Ini adalah jurang pemisah terbesar antara perdata dan pidana Islam (jinayat). Di perdata umum (memori banding sifatnya hanyalah sunah/opsional belaka, banding jalan terus tanpa memori). Sedangkan pada acara Jinayat (Pidana Syariat Islam di Aceh), ketiadaan fisik dokumen memori banding yang diserahkan dalam rentang waktu yang diamanatkan akan berakibat fatal: permohonan banding terdakwa ditolak formil (niet ontvankelijke verklaard)."
+                        }
+                    ]
+                },
+                {
+                    judul: "Aturan Izin Khusus Aparatur Negara & Class Action Ekonomi",
+                    isi: `
+                        <ul>
+                            <li>
+                                <strong>Ketatnya Izin Atasan ASN/TNI/Polri:</strong> Penggugat/Pemohon yang berprofesi abdi negara (ASN, anggota TNI, atau Polri) yang ingin memutus ikatan suci pernikahan diwajibkan melampirkan berkas fisik Surat Izin/Keterangan Perceraian resmi yang ditandatangani oleh Atasan/Komandannya langsung. Tanpa adanya surat izin institusi tersebut saat sidang berlangsung, gugatannya cacat formil dan Majelis Hakim wajib menunda persidangan panjang atau langsung menjatuhkan vonis <strong>Tidak Dapat Diterima (NO)</strong>.
+                            </li>
+                            <li>
+                                <strong>Class Action (Gugatan Kelompok Nasabah Massal):</strong> Khusus sengketa bank syariah raksasa yang merugikan ribuan nasabah sekaligus. Sebelum membacakan gugatan dan membahas materi pokok kerugiannya, Majelis Hakim diwajibkan melaksanakan satu tahapan steril bernama <strong>Preliminary Hearing (Pemeriksaan Pendahuluan)</strong>. Tujuannya untuk menyaring dan memverifikasi ketat apakah sekelompok orang yang mengaku sebagai wakil kelompok (Class Representative) itu valid dan punya legal standing mewakili nasabah pasif lainnya di seluruh negeri.
+                            </li>
+                            <li>
+                                <strong>Legalitas Dokumen Asing & Aksesibilitas Disabilitas:</strong> Segala wujud bukti surat/sertifikat yang dicetak dan diterbitkan dengan menggunakan bahasa asing atau dikirim langsung dari luar negeri, haram dijadikan alat bukti apabila belum <strong>diterjemahkan secara tersumpah dan dilegalisasi ke Bahasa Indonesia oleh profesi Penerjemah Tersumpah (Sworn Translator)</strong>. Demikian pula jika ada saksi buta huruf atau disabilitas wicara, negara via PTSP wajib menyiapkan pendamping penerjemah isyarat tersumpah.
+                            </li>
+                        </ul>
+                    `,
+                    kuis: [
+                        {
+                            soal: "Seorang Penggugat pria yang bersatus sebagai Perwira Anggota TNI aktif secara diam-diam mendaftarkan gugatan perceraian murni terhadap istrinya ke PA tanpa melampirkan secarik pun Surat Izin Perceraian dari markas Komandannya. Mengacu pada penegakan Buku II MA RI, sikap paling tepat dan tegas yang harus diambil oleh Majelis Hakim persidangan adalah...",
+                            pilihan: [
+                                "A. Meneruskan sidang dengan lancar karena izin komandan hanyalah regulasi internal mabes yang tidak mengikat secara hukum perdata keperdataan",
+                                "B. Mengabulkan gugatan cerai tersebut dengan amar tambahan hukuman memotong hak pensiun prajurit ke negara",
+                                "C. Memanggil atasan Penggugat tersebut secara paksa via juru sita untuk diperiksa sebagai saksi fakta",
+                                "D. Merespons cacat administratif tersebut dengan menskors/menunda sidang sampai izin resmi diserahkan, atau menyatakannya cacat formil sehingga gugatan Tidak Dapat Diterima (NO)"
+                            ],
+                            jawaban: 3,
+                            pembahasan: "Prajurit TNI/Polri/ASN sangat ketat diikat oleh hirarki komando dan Peraturan Pemerintah Disiplin Pegawai (PP 10/1983 dkk). Ketiadaan izin atasan bukanlah hal sepele melainkan masuk wilayah cacat formil yang sangat esensial. Hakim PA diwajibkan melakukan intervensi dengan cara men-skors sidang (memberikan waktu tenggang agar ia mengurus ke komandannya), atau paling ekstrem langsung memutus NO pada sidang-sidang awal."
+                        },
+                        {
+                            soal: "Sebuah perusahaan investasi asuransi jiwa internasional yang bermarkas di Arab Saudi mengajukan bukti dokumen polis ganti rugi miliaran yang seluruh pasalnya murni tertulis dalam abjad dan bahasa Arab pada sidang sengketa bisnis syariah di Pengadilan Agama Jakarta Selatan. Syarat formil utama agar bukti surat monumental tersebut diakui sah dan legal untuk dinilai pembuktiannya oleh Majelis Hakim adalah...",
+                            pilihan: [
+                                "A. Harus di-nazegelen (dimeteraikan legalisasi silang) pada Kantor Pos Pusat saja",
+                                "B. Harus diterjemahkan ke dalam Bahasa Indonesia secara mandiri dan dibubuhi tanda tangan oleh Pihak Lawan pengacara",
+                                "C. Cukup langsung dibacakan maknanya secara komprehensif oleh Hakim anggota atau panitera sidang yang secara kebetulan fasih bahasa Arab",
+                                "D. Dokumen tersebut hukumnya mutlak harus diterjemahkan ke dalam Bahasa Indonesia oleh kantor profesi Penerjemah Tersumpah resmi (Sworn Translator)"
+                            ],
+                            jawaban: 3,
+                            pembahasan: "Hukum acara keperdataan Indonesia sangat chauvinistik soal tertib persidangan: Segala bentuk lembaran dokumen perikatan, akta, maupun alat bukti tertulis dari ranah yurisdiksi asing (yang tidak berbahasa Indonesia resmi) haram dan tidak sah dijadikan produk pembuktian di muka majelis apabila pihak yang bersangkutan tidak melampirkan salinan terjemahan tervalidasi yang dikerjakan oleh Penerjemah Tersumpah. Upaya hakim yang sok tahu menerjemahkan sendiri di persidangan adalah pelanggaran serius terhadap nilai objektivitas pemeriksaan."
+                        },
+                        {
+                            soal: "Sekelompok gabungan 50 nasabah VIP (yang mengaku sebagai Class Representatives mewakili total 10.000 korban) mengajukan Gugatan Kelompok (Class Action) besar-besaran terhadap sebuah Bank Syariah Nasional. Sebelum persidangan itu menukik masuk ke agenda utama pembacaan surat gugatan dan tawar-menawar jawaban bantahan ganti rugi materiil, tahapan krusial pra-kondisi apa yang WAJIB dilalui secara mutlak oleh ketukan palu Majelis Hakim?",
+                            pilihan: [
+                                "A. Melakukan ritual pemeriksaan setempat (Descente) langsung secara bersama-sama mengepung fisik kantor pusat Bank Syariah yang bersangkutan",
+                                "B. Memerintahkan Panitera menyita gembok seluruh brankas aset bank sentral sebagai jaminan (Sita Revindikasi massal)",
+                                "C. Melaksanakan sidang Preliminary Hearing khusus (pemeriksaan pendahuluan) guna membedah dan memverifikasi sejauh mana legal standing dan validitas 50 perwakilan nasabah tersebut sebagai kriteria wakil kelompok yang sah",
+                                "D. Menghitung massal kerugian bersama auditor Otoritas Jasa Keuangan (OJK)"
+                            ],
+                            jawaban: 2,
+                            pembahasan: "Gugatan kelompok raksasa (Class action) memiliki kerawanan tingkat tinggi yang bisa disusupi penumpang gelap kompetitor bank atau representasi pengacara yang tidak valid mandatnya. Untuk menanggulangi jebakan batman itu, sidang perdana wajib diagendakan khusus untuk proses 'Preliminary Hearing'. Di sinilah insting tajam Hakim diuji untuk menginvestigasi berlapis-lapis apakah gerombolan orang di depannya ini (Class Representative) itu legal, sah, dan pantas mewakili kepentingan puluhan ribu member/nasabah yang pasif di belakang layar."
+                        }
+                    ]
+                }
+            ]
+        }
+    ];
+
+    const navContainer = document.getElementById('buku2-nav-container');
+    const cardsContainer = document.getElementById('buku2-cards-container');
+    const categoryTitle = document.getElementById('buku2-category-title');
+    const hafalanToggle = document.getElementById('buku2-hafalanToggle');
+    const overlayContainer = document.getElementById('bukuDuaOverlay');
+    
+    let activeKategoriIndex = 0; 
+
+    function renderNav() {
+        navContainer.innerHTML = '';
+        bankMateri.forEach((item, index) => {
+            const navItem = document.createElement('div');
+            navItem.className = `nav-item ${index === activeKategoriIndex ? 'active' : ''}`;
+            navItem.textContent = item.kategori;
+            navItem.onclick = () => {
+                activeKategoriIndex = index;
+                renderNav();
+                renderCards();
+            };
+            navContainer.appendChild(navItem);
+        });
+    }
+
+    function renderCards() {
+        cardsContainer.innerHTML = '';
+        const data = bankMateri[activeKategoriIndex];
+        categoryTitle.textContent = data.kategori;
+
+        data.materi.forEach((cardData, cardIndex) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            if(!hafalanToggle.checked) {
+                card.classList.add('open');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'card-header';
+            header.innerHTML = `
+                <span>${cardData.judul}</span>
+                <span class="study-hint">(Klik untuk melihat rincian & kuis) ▾</span>
+            `;
+            
+            const body = document.createElement('div');
+            body.className = 'card-body';
+            
+            let contentHTML = cardData.isi;
+
+            // Handle Multiple Quizzes
+            if(cardData.kuis && Array.isArray(cardData.kuis)) {
+                let allQuizzesHTML = '';
+                cardData.kuis.forEach((q, qIndex) => {
+                    let optionsHTML = '';
+                    q.pilihan.forEach((pilihanText, optIndex) => {
+                        optionsHTML += `<div class="quiz-option" data-opt="${optIndex}">${pilihanText}</div>`;
+                    });
+
+                    allQuizzesHTML += `
+                        <div class="quiz-container" id="buku2-quiz-${cardIndex}-${qIndex}">
+                            <div class="quiz-title">📝 Kuis Evaluasi ${qIndex + 1} (HOTS)</div>
+                            <div class="quiz-question">${q.soal}</div>
+                            <div class="quiz-options">
+                                ${optionsHTML}
+                            </div>
+                            <div class="quiz-explanation">
+                                <strong>💡 Pembahasan:</strong> ${q.pembahasan}
+                            </div>
+                        </div>
+                    `;
+                });
+                contentHTML += allQuizzesHTML;
+            }
+
+            body.innerHTML = contentHTML;
+
+            header.onclick = () => {
+                card.classList.toggle('open');
+            };
+
+            card.appendChild(header);
+            card.appendChild(body);
+            cardsContainer.appendChild(card);
+
+            // Setup Listeners for Multiple Quizzes
+            if(cardData.kuis && Array.isArray(cardData.kuis)) {
+                cardData.kuis.forEach((q, qIndex) => {
+                    const quizContainer = card.querySelector(`#buku2-quiz-${cardIndex}-${qIndex}`);
+                    const options = quizContainer.querySelectorAll('.quiz-option');
+                    const explanation = quizContainer.querySelector('.quiz-explanation');
+
+                    options.forEach(opt => {
+                        opt.addEventListener('click', function() {
+                            if(this.classList.contains('disabled')) return;
+
+                            const selectedIndex = parseInt(this.getAttribute('data-opt'));
+                            const correctIndex = q.jawaban;
+
+                            options.forEach(o => o.classList.add('disabled'));
+
+                            if(selectedIndex === correctIndex) {
+                                this.classList.add('correct');
+                            } else {
+                                this.classList.add('wrong');
+                                options[correctIndex].classList.add('correct');
+                            }
+
+                            explanation.style.display = 'block';
+                        });
+                    });
+                });
+            }
+        });
+    }
+
+    hafalanToggle.addEventListener('change', (e) => {
+        if(e.target.checked) {
+            overlayContainer.classList.add('mode-hafalan-active');
+        } else {
+            overlayContainer.classList.remove('mode-hafalan-active');
+        }
+        renderCards();
+    });
+
+    // Initialize
+    renderNav();
+    renderCards();
+};
