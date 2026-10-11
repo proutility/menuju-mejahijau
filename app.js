@@ -105,52 +105,58 @@ if(auth) {
             currentUser = user;
             const gateOverlay = document.getElementById('gatekeeperOverlay');
 
-            // A. PANGGIL MAINTENACE (Supaya User Terpantau)
+            // Set default peran awal
+            window.userRoleCakim = "PESERTA"; 
+
+            // A. PANGGIL MAINTENACE
             watchMaintenance(); 
 
-        // B. CEK ADMIN & ASISTEN ADMIN (Fitur Copy Paste Nyala)
+            // B. CEK ADMIN & ASISTEN ADMIN
             const isSuperAdmin = ADMIN_EMAILS.includes(user.email);
             const isEditor = typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(user.email);
 
-            if (isSuperAdmin || isEditor) {
+            if (isSuperAdmin) {
+                window.userRoleCakim = "SUPER_ADMIN"; // 👑 Hanya Lo
                 document.body.classList.add('is-admin'); 
+                
+                const btnAdmin = document.getElementById('btnAdminPanel');
+                if(btnAdmin) btnAdmin.style.display = 'flex'; 
+                
+                const btnAdminLobby = document.getElementById('btnAdminLobby');
+                if(btnAdminLobby) btnAdminLobby.style.display = 'block';
+                
+                console.log("Super Admin Login: Akses Penuh.");
+            } 
+            else if (isEditor) {
+                window.userRoleCakim = "EDITOR"; // 📝 Asisten
+                document.body.classList.add('is-admin'); // Tetap kasih class admin buat ngedit
+                
                 const btnAdmin = document.getElementById('btnAdminPanel');
                 if(btnAdmin) btnAdmin.style.display = 'flex'; 
                 
                 const btnAdminLobby = document.getElementById('btnAdminLobby');
                 if(btnAdminLobby) btnAdminLobby.style.display = 'block';
 
-               // --- SENSOR FITUR KHUSUS ASISTEN ADMIN ---
-                if (isEditor && !isSuperAdmin) {
-                    setTimeout(() => {  // <--- UBAH JADI setTimeout
-                        // 1. Sembunyikan Tombol Maintenance
-                        const btnMaintenance = document.getElementById('btnToggleMaintenance');
-                        if (btnMaintenance) btnMaintenance.style.display = 'none';
-
-                        // 2. Sembunyikan Tab Radar Peserta
-                        const tabRadar = document.querySelector('button[onclick="window.switchAdminTab(\'status\')"]');
-                        if (tabRadar) tabRadar.style.display = 'none';
-
-                        // 3. Sembunyikan Export Excel & Backup JSON
-                        const btnExcel = document.querySelector('button[onclick="window.downloadSoalExcel()"]');
-                        if (btnExcel) btnExcel.style.display = 'none';
-                        const btnJsonDb = document.querySelector('button[onclick="window.downloadSoalJSON()"]');
-                        if (btnJsonDb) btnJsonDb.style.display = 'none';
-
-                        // 4. Sembunyikan Fitur Upload JSON
-                        const tabUpload = document.querySelector('button[onclick="window.switchAdminTab(\'tambah\')"]');
-                        if (tabUpload) tabUpload.style.display = 'none';
-                        const btnUploadAksi = document.querySelector('button[onclick="window.eksekusiUpload()"]');
-                        if (btnUploadAksi) btnUploadAksi.style.display = 'none';
-                        
-                    }, 500); 
+                // Sensor fitur sensitif untuk Asisten Admin
+                setTimeout(() => {  
+                    const idsToHide = [
+                        'btnToggleMaintenance', 
+                        'button[onclick="window.switchAdminTab(\'status\')"]',
+                        'button[onclick="window.downloadSoalExcel()"]',
+                        'button[onclick="window.downloadSoalJSON()"]',
+                        'button[onclick="window.switchAdminTab(\'tambah\')"]',
+                        'button[onclick="window.eksekusiUpload()"]'
+                    ];
                     
-                    console.log("Asisten Admin Login: Hanya bisa Edit, Review, dan Laporan.");
-                } else {
-                    console.log("Super Admin Login: Akses Penuh.");
-                }
-
-            } else {
+                    idsToHide.forEach(id => {
+                        let el = document.getElementById(id) || document.querySelector(id);
+                        if(el) el.style.display = 'none';
+                    });
+                }, 500); 
+                
+                console.log("Asisten Admin Login: Hanya bisa Edit, Review, dan Laporan.");
+            } 
+            else {
                 document.body.classList.remove('is-admin');
             }
 
@@ -158,11 +164,10 @@ if(auth) {
             document.getElementById('loginOverlay').style.setProperty('display', 'none', 'important');
             if(gateOverlay) gateOverlay.style.display = 'flex';
             
-            // Reset Tampilan Gatekeeper
             document.getElementById('gateLoading').style.display = 'block';
             document.getElementById('gateInputArea').style.display = 'none';
 
-           // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
+            // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
             const urlParams = new URLSearchParams(window.location.search);
             const roomTarget = urlParams.get('room');
 
@@ -177,6 +182,7 @@ if(auth) {
                         const accSnap = await getDoc(accRef);
                         if(accSnap.exists() && accSnap.data().isVerified === true) {
                             window.isVIPUser = true;
+                            window.userRoleCakim = "VIP";
                         }
                     } catch(e) {}
                     
@@ -187,11 +193,11 @@ if(auth) {
             }
 
             // 🛑 JALUR TOL KHUSUS ADMIN & EDITOR (BYPASS GERBANG VIP)
-            if (isSuperAdmin || isEditor) {
-                console.log("Jalur Bebas Hambatan (VVIP) untuk Admin & Editor");
-                window.isVIPUser = true; // Langsung cap halal sebagai VIP
-                lanjutKeAplikasi();      // Terbangkan langsung ke Lobby
-                return;                  // Hentikan sistem biar ga minta kode VIP!
+            if (window.userRoleCakim === "SUPER_ADMIN" || window.userRoleCakim === "EDITOR") {
+                console.log(`Jalur Bebas Hambatan untuk: ${window.userRoleCakim}`);
+                window.isVIPUser = true; 
+                lanjutKeAplikasi();      
+                return;                  
             }
 
             // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM (PESERTA BIASA) ---
@@ -201,14 +207,15 @@ if(auth) {
             
                 if (accessSnap.exists()) {
                     if (accessSnap.data().isVerified === true) {
-                        window.isVIPUser = true; // 🛑 TANDAI SEBAGAI VIP ASLI
+                        window.isVIPUser = true; 
+                        window.userRoleCakim = "VIP"; // Tandai VIP
                         lanjutKeAplikasi();
                     } else {
                         showGateInput(user.displayName, user.email);
                         window.updateUserStatus(true, "VIP Gatekeeper"); 
                     }
                 } else {
-                    // USER BARU (Atau Admin Baru) -> BIKIN KODE + KIRIM EMAIL
+                    // USER BARU (Bikin Kode + Email)
                     const randomAsas = legalTerms[Math.floor(Math.random() * legalTerms.length)];
                     const randomNum = Math.floor(100 + Math.random() * 899);
                     const finalCode = `${randomAsas}-${randomNum}`;
@@ -221,23 +228,15 @@ if(auth) {
                         createdAt: new Date()
                     });
 
-                    // KIRIM EMAIL PAKE GOOGLE APPS SCRIPT
                     fetch("https://script.google.com/macros/s/AKfycbwZcPxD1ZX8CgW8yhGZA9AM3S39jmpxFlti9sU_RlYP/dev", {
-                        method: "POST",
-                        mode: "no-cors",
-                        body: JSON.stringify({
-                            user_name: user.displayName,
-                            user_email: user.email,
-                            vip_code: finalCode
-                        })
+                        method: "POST", mode: "no-cors",
+                        body: JSON.stringify({ user_name: user.displayName, user_email: user.email, vip_code: finalCode })
                     }).then(() => {
                         showGateInput(user.displayName, user.email);
-                        // --- TAMBAHAN: Lapor ke Radar ---
                         window.updateUserStatus(true, "VIP Gatekeeper");
                     }).catch(err => {
                         console.error("Gagal fetch GAS:", err);
                         showGateInput(user.displayName, user.email);
-                        // --- TAMBAHAN: Lapor ke Radar walau email gagal ---
                         window.updateUserStatus(true, "VIP Gatekeeper");
                     });
                 }
@@ -248,6 +247,7 @@ if(auth) {
 
         } else {
             // STATE LOGOUT
+            window.userRoleCakim = null;
             document.body.classList.remove('is-admin');
             document.getElementById('loginOverlay').style.setProperty('display', 'block', 'important');
             document.getElementById('appSection').style.display = 'none';
@@ -7037,46 +7037,20 @@ window.initKitabKuning = () => {
     // Panggil render pertama kali saat modal dibuka
     window.switchTabKitab('vocab');
 };
-// ==========================================
-// 🎓 FITUR PUSAT STUDI CAKIM (MODE SILUMAN)
-// ==========================================
 window.bukaPusatStudi = () => {
     const overlay = document.getElementById('pusatStudiOverlay');
-    if (!overlay) {
-        alert("HTML Overlay Pusat Studi belum dipasang!");
-        return;
-    }
+    if (!overlay) return;
     
     // Tampilkan layar penuh Pusat Studi
     overlay.style.display = "flex";
 
-    // KUNCI SILUMAN: Cek apakah user yang login adalah Admin (Lo sendiri)
-    // Di sistem PRO-TAMA, status admin biasanya kelihatan di elemen dengan class .user-role atau p di sidebar
-    let isAdmin = false;
-    let roleTextElements = document.querySelectorAll('.user-info p, .user-role'); 
-    
-    roleTextElements.forEach(el => {
-        if (el.innerText.toLowerCase().includes("administrator") || el.innerText.toLowerCase().includes("admin")) {
-            isAdmin = true;
-        }
-    });
-
-    // Cara backup paling brutal: Ngecek nama Ilham Nur Pratama
-    if (!isAdmin && document.body.innerHTML.includes("Ilham Nur Pratama")) {
-        isAdmin = true; 
-    }
-
     let menuRahasia = document.querySelectorAll('.menu-rahasia-admin');
     
-    if (isAdmin) {
-        // Kalau Admin: Sulap menu rahasia jadi kelihatan!
-        menuRahasia.forEach(menu => {
-            menu.style.display = "block";
-        });
+    // KUNCI SILUMAN: Cuma SUPER_ADMIN (lo) yang bisa liat! 
+    // Editor dan VIP lewattt...
+    if (window.userRoleCakim === "SUPER_ADMIN") {
+        menuRahasia.forEach(menu => { menu.style.display = "block"; });
     } else {
-        // Kalau VIP/Member biasa: Sembunyikan tanpa jejak
-        menuRahasia.forEach(menu => {
-            menu.style.display = "none";
-        });
+        menuRahasia.forEach(menu => { menu.style.display = "none"; });
     }
 };
