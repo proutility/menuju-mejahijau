@@ -1258,3 +1258,106 @@ div.swal2-container {
 
 /* Responsive Dashboard Kitab Kuning */
 @media(max-width:800px){ .kitab-wrapper .layout{grid-template-columns:1fr} .kitab-wrapper .app{padding:10px} .kitab-wrapper .hero{padding:21px} .kitab-wrapper .tabs{overflow-x:auto;white-space:nowrap} }
+
+/* ========================================= */
+/* CSS KHUSUS UU MAHKAMAH AGUNG              */
+/* ========================================= */
+#uumaOverlay {
+    --uuma-main: #1a365d;
+    --uuma-accent: #2b6cb0;
+    --uuma-text: #2d3748;
+    --uuma-border: #e2e8f0;
+    --uuma-success-bg: #f0fff4;
+    --uuma-success-text: #22543d;
+    --uuma-error-bg: #fff5f5;
+    --uuma-error-border: #fc8181;
+}
+
+.uuma-layout-wrapper {
+    display: flex;
+    max-width: 1200px;
+    margin: 30px auto;
+    gap: 25px;
+    align-items: flex-start;
+    width: 100%;
+    flex: 1;
+    overflow: hidden;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.uuma-sidebar {
+    width: 280px;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--uuma-border);
+    flex-shrink: 0;
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+.uuma-sidebar h3 {
+    color: var(--uuma-main);
+    margin-top: 0;
+    border-bottom: 2px solid var(--uuma-accent);
+    padding-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.uuma-sidebar ul { list-style: none; padding: 0; margin: 0; }
+.uuma-sidebar li { margin-bottom: 8px; }
+.uuma-sidebar a {
+    text-decoration: none; color: #4a5568; font-weight: 600; font-size: 0.9em; display: block;
+    padding: 10px 15px; border-radius: 6px; transition: all 0.2s; cursor: pointer; border-left: 4px solid transparent;
+}
+.uuma-sidebar a:hover { background-color: #ebf8ff; color: var(--uuma-accent); }
+.uuma-sidebar a.active { background-color: #ebf8ff; color: var(--uuma-accent); border-left: 4px solid var(--uuma-accent); padding-left: 11px; }
+
+.uuma-container {
+    flex: 1; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    height: calc(100vh - 150px); overflow-y: auto; border: 1px solid var(--uuma-border); box-sizing: border-box;
+}
+
+.uuma-header { text-align: center; border-bottom: 3px solid var(--uuma-main); padding-bottom: 20px; margin-bottom: 30px; }
+.uuma-header h1 { color: var(--uuma-main); margin: 0; font-size: 2.2em; font-weight: 900; }
+.uuma-header p { color: #718096; font-weight: 600; }
+
+.uuma-bab-title { background-color: var(--uuma-main); color: white; padding: 12px 20px; border-radius: 6px; margin-top: 10px; margin-bottom: 20px; font-size: 1.3em; font-weight: bold;}
+
+.uuma-materi-details {
+    background-color: #ffffff; border: 1px solid var(--uuma-border); border-left: 4px solid var(--uuma-accent);
+    border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); overflow: hidden;
+}
+.uuma-materi-details summary {
+    padding: 15px 20px; font-weight: bold; font-size: 1.1em; color: var(--uuma-main); background-color: #f8fafc;
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none;
+}
+.uuma-materi-details summary::after { content: '+'; font-size: 1.5em; color: var(--uuma-accent); font-weight: normal; }
+.uuma-materi-details[open] summary::after { content: '−'; }
+.uuma-materi-details summary:hover { background-color: #f1f5f9; }
+
+.uuma-materi-content { padding: 20px; border-top: 1px solid var(--uuma-border); color: var(--uuma-text); line-height: 1.6;}
+.uuma-materi-content ul, .uuma-materi-content ol { margin-bottom: 15px; padding-left: 20px; }
+.uuma-materi-content li { margin-bottom: 8px; }
+.uuma-materi-content table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }
+.uuma-materi-content th, .uuma-materi-content td { border: 1px solid var(--uuma-border); padding: 10px; text-align: left; }
+.uuma-materi-content th { background-color: #edf2f7; color: var(--uuma-main); }
+
+/* Kuis */
+.uuma-soal-poin { background: #fafafa; border: 1px dashed #cbd5e0; border-radius: 8px; padding: 20px; margin-top: 25px; }
+.uuma-soal-badge { display: inline-block; background: #ebf8ff; color: #2b6cb0; padding: 4px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-bottom: 15px; }
+.uuma-opsi-list { list-style-type: none; padding: 0; margin-bottom: 15px; }
+.uuma-opsi-list li { margin-bottom: 8px; padding: 10px 15px; border: 2px solid var(--uuma-border); border-radius: 6px; background: #fff; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+.uuma-opsi-list li:hover { border-color: #a0aec0; background: #f8fafc; }
+.uuma-opsi-list li.correct { background-color: var(--uuma-success-bg) !important; border-color: #48bb78 !important; color: var(--uuma-success-text) !important; }
+.uuma-opsi-list li.wrong { background-color: var(--uuma-error-bg) !important; border-color: var(--uuma-error-border) !important; color: #c53030 !important; }
+.uuma-opsi-list li.disabled { pointer-events: none; }
+.uuma-pembahasan { display: none; background: #f0fff4; border-left: 4px solid #48bb78; padding: 15px; margin-top: 15px; border-radius: 4px; font-size: 0.9em; color: #22543d; animation: fadeIn 0.4s; }
+
+@media (max-width: 900px) {
+    .uuma-layout-wrapper { flex-direction: column; padding: 10px; }
+    .uuma-sidebar { width: 100%; height: auto; position: relative; max-height: 200px; }
+    .uuma-container { padding: 20px; width: 100%; }
+}
