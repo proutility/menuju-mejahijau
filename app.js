@@ -7391,3 +7391,172 @@ window.initUUMA = async () => {
     renderUUMA();
 };
 
+// ==========================================
+// ⚖️ FITUR UU KEKUASAAN KEHAKIMAN (FIREBASE)
+// ==========================================
+window.bukaUUKK = () => {
+    const overlay = document.getElementById('uukkOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        if(typeof window.initUUKK === 'function') window.initUUKK();
+    } else {
+        alert("HTML Overlay UU KK belum dipasang!");
+    }
+};
+
+window.initUUKK = async () => {
+    if (window.uukkSudahRender) return;
+
+    PROTAMA.loading("Memuat Modul UU Kekuasaan Kehakiman...");
+    let databaseMateri = [];
+
+    try {
+        const qRef = query(collection(window.db, "uu_kk"), orderBy("urutan", "asc"));
+        const snapshot = await getDocs(qRef);
+
+        if (snapshot.empty) {
+            PROTAMA.close();
+            return PROTAMA.alert("Data Kosong", "Materi UU KK belum tersedia di server!", "warning");
+        }
+
+        snapshot.forEach(doc => databaseMateri.push(doc.data()));
+        window.uukkSudahRender = true;
+        PROTAMA.close();
+    } catch (error) {
+        PROTAMA.close();
+        return PROTAMA.alert("Gagal Memuat", "Koneksi ke server bermasalah: " + error.message, "error");
+    }
+
+    const navList = document.getElementById('uukkNavList');
+    const contentArea = document.getElementById('uukkContentArea');
+    const sidebar = document.getElementById('uukkSidebar');
+    const sidebarToggle = document.getElementById('uukkSidebarToggle');
+    const focusToggle = document.getElementById('uukkFocusToggle');
+    const overlay = document.getElementById('uukkOverlay');
+
+    function renderSidebar() {
+        navList.innerHTML = '';
+        databaseMateri.forEach((babData, indexBab) => {
+            const babTitle = document.createElement('li');
+            babTitle.className = 'uukk-nav-bab';
+            babTitle.textContent = babData.bab;
+            navList.appendChild(babTitle);
+
+            babData.subBabList.forEach((sub, indexSub) => {
+                const subItem = document.createElement('li');
+                subItem.className = 'uukk-nav-sub';
+                subItem.textContent = sub.title;
+                subItem.onclick = (e) => renderContent(indexBab, indexSub, e.target);
+                navList.appendChild(subItem);
+            });
+        });
+    }
+
+    function renderContent(indexBab, indexSub, elementClicked) {
+        document.querySelectorAll('.uukk-nav-sub').forEach(el => el.classList.remove('active'));
+        if(elementClicked) elementClicked.classList.add('active');
+        
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('minimized');
+            sidebarToggle.innerHTML = '&#10095;';
+        }
+
+        const data = databaseMateri[indexBab].subBabList[indexSub];
+        
+        let html = `
+            <div class="uukk-card">
+                <h2>${data.title}</h2>
+                ${data.materi}
+        `;
+
+        const hurufAbjad = ['A', 'B', 'C', 'D'];
+        
+        if (data.soalList && Array.isArray(data.soalList)) {
+            data.soalList.forEach((soal, idSoal) => {
+                let opsiHtml = '';
+                soal.opsi.forEach((opt, idx) => {
+                    opsiHtml += `
+                        <li class="uukk-opsi-item" data-benar="${opt.benar}">
+                            <div class="uukk-opsi-huruf">${hurufAbjad[idx]}</div>
+                            <div class="uukk-opsi-teks">${opt.teks}</div>
+                        </li>
+                    `;
+                });
+
+                html += `
+                    <div class="uukk-soal-container">
+                        <h3><span style="font-size: 1.3rem;">⚖️</span> ${soal.label}</h3>
+                        <p class="uukk-soal-text">${soal.tanya}</p>
+                        <ul class="uukk-opsi-list">
+                            ${opsiHtml}
+                        </ul>
+                        <div class="uukk-pembahasan-box">
+                            <div class="uukk-status-jawaban"></div>
+                            <div class="uukk-pembahasan-teks"><b>Pembahasan:</b> ${soal.bahas}</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        html += `</div>`; 
+        contentArea.innerHTML = html;
+
+        // Pasang Event Listener Kuis
+        const soalContainers = contentArea.querySelectorAll('.uukk-soal-container');
+        soalContainers.forEach(container => {
+            const opsiItems = container.querySelectorAll('.uukk-opsi-item');
+            const pembahasanBox = container.querySelector('.uukk-pembahasan-box');
+            const statusJawaban = container.querySelector('.uukk-status-jawaban');
+
+            opsiItems.forEach(opsi => {
+                opsi.addEventListener('click', function() {
+                    if (this.classList.contains('disabled')) return;
+
+                    const isBenar = this.getAttribute('data-benar') === 'true';
+
+                    opsiItems.forEach(o => {
+                        o.classList.add('disabled');
+                        if (o.getAttribute('data-benar') === 'true') {
+                            o.classList.add('correct');
+                        }
+                    });
+
+                    if (!isBenar) {
+                        this.classList.add('wrong');
+                        statusJawaban.className = 'uukk-status-jawaban uukk-status-salah';
+                        statusJawaban.innerHTML = '❌ Jawaban Anda Kurang Tepat';
+                    } else {
+                        statusJawaban.className = 'uukk-status-jawaban uukk-status-benar';
+                        statusJawaban.innerHTML = '✅ Luar Biasa! Jawaban Anda Benar';
+                    }
+
+                    pembahasanBox.style.display = 'block';
+                    pembahasanBox.classList.add('show');
+                });
+            });
+        });
+    }
+
+    // Toggle Sidebar
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('minimized');
+        sidebarToggle.innerHTML = sidebar.classList.contains('minimized') ? '&#10095;' : '&#10094;';
+    });
+
+    // Toggle Focus Mode
+    focusToggle.addEventListener('click', () => {
+        overlay.classList.toggle('uukk-focus-mode');
+        if (overlay.classList.contains('uukk-focus-mode')) {
+            sidebar.classList.add('minimized');
+            sidebarToggle.innerHTML = '&#10095;';
+            focusToggle.textContent = "☀️ Matikan Mode Samar";
+        } else {
+            sidebar.classList.remove('minimized');
+            sidebarToggle.innerHTML = '&#10094;';
+            focusToggle.textContent = "🌙 Mode Samar";
+        }
+    });
+
+    renderSidebar();
+};
