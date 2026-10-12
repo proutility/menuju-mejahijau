@@ -922,13 +922,13 @@
                 <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Pedoman Teknis Administrasi & Persidangan</p>
             </div>
 
-            <!-- MENU 4: HAFALAN UU (MENU SILUMAN - ADMIN ONLY) -->
-            <div class="menu-rahasia-admin" onclick="alert('Fitur Hafalan UU segera hadir bro!');" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#2b8bd9'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+            <!-- MENU 4: UU MAHKAMAH AGUNG (MENU SILUMAN - ADMIN ONLY) -->
+            <div class="menu-rahasia-admin" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaUUMA();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#2b8bd9'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
                 <div style="background: #e9f3fb; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
                     <i class="fas fa-balance-scale" style="font-size: 2rem; color: #2b8bd9;"></i>
                 </div>
-                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Hafalan UU & Perma</h3>
-                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling Pasal-pasal Krusial Kompetensi PA</p>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">UU Mahkamah Agung</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Pasal-pasal Krusial & Studi Kasus</p>
             </div>
 
         </div>
@@ -1322,5 +1322,39 @@
         </div>
     </div>
 </div>
+    <!-- ========================================== -->
+    <!-- OVERLAY UU MAHKAMAH AGUNG (FULL SCREEN)    -->
+    <!-- ========================================== -->
+    <div id="uumaOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f4f7f6; z-index:2000000; flex-direction:column; overflow:hidden;">
+        
+        <!-- HEADER FIXED -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: white; border-bottom: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); z-index: 100;">
+            <h2 style="margin:0; color: #1a365d; font-size: 1.4rem; font-family:'Poppins', sans-serif; font-weight: 800;">
+                <i class="fas fa-balance-scale" style="color: #2b6cb0; margin-right: 8px;"></i> UU Mahkamah Agung
+            </h2>
+            <button onclick="document.getElementById('uumaOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- LAYOUT KONTEN UUMA -->
+        <div class="uuma-layout-wrapper">
+            <nav class="uuma-sidebar">
+                <h3>Daftar Isi Modul</h3>
+                <ul id="uuma-nav-list">
+                    <!-- Navigasi digenerate via JS -->
+                </ul>
+            </nav>
+            <main class="uuma-container">
+                <div class="uuma-header">
+                    <h1>COMPREHENSIVE CODEBOOK</h1>
+                    <p>UNDANG-UNDANG MAHKAMAH AGUNG<br>(Konsolidasi UU No. 14/1985 + UU No. 5/2004 + UU No. 3/2009)</p>
+                </div>
+                <div id="uuma-content-area">
+                    <!-- Konten Bab & Kuis digenerate via JS -->
+                </div>
+            </main>
+        </div>
+    </div>
 </body>
 </html>
