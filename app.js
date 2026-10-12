@@ -8414,3 +8414,43 @@ window.initBukuDua = () => {
     renderNav();
     renderCards();
 };
+// SCRIPT MENGUNGGAH BUKU II KE FIREBASE (JALANKAN SEKALI SAJA)
+window.uploadBukuDuaToFirebase = async () => {
+    // Paste seluruh array bankMateri lu yang panjang itu di sini
+    const bankMateri = [
+        {
+            kategori: "1. Pelayanan Terpadu Satu Pintu (PTSP)",
+            materi: [ /* ... isi materi 1 ... */ ]
+        },
+        // ... (masukkan sisa data bankMateri lu secara utuh di sini) ...
+        {
+            kategori: "8. Ekonomi Syariah, Jinayat & Aturan Khusus",
+            materi: [ /* ... isi materi 8 ... */ ]
+        }
+    ];
+
+    try {
+        PROTAMA.loading("Ngedorong data Buku II ke Firebase...");
+        const batch = writeBatch(window.db);
+
+        bankMateri.forEach((item, index) => {
+            // Kita kasih nama dokumen bab_1, bab_2, dst biar rapi di database
+            const docId = `bab_${index + 1}`;
+            const docRef = doc(window.db, "buku_dua_ma", docId);
+            
+            // Simpan data beserta urutannya biar gampang di-sort pas ditarik
+            batch.set(docRef, {
+                urutan: index + 1,
+                kategori: item.kategori,
+                materi: item.materi
+            });
+        });
+
+        await batch.commit();
+        PROTAMA.close();
+        PROTAMA.alert("SUKSES!", "Seluruh materi Buku II berhasil migrasi ke Firebase!", "success");
+    } catch (e) {
+        PROTAMA.close();
+        alert("Error ngedorong data: " + e.message);
+    }
+};
