@@ -1361,3 +1361,100 @@ div.swal2-container {
     .uuma-sidebar { width: 100%; height: auto; position: relative; max-height: 200px; }
     .uuma-container { padding: 20px; width: 100%; }
 }
+/* ========================================= */
+/* CSS KHUSUS UU KEKUASAAN KEHAKIMAN (UUKK)  */
+/* ========================================= */
+#uukkOverlay {
+    --uukk-bg: #f0fdf4;
+    --uukk-text: #1e293b;
+    --uukk-primary: #15803d;
+    --uukk-primary-hover: #166534;
+    --uukk-accent: #ca8a04;
+    --uukk-accent-hover: #a16207;
+    --uukk-card-bg: #ffffff;
+    --uukk-sidebar-bg: #ffffff;
+    --uukk-border: #bbf7d0;
+    --uukk-soal-bg: #fefce8;
+    --uukk-transition: all 0.3s ease;
+}
+
+#uukkOverlay.uukk-focus-mode {
+    --uukk-bg: #0f172a;
+    --uukk-text: #cbd5e1;
+    --uukk-card-bg: #1e293b;
+    --uukk-sidebar-bg: #1e293b;
+    --uukk-border: #334155;
+    --uukk-soal-bg: #27272a;
+    --uukk-primary: #22c55e;
+    --uukk-accent: #eab308;
+}
+
+#uukkOverlay { background-color: var(--uukk-bg); color: var(--uukk-text); transition: var(--uukk-transition); font-family: 'Segoe UI', sans-serif;}
+
+.uukk-btn-header { background-color: var(--uukk-accent); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: bold; transition: var(--uukk-transition); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.uukk-btn-header:hover { background-color: var(--uukk-accent-hover); transform: translateY(-2px); }
+
+.uukk-layout-wrapper { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+.uukk-sidebar { width: 340px; background-color: var(--uukk-sidebar-bg); border-right: 2px solid var(--uukk-border); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; position: relative; z-index: 5; }
+.uukk-sidebar.minimized { transform: translateX(-100%); position: absolute; left: 0; height: 100%; }
+
+.uukk-sidebar-header { padding: 1rem; background-color: var(--uukk-primary); color: white; border-bottom: 2px solid var(--uukk-accent); }
+.uukk-sidebar-header h3 { margin: 0; font-size: 1.1rem; }
+
+.uukk-nav-list { list-style: none; overflow-y: auto; flex: 1; padding: 0 0 2rem 0; margin: 0; }
+.uukk-nav-bab { padding: 0.8rem 1rem; font-weight: bold; color: var(--uukk-text); background-color: rgba(21, 128, 61, 0.1); border-left: 4px solid var(--uukk-accent); margin-top: 2px; font-size: 0.95rem; }
+#uukkOverlay.uukk-focus-mode .uukk-nav-bab { background-color: rgba(255,255,255,0.05); color: var(--uukk-accent); }
+
+.uukk-nav-sub { padding: 0.7rem 1rem 0.7rem 1.5rem; cursor: pointer; transition: var(--uukk-transition); font-size: 0.9rem; border-bottom: 1px solid var(--uukk-border); line-height: 1.4; }
+.uukk-nav-sub:hover { background-color: rgba(202, 138, 4, 0.1); }
+.uukk-nav-sub.active { background-color: rgba(21, 128, 61, 0.05); font-weight: bold; color: var(--uukk-primary); border-left: 3px solid var(--uukk-primary); }
+#uukkOverlay.uukk-focus-mode .uukk-nav-sub.active { color: var(--uukk-accent); border-left-color: var(--uukk-accent); }
+
+.uukk-toggle-sidebar-btn { position: absolute; right: -40px; top: 15px; width: 40px; height: 40px; background-color: var(--uukk-primary); color: white; border: none; border-radius: 0 8px 8px 0; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; z-index: 20; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); transition: var(--uukk-transition); }
+.uukk-toggle-sidebar-btn:hover { background-color: var(--uukk-primary-hover); }
+
+.uukk-main-content { flex: 1; padding: 2rem; overflow-y: auto; display: flex; justify-content: center; }
+.uukk-content-wrapper { max-width: 850px; width: 100%; }
+
+.uukk-card { background-color: var(--uukk-card-bg); padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); margin-bottom: 2rem; border-top: 5px solid var(--uukk-primary); }
+.uukk-card h2 { margin: 0 0 1.5rem 0; color: var(--uukk-primary); border-bottom: 2px solid var(--uukk-accent); padding-bottom: 0.5rem; line-height: 1.4; }
+#uukkOverlay.uukk-focus-mode .uukk-card h2 { color: var(--uukk-accent); border-bottom-color: var(--uukk-primary); }
+.uukk-card ul { margin-left: 1.5rem; margin-bottom: 1.5rem; line-height: 1.8; }
+.uukk-card li { margin-bottom: 0.8rem; }
+.uukk-card li b { color: var(--uukk-accent-hover); }
+#uukkOverlay.uukk-focus-mode .uukk-card li b { color: var(--uukk-accent); }
+
+/* Kuis Section */
+.uukk-soal-container { background-color: var(--uukk-soal-bg); padding: 2rem; border-radius: 8px; border-left: 5px solid var(--uukk-accent); margin-top: 2rem; box-shadow: inset 0 0 10px rgba(202, 138, 4, 0.05); }
+.uukk-soal-container h3 { margin: 0 0 1rem 0; font-size: 1.15rem; color: var(--uukk-accent-hover); }
+#uukkOverlay.uukk-focus-mode .uukk-soal-container h3 { color: var(--uukk-accent); }
+.uukk-soal-text { margin-bottom: 1.5rem; line-height: 1.6; font-weight: 500; }
+.uukk-opsi-list { list-style-type: none; margin: 0 0 1.5rem 0; padding: 0; }
+.uukk-opsi-item { margin-bottom: 0.8rem; padding: 1rem; border: 1px solid var(--uukk-border); border-radius: 6px; cursor: pointer; transition: all 0.2s; background-color: var(--uukk-card-bg); display: flex; align-items: flex-start; gap: 10px; }
+.uukk-opsi-item:hover:not(.disabled) { border-color: var(--uukk-primary); background-color: rgba(21, 128, 61, 0.05); transform: translateX(5px); }
+#uukkOverlay.uukk-focus-mode .uukk-opsi-item:hover:not(.disabled) { background-color: rgba(255,255,255,0.05); }
+
+.uukk-opsi-huruf { font-weight: bold; color: white; background-color: var(--uukk-primary); width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; border-radius: 50%; flex-shrink: 0; }
+.uukk-opsi-item.correct { background-color: #dcfce7; border-color: #16a34a; color: #166534; }
+.uukk-opsi-item.correct .uukk-opsi-huruf { background-color: #16a34a; }
+.uukk-opsi-item.wrong { background-color: #fee2e2; border-color: #dc2626; color: #991b1b; }
+.uukk-opsi-item.wrong .uukk-opsi-huruf { background-color: #dc2626; }
+#uukkOverlay.uukk-focus-mode .uukk-opsi-item.correct { background-color: rgba(22, 163, 74, 0.2); color: #4ade80;}
+#uukkOverlay.uukk-focus-mode .uukk-opsi-item.wrong { background-color: rgba(220, 38, 38, 0.2); color: #f87171;}
+.uukk-opsi-item.disabled { pointer-events: none; opacity: 0.8; }
+
+.uukk-pembahasan-box { display: none; margin-top: 1.5rem; padding: 1.5rem; background-color: var(--uukk-card-bg); border-radius: 8px; border-top: 4px solid var(--uukk-primary); animation: fadeIn 0.5s; }
+.uukk-pembahasan-box.show { display: block; }
+.uukk-status-jawaban { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; }
+.uukk-status-benar { color: #16a34a; }
+.uukk-status-salah { color: #dc2626; }
+#uukkOverlay.uukk-focus-mode .uukk-status-benar { color: #4ade80; }
+#uukkOverlay.uukk-focus-mode .uukk-status-salah { color: #f87171; }
+.uukk-pembahasan-teks { line-height: 1.6; }
+
+@media (max-width: 768px) {
+    .uukk-sidebar { width: 100%; position: absolute; left: 0; top: 0; height: 100%; }
+    .uukk-sidebar.minimized { transform: translateX(-100%); }
+    .uukk-toggle-sidebar-btn { display: none; } /* Bisa diatur beda utk mobile jika perlu */
+}
