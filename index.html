@@ -929,6 +929,14 @@
                 <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">UU Mahkamah Agung</h3>
                 <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Pasal-pasal Krusial & Studi Kasus</p>
             </div>
+            <!-- MENU 5: UU KEKUASAAN KEHAKIMAN (MENU SILUMAN - ADMIN ONLY) -->
+            <div class="menu-rahasia-admin" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaUUKK();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#15803d'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                <div style="background: #f0fdf4; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                    <i class="fas fa-landmark" style="font-size: 2rem; color: #15803d;"></i>
+                </div>
+                <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">UU Kekuasaan Kehakiman</h3>
+                <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling UU No. 48 Tahun 2009</p>
+            </div>
 
         </div>
     </div>
@@ -1351,6 +1359,49 @@
                 </div>
                 <div id="uuma-content-area">
                     <!-- Konten Bab & Kuis digenerate via JS -->
+                </div>
+            </main>
+        </div>
+    </div>
+    <!-- ========================================== -->
+    <!-- OVERLAY UU KEKUASAAN KEHAKIMAN (FULL SCREEN)-->
+    <!-- ========================================== -->
+    <div id="uukkOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f0fdf4; z-index:2000000; flex-direction:column; overflow:hidden;">
+        
+        <!-- HEADER FIXED -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: #15803d; color: white; border-bottom: 4px solid #ca8a04; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100;">
+            <h2 style="margin:0; font-size: 1.4rem; font-family:'Poppins', sans-serif; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                ⚖️ e-TAMA Learning | UU Kekuasaan Kehakiman
+            </h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="uukk-btn-header" id="uukkFocusToggle">🌙 Mode Samar</button>
+                <button onclick="document.getElementById('uukkOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#ca8a04; color:white; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#a16207'" onmouseout="this.style.background='#ca8a04'">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- LAYOUT KONTEN UUKK -->
+        <div class="uukk-layout-wrapper">
+            <aside class="uukk-sidebar" id="uukkSidebar">
+                <div class="uukk-sidebar-header">
+                    <h3>Daftar Materi (UU 48/2009)</h3>
+                </div>
+                <button class="uukk-toggle-sidebar-btn" id="uukkSidebarToggle" title="Tutup/Buka Sidebar">&#10094;</button>
+                <ul class="uukk-nav-list" id="uukkNavList">
+                    <!-- Navigasi Di-generate lewat JS -->
+                </ul>
+            </aside>
+            <main class="uukk-main-content">
+                <div class="uukk-content-wrapper" id="uukkContentArea">
+                    <!-- Konten Bab & Kuis digenerate via JS -->
+                    <div class="uukk-card">
+                        <h2 style="text-align: center; color: var(--uukk-primary);">Selamat Datang, Calon Yang Mulia!</h2>
+                        <p style="text-align: center; font-size: 1.1rem; line-height: 1.8;">
+                            Seluruh materi BAB I s.d. BAB XI UU Kekuasaan Kehakiman telah dimuat lengkap.<br>
+                            Silakan pilih sub-bab di sebelah kiri untuk mempelajari materi beserta <b>17 Soal HOTS interaktif</b>.
+                        </p>
+                    </div>
                 </div>
             </main>
         </div>
