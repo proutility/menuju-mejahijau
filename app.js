@@ -7262,3 +7262,132 @@ window.uploadBukuDuaToFirebase = async () => {
         alert("Error ngedorong data: " + e.message);
     }
 };
+// ==========================================
+// ⚖️ FITUR UU MAHKAMAH AGUNG (FIREBASE)
+// ==========================================
+window.bukaUUMA = () => {
+    const overlay = document.getElementById('uumaOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        if(typeof window.initUUMA === 'function') window.initUUMA();
+    } else {
+        alert("HTML Overlay UU MA belum dipasang!");
+    }
+};
+
+window.initUUMA = async () => {
+    if (window.uumaSudahRender) return;
+
+    PROTAMA.loading("Memuat Modul UU Mahkamah Agung dari Server...");
+    let bankMateri = [];
+
+    try {
+        const qRef = query(collection(window.db, "uu_ma"));
+        const snapshot = await getDocs(qRef);
+
+        if (snapshot.empty) {
+            PROTAMA.close();
+            return PROTAMA.alert("Data Kosong", "Materi UU MA belum tersedia di server!", "warning");
+        }
+
+        snapshot.forEach(doc => bankMateri.push(doc.data()));
+        
+        // Pastikan urut dari bab1 sampai bab6
+        bankMateri.sort((a, b) => {
+            const numA = parseInt(a.idBab.replace(/\D/g, ''));
+            const numB = parseInt(b.idBab.replace(/\D/g, ''));
+            return numA - numB;
+        });
+
+        window.uumaSudahRender = true;
+        PROTAMA.close();
+    } catch (error) {
+        PROTAMA.close();
+        return PROTAMA.alert("Gagal Memuat", "Koneksi ke server bermasalah: " + error.message, "error");
+    }
+
+    const navContainer = document.getElementById('uuma-nav-list');
+    const contentArea = document.getElementById('uuma-content-area');
+    let activeKategoriIndex = 0; 
+
+    function renderUUMA() {
+        navContainer.innerHTML = '';
+        contentArea.innerHTML = '';
+
+        bankMateri.forEach((bab, index) => {
+            // 1. Render Navigasi Kiri
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.className = index === activeKategoriIndex ? 'active' : '';
+            a.textContent = bab.judulBab;
+            a.onclick = () => {
+                activeKategoriIndex = index;
+                renderUUMA();
+            };
+            li.appendChild(a);
+            navContainer.appendChild(li);
+
+            // 2. Render Konten Utama
+            if (index === activeKategoriIndex) {
+                const titleEl = document.createElement('h2');
+                titleEl.className = 'uuma-bab-title';
+                titleEl.textContent = bab.judulBab;
+                contentArea.appendChild(titleEl);
+
+                bab.materi.forEach((m, mIndex) => {
+                    const details = document.createElement('details');
+                    details.className = 'uuma-materi-details';
+                    details.innerHTML = `<summary>${m.subJudul}</summary>`;
+
+                    const body = document.createElement('div');
+                    body.className = 'uuma-materi-content';
+                    
+                    let htmlKonten = m.isi;
+                    
+                    // Render Soal HOTS
+                    htmlKonten += `
+                        <div class="uuma-soal-poin" id="uuma-soal-${index}-${mIndex}">
+                            <div class="uuma-soal-badge">📝 Uji Pemahaman</div>
+                            <p style="font-weight: 500;">${m.soal}</p>
+                            <ul class="uuma-opsi-list">
+                                ${m.opsi.map((opsiText, optIdx) => `<li data-opt="${optIdx}">${opsiText}</li>`).join('')}
+                            </ul>
+                            <div class="uuma-pembahasan">
+                                <strong>💡 Pembahasan:</strong><br>${m.pembahasan}
+                            </div>
+                        </div>
+                    `;
+
+                    body.innerHTML = htmlKonten;
+                    details.appendChild(body);
+                    contentArea.appendChild(details);
+
+                    // Pasang Interaksi Kuis
+                    const quizContainer = details.querySelector(`#uuma-soal-${index}-${mIndex}`);
+                    const opsiElements = quizContainer.querySelectorAll('.uuma-opsi-list li');
+                    const pembahasanBox = quizContainer.querySelector('.uuma-pembahasan');
+
+                    opsiElements.forEach(optEl => {
+                        optEl.addEventListener('click', function() {
+                            if (this.classList.contains('disabled')) return;
+                            
+                            opsiElements.forEach(o => o.classList.add('disabled'));
+                            
+                            const selected = parseInt(this.getAttribute('data-opt'));
+                            if (selected === m.kunci) {
+                                this.classList.add('correct');
+                            } else {
+                                this.classList.add('wrong');
+                                opsiElements[m.kunci].classList.add('correct');
+                            }
+                            pembahasanBox.style.display = 'block';
+                        });
+                    });
+                });
+            }
+        });
+    }
+
+    renderUUMA();
+};
+
