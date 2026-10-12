@@ -28,8 +28,8 @@ window.PROTAMA = {
             icon: icon,
             confirmButtonColor: colors[icon] || '#004d00',
             confirmButtonText: 'Seles',
-            background: document.body.classList.contns('dark-mode') ? '#242424' : '#fff',
-            color: document.body.classList.contns('dark-mode') ? '#fff' : '#333',
+            background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
+            color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
             didOpen: () => {
                 // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan (nembus overlay apapun)
                 const swalBox = document.querySelector('.swal2-contner');
