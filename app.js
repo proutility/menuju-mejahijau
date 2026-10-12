@@ -6657,13 +6657,12 @@ window.hapusJadwalMingguan = (index) => {
     }
 };
 // ==========================================
-// 📖 FITUR 60 HARI KITAB KUNING
+// 📖 FITUR 60 HARI KITAB KUNING (FIREBASE VERSI OBJECT)
 // ==========================================
 window.bukaKitabKuning = () => {
     const overlay = document.getElementById('kitabOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
-        // Inisialisasi awal saat modal dibuka
         if(typeof window.initKitabKuning === 'function') {
             window.initKitabKuning();
         }
@@ -6672,7 +6671,7 @@ window.bukaKitabKuning = () => {
     }
 };
 
-window.initKitabKuning = () => {
+window.initKitabKuning = async () => {
     // --- AUDIO PLAYBACK FUNCTION (TTS) ---
     if ('speechSynthesis' in window) {
         window.speechSynthesis.onvoiceschanged = function() {
@@ -6680,96 +6679,78 @@ window.initKitabKuning = () => {
         };
     }
 
-// 1. Taruh ini di LUAR fungsi biar datanya gak dihapus paksa sama Chrome (Fix Bug Memori)
     window.suaraArabGlobal = null;
-
     window.playTextKitab = (text) => {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Matikan suara yang numpuk
-            
-            // 2. Gunakan variabel global yang kita bikin di atas
+            window.speechSynthesis.cancel(); 
             window.suaraArabGlobal = new SpeechSynthesisUtterance(text);
             window.suaraArabGlobal.lang = 'ar-SA';
-            
-            // 👇 INI YANG DIGANTI: Angka 0.4 bikin suaranya jadi pelan dan jelas
             window.suaraArabGlobal.rate = 0.4; 
-            
             window.suaraArabGlobal.volume = 1.0;
 
-            // 3. Deteksi suara Arab yang udah lo install di Windows
             let voices = window.speechSynthesis.getVoices();
             let arabicVoice = voices.find(v => v.lang.toLowerCase().includes('ar'));
-            
-            if (arabicVoice) {
-                window.suaraArabGlobal.voice = arabicVoice;
-            }
+            if (arabicVoice) window.suaraArabGlobal.voice = arabicVoice;
 
-            // 4. Kasih notif kalau ternyata Chrome lo yang nge-mute tab-nya
             window.suaraArabGlobal.onerror = (event) => {
                 console.error("Error dari browser:", event);
                 alert("Gagal memutar! Pastikan Tab Chrome ini tidak di-Mute (Klik kanan tab > Unmute Site).");
             };
-
-            // 5. Langsung play tepat setelah tombol diklik!
             window.speechSynthesis.speak(window.suaraArabGlobal);
         } else {
             alert("Fitur suara tidak didukung browser ini.");
         }
     };
 
-    // Pancingan awal biar daftar suara terbaca langsung pas web dibuka
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    if (window.kitabSudahRender) {
+        window.switchTabKitab('vocab');
+        return;
     }
-    // --- DATA ---
-    const vocabM=[["الزواج","az-zawāj","pernikahan"],["النكاح","an-nikāḥ","perkawinan"],["الزوج","az-zauj","suami"],["الزوجة","az-zaujah","istri"],["الخِطبة","al-khiṭbah","peminangan"],["العقد","al-‘aqd","akad"],["الإيجاب","al-ījāb","ijab"],["القبول","al-qabūl","kabul"],["الولي","al-waliyy","wali"],["الشاهدان","asy-syāhidān","dua saksi"],["الصداق","aṣ-ṣadāq","mahar/maskawin"],["الكفاءة","al-kafā’ah","kesepadanan"],["المتعة","al-mut‘ah","pemberian mut'ah"],["النفقة","an-nafaqah","nafkah"],["الوليمة","al-walīmah","pesta pernikahan"],["القسم","al-qasm","pembagian giliran"],["النشوز","an-nusyūz","pembangkangan istri"],["الفسخ","al-faskh","pembatalan akad"],["الطلاق","aṭ-ṭalāq","talak"],["الرجعة","ar-raj‘ah","rujuk"],["الخلع","al-khul‘","gugat cerai (tebus talak)"],["الإيلاء","al-īlā’","sumpah tak menggauli"],["الظهار","aẓ-ẓihār","menyamakan punggung ibu"],["اللِّعان","al-li‘ān","sumpah saling melaknat"],["العدة","al-‘iddah","masa tunggu"],["الحضانة","al-ḥaḍānah","hak asuh anak"]];
-    const vocabW=[["الفرائض","al-farā’iḍ","ilmu waris"],["الميراث","al-mīrāṡ","warisan"],["الوارثون","al-wāriṡūn","ahli waris laki-laki"],["الوارثات","al-wāriṡāt","ahli waris perempuan"],["التركة","at-tarikah","harta peninggalan"],["النصف","an-niṣf","seperdua (1/2)"],["الربع","ar-rub‘","seperempat (1/4)"],["الثمن","aṡ-ṡumun","seperdelapan (1/8)"],["الثلثان","aṡ-ṡuluṡān","dua pertiga (2/3)"],["الثلث","aṡ-ṡuluṡ","sepertiga (1/3)"],["السدس","as-sudus","seperenam (1/6)"],["العصبة","al-‘aṣabah","penerima sisa harta"],["الحجب","al-ḥajb","terhalang dari warisan"],["الجد","al-jadd","kakek"],["الجدة","al-jaddah","nenek"],["الكلالة","al-kalālah","wafat tanpa asal & keturunan"],["الحمل","al-ḥaml","janin"],["المفقود","al-mafqūd","orang hilang"],["الوصية","al-waṣiyyah","wasiat"],["الدين","ad-dayn","utang"]];
-    const vocabE=[["البيع","al-bay‘","jual beli"],["الربا","ar-ribā","riba/tambahan haram"],["الخيار","al-khiyār","hak pilih pembatalan"],["السلم","as-salam","jual beli pesanan"],["الرهن","ar-rahn","gadai/agunan utang"],["الحوالة","al-ḥawālah","pengalihan utang"],["الضمان","aḍ-ḍamān","tanggungan utang"],["الكفالة","al-kafālah","penanggungan orang"],["الشركة","asy-syirkah","perseroan/kongsi"],["الوكالة","al-wakālah","perwakilan/kuasa"],["العارية","al-‘āriyah","pinjam pakai"],["الغصب","al-ghaṣb","merampas hak"],["الشفعة","asy-syuf‘ah","hak prioritas membeli"],["القراض","al-qirāḍ","bagi hasil (mudharabah)"],["الإجارة","al-ijārah","sewa-menyewa"],["المساقاة","al-musāqāh","bagi hasil kebun"],["الوقف","al-waqf","wakaf"],["الهبة","al-hibah","pemberian/hibah"],["اللقطة","al-luqaṭah","barang temuan"],["الوديعة","al-wadī‘ah","titipan barang"]];
-    const vocabQ=[["القاضي","al-qāḍī","hakim"],["الدعوى","ad-da‘wā","gugatan"],["المدعي","al-mudda‘ī","penggugat"],["المدعى عليه","al-mudda‘ā ‘alayh","tergugat"],["البينة","al-bayyinah","bukti (saksi/surat)"],["اليمين","al-yamīn","sumpah"],["النكول","an-nukūl","menolak bersumpah"],["الشاهد","asy-syāhid","saksi"],["الإقرار","al-iqrār","pengakuan sah"],["الحكم","al-ḥukm","putusan pengadilan"],["الصلح","aṣ-ṣulḥ","perdamaian/mediasi"],["الشهادة","asy-syahādah","kesaksian"],["التزكية","at-tazkiyah","pemeriksaan saksi"],["الحجر","al-ḥajr","pembatasan kewenangan"],["الرشد","ar-rusyd","dewasa & cakap hukum"]];
 
-    const stagesVocab=[
-        ["Khitbah & Akad","Munakahat",vocabM.slice(0,5)],["Rukun Nikah","Munakahat",vocabM.slice(5,10)],["Mahar & Hak","Munakahat",vocabM.slice(10,16)],["Talak & Khulu'","Munakahat",vocabM.slice(16,21)],["Iddah & Hadhanah","Munakahat",vocabM.slice(21,26)],
-        ["Dasar Waris","Mawaris",vocabW.slice(0,4)],["Furudh 1","Mawaris",vocabW.slice(4,8)],["Furudh 2","Mawaris",vocabW.slice(8,12)],["Asabah & Hijab","Mawaris",vocabW.slice(12,16)],["Kasus Waris","Mawaris",vocabW.slice(16,20)],
-        ["Jual Beli & Riba","Ekonomi Syariah",vocabE.slice(0,4)],["Gadai & Utang","Ekonomi Syariah",vocabE.slice(4,8)],["Syirkah & Kuasa","Ekonomi Syariah",vocabE.slice(8,12)],["Sewa & Bagi Hasil","Ekonomi Syariah",vocabE.slice(12,16)],["Wakaf & Hibah","Ekonomi Syariah",vocabE.slice(16,20)],
-        ["Hakim & Gugatan","Hukum Acara",vocabQ.slice(0,4)],["Saksi & Sumpah","Hukum Acara",vocabQ.slice(4,8)],["Putusan & Iqrar","Hukum Acara",vocabQ.slice(8,12)],["Kecakapan Hukum","Hukum Acara",vocabQ.slice(12,15)],["Simulasi Gabungan","Campuran",[...vocabM.slice(18,20), ...vocabE.slice(4,6)]]
-    ];
+    PROTAMA.loading("Membuka Lembaran Kitab Kuning dari Server...");
 
-    const kalimatData = [
-        ["النِّكَاحُ مُسْتَحَبٌّ لِمَنْ يَحْتَاجُ إِلَيْهِ", "النكاح مستحب لمن يحتاج إليه", "an-nikāḥu mustaḥabbun liman yaḥtāju ilayh", "Nikah itu disunnahkan bagi orang yang membutuhkannya.", "يَحْتَاجُ (yaḥtāju) = Fi'il Mudhari' (Sekarang/Akan datang). Menunjukkan kondisi yang berkesinambungan. Akar kata: ح-و-ج", "Munakahat"],
-        ["وَيَجُوزُ لِلْحُرِّ أَنْ يَجْمَعَ بَيْنَ أَرْبَعِ حَرَائِرَ", "ويجوز للحر أن يجمع بين أربع حرائر", "wa yajūzu lil-ḥurri an yajma‘a bayna arba‘i ḥarā’ir", "Diperbolehkan bagi laki-laki merdeka untuk mengumpulkan (memadu) maksimal empat wanita merdeka.", "يَجْمَعَ (yajma‘a) = Fi'il Mudhari' Manshub, karena didahului amil nashab 'an' (أَنْ).", "Munakahat"],
-        ["وَلَا يَصِحُّ عَقْدُ النِّكَاحِ إِلَّا بِوَلِيٍّ وَشَاهِدَيْ عَدْلٍ", "ولا يصح عقد النكاح إلا بولي وشاهدي عدل", "wa lā yaṣiḥḥu ‘aqdun-nikāḥi illā biwaliyyin wa syāhiday ‘adl", "Akad nikah tidak sah kecuali dengan (adanya) seorang wali dan dua saksi yang adil.", "يَصِحُّ (yaṣiḥḥu) = Fi'il Mudhari'. Didahului 'La' Nafi (meniadakan). Hukum nikah bertumpu pada kalimat ini.", "Munakahat"],
-        ["وَالْمُحَرَّمَاتُ بِالنَّصِّ أَرْبَعَ عَشْرَةَ", "والمحرمات بالنص أربع عشرة", "wal-muḥarramātu bin-naṣṣi arba‘a ‘asyrah", "Wanita yang haram dinikahi berdasarkan nash (Al-Qur'an) ada empat belas.", "الْمُحَرَّمَاتُ (al-muḥarramātu) = Isim Maf'ul (yang diharamkan), jamak muannats salim. Kedudukannya sebagai Mubtada'.", "Munakahat"],
-        ["وَيُسْتَحَبُّ تَسْمِيَةُ الْمَهْرِ فِي النِّكَاحِ", "ويستحب تسمية المهر في النكاح", "wa yustaḥabbu tasmiyatul-mahri fin-nikāḥ", "Disunnahkan untuk menyebutkan (nominal) mahar dalam akad nikah.", "يُسْتَحَبُّ (yustaḥabbu) = Fi'il Mudhari' Majhul (pasif). Artinya 'disunnahkan/dianjurkan'.", "Munakahat"],
-        ["وَالْوَلِيمَةُ عَلَى الْعُرْسِ مُسْتَحَبَّةٌ", "والوليمة على العرس مستحبة", "wal-walīmatu ‘alal-‘ursi mustaḥabbatun", "Mengadakan walimah (pesta) atas pernikahan itu hukumnya sunnah.", "مُسْتَحَبَّةٌ (mustaḥabbatun) = Khabar dari Mubtada' (al-walīmatu). Berbentuk Isim Maf'ul muannats.", "Munakahat"],
-        ["وَالتَّسْوِيَةُ فِي الْقَسْمِ بَيْنَ الزَّوْجَاتِ وَاجِبَةٌ", "والتسوية في القسم بين الزوجات واجبة", "wat-taswiyatu fil-qasmi baynaz-zawjāti wājibatun", "Menyamakan pembagian giliran (menginap) di antara para istri adalah wajib.", "وَاجِبَةٌ (wājibatun) = Isim Fa'il. Berkedudukan sebagai Khabar yang menetapkan kepastian hukum wajib.", "Munakahat"],
-        ["وَالْخُلْعُ جَائِزٌ عَلَى عِوَضٍ مَعْلُومٍ", "والخلع جائز على عوض معلوم", "wal-khul‘u jā’izun ‘alā ‘iwaḍin ma‘lūm", "Khulu' (gugat cerai istri) diperbolehkan dengan adanya tebusan yang nominalnya diketahui.", "مَعْلُومٍ (ma‘lūmin) = Isim Maf'ul, menjadi na'at (sifat) dari 'iwadh (tebusan). Artinya tebusan tersebut tidak boleh fiktif.", "Munakahat"],
-        ["وَالطَّلَاقُ ضَرْبَانِ صَرِيحٌ وَكِنَايَةٌ", "والطلاق ضربان صريح وكناية", "waṭ-ṭalāqu ḍarbāni: ṣarīḥun wa kināyatun", "Talak itu ada dua macam: talak sharih (tegas) dan talak kinayah (sindiran).", "ضَرْبَانِ (ḍarbāni) = Khabar dalam bentuk Mutsanna (dua). Kalimat ini murni Jumlah Ismiyyah (tanpa kata kerja).", "Munakahat"],
-        ["وَالْوَارِثُونَ مِنَ الرِّجَالِ عَشَرَةٌ", "والوارثون من الرجال عشرة", "wal-wāriṡūna minar-rijāli ‘asyaratun", "Ahli waris dari kaum laki-laki itu ada sepuluh (golongan).", "الْوَارِثُونَ (al-wāriṡūna) = Isim Fa'il jamak mudzakkar salim. Artinya 'orang-orang yang mewarisi'.", "Mawaris"],
-        ["وَالْوَارِثَاتُ مِنَ النِّسَاءِ سَبْعٌ", "والوارثات من النساء سبع", "wal-wāriṡātu minan-nisā’i sab‘un", "Ahli waris dari kaum perempuan itu ada tujuh (golongan).", "الْوَارِثَاتُ (al-wāriṡātu) = Isim Fa'il jamak muannats salim.", "Mawaris"],
-        ["وَمَنْ لَا يَسْقُطُ بِحَالٍ خَمْسَةٌ", "ومن لا يسقط بحال خمسة", "wa man lā yasquṭu biḥālin khamsatun", "Ahli waris yang tidak akan gugur (terhalang) dalam keadaan apapun ada lima.", "يَسْقُطُ (yasquṭu) = Fi'il Mudhari' Marfu'. Didahului 'La' Nafi. Menunjukkan ketetapan mutlak bagi 5 ahli waris inti.", "Mawaris"],
-        ["الْبُيُوعُ ثَلَاثَةُ أَشْيَاءَ بَيْعُ عَيْنٍ مُشَاهَدَةٍ فَجَائِزٌ", "البيوع ثلاثة أشياء بيع عين مشاهدة فجائز", "al-buyū‘u ṡalāṡatu asy-yā’a: bay‘u ‘aynin musyāhadatin fajā’izun", "Jual beli ada tiga jenis: menjual barang yang terlihat secara fisik hukumnya boleh.", "الْبُيُوعُ (al-buyū‘u) = Jamak taksir dari 'al-bay‘' (jual beli).", "Ekonomi Syariah"],
-        ["وَلَا يَصِحُّ بَيْعُ مَا لَمْ يَمْلِكْهُ", "ولا يصح بيع ما لم يملكه", "wa lā yaṣiḥḥu bai‘u mā lam yamlikhu", "Tidak sah menjual barang yang belum dimilikinya.", "يَمْلِكْهُ (yamlik-hu) = Fi'il Mudhari' Majzum karena didahului 'lam' (لَمْ). Dasar hukum larangan short-selling.", "Ekonomi Syariah"],
-        ["وَلَا يَجُوزُ بَيْعُ الثَّمَرَةِ مُطْلَقًا إِلَّا بَعْدَ بُدُوِّ صَلَاحِهَا", "ولا يجوز بيع الثمرة مطلقا إلا بعد بدو صلاحها", "wa lā yajūzu bai‘uṡ-ṡamarati muṭlaqan illā ba‘da budūwwi ṣalāḥihā", "Tidak boleh menjual buah-buahan secara mutlak kecuali setelah tampak kematangannya.", "يَجُوزُ (yajūzu) = Fi'il Mudhari'. Hukum pencegahan gharar (ketidakpastian) dalam transaksi pertanian.", "Ekonomi Syariah"],
-        ["وَكُلُّ مَا جَازَ بَيْعُهُ جَازَ رَهْنُهُ فِي الدُّيُونِ", "وكل ما جاز بيعه جاز رهنه في الديون", "wa kullu mā jāza bai‘uhu jāza rahnuhu fid-duyūn", "Setiap barang yang sah diperjualbelikan, sah pula digadaikan sebagai jaminan utang.", "جَازَ (jāza) = Fi'il Madhi. Artinya 'telah boleh/sah'. Kaidah emas dalam hukum jaminan (Rahn).", "Ekonomi Syariah"],
-        ["وَتَفْتَقِرُ صِحَّةُ الْإِقْرَارِ إِلَى ثَلَاثَةِ شَرَائِطَ البلوغ والعقل والاختيار", "وتفتقر صحة الإقرار إلى ثلاثة شرائط البلوغ والعقل والاختيار", "wa taftaqiru ṣiḥḥatul-iqrāri ilā ṡalāṡati syarā’iṭ: al-bulūgh, wal-‘aql, wal-ikhtiyār", "Sahnya ikrar (pengakuan) membutuhkan tiga syarat: baligh, berakal, dan atas kehendak sendiri.", "تَفْتَقِرُ (taftaqiru) = Fi'il Mudhari'. Artinya 'membutuhkan' atau 'bergantung pada'.", "Hukum Acara"],
-        ["وَيَصِحُّ الِاسْتِثْنَاءُ فِي الْإِقْرَارِ إِذَا وَصَلَهُ بِهِ", "ويصح الاستثناء في الإقرار إذا وصله به", "wa yaṣiḥḥul-istiṡnā’u fil-iqrāri iżā waṣalahu bih", "Pengecualian dalam ikrar (pengakuan) itu sah apabila diucapkan bersambung dengannya.", "وَصَلَهُ (waṣalahu) = Fi'il Madhi. Syarat sahnya ralat dalam pengadilan adalah diucapkan tanpa jeda.", "Hukum Acara"],
-        ["وَالصُّلْحُ جَائِزٌ مَعَ الْإِقْرَارِ فِي الْأَمْوَالِ", "والصلح جائز مع الإقرار في الأموال", "waṣ-ṣulḥu jā’izun ma‘al-iqrāri fil-amwāl", "Perdamaian (mediasi) itu boleh dilakukan bersamaan dengan pengakuan hak dalam masalah harta.", "جَائِزٌ (jā’izun) = Isim Fa'il yang berfungsi sebagai Khabar. Dasar mediasi perkara ekonomi di PA.", "Hukum Acara"],
-        ["وَلَا يُقْبَلُ كِتَابُ قَاضٍ إِلَى قَاضٍ فِي الْأَحْكَامِ إِلَّا بِشَاهِدَيْنِ", "ولا يقبل كتاب قاض إلى قاض في الأحكام إلا بشاهدين", "wa lā yuqbalu kitābu qāḍin ilā qāḍin fil-aḥkāmi illā bisyāhidayn", "Surat pengantar dari seorang hakim ke hakim lain mengenai putusan tidak diterima kecuali dengan dua saksi.", "يُقْبَلُ (yuqbalu) = Fi'il Mudhari' Majhul (pasif). Artinya 'diterima'. Hukum delegasi antar pengadilan.", "Hukum Acara"]
-    ];
+    try {
+        const vocabDoc = await getDoc(doc(window.db, "kitab_kuning", "master_vocab"));
+        const kalimatDoc = await getDoc(doc(window.db, "kitab_kuning", "master_kalimat"));
+        const shorofDoc = await getDoc(doc(window.db, "kitab_kuning", "master_shorof"));
 
-    const fiilData = [
-        { arab: "طَلَّقَ", latin: "ṭallaqa", arti: "Telah mentalak", jenis: "Madhi (Lampau)", konteks: "Biasa digunakan dalam ikrar talak yang sudah jatuh (sah)." },
-        { arab: "يُطَلِّقُ", latin: "yuṭalliqu", arti: "Sedang/akan mentalak", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Merujuk pada janji talak, secara fiqh belum menjatuhkan cerai." },
-        { arab: "زَوَّجْتُ", latin: "zawwajtu", arti: "Aku telah menikahkan", jenis: "Madhi (Lampau)", konteks: "Kalimat wajib bagi Wali dalam Ijab (menandakan penyerahan final)." },
-        { arab: "أُزَوِّجُ", latin: "uzawwiju", arti: "Aku akan menikahkan", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Jika diucapkan Wali, ini dianggap Khithbah (janji), bukan akad sah." },
-        { arab: "قَبِلْتُ", latin: "qabiltu", arti: "Aku telah menerima", jenis: "Madhi (Lampau)", konteks: "Kalimat wajib bagi Calon Suami dalam Kabul." },
-        { arab: "وَرِثَ", latin: "wariṡa", arti: "Telah mewarisi", jenis: "Madhi (Lampau)", konteks: "Digunakan ketika pewaris sudah meninggal dan harta telah beralih." },
-        { arab: "يَرِثُ", latin: "yariṡu", arti: "Berhak mewaris", jenis: "Mudhari' (Sekarang/Akan Datang)", konteks: "Menjelaskan kaidah hukum (siapa yang berhak mewaris secara umum)." },
-        { arab: "أَقَرَّ", latin: "aqarra", arti: "Telah mengakui", jenis: "Madhi (Lampau)", konteks: "Al-Iqrar dalam persidangan (Pengakuan) yang mengikat secara hukum." },
-        { arab: "اَنْفِقْ", latin: "anfiq", arti: "Berikanlah nafkah!", jenis: "Amr (Perintah)", konteks: "Bentuk perintah dalam teks yang menunjukkan hukum Wajib atas nafkah." },
-        { arab: "فَسَخَ", latin: "fasakha", arti: "Telah membatalkan akad", jenis: "Madhi (Lampau)", konteks: "Menunjukkan penetapan batalnya nikah oleh Hakim." }
-    ];
-    window.allVocabsKitab = [...vocabM, ...vocabW, ...vocabE, ...vocabQ];
+        if (!vocabDoc.exists() || !kalimatDoc.exists() || !shorofDoc.exists()) {
+            PROTAMA.close();
+            return alert("Data Kitab Kuning belum tersedia di server!");
+        }
+
+        // 1. Ekstrak data Object dari Firebase
+        const dataV = vocabDoc.data();
+        
+        // 2. Balikin (Convert) Object ke bentuk Nested Array aslinya biar kuis lo jalan
+        const mapKeArray = (arrObj) => arrObj.map(o => [o.arab, o.latin, o.arti]);
+        const vM = mapKeArray(dataV.vocabM);
+        const vW = mapKeArray(dataV.vocabW);
+        const vE = mapKeArray(dataV.vocabE);
+        const vQ = mapKeArray(dataV.vocabQ);
+
+        // Balikin array kalimat
+        window.kalimatData = kalimatDoc.data().data.map(o => [
+            o.arab_harokat, o.arab_gundul, o.latin, o.arti, o.shorof, o.kategori
+        ]);
+
+        window.fiilData = shorofDoc.data().data; // Shorof udah object dari awal
+        window.allVocabsKitab = [...vM, ...vW, ...vE, ...vQ];
+
+        // Rakit ulang tahapan (Stages)
+        window.stagesVocab = [
+            ["Khitbah & Akad","Munakahat",vM.slice(0,5)],["Rukun Nikah","Munakahat",vM.slice(5,10)],["Mahar & Hak","Munakahat",vM.slice(10,16)],["Talak & Khulu'","Munakahat",vM.slice(16,21)],["Iddah & Hadhanah","Munakahat",vM.slice(21,26)],
+            ["Dasar Waris","Mawaris",vW.slice(0,4)],["Furudh 1","Mawaris",vW.slice(4,8)],["Furudh 2","Mawaris",vW.slice(8,12)],["Asabah & Hijab","Mawaris",vW.slice(12,16)],["Kasus Waris","Mawaris",vW.slice(16,20)],
+            ["Jual Beli & Riba","Ekonomi Syariah",vE.slice(0,4)],["Gadai & Utang","Ekonomi Syariah",vE.slice(4,8)],["Syirkah & Kuasa","Ekonomi Syariah",vE.slice(8,12)],["Sewa & Bagi Hasil","Ekonomi Syariah",vE.slice(12,16)],["Wakaf & Hibah","Ekonomi Syariah",vE.slice(16,20)],
+            ["Hakim & Gugatan","Hukum Acara",vQ.slice(0,4)],["Saksi & Sumpah","Hukum Acara",vQ.slice(4,8)],["Putusan & Iqrar","Hukum Acara",vQ.slice(8,12)],["Kecakapan Hukum","Hukum Acara",vQ.slice(12,15)],["Simulasi Gabungan","Campuran",[...vM.slice(18,20), ...vE.slice(4,6)]]
+        ];
+
+        window.kitabSudahRender = true;
+        PROTAMA.close();
+    } catch (error) {
+        PROTAMA.close();
+        return alert("Gagal memuat Kitab Kuning: " + error.message);
+    }
 
     // --- STATE MANAGEMENT ---
     window.stateKitab = JSON.parse(localStorage.getItem("kitab60_v7") || "{}");
@@ -6779,9 +6760,9 @@ window.initKitabKuning = () => {
 
     window.stageForKitab = (d) => {
         if(window.currentTabKitab === "vocab") {
-            return stagesVocab[Math.min(Math.floor((d-1)/3), stagesVocab.length-1)];
+            return window.stagesVocab[Math.min(Math.floor((d-1)/3), window.stagesVocab.length-1)];
         } else {
-            let s = kalimatData[(d-1) % kalimatData.length];
+            let s = window.kalimatData[(d-1) % window.kalimatData.length];
             return [`Bedah Teks ${d}`, s[5], [s]]; 
         }
     };
@@ -6996,7 +6977,7 @@ window.initKitabKuning = () => {
     window.closeShorofModalKitab = () => { document.getElementById("shorof-modal-kitab").classList.remove("active"); };
 
     window.startShorofKitab = () => {
-        window.shorofQuestionsKitab = [...fiilData].sort(() => 0.5 - Math.random());
+        window.shorofQuestionsKitab = [...window.fiilData].sort(() => 0.5 - Math.random());
         window.shorofIndexKitab = 0; window.shorofScoreKitab = 0;
         document.getElementById("shorof-setup-kitab").classList.add("hidden");
         document.getElementById("shorof-engine-kitab").classList.remove("hidden");
@@ -7051,7 +7032,6 @@ window.initKitabKuning = () => {
         }
     };
 
-    // Panggil render pertama kali saat modal dibuka
     window.switchTabKitab('vocab');
 };
 window.bukaPusatStudi = () => {
