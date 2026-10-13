@@ -7565,16 +7565,26 @@ window.initUUKK = async () => {
 // ==========================================
 
 window.bukaAyatHukum = () => {
-    // CEK AKSES VIP / ADMIN / EDITOR DI SINI
-    // Sesuaikan "window.userRole" atau "localStorage.getItem('role')" dengan cara web lo nyimpen role user saat login
-    let role = window.userRole || localStorage.getItem('userRole') || "guest"; 
-    let isVipAtauAdmin = (role === "admin" || role === "editor" || role === "vip");
+    // 1. Tarik data role dari variabel mesin Gatekeeper lo
+    let roleAsli = window.userRoleCakim || "PESERTA";
+    
+    // 2. Bersihkan spasi dan kapitalisasi
+    let role = roleAsli.toLowerCase().trim(); 
 
-    // Kalau bukan VIP/Admin, tolak!
+    // 3. Syarat pembuka gerbang (Sesuaikan dengan nama role di Gatekeeper lo)
+    let isVipAtauAdmin = (
+        role === "super_admin" || 
+        role === "editor" || 
+        role === "vip"
+    );
+
+    // Kalau bukan VIP/Admin, tolak mentah-mentah!
     if (!isVipAtauAdmin) {
+        console.log("Akses Ditolak. Role Kamu:", roleAsli);
         return alert("Mohon maaf Calon Yang Mulia! 🙏\nFitur Drilling Tajwid Ayat Hukum ini eksklusif untuk member VIP.");
     }
 
+    // Kalau lolos, Buka Overlay-nya!
     const overlay = document.getElementById('aykumOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
