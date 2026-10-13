@@ -7650,82 +7650,68 @@ window.initAykum = async () => {
         });
     }
 
-   function loadAyat(katIndex, ayatIndex, elClicked) {
-    document.querySelectorAll('.aykum-nav-item').forEach(el => el.classList.remove('active'));
-    elClicked.classList.add('active');
+    function loadAyat(katIndex, ayatIndex, elClicked) {
+        document.querySelectorAll('.aykum-nav-item').forEach(el => el.classList.remove('active'));
+        elClicked.classList.add('active');
 
-    const ayatData = dbAykum[katIndex].ayatList[ayatIndex];
-
-    contentArea.innerHTML = `
-        <div class="aykum-card">
-            <div style="display:inline-block; background:#ccfbf1; color:#0f766e; padding:5px 15px; border-radius:20px; font-weight:600; font-size:0.85rem; margin-bottom:15px;">📌 ${dbAykum[katIndex].kategori}</div>
-            <h2 class="aykum-ayat-title">${ayatData.surat}</h2>
-            
-            <!-- Keterangan Warna Tajwid -->
-            <div class="aykum-legend-container" id="aykumLegendBox">
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#ef4444;"></div> Idgam Bigunnah / Mutaqaribain</div>
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#d946ef;"></div> Gunnah / Mimi / Madd Lazim</div>
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#06b6d4;"></div> Iqlab / Madd Wajib Muttasil</div>
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#22c55e;"></div> Ikhfa' / Madd Ja'iz Munfasil</div>
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#3b82f6;"></div> Qalqalah</div>
-                <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#94a3b8;"></div> Huruf Tidak Dilafalkan</div>
-            </div>
-
-            <div class="aykum-quran-box">
-                <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom: 25px;">
-                    <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')" style="margin-bottom:0;"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
-                    
-                    <!-- Toggle Mode Ujian -->
-                    <label class="aykum-toggle-container">
-                        <input type="checkbox" id="toggleUjian" onchange="toggleModeUjian(this)">
-                        <span class="aykum-toggle-slider"></span>
-                        <span class="aykum-toggle-label">Mode Ujian Tajwid</span>
-                    </label>
+        const ayatData = dbAykum[katIndex].ayatList[ayatIndex];
+        
+        contentArea.innerHTML = `
+            <div class="aykum-card">
+                <div style="display:inline-block; background:#ccfbf1; color:#0f766e; padding:5px 15px; border-radius:20px; font-weight:600; font-size:0.85rem; margin-bottom:15px;">📌 ${dbAykum[katIndex].kategori}</div>
+                <h2 class="aykum-ayat-title">${ayatData.surat}</h2>
+                
+                <div class="aykum-legend-container">
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#ef4444;"></div> Idgam Bigunnah / Mutaqaribain</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#d946ef;"></div> Gunnah / Mimi / Madd Lazim</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#06b6d4;"></div> Iqlab / Madd Wajib Muttasil</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#22c55e;"></div> Ikhfa' / Madd Ja'iz Munfasil</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#3b82f6;"></div> Qalqalah</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#94a3b8;"></div> Huruf Tidak Dilafalkan</div>
                 </div>
 
-                <!-- DUA VERSI ARAB: BERWARNA & POLOS -->
-                <div id="aykumTextColored" class="aykum-arabic-text">${ayatData.arab}</div>
-                <div id="aykumTextPlain" class="aykum-arabic-text" style="display:none; color:#0f172a;">${ayatData.arabTextPlain}</div>
-                
-                <div class="aykum-latin-text">${ayatData.latin}</div>
-                <div class="aykum-arti-text">${ayatData.arti}</div>
-            </div>
+                <div class="aykum-quran-box">
+                            <div style="display:flex; justify-content:center; gap:15px; margin-bottom: 20px;">
+                                <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
+                                
+                                <!-- Toggle Mode Ujian -->
+                                <label class="aykum-toggle-container">
+                                    <input type="checkbox" id="toggleUjian" onchange="toggleModeUjian(this)">
+                                    <span class="aykum-toggle-slider"></span>
+                                    <span class="aykum-toggle-label">Mode Ujian Tajwid</span>
+                                </label>
+                            </div>
+                        
+                            <!-- Container Arab akan diberi ID agar bisa dimanipulasi -->
+                            <div id="aykumArabicWrapper" class="aykum-arabic-text">${ayatData.arab}</div>
+                            <div class="aykum-latin-text">${ayatData.latin}</div>
+                            <div class="aykum-arti-text">${ayatData.arti}</div>
+                        </div>
+                        
+                        <!-- Area Kuis yang muncul saat Mode Ujian aktif -->
+                        <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
+                            <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Tebak Tajwid!</h3>
+                            <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat di atas? Pilih semua yang menurut Anda benar.</p>
+                            
+                            <!-- Checkbox akan di-generate oleh JS di sini -->
+                            <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
+                            
+                            <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">Cek Jawaban</button>
+                            
+                            <!-- Area Hasil Evaluasi -->
+                            <div id="aykumKuisHasil" style="display:none; margin-top:15px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.6;"></div>
+                        </div>
+                    <div class="aykum-arabic-text">${ayatData.arab}</div>
+                    <div class="aykum-latin-text">${ayatData.latin}</div>
+                    <div class="aykum-arti-text">${ayatData.arti}</div>
+                </div>
 
-            <!-- AREA KUIS (Tersembunyi secara default) -->
-            <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
-                <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Ujian Analisis Tajwid</h3>
-                <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat hitam polos di atas? Centang semua yang menurut Anda benar.</p>
-                
-                <!-- Opsi Jawaban akan di-generate otomatis ke sini -->
-                <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
-                
-                <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%; transition:0.2s;">🔍 Cek Jawaban Saya</button>
-                
-                <!-- Kotak Hasil Kuis -->
-                <div id="aykumKuisHasil" style="display:none; margin-top:20px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.7; font-size:0.95rem;"></div>
+                <div class="aykum-penjelasan-box" id="aykumPenjelasanBox">
+                    <h3 id="aykumPHukum" style="margin: 0 0 10px 0; color: #0284c7;"></h3>
+                    <p id="aykumPCara" style="margin: 0; line-height: 1.5; color: #0f172a;"></p>
+                </div>
             </div>
-
-            <!-- Kotak Penjelasan Tajwid pas di-klik -->
-            <div class="aykum-penjelasan-box" id="aykumPenjelasanBox">
-                <h3 id="aykumPHukum" style="margin: 0 0 10px 0; color: #0284c7;"></h3>
-                <p id="aykumPCara" style="margin: 0; line-height: 1.5; color: #0f172a;"></p>
-            </div>
-        </div>
-    `;
-
-    // Interaksi Klik Tajwid (hanya berefek pada teks yang berwarna)
-    const tajwidElements = contentArea.querySelectorAll('#aykumTextColored .aykum-tajwid');
-    tajwidElements.forEach(el => {
-        el.addEventListener('click', function() {
-            tajwidElements.forEach(t => t.style.backgroundColor = 'transparent');
-            this.style.backgroundColor = '#fef08a';
-            
-            document.getElementById('aykumPHukum').innerText = `🔍 Analisis Tajwid: ${this.getAttribute('data-hukum')}`;
-            document.getElementById('aykumPCara').innerHTML = `<strong>Cara Membaca:</strong> ${this.getAttribute('data-cara')}`;
-            document.getElementById('aykumPenjelasanBox').style.display = 'block';
-        });
-    });
-}
+        `;
 
         // Interaksi Klik Tajwid
         const tajwidElements = contentArea.querySelectorAll('.aykum-tajwid');
@@ -7789,47 +7775,44 @@ window.initAykum = async () => {
     renderSidebar();
 };
 // ==========================================
-// LOGIKA MODE UJIAN TAJWID & SCORING
+// LOGIKA MODE UJIAN TAJWID
 // ==========================================
 
+// Variabel global untuk menyimpan jawaban yang benar pada ayat yang sedang aktif
 window.kunciJawabanTajwidAktif = [];
 
 window.toggleModeUjian = function(checkbox) {
-    const textColored = document.getElementById('aykumTextColored');
-    const textPlain = document.getElementById('aykumTextPlain');
+    const arabWrapper = document.getElementById('aykumArabicWrapper');
     const kuisArea = document.getElementById('aykumKuisArea');
-    const legendContainer = document.getElementById('aykumLegendBox');
+    const legendContainer = document.querySelector('.aykum-legend-container');
     const penjelasanBox = document.getElementById('aykumPenjelasanBox');
 
     if (checkbox.checked) {
-        // MODE UJIAN ON: Sembunyikan warna (Colored), Munculkan polos (Plain)
-        textColored.style.display = 'none';
-        textPlain.style.display = 'block';
-        
+        // Aktifkan Mode Ujian
+        arabWrapper.classList.add('aykum-mode-ujian-aktif');
         kuisArea.style.display = 'block';
-        legendContainer.style.display = 'none'; 
-        penjelasanBox.style.display = 'none';
+        legendContainer.style.display = 'none'; // Sembunyikan panduan warna
+        penjelasanBox.style.display = 'none'; // Tutup penjelasan aktif jika ada
         
         generateKuisTajwid();
     } else {
-        // MODE UJIAN OFF: Kembalikan warna
-        textColored.style.display = 'block';
-        textPlain.style.display = 'none';
-        
+        // Matikan Mode Ujian
+        arabWrapper.classList.remove('aykum-mode-ujian-aktif');
         kuisArea.style.display = 'none';
         legendContainer.style.display = 'flex';
         
+        // Reset Hasil
         document.getElementById('aykumKuisHasil').style.display = 'none';
         document.getElementById('aykumKuisHasil').innerHTML = '';
     }
 };
 
 window.generateKuisTajwid = function() {
-    const textColored = document.getElementById('aykumTextColored');
+    const arabWrapper = document.getElementById('aykumArabicWrapper');
     const opsiContainer = document.getElementById('aykumKuisOptions');
     
-    // Ekstrak otomatis Kunci Jawaban dari span di teks yang tersembunyi
-    const elemenTajwid = textColored.querySelectorAll('.aykum-tajwid');
+    // 1. Ekstrak Kunci Jawaban dari span di dalam arabWrapper
+    const elemenTajwid = arabWrapper.querySelectorAll('.aykum-tajwid');
     const setKunci = new Set();
     
     elemenTajwid.forEach(span => {
@@ -7839,7 +7822,7 @@ window.generateKuisTajwid = function() {
     
     window.kunciJawabanTajwidAktif = Array.from(setKunci);
 
-    // Master pilihan pengecoh (Standar Kemenag)
+    // 2. Siapkan Master Pilihan (Semua kemungkinan tajwid)
     const masterTajwid = [
         "Idgam Bigunnah", "Idgam Bilagunnah", "Idgam Mimi", "Idgam Mutajanisain", "Idgam Mutaqaribain", "Idgam Mutamasilain",
         "Gunnah Musyaddadah", "Iqlab", 
@@ -7849,14 +7832,20 @@ window.generateKuisTajwid = function() {
         "Alif Lam Syamsiyah", "Alif Lam Qamariyah", "Hamzah Washal", "Huruf tidak dilafalkan"
     ];
 
+    // 3. Gabungkan kunci jawaban dengan beberapa pengecoh acak
     let opsiKuis = [...window.kunciJawabanTajwidAktif];
+    
+    // Ambil pengecoh yang bukan bagian dari kunci jawaban
     let pengecohTersedia = masterTajwid.filter(t => !window.kunciJawabanTajwidAktif.includes(t));
     
-    // Ambil 6 pengecoh acak biar soalnya makin menantang
+    // Acak pengecoh dan ambil maksimal 5
     pengecohTersedia.sort(() => 0.5 - Math.random());
-    opsiKuis.push(...pengecohTersedia.slice(0, 6));
+    opsiKuis.push(...pengecohTersedia.slice(0, 5));
+
+    // Acak ulang susunan opsi yang sudah digabung
     opsiKuis.sort(() => 0.5 - Math.random());
 
+    // 4. Render ke HTML
     opsiContainer.innerHTML = '';
     opsiKuis.forEach(opsi => {
         const idUnik = 'cb_' + Math.random().toString(36).substr(2, 9);
@@ -7868,6 +7857,7 @@ window.generateKuisTajwid = function() {
         `;
     });
     
+    // Sembunyikan hasil sebelumnya jika ada
     document.getElementById('aykumKuisHasil').style.display = 'none';
 };
 
@@ -7881,41 +7871,36 @@ window.submitKuisTajwid = function() {
     });
 
     if(jawabanUser.length === 0) {
-        return alert("Pilih minimal satu hukum tajwid sebelum Cek Jawaban!");
+        return alert("Pilih minimal satu hukum tajwid!");
     }
 
-    // Evaluasi Skor
+    // Evaluasi
     let tebakanBenar = jawabanUser.filter(j => kunci.includes(j));
     let tebakanSalah = jawabanUser.filter(j => !kunci.includes(j));
     let terlewatkan = kunci.filter(k => !jawabanUser.includes(k));
 
+    // Render Hasil
     const hasilDiv = document.getElementById('aykumKuisHasil');
     hasilDiv.style.display = 'block';
 
-    let htmlHasil = `📊 <strong>Skor Analisis:</strong> Anda menemukan ${tebakanBenar.length} dari ${kunci.length} Tajwid yang ada pada ayat ini.<br><br>`;
+    let htmlHasil = `Skor Anda: Ditemukan ${tebakanBenar.length} dari ${kunci.length} Tajwid yang ada.<br><br>`;
 
     if(tebakanSalah.length === 0 && terlewatkan.length === 0) {
         hasilDiv.className = 'aykum-hasil-benar';
-        htmlHasil += `🎉 <strong>LULUS SEMPURNA!</strong> Insting tajwid Anda tajam. Anda berhasil menebak seluruh hukum tanpa meleset. Silakan pelajari warna ayat di atas.`;
+        htmlHasil += `🎉 <strong>SEMPURNA!</strong> Anda berhasil menebak seluruh hukum tajwid pada ayat ini tanpa ada yang salah.`;
     } else {
         hasilDiv.className = 'aykum-hasil-salah';
-        htmlHasil += `✅ <strong>Tebakan Benar:</strong><br> <span style="color:#166534; font-weight:normal;">${tebakanBenar.join(', ') || '-'}</span><br><br>`;
+        htmlHasil += `<strong>Tebakan Benar:</strong><br> <span style="color:#166534;">${tebakanBenar.join(', ') || '-'}</span><br><br>`;
         if(tebakanSalah.length > 0) {
-             htmlHasil += `❌ <strong>Tebakan Keliru (Halusinasi Tajwid):</strong><br> <span style="color:#991b1b; font-weight:normal;">${tebakanSalah.join(', ')}</span><br><br>`;
+             htmlHasil += `<strong>Tebakan Salah (Tidak ada di ayat ini):</strong><br> <span style="color:#991b1b;">${tebakanSalah.join(', ')}</span><br><br>`;
         }
         if(terlewatkan.length > 0) {
-             htmlHasil += `⚠️ <strong>Kurang Teliti (Ada, tapi terlewatkan):</strong><br> <span style="color:#b45309; font-weight:normal;">${terlewatkan.join(', ')}</span>`;
+             htmlHasil += `<strong>Tajwid yang Terlewat (Ada, tapi tidak Anda pilih):</strong><br> <span style="color:#b45309;">${terlewatkan.join(', ')}</span>`;
         }
     }
     
     hasilDiv.innerHTML = htmlHasil;
 
-    // KUNCI UTAMA: Tampilkan lagi warna aslinya supaya user bisa cross-check ke ayatnya
-    document.getElementById('aykumTextPlain').style.display = 'none';
-    document.getElementById('aykumTextColored').style.display = 'block';
-    
-    // Ganti teks tombolnya
-    document.querySelector('#aykumKuisArea button').innerText = "Sudah Dinilai! (Silakan Cek Warna Ayat)";
-    document.querySelector('#aykumKuisArea button').disabled = true;
-    document.querySelector('#aykumKuisArea button').style.opacity = '0.7';
+    // Matikan mode samar agar warna tajwid asli terlihat sebagai koreksi
+    document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
 };
