@@ -7661,7 +7661,8 @@ window.initAykum = async () => {
                 <div style="display:inline-block; background:#ccfbf1; color:#0f766e; padding:5px 15px; border-radius:20px; font-weight:600; font-size:0.85rem; margin-bottom:15px;">📌 ${dbAykum[katIndex].kategori}</div>
                 <h2 class="aykum-ayat-title">${ayatData.surat}</h2>
                 
-                <div class="aykum-legend-container">
+                <!-- KOTAK LEGENDA KITA KASIH ID BIAR GAK NGILANG -->
+                <div class="aykum-legend-container" id="aykumLegendBox">
                     <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#ef4444;"></div> Idgam Bigunnah / Mutaqaribain</div>
                     <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#d946ef;"></div> Gunnah / Mimi / Madd Lazim</div>
                     <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#06b6d4;"></div> Iqlab / Madd Wajib Muttasil</div>
@@ -7682,26 +7683,24 @@ window.initAykum = async () => {
                         </label>
                     </div>
                     
-                    <!-- Container Arab akan diberi ID agar bisa dimanipulasi warnanya -->
+                    <!-- Container Arab -->
                     <div id="aykumArabicWrapper" class="aykum-arabic-text">${ayatData.arab}</div>
                     <div class="aykum-latin-text">${ayatData.latin}</div>
                     <div class="aykum-arti-text">${ayatData.arti}</div>
                 </div>
                 
-                <!-- Area Kuis yang muncul saat Mode Ujian aktif -->
+                <!-- Area Kuis -->
                 <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
                     <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Tebak Tajwid!</h3>
                     <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat di atas? Pilih semua yang menurut Anda benar.</p>
                     
-                    <!-- Checkbox akan di-generate oleh JS di sini -->
                     <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
                     
                     <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">Cek Jawaban</button>
                     
-                    <!-- Area Hasil Evaluasi -->
                     <div id="aykumKuisHasil" style="display:none; margin-top:15px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.6;"></div>
 
-                    <!-- Area Kunci Jawaban (Disembunyikan sebelum diklik Cek Jawaban) -->
+                    <!-- Area Kunci Jawaban -->
                     <div id="aykumKunciJawaban" style="display:none; margin-top:20px; padding-top:20px; border-top:2px dashed #cbd5e1;">
                         <h4 style="color:#0f766e; margin-top:0; margin-bottom:15px;">Kunci Jawaban Warna Tajwid:</h4>
                         <div class="aykum-arabic-text">${ayatData.arab}</div>
@@ -7791,7 +7790,7 @@ window.kunciJawabanTajwidAktif = [];
 window.toggleModeUjian = function(checkbox) {
     const arabWrapper = document.getElementById('aykumArabicWrapper');
     const kuisArea = document.getElementById('aykumKuisArea');
-    const legendContainer = document.querySelector('.aykum-legend-container');
+    const legendContainer = document.getElementById('aykumLegendBox');
     const penjelasanBox = document.getElementById('aykumPenjelasanBox');
     const kunciJawaban = document.getElementById('aykumKunciJawaban');
 
@@ -7799,24 +7798,26 @@ window.toggleModeUjian = function(checkbox) {
         // Aktifkan Mode Ujian
         arabWrapper.classList.add('aykum-mode-ujian-aktif');
         kuisArea.style.display = 'block';
-        legendContainer.style.display = 'none'; // Sembunyikan panduan warna
-        penjelasanBox.style.display = 'none'; // Tutup penjelasan aktif jika ada
-        if(kunciJawaban) kunciJawaban.style.display = 'none'; // Pastikan jawaban ngumpet
+        if(legendContainer) legendContainer.style.display = 'none'; // Sembunyikan legenda warna
+        if(penjelasanBox) penjelasanBox.style.display = 'none';
+        if(kunciJawaban) kunciJawaban.style.display = 'none'; 
         
         generateKuisTajwid();
     } else {
         // Matikan Mode Ujian
         arabWrapper.classList.remove('aykum-mode-ujian-aktif');
         kuisArea.style.display = 'none';
-        legendContainer.style.display = 'flex';
+        if(legendContainer) legendContainer.style.display = 'flex'; // Munculkan kembali legenda
         if(kunciJawaban) kunciJawaban.style.display = 'none';
         
         // Reset Hasil
-        document.getElementById('aykumKuisHasil').style.display = 'none';
-        document.getElementById('aykumKuisHasil').innerHTML = '';
+        const hasilDiv = document.getElementById('aykumKuisHasil');
+        if(hasilDiv) {
+            hasilDiv.style.display = 'none';
+            hasilDiv.innerHTML = '';
+        }
     }
 };
-
 window.generateKuisTajwid = function() {
     const arabWrapper = document.getElementById('aykumArabicWrapper');
     const opsiContainer = document.getElementById('aykumKuisOptions');
@@ -7884,7 +7885,7 @@ window.submitKuisTajwid = function() {
         return alert("Pilih minimal satu hukum tajwid!");
     }
 
-    // Evaluasi
+    // Evaluasi Jawaban
     let tebakanBenar = jawabanUser.filter(j => kunci.includes(j));
     let tebakanSalah = jawabanUser.filter(j => !kunci.includes(j));
     let terlewatkan = kunci.filter(k => !jawabanUser.includes(k));
@@ -7911,12 +7912,18 @@ window.submitKuisTajwid = function() {
     
     hasilDiv.innerHTML = htmlHasil;
 
-    // Munculkan kembali Kunci Jawaban di bagian bawah
+    // 1. Munculkan kembali Kunci Jawaban di bagian bawah
     const kunciJawaban = document.getElementById('aykumKunciJawaban');
-    if(kunciJawaban) {
-        kunciJawaban.style.display = 'block';
-    }
+    if(kunciJawaban) kunciJawaban.style.display = 'block';
 
-    // Matikan mode samar pada bacaan utama agar warnanya kembali terlihat 
+    // 2. Munculkan kembali Legend Warna di Atas
+    const legendContainer = document.getElementById('aykumLegendBox');
+    if(legendContainer) legendContainer.style.display = 'flex';
+
+    // 3. Uncheck tombol switchnya (Biar statusnya ikut mati)
+    const toggleBtn = document.getElementById('toggleUjian');
+    if(toggleBtn) toggleBtn.checked = false;
+
+    // 4. Matikan mode samar pada bacaan utama agar warnanya kembali terlihat 
     document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
 };
