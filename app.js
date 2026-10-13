@@ -7671,7 +7671,36 @@ window.initAykum = async () => {
                 </div>
 
                 <div class="aykum-quran-box">
-                    <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
+                            <div style="display:flex; justify-content:center; gap:15px; margin-bottom: 20px;">
+                                <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
+                                
+                                <!-- Toggle Mode Ujian -->
+                                <label class="aykum-toggle-container">
+                                    <input type="checkbox" id="toggleUjian" onchange="toggleModeUjian(this)">
+                                    <span class="aykum-toggle-slider"></span>
+                                    <span class="aykum-toggle-label">Mode Ujian Tajwid</span>
+                                </label>
+                            </div>
+                        
+                            <!-- Container Arab akan diberi ID agar bisa dimanipulasi -->
+                            <div id="aykumArabicWrapper" class="aykum-arabic-text">${ayatData.arab}</div>
+                            <div class="aykum-latin-text">${ayatData.latin}</div>
+                            <div class="aykum-arti-text">${ayatData.arti}</div>
+                        </div>
+                        
+                        <!-- Area Kuis yang muncul saat Mode Ujian aktif -->
+                        <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
+                            <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Tebak Tajwid!</h3>
+                            <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat di atas? Pilih semua yang menurut Anda benar.</p>
+                            
+                            <!-- Checkbox akan di-generate oleh JS di sini -->
+                            <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
+                            
+                            <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">Cek Jawaban</button>
+                            
+                            <!-- Area Hasil Evaluasi -->
+                            <div id="aykumKuisHasil" style="display:none; margin-top:15px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.6;"></div>
+                        </div>
                     <div class="aykum-arabic-text">${ayatData.arab}</div>
                     <div class="aykum-latin-text">${ayatData.latin}</div>
                     <div class="aykum-arti-text">${ayatData.arti}</div>
