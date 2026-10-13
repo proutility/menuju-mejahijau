@@ -7774,3 +7774,133 @@ window.initAykum = async () => {
 
     renderSidebar();
 };
+// ==========================================
+// LOGIKA MODE UJIAN TAJWID
+// ==========================================
+
+// Variabel global untuk menyimpan jawaban yang benar pada ayat yang sedang aktif
+window.kunciJawabanTajwidAktif = [];
+
+window.toggleModeUjian = function(checkbox) {
+    const arabWrapper = document.getElementById('aykumArabicWrapper');
+    const kuisArea = document.getElementById('aykumKuisArea');
+    const legendContainer = document.querySelector('.aykum-legend-container');
+    const penjelasanBox = document.getElementById('aykumPenjelasanBox');
+
+    if (checkbox.checked) {
+        // Aktifkan Mode Ujian
+        arabWrapper.classList.add('aykum-mode-ujian-aktif');
+        kuisArea.style.display = 'block';
+        legendContainer.style.display = 'none'; // Sembunyikan panduan warna
+        penjelasanBox.style.display = 'none'; // Tutup penjelasan aktif jika ada
+        
+        generateKuisTajwid();
+    } else {
+        // Matikan Mode Ujian
+        arabWrapper.classList.remove('aykum-mode-ujian-aktif');
+        kuisArea.style.display = 'none';
+        legendContainer.style.display = 'flex';
+        
+        // Reset Hasil
+        document.getElementById('aykumKuisHasil').style.display = 'none';
+        document.getElementById('aykumKuisHasil').innerHTML = '';
+    }
+};
+
+window.generateKuisTajwid = function() {
+    const arabWrapper = document.getElementById('aykumArabicWrapper');
+    const opsiContainer = document.getElementById('aykumKuisOptions');
+    
+    // 1. Ekstrak Kunci Jawaban dari span di dalam arabWrapper
+    const elemenTajwid = arabWrapper.querySelectorAll('.aykum-tajwid');
+    const setKunci = new Set();
+    
+    elemenTajwid.forEach(span => {
+        let hukum = span.getAttribute('data-hukum');
+        if(hukum) setKunci.add(hukum.trim());
+    });
+    
+    window.kunciJawabanTajwidAktif = Array.from(setKunci);
+
+    // 2. Siapkan Master Pilihan (Semua kemungkinan tajwid)
+    const masterTajwid = [
+        "Idgam Bigunnah", "Idgam Bilagunnah", "Idgam Mimi", "Idgam Mutajanisain", "Idgam Mutaqaribain", "Idgam Mutamasilain",
+        "Gunnah Musyaddadah", "Iqlab", 
+        "Ikhfa Haqiqi", "Ikhfa Syafawi", "Idzhar Halqi", "Idzhar Syafawi",
+        "Madd Wajib Muttasil", "Madd Jaiz Munfasil", "Madd Lazim Mutsaqqal Kilmi", "Madd Lazim Mukhaffaf Kilmi", "Madd Silah Tawilah",
+        "Qalqalah Sugra", "Qalqalah Kubra", 
+        "Alif Lam Syamsiyah", "Alif Lam Qamariyah", "Hamzah Washal", "Huruf tidak dilafalkan"
+    ];
+
+    // 3. Gabungkan kunci jawaban dengan beberapa pengecoh acak
+    let opsiKuis = [...window.kunciJawabanTajwidAktif];
+    
+    // Ambil pengecoh yang bukan bagian dari kunci jawaban
+    let pengecohTersedia = masterTajwid.filter(t => !window.kunciJawabanTajwidAktif.includes(t));
+    
+    // Acak pengecoh dan ambil maksimal 5
+    pengecohTersedia.sort(() => 0.5 - Math.random());
+    opsiKuis.push(...pengecohTersedia.slice(0, 5));
+
+    // Acak ulang susunan opsi yang sudah digabung
+    opsiKuis.sort(() => 0.5 - Math.random());
+
+    // 4. Render ke HTML
+    opsiContainer.innerHTML = '';
+    opsiKuis.forEach(opsi => {
+        const idUnik = 'cb_' + Math.random().toString(36).substr(2, 9);
+        opsiContainer.innerHTML += `
+            <label class="aykum-kuis-cb-wrapper" for="${idUnik}">
+                <input type="checkbox" id="${idUnik}" value="${opsi}" class="aykum-cb-jawaban">
+                <span>${opsi}</span>
+            </label>
+        `;
+    });
+    
+    // Sembunyikan hasil sebelumnya jika ada
+    document.getElementById('aykumKuisHasil').style.display = 'none';
+};
+
+window.submitKuisTajwid = function() {
+    const checkboxes = document.querySelectorAll('.aykum-cb-jawaban');
+    const kunci = window.kunciJawabanTajwidAktif;
+    
+    let jawabanUser = [];
+    checkboxes.forEach(cb => {
+        if(cb.checked) jawabanUser.push(cb.value);
+    });
+
+    if(jawabanUser.length === 0) {
+        return alert("Pilih minimal satu hukum tajwid!");
+    }
+
+    // Evaluasi
+    let tebakanBenar = jawabanUser.filter(j => kunci.includes(j));
+    let tebakanSalah = jawabanUser.filter(j => !kunci.includes(j));
+    let terlewatkan = kunci.filter(k => !jawabanUser.includes(k));
+
+    // Render Hasil
+    const hasilDiv = document.getElementById('aykumKuisHasil');
+    hasilDiv.style.display = 'block';
+
+    let htmlHasil = `Skor Anda: Ditemukan ${tebakanBenar.length} dari ${kunci.length} Tajwid yang ada.<br><br>`;
+
+    if(tebakanSalah.length === 0 && terlewatkan.length === 0) {
+        hasilDiv.className = 'aykum-hasil-benar';
+        htmlHasil += `🎉 <strong>SEMPURNA!</strong> Anda berhasil menebak seluruh hukum tajwid pada ayat ini tanpa ada yang salah.`;
+    } else {
+        hasilDiv.className = 'aykum-hasil-salah';
+        htmlHasil += `<strong>Tebakan Benar:</strong><br> <span style="color:#166534;">${tebakanBenar.join(', ') || '-'}</span><br><br>`;
+        if(tebakanSalah.length > 0) {
+             htmlHasil += `<strong>Tebakan Salah (Tidak ada di ayat ini):</strong><br> <span style="color:#991b1b;">${tebakanSalah.join(', ')}</span><br><br>`;
+        }
+        if(terlewatkan.length > 0) {
+             htmlHasil += `<strong>Tajwid yang Terlewat (Ada, tapi tidak Anda pilih):</strong><br> <span style="color:#b45309;">${terlewatkan.join(', ')}</span>`;
+        }
+    }
+    
+    hasilDiv.innerHTML = htmlHasil;
+
+    // Matikan mode samar agar warna tajwid asli terlihat sebagai koreksi
+    document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
+};
