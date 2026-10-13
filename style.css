@@ -1458,3 +1458,42 @@ div.swal2-container {
     .uukk-sidebar.minimized { transform: translateX(-100%); }
     .uukk-toggle-sidebar-btn { display: none; } /* Bisa diatur beda utk mobile jika perlu */
 }
+/* ========================================= */
+/* CSS KHUSUS AYAT HUKUM (TAJWID)            */
+/* ========================================= */
+.aykum-layout-wrapper { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 75px); }
+.aykum-sidebar { width: 320px; background: #fff; border-right: 2px solid #e2e8f0; display: flex; flex-direction: column; overflow-y: auto; }
+.aykum-nav-list { list-style: none; padding: 0; margin: 0; }
+.aykum-nav-kategori { padding: 12px 20px; font-weight: 800; color: #0f766e; background: #ccfbf1; font-size: 0.9rem; margin-top: 10px; text-transform: uppercase; }
+.aykum-nav-item { padding: 12px 20px 12px 30px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #475569; transition: 0.2s; }
+.aykum-nav-item:hover, .aykum-nav-item.active { background: #fefce8; color: #ca8a04; padding-left: 35px; border-left: 4px solid #ca8a04; }
+
+.aykum-main-content { flex: 1; overflow-y: auto; padding: 40px; background: #f8fafc; }
+.aykum-content-wrapper { max-width: 900px; margin: 0 auto; }
+.aykum-card { background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid #0f766e; }
+
+.aykum-ayat-title { color: #0f766e; font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; border-bottom: 2px dashed #e2e8f0; padding-bottom: 15px; }
+.aykum-legend-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+.aykum-legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 600; width: calc(33.33% - 10px); }
+.aykum-color-box { width: 14px; height: 14px; border-radius: 4px; }
+
+.aykum-quran-box { text-align: center; margin-bottom: 30px; }
+.aykum-arabic-text { font-family: 'Amiri', 'Traditional Arabic', serif; font-size: 3.5rem; line-height: 2.2; direction: rtl; margin-bottom: 25px; color: #0f172a; }
+.aykum-latin-text { font-size: 1.1rem; color: #64748b; font-style: italic; margin-bottom: 20px; line-height: 1.6; }
+.aykum-arti-text { font-size: 1.15rem; color: #334155; font-weight: 500; line-height: 1.7; background: #f0fdf4; padding: 20px; border-radius: 12px; border-left: 4px solid #0f766e; text-align: left; }
+
+/* WARNA TAJWID KEMENAG RI */
+.aykum-tajwid { cursor: pointer; transition: 0.2s; font-weight: bold; border-bottom: 3px dashed transparent; }
+.aykum-tajwid:hover { background-color: #fef08a; border-radius: 4px; }
+.aykum-t-merah { color: #ef4444; border-bottom-color: #ef4444; }
+.aykum-t-magenta { color: #d946ef; border-bottom-color: #d946ef; }
+.aykum-t-cyan { color: #06b6d4; border-bottom-color: #06b6d4; }
+.aykum-t-hijau { color: #22c55e; border-bottom-color: #22c55e; }
+.aykum-t-biru { color: #3b82f6; border-bottom-color: #3b82f6; }
+.aykum-t-grey { color: #94a3b8; border-bottom-color: #94a3b8; }
+
+.aykum-penjelasan-box { display: none; background: #e0f2fe; border-left: 5px solid #0ea5e9; padding: 20px; border-radius: 8px; margin-top: 20px; animation: fadeIn 0.3s; text-align: left; }
+.aykum-btn-audio { background: #0f766e; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 1rem; cursor: pointer; font-weight: bold; margin-bottom: 20px; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;}
+.aykum-btn-audio:hover:not(:disabled) { background: #115e59; transform: translateY(-2px); }
+.aykum-btn-audio:disabled { opacity: 0.7; cursor: not-allowed; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
