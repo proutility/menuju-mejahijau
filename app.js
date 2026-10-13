@@ -7560,3 +7560,161 @@ window.initUUKK = async () => {
 
     renderSidebar();
 };
+// ==========================================
+// 📖 FITUR AYAT HUKUM & TAJWID (QARI API)
+// ==========================================
+import { collection, query, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+window.bukaAyatHukum = () => {
+    const overlay = document.getElementById('aykumOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        if(typeof window.initAykum === 'function') window.initAykum();
+    }
+};
+
+window.initAykum = async () => {
+    if (window.aykumSudahRender) return;
+
+    // Asumsi lu punya fungsi loading, kalau nggak ada ganti console.log
+    if(typeof PROTAMA !== 'undefined') PROTAMA.loading("Memuat Ayat Hukum...");
+    let dbAykum = [];
+
+    try {
+        const qRef = query(collection(window.db, "ayat_hukum"));
+        const snapshot = await getDocs(qRef);
+
+        if (snapshot.empty) {
+            if(typeof PROTAMA !== 'undefined') PROTAMA.close();
+            return alert("Data Ayat Hukum belum ada di server!");
+        }
+
+        // Simpan sementara buat di-sort biar urutan kategori nggak ngacak
+        let rawData = [];
+        snapshot.forEach(doc => rawData.push({ id: doc.id, data: doc.data() }));
+        rawData.sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
+        dbAykum = rawData.map(d => d.data);
+
+        window.aykumSudahRender = true;
+        if(typeof PROTAMA !== 'undefined') PROTAMA.close();
+    } catch (error) {
+        if(typeof PROTAMA !== 'undefined') PROTAMA.close();
+        return alert("Koneksi Firebase gagal: " + error.message);
+    }
+
+    const navList = document.getElementById('aykumNavList');
+    const contentArea = document.getElementById('aykumContentArea');
+
+    function renderSidebar() {
+        navList.innerHTML = '';
+        dbAykum.forEach((kategoriData, katIndex) => {
+            const lbl = document.createElement('li');
+            lbl.className = 'aykum-nav-kategori';
+            lbl.textContent = kategoriData.kategori;
+            navList.appendChild(lbl);
+
+            kategoriData.ayatList.forEach((ayat, ayatIndex) => {
+                const item = document.createElement('li');
+                item.className = 'aykum-nav-item';
+                item.textContent = ayat.surat;
+                item.onclick = (e) => loadAyat(katIndex, ayatIndex, e.target);
+                navList.appendChild(item);
+            });
+        });
+    }
+
+    function loadAyat(katIndex, ayatIndex, elClicked) {
+        document.querySelectorAll('.aykum-nav-item').forEach(el => el.classList.remove('active'));
+        elClicked.classList.add('active');
+
+        const ayatData = dbAykum[katIndex].ayatList[ayatIndex];
+        
+        contentArea.innerHTML = `
+            <div class="aykum-card">
+                <div style="display:inline-block; background:#ccfbf1; color:#0f766e; padding:5px 15px; border-radius:20px; font-weight:600; font-size:0.85rem; margin-bottom:15px;">📌 ${dbAykum[katIndex].kategori}</div>
+                <h2 class="aykum-ayat-title">${ayatData.surat}</h2>
+                
+                <div class="aykum-legend-container">
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#ef4444;"></div> Idgam Bigunnah / Mutaqaribain</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#d946ef;"></div> Gunnah / Mimi / Madd Lazim</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#06b6d4;"></div> Iqlab / Madd Wajib Muttasil</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#22c55e;"></div> Ikhfa' / Madd Ja'iz Munfasil</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#3b82f6;"></div> Qalqalah</div>
+                    <div class="aykum-legend-item"><div class="aykum-color-box" style="background:#94a3b8;"></div> Huruf Tidak Dilafalkan</div>
+                </div>
+
+                <div class="aykum-quran-box">
+                    <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
+                    <div class="aykum-arabic-text">${ayatData.arab}</div>
+                    <div class="aykum-latin-text">${ayatData.latin}</div>
+                    <div class="aykum-arti-text">${ayatData.arti}</div>
+                </div>
+
+                <div class="aykum-penjelasan-box" id="aykumPenjelasanBox">
+                    <h3 id="aykumPHukum" style="margin: 0 0 10px 0; color: #0284c7;"></h3>
+                    <p id="aykumPCara" style="margin: 0; line-height: 1.5; color: #0f172a;"></p>
+                </div>
+            </div>
+        `;
+
+        // Interaksi Klik Tajwid
+        const tajwidElements = contentArea.querySelectorAll('.aykum-tajwid');
+        tajwidElements.forEach(el => {
+            el.addEventListener('click', function() {
+                tajwidElements.forEach(t => t.style.backgroundColor = 'transparent');
+                this.style.backgroundColor = '#fef08a';
+                
+                document.getElementById('aykumPHukum').innerText = `🔍 Analisis Tajwid: ${this.getAttribute('data-hukum')}`;
+                document.getElementById('aykumPCara').innerHTML = `<strong>Cara Membaca:</strong> ${this.getAttribute('data-cara')}`;
+                document.getElementById('aykumPenjelasanBox').style.display = 'block';
+            });
+        });
+    }
+
+    window.playQari = async (btnEl, suratStr) => {
+        if(window.currentQariAudio && !window.currentQariAudio.paused) {
+            window.currentQariAudio.pause();
+        }
+
+        const surahMap = {
+            "al-baqarah": 2, "al-maidah": 5, "al-maa'idah": 5, "an-nuur": 24, "an-nur": 24,
+            "an-nisaa": 4, "an-nisa": 4, "an-nisaa'": 4, "an-nisa'": 4, "al-an'aam": 6, 
+            "al-ahzaab": 33, "al-ahzab": 33, "at-talaq": 65, "at-taubah": 9, 
+            "al-a'raaf": 7, "al-anbiyaa": 21, "al-bayyinah": 98, "al-muzzammil": 73
+        };
+
+        // Parse format "1. Al-Baqarah: 275"
+        let cleanStr = suratStr.replace(/^[0-9]+\.\s*/, ''); 
+        let parts = cleanStr.split(':');
+        let namaSurat = parts[0].trim().toLowerCase();
+        let noAyat = parts[1].trim();
+        let noSurat = surahMap[namaSurat] || surahMap[namaSurat.replace(/['’]/g, '')];
+
+        if(!noSurat) return alert("Sistem belum mengenali surat: " + namaSurat);
+
+        let origText = btnEl.innerHTML;
+        btnEl.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Menghubungi Server...";
+        btnEl.disabled = true;
+
+        try {
+            let response = await fetch(`https://api.alquran.cloud/v1/ayah/${noSurat}:${noAyat}/ar.husary`);
+            let data = await response.json();
+            
+            if(data.code === 200) {
+                window.currentQariAudio = new Audio(data.data.audio);
+                window.currentQariAudio.onended = () => {
+                    btnEl.innerHTML = origText;
+                    btnEl.disabled = false;
+                };
+                window.currentQariAudio.play();
+                btnEl.innerHTML = "<i class='fas fa-volume-up'></i> Sedang Memutar...";
+            } else throw new Error("Gagal mengambil audio");
+        } catch(e) {
+            alert("Gagal memuat audio Qari. Pastikan koneksi internet stabil.");
+            btnEl.innerHTML = origText;
+            btnEl.disabled = false;
+        }
+    };
+
+    renderSidebar();
+};
