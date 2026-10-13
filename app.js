@@ -7565,26 +7565,31 @@ window.initUUKK = async () => {
 // ==========================================
 
 window.bukaAyatHukum = () => {
-    // 1. Tarik data role dari variabel mesin Gatekeeper lo
+    // 1. Cek Jabatan (Gatekeeper)
     let roleAsli = window.userRoleCakim || "PESERTA";
-    
-    // 2. Bersihkan spasi dan kapitalisasi
     let role = roleAsli.toLowerCase().trim(); 
 
-    // 3. Syarat pembuka gerbang (Sesuaikan dengan nama role di Gatekeeper lo)
     let isVipAtauAdmin = (
         role === "super_admin" || 
         role === "editor" || 
         role === "vip"
     );
 
-    // Kalau bukan VIP/Admin, tolak mentah-mentah!
+    // Kalau bukan VIP/Admin, tolak mentah-mentah! (Layar menu utama JANGAN ditutup)
     if (!isVipAtauAdmin) {
         console.log("Akses Ditolak. Role Kamu:", roleAsli);
         return alert("Mohon maaf Calon Yang Mulia! 🙏\nFitur Drilling Tajwid Ayat Hukum ini eksklusif untuk member VIP.");
     }
 
-    // Kalau lolos, Buka Overlay-nya!
+    // ========================================================
+    // 2. KUNCI FIX-NYA DI SINI: TUTUP DULU LAYAR MENU UTAMA
+    // ========================================================
+    const pusatStudi = document.getElementById('pusatStudiOverlay');
+    if (pusatStudi) {
+        pusatStudi.style.display = 'none';
+    }
+
+    // 3. BARU BUKA LAYAR AYAT HUKUM
     const overlay = document.getElementById('aykumOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
