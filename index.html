@@ -937,7 +937,14 @@
                 <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">UU Kekuasaan Kehakiman</h3>
                 <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling UU No. 48 Tahun 2009</p>
             </div>
-
+            <!-- MENU 6: HIMPUNAN AYAT HUKUM (HANYA VIP, EDITOR, ADMIN) -->
+                <div class="menu-premium" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; window.bukaAyatHukum();" style="display: none; background: white; border-radius: 16px; padding: 30px 25px; text-align: center; cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 2px solid transparent; transition: 0.3s;" onmouseover="this.style.borderColor='#0f766e'; this.style.transform='translateY(-5px)'" onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)'">
+                    <div style="background: #ccfbf1; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+                        <i class="fas fa-quran" style="font-size: 2rem; color: #0f766e;"></i>
+                    </div>
+                    <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 1.2rem;">Ayat Hukum</h3>
+                    <p style="margin: 0; color: #64748b; font-size: 0.9rem;">Drilling Tajwid PA</p>
+                </div>
         </div>
     </div>
 </div>
@@ -1406,5 +1413,31 @@
             </main>
         </div>
     </div>
+    <!-- ========================================== -->
+<!-- OVERLAY AYAT HUKUM (FULL SCREEN)           -->
+<!-- ========================================== -->
+<div id="aykumOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f0fdf4; z-index:20000; flex-direction:column; overflow:hidden;">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: #0f766e; color: white; border-bottom: 4px solid #fcd34d; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100;">
+        <h2 style="margin:0; font-size: 1.4rem; font-weight: 800;"><i class="fas fa-quran"></i> Simulasi Tahsin & Tajwid PA</h2>
+        <button onclick="document.getElementById('aykumOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#fef2f2; color:#ef4444; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer; transition:0.2s;">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <div class="aykum-layout-wrapper">
+        <aside class="aykum-sidebar">
+            <ul class="aykum-nav-list" id="aykumNavList"></ul>
+        </aside>
+        <main class="aykum-main-content">
+            <div class="aykum-content-wrapper" id="aykumContentArea">
+                <div class="aykum-card" style="text-align:center; padding:50px;">
+                    <h2 style="color:#0f766e;">Selamat Datang, Calon Yang Mulia!</h2>
+                    <p>Pilih ayat di panel kiri untuk memulai simulasi membaca dan identifikasi hukum Tajwid (Standar Kemenag RI).</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
 </body>
 </html>
