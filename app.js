@@ -7671,39 +7671,43 @@ window.initAykum = async () => {
                 </div>
 
                 <div class="aykum-quran-box">
-                            <div style="display:flex; justify-content:center; gap:15px; margin-bottom: 20px;">
-                                <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
-                                
-                                <!-- Toggle Mode Ujian -->
-                                <label class="aykum-toggle-container">
-                                    <input type="checkbox" id="toggleUjian" onchange="toggleModeUjian(this)">
-                                    <span class="aykum-toggle-slider"></span>
-                                    <span class="aykum-toggle-label">Mode Ujian Tajwid</span>
-                                </label>
-                            </div>
+                    <div style="display:flex; justify-content:center; gap:15px; margin-bottom: 20px;">
+                        <button class="aykum-btn-audio" onclick="window.playQari(this, '${ayatData.surat}')"><i class="fas fa-volume-up"></i> Dengarkan Qari</button>
                         
-                            <!-- Container Arab akan diberi ID agar bisa dimanipulasi -->
-                            <div id="aykumArabicWrapper" class="aykum-arabic-text">${ayatData.arab}</div>
-                            <div class="aykum-latin-text">${ayatData.latin}</div>
-                            <div class="aykum-arti-text">${ayatData.arti}</div>
-                        </div>
-                        
-                        <!-- Area Kuis yang muncul saat Mode Ujian aktif -->
-                        <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
-                            <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Tebak Tajwid!</h3>
-                            <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat di atas? Pilih semua yang menurut Anda benar.</p>
-                            
-                            <!-- Checkbox akan di-generate oleh JS di sini -->
-                            <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
-                            
-                            <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">Cek Jawaban</button>
-                            
-                            <!-- Area Hasil Evaluasi -->
-                            <div id="aykumKuisHasil" style="display:none; margin-top:15px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.6;"></div>
-                        </div>
-                    <div class="aykum-arabic-text">${ayatData.arab}</div>
+                        <!-- Toggle Mode Ujian -->
+                        <label class="aykum-toggle-container">
+                            <input type="checkbox" id="toggleUjian" onchange="toggleModeUjian(this)">
+                            <span class="aykum-toggle-slider"></span>
+                            <span class="aykum-toggle-label">Mode Ujian Tajwid</span>
+                        </label>
+                    </div>
+                    
+                    <!-- Container Arab akan diberi ID agar bisa dimanipulasi warnanya -->
+                    <div id="aykumArabicWrapper" class="aykum-arabic-text">${ayatData.arab}</div>
                     <div class="aykum-latin-text">${ayatData.latin}</div>
                     <div class="aykum-arti-text">${ayatData.arti}</div>
+                </div>
+                
+                <!-- Area Kuis yang muncul saat Mode Ujian aktif -->
+                <div id="aykumKuisArea" style="display:none; margin-top:20px; background:#f8fafc; padding:20px; border-radius:12px; border:2px dashed #94a3b8; text-align:left;">
+                    <h3 style="margin-top:0; color:#0f766e;"><i class="fas fa-brain"></i> Tebak Tajwid!</h3>
+                    <p style="font-size:0.95rem; color:#475569; margin-bottom:15px;">Hukum tajwid apa saja yang ada pada ayat di atas? Pilih semua yang menurut Anda benar.</p>
+                    
+                    <!-- Checkbox akan di-generate oleh JS di sini -->
+                    <div id="aykumKuisOptions" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px;"></div>
+                    
+                    <button onclick="submitKuisTajwid()" style="background:#0f766e; color:white; border:none; padding:10px 25px; border-radius:8px; cursor:pointer; font-weight:bold; width:100%;">Cek Jawaban</button>
+                    
+                    <!-- Area Hasil Evaluasi -->
+                    <div id="aykumKuisHasil" style="display:none; margin-top:15px; padding:15px; border-radius:8px; font-weight:bold; line-height:1.6;"></div>
+
+                    <!-- Area Kunci Jawaban (Disembunyikan sebelum diklik Cek Jawaban) -->
+                    <div id="aykumKunciJawaban" style="display:none; margin-top:20px; padding-top:20px; border-top:2px dashed #cbd5e1;">
+                        <h4 style="color:#0f766e; margin-top:0; margin-bottom:15px;">Kunci Jawaban Warna Tajwid:</h4>
+                        <div class="aykum-arabic-text">${ayatData.arab}</div>
+                        <div class="aykum-latin-text">${ayatData.latin}</div>
+                        <div class="aykum-arti-text">${ayatData.arti}</div>
+                    </div>
                 </div>
 
                 <div class="aykum-penjelasan-box" id="aykumPenjelasanBox">
@@ -7717,6 +7721,9 @@ window.initAykum = async () => {
         const tajwidElements = contentArea.querySelectorAll('.aykum-tajwid');
         tajwidElements.forEach(el => {
             el.addEventListener('click', function() {
+                // Blokir klik jika sedang mode ujian
+                if(document.getElementById('aykumArabicWrapper').classList.contains('aykum-mode-ujian-aktif')) return;
+
                 tajwidElements.forEach(t => t.style.backgroundColor = 'transparent');
                 this.style.backgroundColor = '#fef08a';
                 
@@ -7786,6 +7793,7 @@ window.toggleModeUjian = function(checkbox) {
     const kuisArea = document.getElementById('aykumKuisArea');
     const legendContainer = document.querySelector('.aykum-legend-container');
     const penjelasanBox = document.getElementById('aykumPenjelasanBox');
+    const kunciJawaban = document.getElementById('aykumKunciJawaban');
 
     if (checkbox.checked) {
         // Aktifkan Mode Ujian
@@ -7793,6 +7801,7 @@ window.toggleModeUjian = function(checkbox) {
         kuisArea.style.display = 'block';
         legendContainer.style.display = 'none'; // Sembunyikan panduan warna
         penjelasanBox.style.display = 'none'; // Tutup penjelasan aktif jika ada
+        if(kunciJawaban) kunciJawaban.style.display = 'none'; // Pastikan jawaban ngumpet
         
         generateKuisTajwid();
     } else {
@@ -7800,6 +7809,7 @@ window.toggleModeUjian = function(checkbox) {
         arabWrapper.classList.remove('aykum-mode-ujian-aktif');
         kuisArea.style.display = 'none';
         legendContainer.style.display = 'flex';
+        if(kunciJawaban) kunciJawaban.style.display = 'none';
         
         // Reset Hasil
         document.getElementById('aykumKuisHasil').style.display = 'none';
@@ -7901,6 +7911,12 @@ window.submitKuisTajwid = function() {
     
     hasilDiv.innerHTML = htmlHasil;
 
-    // Matikan mode samar agar warna tajwid asli terlihat sebagai koreksi
+    // Munculkan kembali Kunci Jawaban di bagian bawah
+    const kunciJawaban = document.getElementById('aykumKunciJawaban');
+    if(kunciJawaban) {
+        kunciJawaban.style.display = 'block';
+    }
+
+    // Matikan mode samar pada bacaan utama agar warnanya kembali terlihat 
     document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
 };
