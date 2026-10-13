@@ -7563,20 +7563,32 @@ window.initUUKK = async () => {
 // ==========================================
 // 📖 FITUR AYAT HUKUM & TAJWID (QARI API)
 // ==========================================
-import { collection, query, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 window.bukaAyatHukum = () => {
+    // CEK AKSES VIP / ADMIN / EDITOR DI SINI
+    // Sesuaikan "window.userRole" atau "localStorage.getItem('role')" dengan cara web lo nyimpen role user saat login
+    let role = window.userRole || localStorage.getItem('userRole') || "guest"; 
+    let isVipAtauAdmin = (role === "admin" || role === "editor" || role === "vip");
+
+    // Kalau bukan VIP/Admin, tolak!
+    if (!isVipAtauAdmin) {
+        return alert("Mohon maaf Calon Yang Mulia! 🙏\nFitur Drilling Tajwid Ayat Hukum ini eksklusif untuk member VIP.");
+    }
+
     const overlay = document.getElementById('aykumOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
-        if(typeof window.initAykum === 'function') window.initAykum();
+        if(typeof window.initAykum === 'function') {
+            window.initAykum();
+        }
+    } else {
+        alert("HTML Overlay Ayat Hukum belum dipasang!");
     }
 };
 
 window.initAykum = async () => {
     if (window.aykumSudahRender) return;
 
-    // Asumsi lu punya fungsi loading, kalau nggak ada ganti console.log
     if(typeof PROTAMA !== 'undefined') PROTAMA.loading("Memuat Ayat Hukum...");
     let dbAykum = [];
 
