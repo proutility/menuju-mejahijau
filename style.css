@@ -1497,3 +1497,71 @@ div.swal2-container {
 .aykum-btn-audio:hover:not(:disabled) { background: #115e59; transform: translateY(-2px); }
 .aykum-btn-audio:disabled { opacity: 0.7; cursor: not-allowed; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========================================= */
+/* CSS TAMBAHAN: MODE UJIAN TAJWID           */
+/* ========================================= */
+
+/* Toggle Switch Styling */
+.aykum-toggle-container {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    background: #e2e8f0;
+    padding: 8px 15px 8px 8px;
+    border-radius: 30px;
+    transition: 0.3s;
+}
+.aykum-toggle-container:hover { background: #cbd5e1; }
+.aykum-toggle-container input { display: none; }
+.aykum-toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background-color: #94a3b8;
+    border-radius: 34px;
+    transition: .4s;
+    margin-right: 10px;
+}
+.aykum-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: .4s;
+}
+.aykum-toggle-container input:checked + .aykum-toggle-slider { background-color: #0f766e; }
+.aykum-toggle-container input:checked + .aykum-toggle-slider:before { transform: translateX(20px); }
+.aykum-toggle-label { font-weight: bold; color: #334155; font-size: 0.95rem; }
+
+/* Saat Mode Ujian Aktif: Sembunyikan warna dan gaya */
+.aykum-mode-ujian-aktif .aykum-tajwid {
+    color: inherit !important;
+    border-bottom: none !important;
+    pointer-events: none; /* Disable klik tajwid individual saat ujian */
+}
+
+/* Checkbox Kuis */
+.aykum-kuis-cb-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+    width: calc(50% - 5px); /* Dua kolom */
+}
+.aykum-kuis-cb-wrapper:hover { border-color: #0f766e; }
+.aykum-kuis-cb-wrapper input { cursor: pointer; accent-color: #0f766e; width: 16px; height: 16px; }
+
+/* Warna Status Hasil Kuis */
+.aykum-hasil-benar { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.aykum-hasil-salah { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
