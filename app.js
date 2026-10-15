@@ -7927,3 +7927,148 @@ window.submitKuisTajwid = function() {
     // 4. Matikan mode samar pada bacaan utama agar warnanya kembali terlihat 
     document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
 };
+// ==========================================
+// 🕌 FITUR UU PERADILAN AGAMA (UUPA)
+// ==========================================
+let stateUUPA = {
+    currentIndex: 0, viewMode: "single", samarMode: false,
+    theme: "light", userAnswers: {}, dbMateri: []
+};
+
+window.bukaUUPA = async () => {
+    const overlay = document.getElementById('uupaOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        
+        // Kalau data belum ada, tarik dari Firebase
+        if (stateUUPA.dbMateri.length === 0) {
+            PROTAMA.loading("Memuat Modul UU PA dari Server...");
+            try {
+                // Import query & getDocs jika belum global
+                const { query, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+                
+                const qRef = query(collection(window.db, "uu_pa"));
+                const snapshot = await getDocs(qRef);
+                
+                let dataTemp = [];
+                snapshot.forEach(doc => dataTemp.push(doc.data()));
+                
+                // Sortir biar urut sesuai Bab
+                dataTemp.sort((a, b) => a.urutan - b.urutan);
+                stateUUPA.dbMateri = dataTemp;
+                
+                PROTAMA.close();
+                window.renderSidebarUUPA();
+                window.renderContentUUPA();
+            } catch (err) {
+                PROTAMA.close();
+                alert("Gagal load Firebase UU PA: " + err.message);
+            }
+        }
+    }
+};
+
+window.renderSidebarUUPA = () => {
+    const navList = document.getElementById("uupaNavList");
+    if(!navList) return;
+    navList.innerHTML = "";
+    
+    stateUUPA.dbMateri.forEach((mod, idx) => {
+        const li = document.createElement("li");
+        li.className = "uupa-nav-item" + (stateUUPA.viewMode === "single" && stateUUPA.currentIndex === idx ? " active" : "");
+        li.innerHTML = `<span style="flex:1">${mod.title}</span>`;
+        li.onclick = () => {
+            stateUUPA.currentIndex = idx;
+            window.renderSidebarUUPA();
+            window.renderContentUUPA();
+            if (window.innerWidth <= 860) window.toggleSidebarUUPA();
+        };
+        navList.appendChild(li);
+    });
+};
+
+window.renderContentUUPA = () => {
+    const container = document.getElementById("uupaContentRenderArea");
+    if(!container) return;
+    container.innerHTML = "";
+    
+    let moduleToShow = stateUUPA.viewMode === "single" ? [stateUUPA.dbMateri[stateUUPA.currentIndex]] : stateUUPA.dbMateri;
+
+    moduleToShow.forEach(mod => {
+        if(!mod) return;
+        let qHTML = "";
+        if(mod.questions) {
+            mod.questions.forEach(q => {
+                const uAns = stateUUPA.userAnswers[q.no];
+                let optsHTML = "";
+                ['A','B','C','D'].forEach(letter => {
+                    let cls = "uupa-option-btn";
+                    if(uAns) {
+                        if (letter === q.answer) cls += " correct-choice";
+                        else if (letter === uAns) cls += " wrong-choice";
+                    }
+                    optsHTML += `<button class="${cls}" onclick="window.jawabSoalUUPA(${q.no}, '${letter}')"><span class="uupa-opt-letter">${letter}</span> <span>${q.options[letter]}</span></button>`;
+                });
+
+                qHTML += `
+                    <div style="background:var(--bg-elevated); padding:1.5rem; border-radius:10px; margin-top:20px; border:1px solid var(--border-color);">
+                        <h4 style="color:var(--gold-accent); margin-top:0;">SOAL HOTS #${q.no}</h4>
+                        <p style="font-weight:600; margin-bottom:15px;">${q.stem}</p>
+                        ${optsHTML}
+                        <div class="uupa-explanation-box ${uAns ? 'visible' : ''}">
+                            <p><strong>Kunci:</strong> ${q.answer}</p>
+                            <p><strong>Analisis:</strong> ${q.analysis}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML += `
+            <div class="uupa-module-section">
+                <h2 style="font-size:1.4rem; color:var(--accent-primary); border-bottom:2px solid var(--border-color); padding-bottom:10px;">${mod.title}</h2>
+                <div style="line-height:1.7;">${mod.materiHTML}</div>
+                ${qHTML}
+            </div>
+        `;
+    });
+
+    const btnPrev = document.getElementById("btnUUPAPrev");
+    const btnNext = document.getElementById("btnUUPANext");
+    const footerNav = document.getElementById("uupaFooterNav");
+    
+    if(btnPrev) btnPrev.disabled = stateUUPA.currentIndex === 0;
+    if(btnNext) btnNext.disabled = stateUUPA.currentIndex === stateUUPA.dbMateri.length - 1;
+    if(footerNav) footerNav.style.display = stateUUPA.viewMode === "single" ? "flex" : "none";
+    
+    window.bindSamarUUPA();
+};
+
+window.jawabSoalUUPA = (qNo, letter) => {
+    if(!stateUUPA.userAnswers[qNo]) {
+        stateUUPA.userAnswers[qNo] = letter;
+        window.renderContentUUPA();
+    }
+};
+
+window.toggleSidebarUUPA = () => { document.getElementById('uupaOverlay').classList.toggle('uupa-sidebar-collapsed'); };
+window.setViewModeUUPA = (mode) => { stateUUPA.viewMode = mode; window.renderContentUUPA(); };
+window.navigateChapterUUPA = (dir) => { stateUUPA.currentIndex += dir; window.renderSidebarUUPA(); window.renderContentUUPA(); };
+window.toggleSamarUUPA = () => { 
+    stateUUPA.samarMode = !stateUUPA.samarMode; 
+    document.getElementById('uupaOverlay').classList.toggle('uupa-mode-samar');
+    document.getElementById('btnUUPASamar').innerHTML = stateUUPA.samarMode ? "🙈 Mode Samar: ON" : "👁️ Mode Samar: OFF";
+};
+window.bindSamarUUPA = () => {
+    document.querySelectorAll('#uupaOverlay .samar').forEach(el => {
+        el.onclick = () => { if(stateUUPA.samarMode) el.classList.toggle('revealed'); };
+    });
+};
+window.cycleThemeUUPA = () => {
+    const themes = ["light", "sepia", "dark"];
+    const labels = ["☀️ Terang", "📜 Sepia", "🌙 Gelap"];
+    let nextIdx = (themes.indexOf(stateUUPA.theme) + 1) % themes.length;
+    stateUUPA.theme = themes[nextIdx];
+    document.getElementById('uupaOverlay').setAttribute('data-theme', stateUUPA.theme);
+    document.getElementById('btnUUPATheme').innerHTML = labels[nextIdx];
+};
