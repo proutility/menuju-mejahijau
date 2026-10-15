@@ -7927,148 +7927,351 @@ window.submitKuisTajwid = function() {
     // 4. Matikan mode samar pada bacaan utama agar warnanya kembali terlihat 
     document.getElementById('aykumArabicWrapper').classList.remove('aykum-mode-ujian-aktif');
 };
-// ==========================================
-// 🕌 FITUR UU PERADILAN AGAMA (UUPA)
-// ==========================================
+// =========================================================
+// 🕌 FITUR UU PERADILAN AGAMA (UUPA) - FULL ORIGINAL ENGINE
+// =========================================================
 let stateUUPA = {
-    currentIndex: 0, viewMode: "single", samarMode: false,
-    theme: "light", userAnswers: {}, dbMateri: []
+    currentIndex: 0,
+    viewMode: "single", // 'single' | 'all' | 'quiz'
+    samarMode: false,
+    revealAllExp: false,
+    theme: localStorage.getItem("cakim_pa_theme") || "light",
+    fontSize: parseInt(localStorage.getItem("cakim_pa_fontsize") || "16", 10),
+    completedChapters: JSON.parse(localStorage.getItem("cakim_pa_completed") || "{}"),
+    userAnswers: JSON.parse(localStorage.getItem("cakim_pa_answers") || "{}"),
+    searchQuery: "",
+    dbMateri: []
 };
 
 window.bukaUUPA = async () => {
     const overlay = document.getElementById('uupaOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-        
-        // Kalau data belum ada, tarik dari Firebase
-        if (stateUUPA.dbMateri.length === 0) {
-            PROTAMA.loading("Memuat Modul UU PA dari Server...");
-            try {
-                // Import query & getDocs jika belum global
-                const { query, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
-                
-                const qRef = query(collection(window.db, "uu_pa"));
-                const snapshot = await getDocs(qRef);
-                
-                let dataTemp = [];
-                snapshot.forEach(doc => dataTemp.push(doc.data()));
-                
-                // Sortir biar urut sesuai Bab
-                dataTemp.sort((a, b) => a.urutan - b.urutan);
-                stateUUPA.dbMateri = dataTemp;
-                
-                PROTAMA.close();
-                window.renderSidebarUUPA();
-                window.renderContentUUPA();
-            } catch (err) {
-                PROTAMA.close();
-                alert("Gagal load Firebase UU PA: " + err.message);
-            }
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    window.applyThemeUUPA(stateUUPA.theme);
+    document.getElementById('uupaContentContainer').style.fontSize = stateUUPA.fontSize + "px";
+
+    if (stateUUPA.dbMateri.length === 0) {
+        if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Memuat Modul UU PA dari Server...");
+        try {
+            const { query, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+            const qRef = query(collection(window.db, "uu_pa"));
+            const snapshot = await getDocs(qRef);
+
+            let dataTemp = [];
+            snapshot.forEach(doc => dataTemp.push(doc.data()));
+            dataTemp.sort((a, b) => a.urutan - b.urutan);
+            stateUUPA.dbMateri = dataTemp;
+
+            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+            window.renderSidebarUUPA();
+            window.renderContentUUPA();
+            window.updateProgressUUPA();
+            window.updateToolbarUUPA();
+        } catch (err) {
+            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+            alert("Gagal memuat Firebase UU PA: " + err.message);
         }
     }
 };
 
 window.renderSidebarUUPA = () => {
     const navList = document.getElementById("uupaNavList");
-    if(!navList) return;
+    if (!navList) return;
     navList.innerHTML = "";
-    
+    let currentGroup = "";
+
     stateUUPA.dbMateri.forEach((mod, idx) => {
+        if (mod.group !== currentGroup) {
+            currentGroup = mod.group;
+            const groupLi = document.createElement("li");
+            groupLi.className = "uupa-nav-group";
+            groupLi.textContent = currentGroup;
+            navList.appendChild(groupLi);
+        }
+
         const li = document.createElement("li");
         li.className = "uupa-nav-item" + (stateUUPA.viewMode === "single" && stateUUPA.currentIndex === idx ? " active" : "");
-        li.innerHTML = `<span style="flex:1">${mod.title}</span>`;
-        li.onclick = () => {
+        li.onclick = (e) => {
+            if (e.target.classList.contains("uupa-nav-check")) return;
             stateUUPA.currentIndex = idx;
+            if (stateUUPA.viewMode === "quiz") stateUUPA.viewMode = "single";
+            window.updateToolbarUUPA();
             window.renderSidebarUUPA();
             window.renderContentUUPA();
-            if (window.innerWidth <= 860) window.toggleSidebarUUPA();
+            if (window.innerWidth <= 860) {
+                document.getElementById("uupaOverlay").classList.add("uupa-sidebar-collapsed");
+            }
+            document.getElementById("uupaMainScroll").scrollTo({ top: 0, behavior: "smooth" });
         };
+
+        const isChecked = !!stateUUPA.completedChapters[mod.id];
+        const qCount = mod.questions ? mod.questions.length : 0;
+        li.innerHTML = `
+            <input type="checkbox" class="uupa-nav-check" ${isChecked ? "checked" : ""} onchange="window.toggleChapterDoneUUPA('${mod.id}')" title="Tandai sudah dikuasai" />
+            <span class="uupa-nav-title">${mod.title}</span>
+            <span class="uupa-nav-badge">${qCount} Soal</span>
+        `;
         navList.appendChild(li);
     });
 };
 
 window.renderContentUUPA = () => {
     const container = document.getElementById("uupaContentRenderArea");
-    if(!container) return;
+    const footerNav = document.getElementById("uupaFooterNav");
+    if (!container) return;
     container.innerHTML = "";
-    
-    let moduleToShow = stateUUPA.viewMode === "single" ? [stateUUPA.dbMateri[stateUUPA.currentIndex]] : stateUUPA.dbMateri;
 
-    moduleToShow.forEach(mod => {
-        if(!mod) return;
-        let qHTML = "";
-        if(mod.questions) {
-            mod.questions.forEach(q => {
-                const uAns = stateUUPA.userAnswers[q.no];
+    let modulesToShow = [];
+    if (stateUUPA.searchQuery.trim() !== "") {
+        const q = stateUUPA.searchQuery.toLowerCase();
+        modulesToShow = stateUUPA.dbMateri.filter(m =>
+            m.title.toLowerCase().includes(q) ||
+            m.materiHTML.toLowerCase().includes(q) ||
+            (m.questions && m.questions.some(ques => ques.stem.toLowerCase().includes(q) || ques.analysis.toLowerCase().includes(q)))
+        );
+        footerNav.style.display = "none";
+    } else if (stateUUPA.viewMode === "single") {
+        modulesToShow = [stateUUPA.dbMateri[stateUUPA.currentIndex]];
+        footerNav.style.display = "flex";
+        document.getElementById("btnUUPAPrev").disabled = stateUUPA.currentIndex === 0;
+        document.getElementById("btnUUPANext").disabled = stateUUPA.currentIndex === stateUUPA.dbMateri.length - 1;
+    } else {
+        modulesToShow = stateUUPA.dbMateri;
+        footerNav.style.display = "none";
+    }
+
+    if (!modulesToShow || modulesToShow.length === 0 || !modulesToShow[0]) {
+        container.innerHTML = `<div class="uupa-module-section"><p>Tidak ditemukan materi atau soal dengan kata kunci "<strong>${stateUUPA.searchQuery}</strong>".</p></div>`;
+        return;
+    }
+
+    modulesToShow.forEach((mod) => {
+        const isDone = !!stateUUPA.completedChapters[mod.id];
+        const sectionEl = document.createElement("section");
+        sectionEl.className = "uupa-module-section";
+
+        let questionsHTML = "";
+        if (mod.questions) {
+            mod.questions.forEach((q) => {
+                const userAns = stateUUPA.userAnswers[q.no];
+                const isAnswered = !!userAns;
+                const isCorrect = userAns === q.answer;
+                const showExp = isAnswered || stateUUPA.revealAllExp;
+
+                let statusBadge = "";
+                if (isAnswered) {
+                    statusBadge = isCorrect
+                        ? `<span style="font-size:0.8rem; font-weight:700; color:#059669;">✓ Jawaban Tepat</span>`
+                        : `<span style="font-size:0.8rem; font-weight:700; color:#dc2626;">✗ Kurang Tepat (Kunci: ${q.answer})</span>`;
+                }
+
                 let optsHTML = "";
-                ['A','B','C','D'].forEach(letter => {
-                    let cls = "uupa-option-btn";
-                    if(uAns) {
-                        if (letter === q.answer) cls += " correct-choice";
-                        else if (letter === uAns) cls += " wrong-choice";
+                ["A", "B", "C", "D"].forEach((letter) => {
+                    let btnClass = "uupa-option-btn";
+                    if (isAnswered) {
+                        if (letter === q.answer) btnClass += " correct-choice";
+                        else if (letter === userAns && userAns !== q.answer) btnClass += " wrong-choice";
                     }
-                    optsHTML += `<button class="${cls}" onclick="window.jawabSoalUUPA(${q.no}, '${letter}')"><span class="uupa-opt-letter">${letter}</span> <span>${q.options[letter]}</span></button>`;
+                    optsHTML += `
+                        <button class="${btnClass}" onclick="window.selectAnswerUUPA(${q.no}, '${letter}')">
+                            <span class="uupa-opt-letter">${letter}</span>
+                            <span>${q.options[letter]}</span>
+                        </button>
+                    `;
                 });
 
-                qHTML += `
-                    <div style="background:var(--bg-elevated); padding:1.5rem; border-radius:10px; margin-top:20px; border:1px solid var(--border-color);">
-                        <h4 style="color:var(--gold-accent); margin-top:0;">SOAL HOTS #${q.no}</h4>
-                        <p style="font-weight:600; margin-bottom:15px;">${q.stem}</p>
-                        ${optsHTML}
-                        <div class="uupa-explanation-box ${uAns ? 'visible' : ''}">
-                            <p><strong>Kunci:</strong> ${q.answer}</p>
-                            <p><strong>Analisis:</strong> ${q.analysis}</p>
+                questionsHTML += `
+                    <div class="uupa-question-card" id="uupa-q-card-${q.no}">
+                        <div class="uupa-q-meta">
+                            <span class="uupa-q-num">SOAL HOTS #${q.no}</span>
+                            ${statusBadge}
+                        </div>
+                        <div class="uupa-q-stem">${q.stem}</div>
+                        <div class="uupa-options-list">${optsHTML}</div>
+                        <div class="uupa-explanation-box ${showExp ? "visible" : ""}">
+                            <div class="uupa-exp-row"><strong>Kunci Jawaban:</strong> Opsi ${q.answer}</div>
+                            <div class="uupa-exp-row"><strong>⚠️ Jebakan Soal:</strong> ${q.trap || "-"}</div>
+                            <div class="uupa-exp-row"><strong>✅ Analisis Benar:</strong> ${q.analysis}</div>
+                            <div class="uupa-exp-source">📌 Sumber Hukum: ${q.source || "-"}</div>
                         </div>
                     </div>
                 `;
             });
         }
 
-        container.innerHTML += `
-            <div class="uupa-module-section">
-                <h2 style="font-size:1.4rem; color:var(--accent-primary); border-bottom:2px solid var(--border-color); padding-bottom:10px;">${mod.title}</h2>
-                <div style="line-height:1.7;">${mod.materiHTML}</div>
-                ${qHTML}
-            </div>
-        `;
+        if (stateUUPA.viewMode === "quiz") {
+            sectionEl.innerHTML = `
+                <div class="uupa-section-header" style="margin-bottom:0.75rem; padding-bottom:0.5rem;">
+                    <div>
+                        <span class="uupa-section-badge">${mod.badge}</span>
+                        <h2 class="uupa-section-title" style="font-size:1.1rem;">${mod.title}</h2>
+                    </div>
+                </div>
+                <div>${questionsHTML}</div>
+            `;
+        } else {
+            sectionEl.innerHTML = `
+                <div class="uupa-section-header">
+                    <div>
+                        <span class="uupa-section-badge">${mod.badge}</span>
+                        <h2 class="uupa-section-title">${mod.title}</h2>
+                    </div>
+                    <button class="uupa-mastered-btn ${isDone ? "done" : ""}" onclick="window.toggleChapterDoneUUPA('${mod.id}')">
+                        ${isDone ? "✓ Sudah Dikuasai" : "○ Tandai Selesai"}
+                    </button>
+                </div>
+                <div class="uupa-materi-body">${mod.materiHTML}</div>
+                <div class="uupa-quiz-wrapper">
+                    <div class="uupa-quiz-title">🔥 Latihan Soal HOTS Sub-Bab Ini</div>
+                    ${questionsHTML}
+                </div>
+            `;
+        }
+
+        container.appendChild(sectionEl);
     });
 
-    const btnPrev = document.getElementById("btnUUPAPrev");
-    const btnNext = document.getElementById("btnUUPANext");
-    const footerNav = document.getElementById("uupaFooterNav");
-    
-    if(btnPrev) btnPrev.disabled = stateUUPA.currentIndex === 0;
-    if(btnNext) btnNext.disabled = stateUUPA.currentIndex === stateUUPA.dbMateri.length - 1;
-    if(footerNav) footerNav.style.display = stateUUPA.viewMode === "single" ? "flex" : "none";
-    
     window.bindSamarUUPA();
 };
 
-window.jawabSoalUUPA = (qNo, letter) => {
-    if(!stateUUPA.userAnswers[qNo]) {
-        stateUUPA.userAnswers[qNo] = letter;
+window.selectAnswerUUPA = (qNo, letter) => {
+    stateUUPA.userAnswers[qNo] = letter;
+    localStorage.setItem("cakim_pa_answers", JSON.stringify(stateUUPA.userAnswers));
+    window.renderContentUUPA();
+    window.updateProgressUUPA();
+};
+
+window.toggleChapterDoneUUPA = (modId) => {
+    if (stateUUPA.completedChapters[modId]) {
+        delete stateUUPA.completedChapters[modId];
+    } else {
+        stateUUPA.completedChapters[modId] = true;
+    }
+    localStorage.setItem("cakim_pa_completed", JSON.stringify(stateUUPA.completedChapters));
+    window.renderSidebarUUPA();
+    window.renderContentUUPA();
+    window.updateProgressUUPA();
+};
+
+window.updateProgressUUPA = () => {
+    const doneCount = Object.keys(stateUUPA.completedChapters).length;
+    const totalChap = stateUUPA.dbMateri.length || 11;
+    const chapText = document.getElementById("uupaChapProgressText");
+    const chapBar = document.getElementById("uupaChapProgressBar");
+    if (chapText) chapText.textContent = `${doneCount} / ${totalChap}`;
+    if (chapBar) chapBar.style.width = `${(doneCount / totalChap) * 100}%`;
+
+    let correctCount = 0;
+    let totalQ = 0;
+    stateUUPA.dbMateri.forEach(m => {
+        if (m.questions) {
+            m.questions.forEach(q => {
+                totalQ++;
+                if (stateUUPA.userAnswers[q.no] === q.answer) correctCount++;
+            });
+        }
+    });
+    const scoreText = document.getElementById("uupaScoreProgressText");
+    const scoreBar = document.getElementById("uupaScoreProgressBar");
+    if (scoreText) scoreText.textContent = `${correctCount} / ${totalQ || 25} Benar`;
+    if (scoreBar) scoreBar.style.width = `${totalQ ? (correctCount / totalQ) * 100 : 0}%`;
+};
+
+window.setViewModeUUPA = (mode) => {
+    stateUUPA.viewMode = mode;
+    stateUUPA.searchQuery = "";
+    const sInput = document.getElementById("uupaSearchInput");
+    if (sInput) sInput.value = "";
+    window.updateToolbarUUPA();
+    window.renderSidebarUUPA();
+    window.renderContentUUPA();
+    document.getElementById("uupaMainScroll").scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.updateToolbarUUPA = () => {
+    document.getElementById("btnUUPASingle")?.classList.toggle("active-mode", stateUUPA.viewMode === "single");
+    document.getElementById("btnUUPAAll")?.classList.toggle("active-mode", stateUUPA.viewMode === "all");
+    document.getElementById("btnUUPAQuiz")?.classList.toggle("active-mode", stateUUPA.viewMode === "quiz");
+};
+
+window.navigateChapterUUPA = (dir) => {
+    const nextIdx = stateUUPA.currentIndex + dir;
+    if (nextIdx >= 0 && nextIdx < stateUUPA.dbMateri.length) {
+        stateUUPA.currentIndex = nextIdx;
+        window.renderSidebarUUPA();
         window.renderContentUUPA();
+        document.getElementById("uupaMainScroll").scrollTo({ top: 0, behavior: "smooth" });
     }
 };
 
-window.toggleSidebarUUPA = () => { document.getElementById('uupaOverlay').classList.toggle('uupa-sidebar-collapsed'); };
-window.setViewModeUUPA = (mode) => { stateUUPA.viewMode = mode; window.renderContentUUPA(); };
-window.navigateChapterUUPA = (dir) => { stateUUPA.currentIndex += dir; window.renderSidebarUUPA(); window.renderContentUUPA(); };
-window.toggleSamarUUPA = () => { 
-    stateUUPA.samarMode = !stateUUPA.samarMode; 
-    document.getElementById('uupaOverlay').classList.toggle('uupa-mode-samar');
-    document.getElementById('btnUUPASamar').innerHTML = stateUUPA.samarMode ? "🙈 Mode Samar: ON" : "👁️ Mode Samar: OFF";
+window.toggleSidebarUUPA = () => {
+    document.getElementById("uupaOverlay")?.classList.toggle("uupa-sidebar-collapsed");
 };
+
+window.handleSearchUUPA = (val) => {
+    stateUUPA.searchQuery = val;
+    window.renderContentUUPA();
+};
+
+window.toggleSamarUUPA = () => {
+    stateUUPA.samarMode = !stateUUPA.samarMode;
+    const overlay = document.getElementById("uupaOverlay");
+    const btn = document.getElementById("btnUUPASamar");
+    overlay?.classList.toggle("uupa-mode-samar", stateUUPA.samarMode);
+    btn?.classList.toggle("samar-active", stateUUPA.samarMode);
+    if (btn) btn.innerHTML = stateUUPA.samarMode ? "🙈 <span>Mode Samar: ON</span>" : "👁️ <span>Mode Samar: OFF</span>";
+    if (!stateUUPA.samarMode) {
+        document.querySelectorAll("#uupaOverlay .samar.revealed").forEach(el => el.classList.remove("revealed"));
+    }
+};
+
+window.revealAllSamarUUPA = () => {
+    document.querySelectorAll("#uupaOverlay .samar").forEach(el => el.classList.add("revealed"));
+};
+
 window.bindSamarUUPA = () => {
-    document.querySelectorAll('#uupaOverlay .samar').forEach(el => {
-        el.onclick = () => { if(stateUUPA.samarMode) el.classList.toggle('revealed'); };
+    document.querySelectorAll("#uupaOverlay .samar").forEach(el => {
+        el.onclick = () => {
+            if (stateUUPA.samarMode) el.classList.toggle("revealed");
+        };
     });
 };
+
+window.toggleAllExpUUPA = () => {
+    stateUUPA.revealAllExp = !stateUUPA.revealAllExp;
+    const btn = document.getElementById("btnUUPARevealExp");
+    btn?.classList.toggle("active-mode", stateUUPA.revealAllExp);
+    if (btn) btn.innerHTML = stateUUPA.revealAllExp ? "🙈 <span>Tutup Pembahasan</span>" : "💡 <span>Buka Semua Pembahasan</span>";
+    window.renderContentUUPA();
+};
+
+window.changeFontUUPA = (delta) => {
+    stateUUPA.fontSize = Math.min(22, Math.max(13, stateUUPA.fontSize + delta));
+    document.getElementById("uupaContentContainer").style.fontSize = stateUUPA.fontSize + "px";
+    localStorage.setItem("cakim_pa_fontsize", stateUUPA.fontSize);
+};
+
 window.cycleThemeUUPA = () => {
-    const themes = ["light", "sepia", "dark"];
-    const labels = ["☀️ Terang", "📜 Sepia", "🌙 Gelap"];
-    let nextIdx = (themes.indexOf(stateUUPA.theme) + 1) % themes.length;
-    stateUUPA.theme = themes[nextIdx];
-    document.getElementById('uupaOverlay').setAttribute('data-theme', stateUUPA.theme);
-    document.getElementById('btnUUPATheme').innerHTML = labels[nextIdx];
+    const order = ["light", "sepia", "dark"];
+    const nextTheme = order[(order.indexOf(stateUUPA.theme) + 1) % order.length];
+    window.applyThemeUUPA(nextTheme);
+};
+
+window.applyThemeUUPA = (themeName) => {
+    stateUUPA.theme = themeName;
+    document.getElementById("uupaOverlay")?.setAttribute("data-theme", themeName);
+    localStorage.setItem("cakim_pa_theme", themeName);
+    const labelMap = { light: "Terang", sepia: "Sepia", dark: "Gelap" };
+    const iconMap = { light: "☀️", sepia: "📜", dark: "🌙" };
+    const btn = document.getElementById("btnUUPATheme");
+    if (btn) btn.innerHTML = `${iconMap[themeName]} <span>${labelMap[themeName]}</span>`;
+};
+
+window.resetQuizUUPA = () => {
+    if (confirm("Yakin ingin mereset seluruh jawaban latihan soal HOTS UU PA?")) {
+        stateUUPA.userAnswers = {};
+        localStorage.removeItem("cakim_pa_answers");
+        window.renderContentUUPA();
+        window.updateProgressUUPA();
+    }
 };
