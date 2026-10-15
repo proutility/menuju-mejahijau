@@ -1450,57 +1450,93 @@
 <!-- ========================================== -->
 <!-- OVERLAY UU PERADILAN AGAMA (FULL SCREEN)   -->
 <!-- ========================================== -->
-<div id="uupaOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg-main, #f8fafc); z-index:9999999; flex-direction:column; overflow:hidden;" data-theme="light">
- 
-    <!-- HEADER FIXED BAWAAN E-TAMA -->
-  <div style="display:flex; justify-content:space-between; align-items:center; padding: 18px 30px; background: #0f172a; color: white; border-bottom: 4px solid #059669; z-index: 100;">
-      <h2 style="margin:0; font-size: 1.4rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-          <i class="fas fa-mosque"></i> Modul Cakim PA (UU 7/89)
-      </h2>
-      <button onclick="document.getElementById('uupaOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#dc2626; color:white; border:none; width:40px; height:40px; border-radius:10px; font-size:1.5rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+<div id="uupaOverlay" style="display:none;" data-theme="light">
+  
+  <!-- HEADER FIXED BAWAAN E-TAMA -->
+  <div class="uupa-top-header">
+    <h2 style="margin:0; font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+      <i class="fas fa-mosque" style="color:#10b981;"></i> E-Modul Cakim PA — Konsolidasi UU Peradilan Agama & Soal HOTS
+    </h2>
+    <button onclick="document.getElementById('uupaOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#dc2626; color:white; border:none; width:38px; height:38px; border-radius:10px; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
 
   <div class="uupa-container">
-      <!-- SIDEBAR -->
-      <aside class="uupa-sidebar">
-        <div class="uupa-sidebar-header">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="uupa-brand-badge">PA</div>
-            <div style="line-height:1.2;">
-              <h1 style="font-size:0.95rem; margin:0;">Modul Cakim PA</h1>
-              <span style="font-size:0.75rem; color:var(--text-sidebar-muted);">UU 7/1989 • 3/2006</span>
-            </div>
+    <!-- SIDEBAR KIRI -->
+    <aside class="uupa-sidebar">
+      <div class="uupa-sidebar-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="uupa-brand-badge">PA</div>
+          <div style="line-height:1.2;">
+            <h3 style="font-size:0.95rem; margin:0; color:#ffffff;">Modul Cakim PA</h3>
+            <span style="font-size:0.72rem; color:#94a3b8;">UU 7/1989 • 3/2006 • 50/2009</span>
           </div>
-          <button onclick="window.toggleSidebarUUPA()" style="background:none; border:none; color:white; cursor:pointer; font-size:1.2rem;">✕</button>
         </div>
-        <div class="uupa-sidebar-search">
-          <input type="text" id="uupaSearchInput" placeholder="Cari pasal, syiqaq..." oninput="window.handleSearchUUPA(this.value)" />
-        </div>
-        <ul class="uupa-nav-list" id="uupaNavList"></ul>
-      </aside>
-
-      <!-- MAIN AREA -->
-      <div class="uupa-main-wrapper">
-        <header class="uupa-top-toolbar">
-          <div style="display:flex; gap:10px;">
-            <button class="uupa-btn-tool" onclick="window.toggleSidebarUUPA()">☰ Menu Bab</button>
-            <button class="uupa-btn-tool active-mode" id="btnUUPASingle" onclick="window.setViewModeUUPA('single')">Per Sub-Bab</button>
-            <button class="uupa-btn-tool" id="btnUUPAAll" onclick="window.setViewModeUUPA('all')">Semua Bab</button>
-          </div>
-          <div style="display:flex; gap:10px;">
-            <button class="uupa-btn-tool" id="btnUUPASamar" onclick="window.toggleSamarUUPA()">👁️ Mode Samar: OFF</button>
-            <button class="uupa-btn-tool" id="btnUUPATheme" onclick="window.cycleThemeUUPA()">☀️ Terang</button>
-          </div>
-        </header>
-
-        <main class="uupa-content-container">
-          <div id="uupaContentRenderArea"></div>
-          <div style="display:flex; justify-content:space-between; margin-top:20px;" id="uupaFooterNav">
-            <button class="uupa-btn-tool" id="btnUUPAPrev" onclick="window.navigateChapterUUPA(-1)">← Sebelumnya</button>
-            <button class="uupa-btn-tool" id="btnUUPANext" onclick="window.navigateChapterUUPA(1)">Selanjutnya →</button>
-          </div>
-        </main>
+        <button onclick="window.toggleSidebarUUPA()" style="background:rgba(255,255,255,0.08); border:none; color:#ffffff; width:30px; height:30px; border-radius:6px; cursor:pointer;">✕</button>
       </div>
+
+      <div class="uupa-sidebar-progress">
+        <div class="uupa-progress-row">
+          <span>Progres Bab Selesai</span>
+          <strong id="uupaChapProgressText">0 / 11</strong>
+        </div>
+        <div class="uupa-progress-track">
+          <div class="uupa-progress-fill" id="uupaChapProgressBar"></div>
+        </div>
+        <div class="uupa-progress-row">
+          <span>Skor Latihan HOTS</span>
+          <strong id="uupaScoreProgressText">0 / 25 Benar</strong>
+        </div>
+        <div class="uupa-progress-track" style="margin-bottom:0;">
+          <div class="uupa-progress-fill" id="uupaScoreProgressBar"></div>
+        </div>
+      </div>
+
+      <div class="uupa-sidebar-search">
+        <input type="text" id="uupaSearchInput" placeholder="Cari pasal, kata kunci, syiqaq..." oninput="window.handleSearchUUPA(this.value)" />
+      </div>
+
+      <ul class="uupa-nav-list" id="uupaNavList"></ul>
+    </aside>
+
+    <!-- AREA UTAMA KANAN -->
+    <div class="uupa-main-wrapper" id="uupaMainScroll">
+      <header class="uupa-top-toolbar">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="uupa-btn-tool" onclick="window.toggleSidebarUUPA()">☰ Menu Bab</button>
+          <button class="uupa-btn-tool active-mode" id="btnUUPASingle" onclick="window.setViewModeUUPA('single')">Per Sub-Bab</button>
+          <button class="uupa-btn-tool" id="btnUUPAAll" onclick="window.setViewModeUUPA('all')">Semua Bab Utuh</button>
+          <button class="uupa-btn-tool" id="btnUUPAQuiz" onclick="window.setViewModeUUPA('quiz')">Fokus 25 Soal HOTS</button>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="uupa-btn-tool" id="btnUUPASamar" onclick="window.toggleSamarUUPA()">👁️ Mode Samar: OFF</button>
+          <button class="uupa-btn-tool" id="btnUUPARevealExp" onclick="window.toggleAllExpUUPA()">💡 Buka Semua Pembahasan</button>
+          <button class="uupa-btn-tool" onclick="window.changeFontUUPA(-1)">A-</button>
+          <button class="uupa-btn-tool" onclick="window.changeFontUUPA(1)">A+</button>
+          <button class="uupa-btn-tool" id="btnUUPATheme" onclick="window.cycleThemeUUPA()">☀️ Terang</button>
+          <button class="uupa-btn-tool" onclick="window.resetQuizUUPA()">🔄 Reset Soal</button>
+        </div>
+      </header>
+
+      <main class="uupa-content-container" id="uupaContentContainer">
+        <div class="uupa-samar-banner">
+          <div>
+            <strong>🎯 Mode Samar (Active Recall) Aktif!</strong>
+            Pasal, tenggang waktu, usia pensiun, dan poin perubahan sedang diburamkan. Arahkan kursor (hover) atau klik pada bagian yang buram untuk menguji ingatanmu.
+          </div>
+          <button class="uupa-btn-tool" onclick="window.revealAllSamarUUPA()">Buka Semua Blur</button>
+        </div>
+
+        <div id="uupaContentRenderArea"></div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:20px;" id="uupaFooterNav">
+          <button class="uupa-btn-tool" id="btnUUPAPrev" onclick="window.navigateChapterUUPA(-1)" style="padding:10px 18px;">← Sub-Bab Sebelumnya</button>
+          <button class="uupa-btn-tool" id="btnUUPANext" onclick="window.navigateChapterUUPA(1)" style="padding:10px 18px;">Sub-Bab Selanjutnya →</button>
+        </div>
+      </main>
+    </div>
   </div>
 </div>
 </body>
