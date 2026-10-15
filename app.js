@@ -514,7 +514,7 @@ window.openLeaderboard = async (mode = 'local') => {
             if(titleEl) titleEl.innerText = "Ranking Global (Hukum & TPA)";
             
             // Ubah Header Tabel: No | Nama | Nilai | Total Tes
-            if(tableHeader) tableHeader.innerHTML = '<th style="width:10%">No</th><th>Nama</th><th style="width:20%">Nilai</th><th style="width:25%">Total Tes</th>';
+            if(tableHeader) tableHeader.innerHTML = '<th style="width:10%">No</th><th>Nama</th><th style="width:20%">Nilai</th><th style="width:%">Total Tes</th>';
             
             // Ambil 1000 data teratas
             const qLb = query(collection(window.db, "leaderboard"), orderBy("skor", "desc"), limit(1000));
@@ -3561,7 +3561,7 @@ window.pantauRoom = (kodeRoom) => {
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
-                let sisaWaktuRoom = 25; 
+                let sisaWaktuRoom = 30; 
                 
                 const setLayarTimer = (detik) => {
                     let txt = "00:00:" + String(detik).padStart(2, '0');
