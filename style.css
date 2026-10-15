@@ -1566,865 +1566,621 @@ div.swal2-container {
 .aykum-hasil-benar { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
 .aykum-hasil-salah { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
-<!-- ========================================================= -->
-<!-- CSS & OVERLAY UU PERADILAN AGAMA (ANTI-TABRAKAN & PERSIS) -->
-<!-- ========================================================= -->
-<style>
-  #uupaOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 9999999;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-    background-color: #f8fafc;
-    color: #0f172a;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    font-size: 16px;
-    line-height: 1.65;
-  }
+/* ========================================= */
+/* CSS KHUSUS MODUL UU PERADILAN AGAMA       */
+/* ========================================= */
+#uupaOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999999;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+}
 
-  #uupaOverlay * {
-    box-sizing: border-box;
-  }
+#uupaOverlay * {
+  box-sizing: border-box;
+}
 
-  /* HEADER ATAS E-TAMA */
-  #uupaOverlay .uupa-top-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 24px;
-    background-color: #060b14;
-    color: #ffffff;
-    border-bottom: 3px solid #059669;
-    flex-shrink: 0;
-    z-index: 100;
-  }
+/* HEADER ATAS */
+#uupaOverlay .uupa-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background-color: #060b14;
+  color: #ffffff;
+  border-bottom: 3px solid #059669;
+  flex-shrink: 0;
+  width: 100%;
+}
 
-  /* BODY FLEX (SIDEBAR KIRI + KONTEN KANAN) */
-  #uupaOverlay .uupa-body-flex {
-    display: flex;
-    flex: 1;
-    width: 100%;
-    height: calc(100vh - 65px);
-    overflow: hidden;
-    position: relative;
-  }
+/* CONTAINER UTAMA (SEJAJAR KIRI & KANAN) */
+#uupaOverlay .uupa-container {
+  display: flex !important;
+  flex-direction: row !important;
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  position: relative;
+}
 
-  /* SIDEBAR KIRI */
-  #uupaOverlay .uupa-sidebar {
-    width: 320px;
-    min-width: 320px;
-    height: 100%;
-    background-color: #0f172a;
-    color: #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #1e293b;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 50;
-  }
+/* SIDEBAR KIRI */
+#uupaOverlay .uupa-sidebar {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  height: 100%;
+  background-color: #0f172a;
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #1e293b;
+  transition: margin-left 0.3s ease;
+  flex-shrink: 0;
+  z-index: 20;
+}
 
-  #uupaOverlay.uupa-sidebar-collapsed .uupa-sidebar {
-    margin-left: -320px;
-  }
+#uupaOverlay.uupa-sidebar-collapsed .uupa-sidebar {
+  margin-left: -320px;
+}
 
-  #uupaOverlay .uupa-sidebar-header {
-    padding: 1.15rem 1.25rem;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+#uupaOverlay .uupa-sidebar-header {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
-  #uupaOverlay .uupa-brand-title {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-  }
+#uupaOverlay .uupa-brand-badge {
+  background: linear-gradient(135deg, #10b981, #047857);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+}
 
-  #uupaOverlay .uupa-brand-badge {
-    background: linear-gradient(135deg, #10b981, #047857);
-    color: #ffffff;
-    font-weight: 800;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 8px;
-  }
+#uupaOverlay .uupa-sidebar-progress {
+  padding: 0.9rem 1.25rem;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-  #uupaOverlay .uupa-brand-text h3 {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-    line-height: 1.2;
-  }
+#uupaOverlay .uupa-progress-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
+}
 
-  #uupaOverlay .uupa-brand-text span {
-    font-size: 0.72rem;
-    color: #94a3b8;
-  }
+#uupaOverlay .uupa-progress-row strong {
+  color: #ffffff;
+}
 
-  #uupaOverlay .uupa-sidebar-close {
-    background: rgba(255,255,255,0.08);
-    border: none;
-    color: #e2e8f0;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
+#uupaOverlay .uupa-progress-track {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 0.65rem;
+}
 
-  #uupaOverlay .uupa-sidebar-close:hover {
-    background: rgba(255,255,255,0.18);
-  }
+#uupaOverlay .uupa-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #fbbf24);
+  width: 0%;
+  transition: width 0.3s ease;
+}
 
-  /* PROGRESS BAR DI SIDEBAR */
-  #uupaOverlay .uupa-sidebar-progress {
-    padding: 1rem 1.25rem;
-    background: rgba(255,255,255,0.03);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
+#uupaOverlay .uupa-sidebar-search {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
 
-  #uupaOverlay .uupa-progress-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.76rem;
-    color: #94a3b8;
-    margin-bottom: 0.35rem;
-  }
+#uupaOverlay .uupa-sidebar-search input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #ffffff;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  outline: none;
+}
 
-  #uupaOverlay .uupa-progress-row strong {
-    color: #ffffff;
-  }
+#uupaOverlay .uupa-nav-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 0.75rem 2rem;
+  list-style: none;
+  margin: 0;
+}
 
-  #uupaOverlay .uupa-progress-track {
-    width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.12);
-    border-radius: 99px;
-    overflow: hidden;
-    margin-bottom: 0.75rem;
-  }
+#uupaOverlay .uupa-nav-group {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fbbf24;
+  font-weight: 700;
+  padding: 0.85rem 0.6rem 0.35rem;
+}
 
-  #uupaOverlay .uupa-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #10b981, #fbbf24);
-    width: 0%;
-    transition: width 0.3s ease;
-  }
+#uupaOverlay .uupa-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  margin-bottom: 3px;
+}
 
-  /* SEARCH BOX DI SIDEBAR */
-  #uupaOverlay .uupa-sidebar-search {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-  }
+#uupaOverlay .uupa-nav-item:hover {
+  background: rgba(255,255,255,0.08);
+}
 
-  #uupaOverlay .uupa-sidebar-search input {
-    width: 100%;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: #ffffff;
-    padding: 0.55rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.82rem;
-    outline: none;
-  }
+#uupaOverlay .uupa-nav-item.active {
+  background: rgba(16, 185, 129, 0.22);
+  color: #6ee7b7;
+  font-weight: 600;
+  border-left: 3px solid #10b981;
+}
 
-  #uupaOverlay .uupa-sidebar-search input::placeholder {
-    color: #94a3b8;
-  }
+#uupaOverlay .uupa-nav-check {
+  width: 16px;
+  height: 16px;
+  accent-color: #10b981;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 
-  #uupaOverlay .uupa-sidebar-search input:focus {
-    border-color: #10b981;
-    background: rgba(255,255,255,0.12);
-  }
+#uupaOverlay .uupa-nav-badge {
+  font-size: 0.68rem;
+  background: rgba(255,255,255,0.12);
+  padding: 0.12rem 0.45rem;
+  border-radius: 99px;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
 
-  /* DAFTAR BAB DI SIDEBAR */
-  #uupaOverlay .uupa-nav-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.75rem 0.75rem 2rem;
-    list-style: none;
-    margin: 0;
-  }
+/* AREA UTAMA KANAN */
+#uupaOverlay .uupa-main-wrapper {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: #f8fafc;
+}
 
-  #uupaOverlay .uupa-nav-group {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #fbbf24;
-    font-weight: 700;
-    padding: 0.85rem 0.6rem 0.35rem;
-  }
+#uupaOverlay .uupa-top-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
 
-  #uupaOverlay .uupa-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.55rem 0.65rem;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #e2e8f0;
-    font-size: 0.82rem;
-    margin-bottom: 3px;
-    transition: background 0.15s ease;
-  }
+#uupaOverlay .uupa-btn-tool {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+  padding: 0.42rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
 
-  #uupaOverlay .uupa-nav-item:hover {
-    background: rgba(255,255,255,0.08);
-  }
+#uupaOverlay .uupa-btn-tool:hover:not(:disabled) {
+  border-color: #059669;
+  background-color: #ecfdf5;
+}
 
-  #uupaOverlay .uupa-nav-item.active {
-    background: rgba(16, 185, 129, 0.22);
-    color: #6ee7b7;
-    font-weight: 600;
-    border-left: 3px solid #10b981;
-  }
+#uupaOverlay .uupa-btn-tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
-  #uupaOverlay .uupa-nav-check {
-    width: 16px;
-    height: 16px;
-    accent-color: #10b981;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
+#uupaOverlay .uupa-btn-tool.active-mode {
+  background-color: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
 
-  #uupaOverlay .uupa-nav-title {
-    flex: 1;
-    line-height: 1.35;
-  }
+#uupaOverlay .uupa-btn-tool.samar-active {
+  background-color: #d97706;
+  color: #ffffff;
+  border-color: #d97706;
+}
 
-  #uupaOverlay .uupa-nav-badge {
-    font-size: 0.68rem;
-    background: rgba(255,255,255,0.12);
-    padding: 0.12rem 0.45rem;
-    border-radius: 99px;
-    color: #cbd5e1;
-    flex-shrink: 0;
-  }
+#uupaOverlay .uupa-content-container {
+  max-width: 940px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
 
-  /* AREA UTAMA KANAN */
-  #uupaOverlay .uupa-main-wrapper {
-    flex: 1;
-    height: 100%;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    background-color: #f8fafc;
-  }
+#uupaOverlay .uupa-samar-banner {
+  display: none;
+  background-color: #fffbeb;
+  border: 1px solid #d97706;
+  color: #0f172a;
+  padding: 0.85rem 1.15rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
 
-  /* STICKY TOOLBAR ATAS */
-  #uupaOverlay .uupa-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background-color: #ffffff;
-    border-bottom: 1px solid #e2e8f0;
-    padding: 0.65rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.65rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
+#uupaOverlay.uupa-mode-samar .uupa-samar-banner {
+  display: flex;
+}
 
-  #uupaOverlay .uupa-toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-  }
+#uupaOverlay .samar {
+  transition: filter 0.2s ease, background-color 0.2s ease;
+  border-radius: 4px;
+  padding: 0 3px;
+}
 
-  #uupaOverlay .uupa-btn-tool {
-    background-color: #f1f5f9;
-    color: #0f172a;
-    border: 1px solid #cbd5e1;
-    padding: 0.42rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    transition: all 0.15s ease;
-  }
+#uupaOverlay.uupa-mode-samar .samar:not(.revealed) {
+  filter: blur(5.5px);
+  background-color: #cbd5e1;
+  color: transparent;
+  user-select: none;
+  cursor: pointer;
+}
 
-  #uupaOverlay .uupa-btn-tool:hover {
-    border-color: #059669;
-    background-color: #ecfdf5;
-  }
+#uupaOverlay.uupa-mode-samar .samar:hover,
+#uupaOverlay.uupa-mode-samar .samar.revealed {
+  filter: blur(0);
+  background-color: #fef3c7;
+  color: #0f172a;
+  outline: 1px dashed #d97706;
+}
 
-  #uupaOverlay .uupa-btn-tool.active-mode {
-    background-color: #059669;
-    color: #ffffff;
-    border-color: #059669;
-  }
+/* KARTU MATERI */
+#uupaOverlay .uupa-module-section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.85rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
 
-  #uupaOverlay .uupa-btn-tool.samar-active {
-    background-color: #d97706;
-    color: #ffffff;
-    border-color: #d97706;
-    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.25);
-  }
+#uupaOverlay .uupa-section-header {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+  margin-bottom: 1.35rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
 
-  /* CONTAINER KONTEN BACAAN */
-  #uupaOverlay .uupa-content-container {
-    max-width: 940px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 2rem 1.5rem 4rem;
-  }
+#uupaOverlay .uupa-section-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #059669;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.2rem 0.65rem;
+  border-radius: 99px;
+  margin-bottom: 0.4rem;
+}
 
-  /* BANNER MODE SAMAR */
-  #uupaOverlay .uupa-samar-banner {
-    display: none;
-    background-color: #fffbeb;
-    border: 1px solid #d97706;
-    color: #0f172a;
-    padding: 0.85rem 1.15rem;
-    border-radius: 10px;
-    margin-bottom: 1.5rem;
-    font-size: 0.88rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
+#uupaOverlay .uupa-section-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
 
-  #uupaOverlay.uupa-mode-samar .uupa-samar-banner {
-    display: flex;
-  }
+#uupaOverlay .uupa-mastered-btn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  background-color: #f1f5f9;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  white-space: nowrap;
+}
 
-  /* EFEK BLUR SAMAR */
-  #uupaOverlay .samar {
-    transition: filter 0.2s ease, background-color 0.2s ease;
-    border-radius: 4px;
-    padding: 0 3px;
-  }
+#uupaOverlay .uupa-mastered-btn.done {
+  background-color: #ecfdf5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
 
-  #uupaOverlay.uupa-mode-samar .samar:not(.revealed) {
-    filter: blur(5.5px);
-    background-color: #cbd5e1;
-    color: transparent;
-    user-select: none;
-    cursor: pointer;
-  }
+#uupaOverlay .uupa-materi-body h4 {
+  font-size: 1.05rem;
+  color: #059669;
+  margin: 1.25rem 0 0.5rem;
+}
 
-  #uupaOverlay.uupa-mode-samar .samar:hover,
-  #uupaOverlay.uupa-mode-samar .samar.revealed {
-    filter: blur(0);
-    background-color: #fef3c7;
-    color: #0f172a;
-    outline: 1px dashed #d97706;
-  }
+#uupaOverlay .uupa-materi-body ul,
+#uupaOverlay .uupa-materi-body ol {
+  padding-left: 1.4rem;
+  margin-bottom: 1rem;
+}
 
-  /* KARTU BAB / SUB-BAB */
-  #uupaOverlay .uupa-module-section {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 1.85rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  }
+#uupaOverlay .uupa-materi-body li {
+  margin-bottom: 0.55rem;
+  color: #334155;
+}
 
-  #uupaOverlay .uupa-section-header {
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 1rem;
-    margin-bottom: 1.35rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-  }
+#uupaOverlay .compare-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.15rem 0;
+}
 
-  #uupaOverlay .uupa-section-badge {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #059669;
-    background-color: #ecfdf5;
-    border: 1px solid #a7f3d0;
-    padding: 0.2rem 0.65rem;
-    border-radius: 99px;
-    margin-bottom: 0.4rem;
-  }
+#uupaOverlay .compare-card {
+  padding: 1.1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background-color: #f8fafc;
+}
 
-  #uupaOverlay .uupa-section-title {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin: 0;
-    line-height: 1.3;
-  }
+#uupaOverlay .compare-card.old-law {
+  border-left: 4px solid #ef4444;
+  background-color: #fffbfa;
+}
 
-  #uupaOverlay .uupa-mastered-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #64748b;
-    background-color: #f1f5f9;
-    padding: 0.45rem 0.8rem;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+#uupaOverlay .compare-card.new-law {
+  border-left: 4px solid #10b981;
+  background-color: #ecfdf5;
+}
 
-  #uupaOverlay .uupa-mastered-btn.done {
-    background-color: #ecfdf5;
-    color: #059669;
-    border-color: #a7f3d0;
-  }
+#uupaOverlay .compare-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+  display: block;
+}
 
-  /* TIPOGRAFI MATERI */
-  #uupaOverlay .uupa-materi-body h4 {
-    font-size: 1.05rem;
-    color: #059669;
-    margin: 1.25rem 0 0.5rem;
-  }
+#uupaOverlay .old-law .compare-label { color: #dc2626; }
+#uupaOverlay .new-law .compare-label { color: #059669; }
 
-  #uupaOverlay .uupa-materi-body p {
-    margin-bottom: 0.85rem;
-    color: #334155;
-  }
+#uupaOverlay .table-responsive {
+  overflow-x: auto;
+  margin: 1.15rem 0;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+}
 
-  #uupaOverlay .uupa-materi-body ul,
-  #uupaOverlay .uupa-materi-body ol {
-    padding-left: 1.4rem;
-    margin-bottom: 1rem;
-  }
+#uupaOverlay table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
 
-  #uupaOverlay .uupa-materi-body li {
-    margin-bottom: 0.55rem;
-    color: #334155;
-  }
+#uupaOverlay th {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-weight: 700;
+  text-align: left;
+  padding: 0.8rem 1rem;
+  border-bottom: 2px solid #cbd5e1;
+}
 
-  #uupaOverlay .uupa-materi-body strong {
-    color: #0f172a;
-  }
+#uupaOverlay td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  vertical-align: top;
+}
 
-  /* KOTAK KOMPARASI UU LAMA VS BARU */
+/* KARTU KUIS HOTS */
+#uupaOverlay .uupa-quiz-wrapper {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 2px dashed #cbd5e1;
+}
+
+#uupaOverlay .uupa-question-card {
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+#uupaOverlay .uupa-q-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+#uupaOverlay .uupa-q-num {
+  font-size: 0.78rem;
+  font-weight: 800;
+  background-color: #d97706;
+  color: #ffffff;
+  padding: 0.22rem 0.65rem;
+  border-radius: 6px;
+}
+
+#uupaOverlay .uupa-q-stem {
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 1.1rem;
+  line-height: 1.65;
+}
+
+#uupaOverlay .uupa-option-btn {
+  text-align: left;
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  padding: 0.8rem 1rem;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+  width: 100%;
+}
+
+#uupaOverlay .uupa-option-btn:hover {
+  border-color: #059669;
+  background-color: #ecfdf5;
+}
+
+#uupaOverlay .uupa-opt-letter {
+  font-weight: 800;
+  color: #0f172a;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
+#uupaOverlay .uupa-option-btn.correct-choice {
+  background-color: #ecfdf5;
+  border-color: #059669;
+  color: #065f46;
+  font-weight: 600;
+}
+
+#uupaOverlay .uupa-option-btn.correct-choice .uupa-opt-letter {
+  background-color: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+#uupaOverlay .uupa-option-btn.wrong-choice {
+  background-color: #fef2f2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+
+#uupaOverlay .uupa-option-btn.wrong-choice .uupa-opt-letter {
+  background-color: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+#uupaOverlay .uupa-explanation-box {
+  display: none;
+  margin-top: 1.1rem;
+  padding: 1.15rem;
+  border-radius: 10px;
+  background-color: #ffffff;
+  border: 1px solid #a7f3d0;
+  border-left: 4px solid #059669;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+#uupaOverlay .uupa-explanation-box.visible {
+  display: block;
+}
+
+/* TEMA SEPIA & DARK */
+#uupaOverlay[data-theme="sepia"],
+#uupaOverlay[data-theme="sepia"] .uupa-main-wrapper {
+  background-color: #f4ecd8;
+  color: #2c241b;
+}
+#uupaOverlay[data-theme="sepia"] .uupa-top-toolbar,
+#uupaOverlay[data-theme="sepia"] .uupa-module-section,
+#uupaOverlay[data-theme="sepia"] .uupa-option-btn,
+#uupaOverlay[data-theme="sepia"] .uupa-explanation-box {
+  background-color: #fdf6e3;
+  border-color: #dfd5c0;
+  color: #2c241b;
+}
+#uupaOverlay[data-theme="sepia"] .uupa-question-card,
+#uupaOverlay[data-theme="sepia"] th {
+  background-color: #eee8d5;
+  border-color: #dfd5c0;
+  color: #2c241b;
+}
+
+#uupaOverlay[data-theme="dark"],
+#uupaOverlay[data-theme="dark"] .uupa-main-wrapper {
+  background-color: #0b1120;
+  color: #f1f5f9;
+}
+#uupaOverlay[data-theme="dark"] .uupa-top-toolbar,
+#uupaOverlay[data-theme="dark"] .uupa-module-section,
+#uupaOverlay[data-theme="dark"] .uupa-option-btn,
+#uupaOverlay[data-theme="dark"] .uupa-explanation-box {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+#uupaOverlay[data-theme="dark"] .uupa-btn-tool,
+#uupaOverlay[data-theme="dark"] .uupa-opt-letter,
+#uupaOverlay[data-theme="dark"] .uupa-question-card,
+#uupaOverlay[data-theme="dark"] .compare-card,
+#uupaOverlay[data-theme="dark"] th {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+#uupaOverlay[data-theme="dark"] .uupa-materi-body li,
+#uupaOverlay[data-theme="dark"] .uupa-materi-body p,
+#uupaOverlay[data-theme="dark"] td,
+#uupaOverlay[data-theme="dark"] .uupa-section-title,
+#uupaOverlay[data-theme="dark"] .uupa-q-stem {
+  color: #f1f5f9;
+}
+
+@media (max-width: 860px) {
   #uupaOverlay .compare-box {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin: 1.15rem 0;
+    grid-template-columns: 1fr;
   }
-
-  #uupaOverlay .compare-card {
-    padding: 1.1rem;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    background-color: #f8fafc;
+  #uupaOverlay .uupa-sidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.4);
   }
-
-  #uupaOverlay .compare-card.old-law {
-    border-left: 4px solid #ef4444;
-    background-color: #fffbfa;
-  }
-
-  #uupaOverlay .compare-card.new-law {
-    border-left: 4px solid #10b981;
-    background-color: #ecfdf5;
-  }
-
-  #uupaOverlay .compare-label {
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    margin-bottom: 0.45rem;
-    display: block;
-  }
-
-  #uupaOverlay .old-law .compare-label { color: #dc2626; }
-  #uupaOverlay .new-law .compare-label { color: #059669; }
-
-  /* TABEL MATERI */
-  #uupaOverlay .table-responsive {
-    overflow-x: auto;
-    margin: 1.15rem 0;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-  }
-
-  #uupaOverlay table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  #uupaOverlay th {
-    background-color: #f1f5f9;
-    color: #0f172a;
-    font-weight: 700;
-    text-align: left;
-    padding: 0.8rem 1rem;
-    border-bottom: 2px solid #cbd5e1;
-  }
-
-  #uupaOverlay td {
-    padding: 0.8rem 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    color: #334155;
-    vertical-align: top;
-  }
-
-  /* KARTU SOAL HOTS */
-  #uupaOverlay .uupa-quiz-wrapper {
-    margin-top: 1.75rem;
-    padding-top: 1.5rem;
-    border-top: 2px dashed #cbd5e1;
-  }
-
-  #uupaOverlay .uupa-quiz-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #d97706;
-    margin-bottom: 1rem;
-  }
-
-  #uupaOverlay .uupa-question-card {
-    background-color: #f8fafc;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 1.4rem;
-    margin-bottom: 1.25rem;
-  }
-
-  #uupaOverlay .uupa-q-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-
-  #uupaOverlay .uupa-q-num {
-    font-size: 0.78rem;
-    font-weight: 800;
-    background-color: #d97706;
-    color: #ffffff;
-    padding: 0.22rem 0.65rem;
-    border-radius: 6px;
-  }
-
-  #uupaOverlay .uupa-q-stem {
-    font-weight: 600;
-    color: #0f172a;
-    margin-bottom: 1.1rem;
-    line-height: 1.65;
-  }
-
-  #uupaOverlay .uupa-options-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  #uupaOverlay .uupa-option-btn {
-    text-align: left;
-    background-color: #ffffff;
-    border: 1.5px solid #cbd5e1;
-    color: #334155;
-    padding: 0.8rem 1rem;
-    border-radius: 9px;
-    cursor: pointer;
-    font-size: 0.92rem;
-    line-height: 1.55;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    transition: all 0.15s ease;
-    width: 100%;
-  }
-
-  #uupaOverlay .uupa-option-btn:hover {
-    border-color: #059669;
-    background-color: #ecfdf5;
-  }
-
-  #uupaOverlay .uupa-opt-letter {
-    font-weight: 800;
-    color: #0f172a;
-    background-color: #f1f5f9;
-    border: 1px solid #cbd5e1;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 0.82rem;
-  }
-
-  #uupaOverlay .uupa-option-btn.correct-choice {
-    background-color: #ecfdf5;
-    border-color: #059669;
-    color: #065f46;
-    font-weight: 600;
-  }
-
-  #uupaOverlay .uupa-option-btn.correct-choice .uupa-opt-letter {
-    background-color: #059669;
-    color: #ffffff;
-    border-color: #059669;
-  }
-
-  #uupaOverlay .uupa-option-btn.wrong-choice {
-    background-color: #fef2f2;
-    border-color: #dc2626;
-    color: #991b1b;
-  }
-
-  #uupaOverlay .uupa-option-btn.wrong-choice .uupa-opt-letter {
-    background-color: #dc2626;
-    color: #ffffff;
-    border-color: #dc2626;
-  }
-
-  #uupaOverlay .uupa-explanation-box {
-    display: none;
-    margin-top: 1.1rem;
-    padding: 1.15rem;
-    border-radius: 10px;
-    background-color: #ffffff;
-    border: 1px solid #a7f3d0;
-    border-left: 4px solid #059669;
-    font-size: 0.9rem;
-    color: #1e293b;
-  }
-
-  #uupaOverlay .uupa-explanation-box.visible {
-    display: block;
-  }
-
-  #uupaOverlay .uupa-exp-row {
-    margin-bottom: 0.55rem;
-    line-height: 1.6;
-  }
-
-  #uupaOverlay .uupa-exp-source {
-    margin-top: 0.7rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid #e2e8f0;
-    font-size: 0.82rem;
-    color: #059669;
-    font-weight: 700;
-  }
-
-  /* FOOTER NAVIGASI BAB */
-  #uupaOverlay .uupa-footer-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1.5rem;
-    gap: 1rem;
-  }
-
-  #uupaOverlay .uupa-btn-nav {
-    background-color: #ffffff;
-    border: 1px solid #cbd5e1;
-    color: #0f172a;
-    padding: 0.75rem 1.25rem;
-    border-radius: 10px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-
-  #uupaOverlay .uupa-btn-nav:hover:not(:disabled) {
-    border-color: #059669;
-    color: #059669;
-  }
-
-  #uupaOverlay .uupa-btn-nav:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* TEMA SEPIA */
-  #uupaOverlay[data-theme="sepia"],
-  #uupaOverlay[data-theme="sepia"] .uupa-main-wrapper {
-    background-color: #f4ecd8;
-    color: #2c241b;
-  }
-  #uupaOverlay[data-theme="sepia"] .uupa-toolbar,
-  #uupaOverlay[data-theme="sepia"] .uupa-module-section,
-  #uupaOverlay[data-theme="sepia"] .uupa-option-btn,
-  #uupaOverlay[data-theme="sepia"] .uupa-explanation-box,
-  #uupaOverlay[data-theme="sepia"] .uupa-btn-nav {
-    background-color: #fdf6e3;
-    border-color: #dfd5c0;
-    color: #2c241b;
-  }
-  #uupaOverlay[data-theme="sepia"] .uupa-question-card,
-  #uupaOverlay[data-theme="sepia"] .compare-card.old-law,
-  #uupaOverlay[data-theme="sepia"] th {
-    background-color: #eee8d5;
-    border-color: #dfd5c0;
-    color: #2c241b;
-  }
-  #uupaOverlay[data-theme="sepia"] .uupa-materi-body li,
-  #uupaOverlay[data-theme="sepia"] .uupa-materi-body p,
-  #uupaOverlay[data-theme="sepia"] td {
-    color: #4a3f31;
-  }
-  #uupaOverlay[data-theme="sepia"] .uupa-section-title,
-  #uupaOverlay[data-theme="sepia"] .uupa-q-stem,
-  #uupaOverlay[data-theme="sepia"] .uupa-materi-body strong {
-    color: #2c241b;
-  }
-
-  /* TEMA GELAP */
-  #uupaOverlay[data-theme="dark"],
-  #uupaOverlay[data-theme="dark"] .uupa-main-wrapper {
-    background-color: #0b1120;
-    color: #f1f5f9;
-  }
-  #uupaOverlay[data-theme="dark"] .uupa-toolbar,
-  #uupaOverlay[data-theme="dark"] .uupa-module-section,
-  #uupaOverlay[data-theme="dark"] .uupa-option-btn,
-  #uupaOverlay[data-theme="dark"] .uupa-explanation-box,
-  #uupaOverlay[data-theme="dark"] .uupa-btn-nav {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #f1f5f9;
-  }
-  #uupaOverlay[data-theme="dark"] .uupa-btn-tool,
-  #uupaOverlay[data-theme="dark"] .uupa-opt-letter,
-  #uupaOverlay[data-theme="dark"] .uupa-mastered-btn,
-  #uupaOverlay[data-theme="dark"] .uupa-question-card,
-  #uupaOverlay[data-theme="dark"] .compare-card,
-  #uupaOverlay[data-theme="dark"] th {
-    background-color: #0f172a;
-    border-color: #334155;
-    color: #e2e8f0;
-  }
-  #uupaOverlay[data-theme="dark"] .uupa-materi-body li,
-  #uupaOverlay[data-theme="dark"] .uupa-materi-body p,
-  #uupaOverlay[data-theme="dark"] td {
-    color: #cbd5e1;
-  }
-  #uupaOverlay[data-theme="dark"] .uupa-section-title,
-  #uupaOverlay[data-theme="dark"] .uupa-q-stem,
-  #uupaOverlay[data-theme="dark"] .uupa-materi-body strong {
-    color: #ffffff;
-  }
-
-  @media (max-width: 860px) {
-    #uupaOverlay .compare-box {
-      grid-template-columns: 1fr;
-    }
-    #uupaOverlay .uupa-sidebar {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-      box-shadow: 4px 0 15px rgba(0,0,0,0.4);
-    }
-  }
-</style>
-
-<div id="uupaOverlay" data-theme="light">
-  <!-- HEADER ATAS -->
-  <div class="uupa-top-header">
-    <h2 style="margin:0; font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-      <i class="fas fa-mosque" style="color:#10b981;"></i> E-Modul Cakim PA — Konsolidasi UU Peradilan Agama & Soal HOTS
-    </h2>
-    <button onclick="document.getElementById('uupaOverlay').style.display='none'; document.getElementById('pusatStudiOverlay').style.display='flex';" style="background:#dc2626; color:white; border:none; width:38px; height:38px; border-radius:10px; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center;" title="Tutup Modul">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <!-- BODY FLEX -->
-  <div class="uupa-body-flex">
-    <!-- SIDEBAR KIRI -->
-    <aside class="uupa-sidebar">
-      <div class="uupa-sidebar-header">
-        <div class="uupa-brand-title">
-          <div class="uupa-brand-badge">PA</div>
-          <div class="uupa-brand-text">
-            <h3>Modul Cakim PA</h3>
-            <span>UU 7/1989 • 3/2006 • 50/2009</span>
-          </div>
-        </div>
-        <button class="uupa-sidebar-close" onclick="window.toggleSidebarUUPA()" title="Tutup Sidebar">✕</button>
-      </div>
-
-      <div class="uupa-sidebar-progress">
-        <div class="uupa-progress-row">
-          <span>Progres Bab Selesai</span>
-          <strong id="uupaChapProgressText">0 / 11</strong>
-        </div>
-        <div class="uupa-progress-track">
-          <div class="uupa-progress-fill" id="uupaChapProgressBar"></div>
-        </div>
-        <div class="uupa-progress-row">
-          <span>Skor Latihan HOTS</span>
-          <strong id="uupaScoreProgressText">0 / 25 Benar</strong>
-        </div>
-        <div class="uupa-progress-track" style="margin-bottom:0;">
-          <div class="uupa-progress-fill" id="uupaScoreProgressBar"></div>
-        </div>
-      </div>
-
-      <div class="uupa-sidebar-search">
-        <input type="text" id="uupaSearchInput" placeholder="Cari pasal, kata kunci, syiqaq..." oninput="window.handleSearchUUPA(this.value)" />
-      </div>
-
-      <ul class="uupa-nav-list" id="uupaNavList"></ul>
-    </aside>
-
-    <!-- KONTEN UTAMA KANAN -->
-    <div class="uupa-main-wrapper" id="uupaMainScroll">
-      <!-- TOOLBAR STICKY -->
-      <header class="uupa-toolbar">
-        <div class="uupa-toolbar-group">
-          <button class="uupa-btn-tool" onclick="window.toggleSidebarUUPA()">☰ <span>Menu Bab</span></button>
-          <button class="uupa-btn-tool active-mode" id="btnUUPASingle" onclick="window.setViewModeUUPA('single')">Per Sub-Bab</button>
-          <button class="uupa-btn-tool" id="btnUUPAAll" onclick="window.setViewModeUUPA('all')">Semua Bab Utuh</button>
-          <button class="uupa-btn-tool" id="btnUUPAQuiz" onclick="window.setViewModeUUPA('quiz')">Fokus 25 Soal HOTS</button>
-        </div>
-
-        <div class="uupa-toolbar-group">
-          <button class="uupa-btn-tool" id="btnUUPASamar" onclick="window.toggleSamarUUPA()">👁️ <span>Mode Samar: OFF</span></button>
-          <button class="uupa-btn-tool" id="btnUUPARevealExp" onclick="window.toggleAllExpUUPA()">💡 <span>Buka Semua Pembahasan</span></button>
-          <button class="uupa-btn-tool" onclick="window.changeFontUUPA(-1)" title="Perkecil Huruf">A-</button>
-          <button class="uupa-btn-tool" onclick="window.changeFontUUPA(1)" title="Perbesar Huruf">A+</button>
-          <button class="uupa-btn-tool" id="btnUUPATheme" onclick="window.cycleThemeUUPA()">☀️ <span>Terang</span></button>
-          <button class="uupa-btn-tool" onclick="window.resetQuizUUPA()">🔄 <span>Reset Soal</span></button>
-        </div>
-      </header>
-
-      <!-- ISI MATERI & SOAL -->
-      <main class="uupa-content-container" id="uupaContentContainer">
-        <div class="uupa-samar-banner">
-          <div>
-            <strong>🎯 Mode Samar (Active Recall) Aktif!</strong>
-            Pasal, tenggang waktu, usia pensiun, dan poin perubahan sedang diburamkan. <em>Arahkan kursor (hover)</em> atau <em>klik</em> pada bagian yang buram untuk menguji ingatanmu.
-          </div>
-          <button class="uupa-btn-tool" onclick="window.revealAllSamarUUPA()">Buka Semua Blur</button>
-        </div>
-
-        <div id="uupaContentRenderArea"></div>
-
-        <div class="uupa-footer-nav" id="uupaFooterNav">
-          <button class="uupa-btn-nav" id="btnUUPAPrev" onclick="window.navigateChapterUUPA(-1)">← Sub-Bab Sebelumnya</button>
-          <button class="uupa-btn-nav" id="btnUUPANext" onclick="window.navigateChapterUUPA(1)">Sub-Bab Selanjutnya →</button>
-        </div>
-      </main>
-    </div>
-  </div>
-</div>
+}
