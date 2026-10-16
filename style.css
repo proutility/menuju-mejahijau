@@ -2379,140 +2379,640 @@ div.swal2-container {
   }
 }
 /* ========================================================= */
-/* CSS KHUSUS MODUL KOMPILASI HUKUM ISLAM (KHI) - FIX PENYET */
+/* CSS KHUSUS MODUL KOMPILASI HUKUM ISLAM (KHI) - FINAL FIX  */
 /* ========================================================= */
 #khiOverlay {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 9999999; display: none; flex-direction: column; overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999999;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.65;
 }
-#khiOverlay * { box-sizing: border-box; margin: 0; padding: 0; }
+
+#khiOverlay * {
+  box-sizing: border-box;
+}
 
 #khiOverlay[data-theme="light"] {
-  --bg-app: #f1f5f9; --bg-surface: #ffffff; --bg-subtle: #f8fafc;
-  --bg-sidebar: #0f172a; --bg-sidebar-hover: #1e293b;
-  --text-primary: #0f172a; --text-secondary: #334155; --text-muted: #64748b; --text-sidebar: #cbd5e1;
-  --border-color: #e2e8f0; --accent: #059669; --accent-hover: #047857;
-  --accent-soft: #ecfdf5; --accent-border: #a7f3d0;
-  --amber: #d97706; --amber-soft: #fffbeb; --amber-border: #fde68a;
-  --danger: #e11d48; --danger-soft: #fff1f2; --danger-border: #fecdd3;
-  --blur-bg: #cbd5e1; --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  --bg-app: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f8fafc;
+  --bg-sidebar: #0f172a;
+  --bg-sidebar-hover: #1e293b;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-sidebar: #cbd5e1;
+  --border-color: #e2e8f0;
+  --accent: #059669;
+  --accent-hover: #047857;
+  --accent-soft: #ecfdf5;
+  --accent-border: #a7f3d0;
+  --amber: #d97706;
+  --amber-soft: #fffbeb;
+  --amber-border: #fde68a;
+  --danger: #e11d48;
+  --danger-soft: #fff1f2;
+  --danger-border: #fecdd3;
+  --blur-bg: #cbd5e1;
+  --shadow-card: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
 }
+
 #khiOverlay[data-theme="dark"] {
-  --bg-app: #090d16; --bg-surface: #111827; --bg-subtle: #1e293b;
-  --bg-sidebar: #060911; --bg-sidebar-hover: #111827;
-  --text-primary: #f8fafc; --text-secondary: #cbd5e1; --text-muted: #94a3b8; --text-sidebar: #94a3b8;
-  --border-color: #1f2937; --accent: #10b981; --accent-hover: #34d399;
-  --accent-soft: rgba(16, 185, 129, 0.12); --accent-border: rgba(16, 185, 129, 0.3);
-  --amber: #f59e0b; --amber-soft: rgba(245, 158, 11, 0.12); --amber-border: rgba(245, 158, 11, 0.3);
-  --danger: #f43f5e; --danger-soft: rgba(244, 63, 94, 0.12); --danger-border: rgba(244, 63, 94, 0.3);
-  --blur-bg: #334155; --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --bg-app: #090d16;
+  --bg-surface: #111827;
+  --bg-subtle: #1e293b;
+  --bg-sidebar: #060911;
+  --bg-sidebar-hover: #111827;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-sidebar: #94a3b8;
+  --border-color: #1f2937;
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-soft: rgba(16, 185, 129, 0.12);
+  --accent-border: rgba(16, 185, 129, 0.3);
+  --amber: #f59e0b;
+  --amber-soft: rgba(245, 158, 11, 0.12);
+  --amber-border: rgba(245, 158, 11, 0.3);
+  --danger: #f43f5e;
+  --danger-soft: rgba(244, 63, 94, 0.12);
+  --danger-border: rgba(244, 63, 94, 0.3);
+  --blur-bg: #334155;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* KHI Layout Flex */
-#khiOverlay .khi-container {
-  display: flex !important; flex-direction: row !important; flex: 1; height: calc(100vh - 64px); background-color: var(--bg-app); color: var(--text-primary); transition: background-color 0.2s, color 0.2s;
-}
+/* HEADER ATAS HITAM */
 #khiOverlay .khi-top-header {
-  display: flex; justify-content: space-between; align-items: center; padding: 14px 24px;
-  background-color: #060911; color: #ffffff; border-bottom: 3px solid #10b981; flex-shrink: 0; width: 100%;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 12px 24px !important;
+  background-color: #060911 !important;
+  color: #ffffff !important;
+  border-bottom: 3px solid #10b981 !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
 }
 
-/* Sidebar */
-#khiOverlay .sidebar { width: 320px; min-width: 320px; max-width: 320px; background-color: var(--bg-sidebar); color: var(--text-sidebar); display: flex; flex-direction: column; border-right: 1px solid var(--border-color); transition: margin-left 0.3s ease; flex-shrink: 0; z-index: 20;}
-#khiOverlay.sidebar-minimized .sidebar { margin-left: -320px; }
-
-/* FIX PENYET 1: Sidebar Top */
-#khiOverlay .sidebar-top { padding: 1.15rem 1.25rem; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.08); gap: 10px;}
-#khiOverlay .brand { display: flex; align-items: flex-start; gap: 12px; }
-#khiOverlay .brand-icon { width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #047857); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; flex-shrink: 0; font-size: 1rem;}
-#khiOverlay .brand-info h1 { font-size: 1.1rem; line-height: 1.3; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
-#khiOverlay .btn-minimize-sidebar { background: rgba(255,255,255,0.08); border: none; color: #ffffff; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;}
-
-/* FIX PENYET 2: Sidebar Stats */
-#khiOverlay .sidebar-stats { padding: 1rem 1.25rem; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 255, 255, 0.07); display: flex; flex-direction: column; gap: 10px; }
-#khiOverlay .stat-box { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.04); padding: 0.8rem 1rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.06); }
-#khiOverlay .stat-label { font-size: 0.8rem; color: #94a3b8; }
-#khiOverlay .stat-val { font-size: 1rem; font-weight: 800; color: #34d399; }
-
-/* Sidebar Search & Nav */
-#khiOverlay .sidebar-search { padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
-#khiOverlay .search-input { width: 100%; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 0.65rem 1rem; border-radius: 9px; font-size: 0.85rem; outline: none; }
-#khiOverlay .sidebar-nav { flex: 1; overflow-y: auto; padding: 0.75rem; list-style: none;}
-#khiOverlay .nav-section-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: #fbbf24; padding: 0.9rem 0.65rem 0.35rem; }
-#khiOverlay .nav-btn { width: 100%; background: transparent; border: none; text-align: left; color: var(--text-sidebar); padding: 0.75rem 0.85rem; border-radius: 10px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 10px; line-height: 1.4;}
-#khiOverlay .nav-btn:hover { background: var(--bg-sidebar-hover); color: #fff; }
-#khiOverlay .nav-btn.active { background: linear-gradient(90deg, rgba(16, 185, 129, 0.22), rgba(16, 185, 129, 0.06)); color: #6ee7b7; box-shadow: inset 3px 0 0 #10b981; }
-#khiOverlay .nav-pill { font-size: 0.7rem; background: rgba(255, 255, 255, 0.08); padding: 0.2rem 0.55rem; border-radius: 99px; flex-shrink: 0;}
-
-/* Main Workspace */
-#khiOverlay .workspace { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: var(--bg-app); min-width: 0;}
-#khiOverlay .topbar { position: sticky; top: 0; z-index: 30; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-#khiOverlay .topbar-left, #khiOverlay .topbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
-#khiOverlay .btn-action { background: var(--bg-subtle); color: var(--text-primary); border: 1px solid var(--border-color); padding: 0.55rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.45rem; transition: 0.2s;}
-#khiOverlay .btn-action.primary-toggle { background: var(--accent); color: #fff; border-color: var(--accent); }
-#khiOverlay .content-wrap { max-width: 920px; width: 100%; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
-
-#khiOverlay .samar-alert { display: none; background: var(--amber-soft); border: 1px solid var(--amber-border); padding: 1rem 1.25rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.9rem; justify-content: space-between; align-items: center; gap: 15px;}
-#khiOverlay.samar-active .samar-alert { display: flex; }
-#khiOverlay .samar { border-radius: 5px; padding: 0 4px; font-weight: 600; transition: filter 0.2s;}
-#khiOverlay.samar-active .samar:not(.revealed) { filter: blur(5px); background: var(--blur-bg); color: transparent; cursor: pointer; user-select: none; }
-#khiOverlay.samar-active .samar:hover, #khiOverlay.samar-active .samar.revealed { filter: blur(0); background: var(--amber-soft); outline: 1px dashed var(--amber); }
-
-#khiOverlay .chapter-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 2.5rem; box-shadow: var(--shadow-card); margin-bottom: 2rem; }
-#khiOverlay .badge-book { font-size: 0.75rem; font-weight: 800; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent-border); padding: 0.3rem 0.85rem; border-radius: 99px; display: inline-block; margin-bottom: 10px;}
-#khiOverlay .chapter-title { font-size: 1.65rem; font-weight: 800; color: var(--text-primary); margin-top: 5px; line-height: 1.3;}
-#khiOverlay .btn-action.done { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
-#khiOverlay .materi-box h4 { font-size: 1.1rem; color: var(--accent); margin: 1.5rem 0 0.8rem; }
-#khiOverlay .materi-box ul, #khiOverlay .materi-box ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
-#khiOverlay .materi-box li { color: var(--text-secondary); margin-bottom: 0.55rem; line-height: 1.6;}
-#khiOverlay .pasal-callout { background: var(--bg-subtle); border-left: 4px solid var(--accent); padding: 1.15rem 1.35rem; margin: 1.25rem 0; font-size: 0.95rem; border-radius: 0 10px 10px 0;}
-
-/* Kuis HOTS KHI */
-#khiOverlay .quiz-container { margin-top: 2.5rem; padding-top: 2rem; border-top: 2px dashed var(--border-color); }
-#khiOverlay .q-card { background: var(--bg-subtle); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem; margin-bottom: 1.5rem; }
-#khiOverlay .q-badge { font-size: 0.75rem; font-weight: 800; background: var(--amber); color: #fff; padding: 0.3rem 0.85rem; border-radius: 6px; }
-#khiOverlay .opt-btn { background: var(--bg-surface); border: 1.5px solid var(--border-color); color: var(--text-secondary); padding: 1rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 12px; width: 100%; text-align: left; line-height: 1.5;}
-#khiOverlay .opt-btn.correct { background: var(--accent-soft); border-color: var(--accent); color: var(--text-primary); font-weight: bold;}
-#khiOverlay .opt-btn.wrong { background: var(--danger-soft); border-color: var(--danger); color: var(--text-primary); }
-#khiOverlay .opt-key { width: 32px; height: 32px; border-radius: 7px; background: var(--bg-subtle); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;}
-#khiOverlay .opt-btn.correct .opt-key { background: var(--accent); color: #fff; border-color: var(--accent); }
-#khiOverlay .opt-btn.wrong .opt-key { background: var(--danger); color: #fff; border-color: var(--danger); }
-#khiOverlay .exp-panel { display: none; margin-top: 1.25rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-left: 4px solid var(--accent); padding: 1.35rem; border-radius: 10px;}
-#khiOverlay .exp-panel.show { display: block; }
-#khiOverlay .exp-ref { margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed var(--border-color); font-size: 0.85rem; font-weight: 700; color: var(--accent); }
-
-/* FIX PENYET 3: Pager Bawah (Navigasi Sebelumnya/Selanjutnya) */
-#khiOverlay .pager-nav {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
+#khiOverlay .khi-top-header button {
+  width: 38px !important;
+  height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
 }
-#khiOverlay .pager-btn {
-  flex: 1;
-  background: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  padding: 1.25rem;
-  border-radius: 12px;
+
+/* CONTAINER UTAMA KIRI-KANAN */
+#khiOverlay .khi-container {
+  display: flex !important;
+  flex-direction: row !important;
+  flex: 1 !important;
+  height: calc(100vh - 64px) !important;
+  width: 100% !important;
+  background-color: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+  overflow: hidden !important;
+}
+
+/* ========================================= */
+/* SIDEBAR KIRI (RAPI & TIDAK RENGGANG)      */
+/* ========================================= */
+#khiOverlay .sidebar {
+  width: 320px !important;
+  min-width: 320px !important;
+  max-width: 320px !important;
+  height: 100% !important;
+  background-color: var(--bg-sidebar) !important;
+  color: var(--text-sidebar) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  transition: margin-left 0.3s ease !important;
+  flex-shrink: 0 !important;
+  z-index: 20 !important;
+}
+
+#khiOverlay.sidebar-minimized .sidebar {
+  margin-left: -320px !important;
+}
+
+#khiOverlay .sidebar-top {
+  padding: 1rem 1.15rem !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  gap: 10px !important;
+}
+
+#khiOverlay .brand {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+#khiOverlay .brand-icon {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #10b981, #047857) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 0.9rem !important;
+  flex-shrink: 0 !important;
+}
+
+#khiOverlay .brand-info h1 {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+}
+
+#khiOverlay .brand-info p {
+  font-size: 0.72rem !important;
+  color: #94a3b8 !important;
+  margin: 2px 0 0 0 !important;
+}
+
+#khiOverlay .btn-minimize-sidebar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #e2e8f0 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* KOTAK STATISTIK 2 KOLOM SEJAJAR */
+#khiOverlay .sidebar-stats {
+  padding: 0.85rem 1.15rem !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+#khiOverlay .stat-box {
+  background: rgba(255, 255, 255, 0.04) !important;
+  padding: 0.6rem 0.75rem !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+}
+
+#khiOverlay .stat-label {
+  font-size: 0.7rem !important;
+  color: #94a3b8 !important;
+  display: block !important;
+}
+
+#khiOverlay .stat-val {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #34d399 !important;
+  display: block !important;
+}
+
+/* KOTAK PENCARIAN SIDEBAR */
+#khiOverlay .sidebar-search {
+  padding: 0.75rem 1.15rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+}
+
+#khiOverlay .search-input {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  padding: 0.55rem 0.85rem !important;
+  border-radius: 9px !important;
+  font-size: 0.82rem !important;
+  outline: none !important;
+  margin: 0 !important;
+}
+
+/* DAFTAR MENU BAB (ANTI-RENGGANG) */
+#khiOverlay #khiSidebarNav.sidebar-nav {
+  display: block !important;
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 0.65rem 0.75rem 2rem !important;
+  margin: 0 !important;
+  height: auto !important;
+}
+
+#khiOverlay .nav-section-title {
+  font-size: 0.68rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+  color: #fbbf24 !important;
+  padding: 0.85rem 0.6rem 0.35rem !important;
+  margin: 0 !important;
+}
+
+#khiOverlay .nav-btn {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: left !important;
+  color: var(--text-sidebar) !important;
+  padding: 0.6rem 0.75rem !important;
+  border-radius: 9px !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  margin: 0 0 4px 0 !important;
+  line-height: 1.35 !important;
+  box-shadow: none !important;
+}
+
+#khiOverlay .nav-btn:hover {
+  background: var(--bg-sidebar-hover) !important;
+  color: #ffffff !important;
+}
+
+#khiOverlay .nav-btn.active {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6ee7b7 !important;
+  font-weight: 700 !important;
+  border-left: 3px solid #10b981 !important;
+}
+
+#khiOverlay .nav-pill {
+  font-size: 0.68rem !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+  padding: 0.15rem 0.5rem !important;
+  border-radius: 99px !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+}
+
+/* ========================================= */
+/* TOPBAR ATAS (SEBARIS RAPI HORIZONTAL)     */
+/* ========================================= */
+#khiOverlay .workspace {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  background-color: var(--bg-app) !important;
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+#khiOverlay .topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 30 !important;
+  background: var(--bg-surface) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 0.65rem 1.5rem !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 0.65rem !important;
+  width: 100% !important;
+}
+
+#khiOverlay .topbar-left,
+#khiOverlay .topbar-right {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  flex-wrap: wrap !important;
+  width: auto !important;
+}
+
+/* KUNCI AGAR TOMBOL TIDAK MELAR 100% */
+#khiOverlay .btn-action {
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  margin: 0 !important;
+  background: var(--bg-subtle) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 0.45rem 0.85rem !important;
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+#khiOverlay .btn-action:hover {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+#khiOverlay .btn-action.primary-toggle {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+
+#khiOverlay .btn-action.done {
+  background: var(--accent-soft) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent-border) !important;
+}
+
+/* ========================================= */
+/* KONTEN MATERI & SOAL HOTS                 */
+/* ========================================= */
+#khiOverlay .content-wrap {
+  max-width: 920px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 2rem 1.5rem 4rem !important;
+}
+
+#khiOverlay .samar-alert {
+  display: none;
+  background: var(--amber-soft) !important;
+  border: 1px solid var(--amber-border) !important;
+  padding: 0.85rem 1.15rem !important;
+  border-radius: 12px !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 0.88rem !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 15px !important;
+}
+
+#khiOverlay.samar-active .samar-alert {
+  display: flex !important;
+}
+
+#khiOverlay .samar {
+  border-radius: 5px;
+  padding: 0 4px;
+  font-weight: 600;
+  transition: filter 0.2s;
+}
+
+#khiOverlay.samar-active .samar:not(.revealed) {
+  filter: blur(5px);
+  background: var(--blur-bg);
+  color: transparent;
   cursor: pointer;
-  text-align: left;
-  transition: 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+  user-select: none;
 }
-#khiOverlay .pager-btn.next { text-align: right; }
-#khiOverlay .pager-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(16, 185, 129, 0.1); }
-#khiOverlay .pager-dir { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; }
-#khiOverlay .pager-title { font-size: 1rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; }
 
-@media (max-width: 860px) { 
-  #khiOverlay .sidebar { position: absolute; left: 0; box-shadow: 4px 0 15px rgba(0,0,0,0.4); } 
-  #khiOverlay .pager-nav { flex-direction: column; }
-  #khiOverlay .pager-btn.next { text-align: left; }
+#khiOverlay.samar-active .samar:hover,
+#khiOverlay.samar-active .samar.revealed {
+  filter: blur(0);
+  background: var(--amber-soft);
+  color: var(--text-primary);
+  outline: 1px dashed var(--amber);
+}
+
+#khiOverlay .chapter-card {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  padding: 2rem !important;
+  box-shadow: var(--shadow-card) !important;
+  margin-bottom: 2rem !important;
+}
+
+#khiOverlay .materi-box h4 {
+  font-size: 1.05rem !important;
+  color: var(--accent) !important;
+  margin: 1.35rem 0 0.6rem !important;
+}
+
+#khiOverlay .materi-box p {
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.85rem !important;
+}
+
+#khiOverlay .materi-box ul,
+#khiOverlay .materi-box ol {
+  padding-left: 1.4rem !important;
+  margin-bottom: 1.1rem !important;
+}
+
+#khiOverlay .materi-box li {
+  color: var(--text-secondary) !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.65 !important;
+}
+
+#khiOverlay .materi-box strong {
+  color: var(--text-primary) !important;
+}
+
+#khiOverlay .pasal-callout {
+  background: var(--bg-subtle) !important;
+  border-left: 4px solid var(--accent) !important;
+  padding: 1rem 1.25rem !important;
+  margin: 1rem 0 !important;
+  font-size: 0.92rem !important;
+  border-radius: 0 10px 10px 0 !important;
+}
+
+/* KUIS HOTS */
+#khiOverlay .quiz-container {
+  margin-top: 2.25rem !important;
+  padding-top: 1.75rem !important;
+  border-top: 2px dashed var(--border-color) !important;
+}
+
+#khiOverlay .q-card {
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  padding: 1.5rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+#khiOverlay .q-badge {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  background: var(--amber) !important;
+  color: #ffffff !important;
+  padding: 0.22rem 0.65rem !important;
+  border-radius: 6px !important;
+}
+
+#khiOverlay .opt-btn {
+  width: 100% !important;
+  background: var(--bg-surface) !important;
+  border: 1.5px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+  padding: 0.85rem 1rem !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0.85rem !important;
+  margin: 0 0 0.6rem 0 !important;
+  text-align: left !important;
+  line-height: 1.55 !important;
+  font-weight: 500 !important;
+}
+
+#khiOverlay .opt-btn:hover {
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
+}
+
+#khiOverlay .opt-btn.correct {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+#khiOverlay .opt-btn.wrong {
+  background: var(--danger-soft) !important;
+  border-color: var(--danger) !important;
+  color: var(--text-primary) !important;
+}
+
+#khiOverlay .opt-key {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 7px !important;
+  background: var(--bg-subtle) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 800 !important;
+  font-size: 0.8rem !important;
+  flex-shrink: 0 !important;
+}
+
+#khiOverlay .opt-btn.correct .opt-key {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+}
+
+#khiOverlay .opt-btn.wrong .opt-key {
+  background: var(--danger) !important;
+  color: #ffffff !important;
+  border-color: var(--danger) !important;
+}
+
+#khiOverlay .exp-panel {
+  display: none;
+  margin-top: 1.15rem !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-left: 4px solid var(--accent) !important;
+  padding: 1.25rem !important;
+  border-radius: 10px !important;
+}
+
+#khiOverlay .exp-panel.show {
+  display: block !important;
+}
+
+#khiOverlay .exp-ref {
+  margin-top: 0.75rem !important;
+  padding-top: 0.65rem !important;
+  border-top: 1px dashed var(--border-color) !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  color: var(--accent) !important;
+}
+
+/* NAVIGASI BAB BAWAH */
+#khiOverlay .pager-nav {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 1rem !important;
+  margin-top: 1.5rem !important;
+}
+
+#khiOverlay .pager-btn {
+  width: 100% !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  padding: 0.9rem 1.25rem !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  box-shadow: var(--shadow-card) !important;
+  margin: 0 !important;
+}
+
+#khiOverlay .pager-btn:hover:not(:disabled) {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+}
+
+#khiOverlay .pager-btn:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+@media (max-width: 860px) {
+  #khiOverlay .sidebar {
+    position: absolute !important;
+    left: 0 !important;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.4) !important;
+  }
+  #khiOverlay .pager-nav {
+    grid-template-columns: 1fr !important;
+  }
 }
