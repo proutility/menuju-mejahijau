@@ -1293,6 +1293,41 @@ div.swal2-container {
     .pt-hero-countdown { width: 100%; }
     .pt-cd-box { flex: 1; }
 }
+/* ==================================================== */
+/* FIX ANTI-NABRAK & WARNA GELAP PETA TEMPUR (KUDETA)   */
+/* ==================================================== */
+
+/* 1. Paksa teks di banner & progress bar jadi putih */
+.cakim-wrapper .pt-hero h1,
+.cakim-wrapper .pt-hero h2,
+.cakim-wrapper .pt-hero h3,
+.cakim-wrapper .pt-hero p,
+.cakim-wrapper .pt-hero span,
+.cakim-wrapper .pt-hero div,
+.cakim-wrapper .pt-progress-container span,
+.cakim-wrapper .pt-progress-container i,
+.cakim-wrapper .pt-progress-container div {
+    color: #ffffff !important;
+}
+
+/* 2. Kasih jarak biar Judul dan Deskripsi Pilar gak tabrakan */
+.cakim-wrapper .pt-hero-title {
+    font-size: 1.8rem !important;
+    margin-bottom: 15px !important;
+    line-height: 1.3 !important;
+}
+.cakim-wrapper .pt-hero-desc {
+    margin-top: 10px !important;
+    line-height: 1.6 !important;
+    color: #d1fae5 !important;
+}
+
+/* 3. Balikin warna-warna stabilo di dalam kotak countdown & kicker */
+.cakim-wrapper .pt-hero .pt-hero-kicker { color: #a7f3d0 !important; } 
+.cakim-wrapper .pt-hero .text-amber { color: #fbbf24 !important; } 
+.cakim-wrapper .pt-hero .text-rose { color: #fb7185 !important; } 
+.cakim-wrapper .pt-hero .text-green { color: #6ee7b7 !important; } 
+.cakim-wrapper .pt-hero .text-muted { color: #94a3b8 !important; }
 
 /* ========================================= */
 /* CSS KHUSUS 60 HARI KITAB KUNING           */
