@@ -8698,29 +8698,31 @@ window.renderSidebarKHI = () => {
 
     stateKHI.dbMateri.forEach((mod, idx) => {
         if (q && !mod.title.toLowerCase().includes(q) && !mod.materi.toLowerCase().includes(q)) return;
+
         if (mod.group && mod.group !== currentGroup) {
             currentGroup = mod.group;
-            const secTitle = document.createElement("div");
-            secTitle.className = "nav-section-title";
+            const secTitle = document.createElement("li");
+            secTitle.className = "khi-nav-group";
             secTitle.textContent = currentGroup;
             nav.appendChild(secTitle);
         }
 
-        const btn = document.createElement("button");
+        const item = document.createElement("li");
         const isActive = stateKHI.displayMode === "single" && stateKHI.currentIndex === idx;
         const isDone = !!stateKHI.doneMap[mod.id];
-        btn.className = `nav-btn ${isActive ? "active" : ""} ${isDone ? "done" : ""}`;
-        btn.onclick = () => window.selectChapterKHI(idx);
+        item.className = `khi-nav-item ${isActive ? "active" : ""} ${isDone ? "done" : ""}`;
+        item.onclick = (e) => {
+            if (e.target.classList.contains("khi-nav-check")) return;
+            window.selectChapterKHI(idx);
+        };
 
         const qLen = mod.questions ? mod.questions.length : 0;
-        btn.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="width:8px; height:8px; border-radius:50%; background:${isDone ? '#10b981' : 'rgba(255,255,255,0.2)'};"></span>
-                <span style="text-align:left;">${mod.title}</span>
-            </div>
-            <span class="nav-pill">${qLen} Soal</span>
+        item.innerHTML = `
+            <input type="checkbox" class="khi-nav-check" ${isDone ? "checked" : ""} onchange="window.toggleDoneKHI('${mod.id}')" title="Tandai dikuasai" />
+            <span class="khi-nav-title">${mod.title}</span>
+            <span class="khi-nav-pill">${qLen} Soal</span>
         `;
-        nav.appendChild(btn);
+        nav.appendChild(item);
     });
 };
 
