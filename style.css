@@ -1134,6 +1134,80 @@ div.swal2-container {
   .desc-cakim { font-size: 0.85rem !important; }
   .num-cakim { width: 34px; height: 34px; font-size: 1rem; }
 }
+/* ========================================= */
+/* CSS KHUSUS PETA TEMPUR 24 HARI            */
+/* ========================================= */
+.pt-action-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; background: #fff; padding: 15px 20px; border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+.pt-action-left { display: flex; align-items: center; gap: 12px; }
+.pt-badge-focus { background: #10b981; color: white; font-weight: 800; font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; }
+.pt-action-right { display: flex; gap: 10px; }
+.pt-btn { border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+.pt-btn-green { background: var(--green); color: white; }
+.pt-btn-green:hover { background: #065f46; }
+.pt-btn-red { background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; }
+.pt-btn-red:hover { background: #ef4444; color: white; }
+
+.pt-hero { background: linear-gradient(135deg, #064e3b, #0f172a); border-radius: 20px; padding: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; color: white; margin-bottom: 20px; position: relative; overflow: hidden; border: 1px solid #047857; }
+.pt-hero-content { flex: 1; min-width: 300px; z-index: 2; }
+.pt-hero-kicker { display: inline-block; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(52, 211, 153, 0.3); color: #6ee7b7; font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 99px; margin-bottom: 12px; }
+.pt-hero-title { font-size: 2rem !important; font-weight: 900 !important; margin: 0 0 8px 0 !important; color: white !important; line-height: 1.2 !important; text-transform: uppercase; }
+.pt-hero-desc { color: #d1fae5 !important; font-size: 0.9rem !important; margin: 0 !important; line-height: 1.5 !important; }
+
+.pt-hero-countdown { display: flex; gap: 12px; z-index: 2; flex-wrap: wrap; }
+.pt-cd-box { background: rgba(15, 23, 42, 0.8); border: 1px solid; border-radius: 12px; padding: 12px 20px; text-align: center; min-width: 160px; }
+.pt-cd-box.border-amber { border-color: rgba(245, 158, 11, 0.4); }
+.pt-cd-box.border-rose { border-color: rgba(225, 29, 72, 0.4); }
+.pt-cd-label { display: block; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.text-amber { color: #fbbf24; }
+.text-rose { color: #fb7185; }
+.pt-cd-date { display: block; font-size: 1.1rem; font-weight: 900; color: white; margin-bottom: 4px; }
+.pt-cd-sub { display: block; font-size: 0.7rem; font-weight: 600; }
+.text-green { color: #6ee7b7; }
+
+.pt-progress-container { background: #0f172a; padding: 15px 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #1e293b; }
+.pt-progress-header { display: flex; justify-content: space-between; color: white; font-size: 0.85rem; font-weight: 700; margin-bottom: 10px; }
+.pt-progress-header i { color: #34d399; margin-right: 5px; }
+.pt-progress-track { width: 100%; height: 10px; background: #1e293b; border-radius: 99px; overflow: hidden; }
+.pt-progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #34d399, #10b981); border-radius: 99px; transition: 0.4s ease; }
+
+.pt-rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
+.pt-rule-card { background: white; padding: 15px; border-radius: 14px; border-left: 4px solid; display: flex; gap: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.pt-rule-card.border-rose { border-color: #e11d48; }
+.pt-rule-card.border-blue { border-color: #2563eb; }
+.pt-rule-card.border-green { border-color: #10b981; }
+.pt-rule-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; flex-shrink: 0; }
+.pt-rule-icon.bg-rose { background: #ffe4e6; color: #e11d48; }
+.pt-rule-icon.bg-blue { background: #dbeafe; color: #2563eb; }
+.pt-rule-icon.bg-green { background: #d1fae5; color: #10b981; }
+.pt-rule-card h3 { margin: 0 0 5px 0 !important; font-size: 0.85rem !important; font-weight: 800 !important; text-transform: uppercase; color: var(--navy) !important; }
+.pt-rule-card p { margin: 0 !important; font-size: 0.75rem !important; color: var(--muted) !important; line-height: 1.5 !important; }
+
+.pt-phase-block { margin-bottom: 30px; }
+.pt-phase-header { border-bottom: 2px solid var(--navy); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pt-phase-badge { background: var(--navy); color: white; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; }
+.pt-phase-title { font-size: 1rem !important; font-weight: 800 !important; margin: 0 !important; color: var(--ink) !important; }
+
+.pt-day-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+.pt-day-card { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+.pt-day-card:hover { border-color: #cbd5e1; transform: translateY(-3px); box-shadow: 0 8px 15px -3px rgba(0,0,0,0.05); }
+.pt-day-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 10px; }
+.pt-day-label { font-size: 0.85rem; font-weight: 800; color: var(--navy); }
+.pt-day-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+
+.pt-task-row { display: flex; gap: 10px; margin-bottom: 8px; cursor: pointer; align-items: flex-start; }
+.pt-task-row:hover .pt-task-text { color: var(--navy); }
+.pt-checkbox { margin-top: 3px; accent-color: var(--green); width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+.pt-task-text { font-size: 0.8rem; line-height: 1.5; color: var(--ink); transition: 0.2s; }
+.pt-task-row input:checked + .pt-task-text { text-decoration: line-through; color: #94a3b8; }
+
+@media(max-width: 900px) {
+    .pt-rules-grid, .pt-day-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width: 600px) {
+    .pt-rules-grid, .pt-day-grid { grid-template-columns: 1fr; }
+    .pt-hero-countdown { width: 100%; }
+    .pt-cd-box { flex: 1; }
+}
 
 /* ========================================= */
 /* CSS KHUSUS 60 HARI KITAB KUNING           */
