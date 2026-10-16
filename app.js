@@ -6889,7 +6889,6 @@ window.renderPetaTempur = () => {
     const container = document.getElementById("renderPetaTempur");
     if (!container) return;
     
-    // Numpang data centangnya ke kunci Master Checklist yang lama
     const KEY = "cakim2026-checklist-v1";
     let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
     
@@ -6900,7 +6899,7 @@ window.renderPetaTempur = () => {
                 const isChecked = !!saved[t.id];
                 return `
                     <label class="pt-task-row">
-                        <input type="checkbox" class="pt-checkbox" data-id="${t.id}" onchange="window.saveCakim()" ${isChecked ? "checked" : ""}>
+                        <input type="checkbox" class="pt-checkbox" data-id="${t.id}" onchange="window.savePetaTempur(this)" ${isChecked ? "checked" : ""}>
                         <span class="pt-task-text"><strong>[${t.time}]</strong> ${t.text}</span>
                     </label>
                 `;
@@ -6930,6 +6929,23 @@ window.renderPetaTempur = () => {
     
     container.innerHTML = html;
     window.updateProgressPeta();
+};
+
+// Fungsi SIMPAN KHUSUS PETA TEMPUR biar update bar-nya kepanggil
+window.savePetaTempur = (elCheckbox) => {
+    const KEY = "cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    
+    const taskId = elCheckbox.getAttribute('data-id');
+    if(taskId) {
+        saved[taskId] = elCheckbox.checked;
+        localStorage.setItem(KEY, JSON.stringify(saved));
+    }
+    
+    // Update progress bar Peta Tempur
+    window.updateProgressPeta();
+    // Update juga progress bar Master Checklist (biar sinkron)
+    if(typeof window.updateProgressCakim === 'function') window.updateProgressCakim();
 };
 
 window.updateProgressPeta = () => {
