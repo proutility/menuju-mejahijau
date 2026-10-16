@@ -731,12 +731,20 @@
               </div>
             </header>
 
+           <!-- ========================================== -->
+            <!-- NAVIGASI TAB (UDAH DITAMBAHIN TAB PETA TEMPUR) -->
+            <!-- ========================================== -->
             <div class="nav-cakim">
               <button class="active" onclick="window.showTabCakim('timelineCakim', this)"><i class="far fa-calendar-alt"></i> Timeline Utama</button>
               <button onclick="window.showTabCakim('weeklyCakim', this)"><i class="far fa-clock"></i> Jadwal Mingguan</button>
               <button onclick="window.showTabCakim('adminCakim', this)"><i class="far fa-folder-open"></i> Administrasi</button>
+              <!-- TAB BARU: PETA TEMPUR -->
+              <button onclick="window.showTabCakim('petaTempurCakim', this)" style="color:#e11d48;"><i class="fas fa-route"></i> Peta Tempur 24 Hari</button>
             </div>
 
+            <!-- ========================================== -->
+            <!-- SECTION 1: TIMELINE UTAMA (LAMA)           -->
+            <!-- ========================================== -->
             <section id="timelineCakim" class="section-cakim active">
                 <div class="grid-cakim">
                     <div class="card-cakim span8-cakim">
@@ -757,7 +765,10 @@
                 </div>
             </section>
 
-           <section id="weeklyCakim" class="section-cakim">
+            <!-- ========================================== -->
+            <!-- SECTION 2: JADWAL MINGGUAN (LAMA)          -->
+            <!-- ========================================== -->
+            <section id="weeklyCakim" class="section-cakim">
                 <div class="card-cakim span12-cakim">
                     <h2 class="h2-cakim">Master Jadwal Mingguan — Belajar & Rutinitas</h2>
                     <div class="sub-cakim">Fase ini menuntut konsistensi: SKB dan Kitab Kuning dijepit waktu subuh dan malam. Sesuaikan jadwal di bawah ini dengan rutinitasmu sendiri.</div>
@@ -785,6 +796,9 @@
                 </div>
             </section>
 
+            <!-- ========================================== -->
+            <!-- SECTION 3: ADMINISTRASI (LAMA)             -->
+            <!-- ========================================== -->
             <section id="adminCakim" class="section-cakim">
                <div class="grid-cakim">
                     <div class="card-cakim span8-cakim">
@@ -812,7 +826,85 @@
                     </div>
                </div>
             </section>
+
+            <!-- ========================================== -->
+            <!-- SECTION 4: PETA TEMPUR 24 HARI (BARU!)     -->
+            <!-- ========================================== -->
+            <section id="petaTempurCakim" class="section-cakim">
+                <!-- Action Bar Peta Tempur -->
+                <div class="pt-action-bar">
+                    <div class="pt-action-left">
+                        <span class="pt-badge-focus">MODE FOKUS</span>
+                        <span style="font-size:0.85rem; font-weight:600; color:var(--muted);"><i class="fas fa-moon" style="color:#f59e0b;"></i> Batas Malam: 22.00 WIB</span>
+                    </div>
+                    <div class="pt-action-right">
+                        <button onclick="window.downloadICSPeta()" class="pt-btn pt-btn-green"><i class="fas fa-file-download"></i> Unduh Jadwal (.ICS)</button>
+                        <button onclick="window.resetPetaTempur()" class="pt-btn pt-btn-red"><i class="fas fa-rotate-left"></i> Reset Target</button>
+                    </div>
+                </div>
+
+                <!-- Hero Banner Peta Tempur -->
+                <div class="pt-hero">
+                    <div class="pt-hero-content">
+                        <div class="pt-hero-kicker"><i class="fas fa-scale-balanced"></i> KISI-KISI INTI PERADILAN AGAMA + TI PERADILAN</div>
+                        <h1 class="pt-hero-title">Peta Tempur 24 Hari Calon Hakim PA 2026</h1>
+                        <p class="pt-hero-desc">Fokus 4 Pilar: <strong>1. Hukum Acara Perdata</strong> • <strong>2. Hukum Acara PA</strong> • <strong>3. Hukum Islam</strong> • <strong>4. Teknologi Informasi (E-Court)</strong></p>
+                    </div>
+                    <div class="pt-hero-countdown">
+                        <div class="pt-cd-box border-amber">
+                            <span class="pt-cd-label text-amber">Gerbang 1: Tes CAT</span>
+                            <span class="pt-cd-date">9 – 10 Nov 2026</span>
+                            <span id="countdownCAT" class="pt-cd-sub text-green">Menghitung hari...</span>
+                        </div>
+                        <div class="pt-cd-box border-rose">
+                            <span class="pt-cd-label text-rose">Gerbang 2: Tes Tertulis</span>
+                            <span class="pt-cd-date">11 – 12 Nov 2026</span>
+                            <span class="pt-cd-sub text-muted">Kasus & Putusan PA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar Spesifik Peta Tempur -->
+                <div class="pt-progress-container">
+                    <div class="pt-progress-header">
+                        <span><i class="fas fa-chart-line"></i> PROGRES PENAKLUKAN MATERI</span>
+                        <span id="ptProgressText">0 / 68 Sesi Selesai (0%)</span>
+                    </div>
+                    <div class="pt-progress-track">
+                        <div class="pt-progress-fill" id="ptProgressBar"></div>
+                    </div>
+                </div>
+
+                <!-- 3 Golden Rules -->
+                <div class="pt-rules-grid">
+                    <div class="pt-rule-card border-rose">
+                        <div class="pt-rule-icon bg-rose"><i class="fas fa-ban"></i></div>
+                        <div>
+                            <h3>1. Bekukan Coding Aplikasi!</h3>
+                            <p>Berhenti jadi developer, jadilah <strong>user</strong>. Gunakan Split-Screen: modul di kiri & soal di kanan.</p>
+                        </div>
+                    </div>
+                    <div class="pt-rule-card border-blue">
+                        <div class="pt-rule-icon bg-blue"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <h3>2. Cicilan 3 Sesi Pendek (90 Menit)</h3>
+                            <p><strong>Pagi:</strong> Baca KHI. <strong>Siang:</strong> Acara & TI. <strong>Malam:</strong> Drilling Soal HOTS.</p>
+                        </div>
+                    </div>
+                    <div class="pt-rule-card border-green">
+                        <div class="pt-rule-icon bg-green"><i class="fas fa-bed"></i></div>
+                        <div>
+                            <h3>3. Kunci Tidur 22.00 & Rem S2</h3>
+                            <p>Kerjaan kantor standar "Selesai". Wajib tutup layar jam <strong>21.30</strong> agar memori terikat kuat!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Container Render Dinamis Hari -->
+                <div id="renderPetaTempur" class="pt-schedule-container"></div>
+            </section>
             
+            <!-- Tulisan Footer Paling Bawah -->
             <div style="text-align:center; padding:40px 20px; font-size:13px; color:#94a3b8; font-weight: 500;">
                 Calon Hakim 2026 • Master Timeline & Eksekusi • Data tersimpan otomatis di browser
             </div>
