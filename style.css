@@ -2483,16 +2483,16 @@ div.swal2-container {
   overflow: hidden !important;
 }
 
-/* ========================================= */
-/* SIDEBAR KIRI (RAPI & TIDAK RENGGANG)      */
-/* ========================================= */
+/* ========================================================= */
+/* FIX SIDEBAR KHI RAMPING, PADAT & ELEGAN (ALA UU PA)       */
+/* ========================================================= */
 #khiOverlay .sidebar {
-  width: 320px !important;
-  min-width: 320px !important;
-  max-width: 320px !important;
+  width: 290px !important;
+  min-width: 290px !important;
+  max-width: 290px !important;
   height: 100% !important;
-  background-color: var(--bg-sidebar) !important;
-  color: var(--text-sidebar) !important;
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
@@ -2503,185 +2503,114 @@ div.swal2-container {
 }
 
 #khiOverlay.sidebar-minimized .sidebar {
-  margin-left: -320px !important;
+  margin-left: -290px !important;
 }
 
 #khiOverlay .sidebar-top {
-  padding: 1rem 1.15rem !important;
+  padding: 0.9rem 1rem !important;
   display: flex !important;
-  flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  gap: 10px !important;
 }
 
-#khiOverlay .brand {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 10px !important;
-  min-width: 0 !important;
-}
-
-#khiOverlay .brand-icon {
-  width: 38px !important;
-  height: 38px !important;
-  border-radius: 10px !important;
-  background: linear-gradient(135deg, #10b981, #047857) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: #ffffff !important;
-  font-weight: 800 !important;
-  font-size: 0.9rem !important;
-  flex-shrink: 0 !important;
-}
-
-#khiOverlay .brand-info h1 {
-  font-size: 0.95rem !important;
-  font-weight: 800 !important;
-  color: #ffffff !important;
-  line-height: 1.25 !important;
-  margin: 0 !important;
-}
-
-#khiOverlay .brand-info p {
-  font-size: 0.72rem !important;
-  color: #94a3b8 !important;
-  margin: 2px 0 0 0 !important;
-}
-
-#khiOverlay .btn-minimize-sidebar {
-  width: 32px !important;
-  height: 32px !important;
-  min-width: 32px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #e2e8f0 !important;
-  border-radius: 8px !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-}
-
-/* KOTAK STATISTIK 2 KOLOM SEJAJAR */
 #khiOverlay .sidebar-stats {
-  padding: 0.85rem 1.15rem !important;
-  background: rgba(255, 255, 255, 0.02) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  padding: 0.7rem 1rem !important;
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
+  gap: 8px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
 #khiOverlay .stat-box {
   background: rgba(255, 255, 255, 0.04) !important;
-  padding: 0.6rem 0.75rem !important;
-  border-radius: 10px !important;
+  padding: 0.45rem 0.65rem !important;
+  border-radius: 8px !important;
   border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: flex-start !important;
-  gap: 2px !important;
 }
 
-#khiOverlay .stat-label {
-  font-size: 0.7rem !important;
-  color: #94a3b8 !important;
-  display: block !important;
-}
-
-#khiOverlay .stat-val {
-  font-size: 0.95rem !important;
-  font-weight: 800 !important;
-  color: #34d399 !important;
-  display: block !important;
-}
-
-/* KOTAK PENCARIAN SIDEBAR */
 #khiOverlay .sidebar-search {
-  padding: 0.75rem 1.15rem !important;
+  padding: 0.65rem 1rem !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
 }
 
-#khiOverlay .search-input {
-  width: 100% !important;
-  background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: #ffffff !important;
-  padding: 0.55rem 0.85rem !important;
-  border-radius: 9px !important;
-  font-size: 0.82rem !important;
-  outline: none !important;
-  margin: 0 !important;
-}
-
-/* DAFTAR MENU BAB (ANTI-RENGGANG) */
-#khiOverlay #khiSidebarNav.sidebar-nav {
-  display: block !important;
+/* LIST MENU UL & LI RAMPING */
+#khiOverlay #khiSidebarNav {
   flex: 1 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  padding: 0.65rem 0.75rem 2rem !important;
+  padding: 0.5rem 0.65rem 2rem !important;
   margin: 0 !important;
-  height: auto !important;
+  list-style: none !important;
+  display: block !important;
 }
 
-#khiOverlay .nav-section-title {
-  font-size: 0.68rem !important;
+#khiOverlay .khi-nav-group {
+  font-size: 0.66rem !important;
   font-weight: 800 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.07em !important;
+  letter-spacing: 0.08em !important;
   color: #fbbf24 !important;
-  padding: 0.85rem 0.6rem 0.35rem !important;
+  padding: 0.75rem 0.55rem 0.3rem !important;
   margin: 0 !important;
+  list-style: none !important;
 }
 
-#khiOverlay .nav-btn {
-  width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  text-align: left !important;
-  color: var(--text-sidebar) !important;
-  padding: 0.6rem 0.75rem !important;
-  border-radius: 9px !important;
-  font-size: 0.82rem !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
+#khiOverlay .khi-nav-item {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
-  margin: 0 0 4px 0 !important;
+  gap: 0.55rem !important;
+  padding: 0.5rem 0.65rem !important;
+  margin: 0 0 3px 0 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  color: #e2e8f0 !important;
+  font-size: 0.8rem !important;
   line-height: 1.35 !important;
-  box-shadow: none !important;
+  background: transparent !important;
+  border: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  transition: background 0.15s ease !important;
+  list-style: none !important;
 }
 
-#khiOverlay .nav-btn:hover {
-  background: var(--bg-sidebar-hover) !important;
+#khiOverlay .khi-nav-item:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
   color: #ffffff !important;
 }
 
-#khiOverlay .nav-btn.active {
-  background: rgba(16, 185, 129, 0.2) !important;
+#khiOverlay .khi-nav-item.active {
+  background: rgba(16, 185, 129, 0.22) !important;
   color: #6ee7b7 !important;
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   border-left: 3px solid #10b981 !important;
 }
 
-#khiOverlay .nav-pill {
-  font-size: 0.68rem !important;
+#khiOverlay .khi-nav-check {
+  width: 15px !important;
+  height: 15px !important;
+  accent-color: #10b981 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+}
+
+#khiOverlay .khi-nav-title {
+  flex: 1 !important;
+  color: inherit !important;
+  font-size: 0.8rem !important;
+  line-height: 1.35 !important;
+  text-align: left !important;
+}
+
+#khiOverlay .khi-nav-pill {
+  font-size: 0.66rem !important;
   background: rgba(255, 255, 255, 0.1) !important;
-  color: #cbd5e1 !important;
-  padding: 0.15rem 0.5rem !important;
+  color: #94a3b8 !important;
+  padding: 0.12rem 0.45rem !important;
   border-radius: 99px !important;
   flex-shrink: 0 !important;
   white-space: nowrap !important;
