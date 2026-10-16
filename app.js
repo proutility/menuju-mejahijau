@@ -6657,6 +6657,357 @@ window.hapusJadwalMingguan = (index) => {
     }
 };
 // ==========================================
+// 🚀 FITUR PETA TEMPUR 24 HARI CAKIM
+// ==========================================
+
+const petaTempurData = [
+    {
+        title: "MINGGU 1 (16 – 21 OKTOBER 2026)",
+        subtitle: "Fokus Pilar 1 & 2: Hukum Acara Perdata, Hukum Acara PA, & TI Peradilan (E-Court)",
+        days: [
+            {
+                dateStr: "20261016", dayLabel: "Hari 1 • Jumat, 16 Okt", tag: "Start + Kuliah S2", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d1-t1", time: "Pagi (05.30)", text: "2.1. Asas Peradilan Agama + Menu Konsolidasi UU PA" },
+                    { id: "pt-d1-t2", time: "Siang [TI]", text: "Modul 17: E-Court & Tercatat (PERMA 1/2019 jo. PERMA 7/2022)" },
+                    { id: "pt-d1-t3", time: "Malam", text: "STOP BELAJAR CAKIM! Fokus Kuliah S2 & Tidur Maksimal 22.00" }
+                ]
+            },
+            {
+                dateStr: "20261017", dayLabel: "Hari 2 • Sabtu, 17 Okt", tag: "Zona Bebas Cakim", tagBg: "background:#f3e8ff; color:#6b21a8;",
+                tasks: [
+                    { id: "pt-d2-t1", time: "Pagi–Sore", text: "Fokus Full Kuliah S2 (Cicil kerangka tugas S2 di sela jam kuliah)" },
+                    { id: "pt-d2-t2", time: "Malam", text: "Istirahat Total / Refreshing Otak (Tidur Maksimal 22.00)" }
+                ]
+            },
+            {
+                dateStr: "20261018", dayLabel: "Hari 3 • Minggu, 18 Okt", tag: "Waktu Emas Pagi", tagBg: "background:#d1fae5; color:#065f46;",
+                tasks: [
+                    { id: "pt-d3-t1", time: "08.00–09.30", text: "1. BUKU II PA (Grup Acara) + Menu Bedah Buku II PA 2026" },
+                    { id: "pt-d3-t2", time: "09.30–11.00", text: "Modul 4: Pendaftaran & Relaas (Panggilan Sidang Sah & Patut)" },
+                    { id: "pt-d3-t3", time: "Siang/Malam", text: "Bereskan Tugas S2 • Malam Free Time & Tidur 22.00" }
+                ]
+            },
+            {
+                dateStr: "20261019", dayLabel: "Hari 4 • Senin, 19 Okt", tag: "Acara PA Inti", tagBg: "background:#dbeafe; color:#1e40af;",
+                tasks: [
+                    { id: "pt-d4-t1", time: "Pagi (05.30)", text: "Modul 5: Gugatan & Permohonan (Syarat Formil/Materil, Kumulasi, Rekonvensi)" },
+                    { id: "pt-d4-t2", time: "Siang (12.15)", text: "Modul 7: Mediasi di Pengadilan (PERMA No. 1 Tahun 2016)" },
+                    { id: "pt-d4-t3", time: "Malam (20.30)", text: "Drilling 25 Soal HOTS UU Peradilan Agama + Bedah Pasal" }
+                ]
+            },
+            {
+                dateStr: "20261020", dayLabel: "Hari 5 • Selasa, 20 Okt", tag: "Sita & E-Litigasi", tagBg: "background:#dbeafe; color:#1e40af;",
+                tasks: [
+                    { id: "pt-d5-t1", time: "Pagi (05.30)", text: "Modul 12: Sita Jaminan (Conservatoir, Revindicatoir, Sita Marital)" },
+                    { id: "pt-d5-t2", time: "Siang [TI]", text: "Modul 16: Prodeo & Posbakum + Review Alur Teknis SIPP/E-Litigasi" },
+                    { id: "pt-d5-t3", time: "Malam (20.30)", text: "Modul 6: PMH & Wanprestasi (Irisan Hukum Acara & Perdata)" }
+                ]
+            },
+            {
+                dateStr: "20261021", dayLabel: "Hari 6 • Rabu, 21 Okt", tag: "Kunci HAPER 2023", tagBg: "background:#e0e7ff; color:#3730a3;",
+                tasks: [
+                    { id: "pt-d6-t1", time: "Pagi (05.30)", text: "3. HAPER Cakim 2023 (Bagian 1 – Pemetaan Pola Soal Acara Perdata)" },
+                    { id: "pt-d6-t2", time: "Siang (12.15)", text: "3. HAPER Cakim 2023 (Bagian 2)" },
+                    { id: "pt-d6-t3", time: "Malam (20.30)", text: "Bedah Pasal HIR / RBg dari Soal HAPER 2023 yang Masih Salah" }
+                ]
+            }
+        ]
+    },
+    {
+        title: "MINGGU 2 (22 – 26 OKTOBER 2026)",
+        subtitle: "Fokus Pilar 3A: Hukum Islam — Bedah KHI Buku I (Perkawinan) & Buku III (Perwakafan)",
+        days: [
+            {
+                dateStr: "20261022", dayLabel: "Hari 7 • Kamis, 22 Okt", tag: "KHI Perkawinan 1", tagBg: "background:#d1fae5; color:#065f46;",
+                tasks: [
+                    { id: "pt-d7-t1", time: "Pagi (05.30)", text: "Baca KHI Buku I (Bab I–VI: Peminangan, Rukun, Mahar, Larangan) + Modul 8" },
+                    { id: "pt-d7-t2", time: "Siang (12.15)", text: "Modul 8.3: Perkawinan (UU No. 1/1974 jo. UU No. 16/2019)" },
+                    { id: "pt-d7-t3", time: "Malam (20.30)", text: "Modul 8.4: Peraturan Pelaksana (PP No. 9 Tahun 1975)" }
+                ]
+            },
+            {
+                dateStr: "20261023", dayLabel: "Hari 8 • Jumat, 23 Okt", tag: "KHI 2 + Kuliah S2", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d8-t1", time: "Pagi (05.30)", text: "Baca KHI Buku I (Bab VII–XII: Perjanjian, Poligami, Batal Kawin) + Modul 8.1" },
+                    { id: "pt-d8-t2", time: "Siang [TI]", text: "Review TI Umum, UU ITE, Tanda Tangan Elektronik & SPBE MA" },
+                    { id: "pt-d8-t3", time: "Malam", text: "STOP BELAJAR CAKIM! Fokus Kuliah S2 & Tidur Cepat" }
+                ]
+            },
+            {
+                dateStr: "20261024", dayLabel: "Hari 9 • Sabtu, 24 Okt", tag: "Zona Bebas Cakim", tagBg: "background:#f3e8ff; color:#6b21a8;",
+                tasks: [
+                    { id: "pt-d9-t1", time: "Pagi–Sore", text: "Fokus Full Kuliah S2 (Berpikir Hukum di Kelas = Olahraga Otak)" },
+                    { id: "pt-d9-t2", time: "Malam", text: "Istirahat Total & Tidur Maksimal 22.00" }
+                ]
+            },
+            {
+                dateStr: "20261025", dayLabel: "Hari 10 • Minggu, 25 Okt", tag: "Tuntas KHI Buku I", tagBg: "background:#d1fae5; color:#065f46;",
+                tasks: [
+                    { id: "pt-d10-t1", time: "08.00–09.45", text: "Baca KHI Buku I (Bab XIII–XIX: Harta Bersama, Hadhanah, Putus Kawin, Iddah)" },
+                    { id: "pt-d10-t2", time: "09.45–11.00", text: "Modul 9: Perwalian & Pengangkatan Anak" },
+                    { id: "pt-d10-t3", time: "Siang & Malam", text: "Tugas S2 Siang Hari • Malam Free Time & Tidur 22.00" }
+                ]
+            },
+            {
+                dateStr: "20261026", dayLabel: "Hari 11 • Senin, 26 Okt", tag: "KHI Wakaf & Buku Saku", tagBg: "background:#d1fae5; color:#065f46;",
+                tasks: [
+                    { id: "pt-d11-t1", time: "Pagi (05.30)", text: "Baca KHI Buku III (Perwakafan) & UU Wakaf + Modul 14: Perwakafan" },
+                    { id: "pt-d11-t2", time: "Siang (12.15)", text: "Modul 15: Buku Saku Peradilan Agama A" },
+                    { id: "pt-d11-t3", time: "Malam (20.30)", text: "Modul 15.1: Buku Saku PA B & Modul 15.2: Buku Saku PA C" }
+                ]
+            }
+        ]
+    },
+    {
+        title: "MINGGU 3 (27 OKT – 1 NOV 2026)",
+        subtitle: "Fokus Pilar 3B: KHI Buku II (Kewarisan, Wasiat, Hibah) & Ekonomi Syariah",
+        days: [
+            {
+                dateStr: "20261027", dayLabel: "Hari 12 • Selasa, 27 Okt", tag: "Waris Islam & KHI", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d12-t1", time: "Pagi (05.30)", text: "Baca KHI Buku II (Pasal 171–193) + Modul 10: Waris Islam (Dasar)" },
+                    { id: "pt-d12-t2", time: "Siang (12.15)", text: "Hafalan Pasti Ashabul Furudh, Hijab-Mahjub, Masalah Aul & Radd" },
+                    { id: "pt-d12-t3", time: "Malam (20.30)", text: "Modul 10.1: Waris KHI (Ahli Waris Pengganti & Wasiat Wajibah)" }
+                ]
+            },
+            {
+                dateStr: "20261028", dayLabel: "Hari 13 • Rabu, 28 Okt", tag: "Hitungan Waris & Hibah", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d13-t1", time: "Pagi (05.30)", text: "Baca KHI Buku II (Pasal 194–214) + Modul 11: Wasiat & Hibah" },
+                    { id: "pt-d13-t2", time: "Siang (12.15)", text: "Modul 10.2: Waris BW (Cukup Skimming Cepat untuk Perbandingan)" },
+                    { id: "pt-d13-t3", time: "Malam (20.30)", text: "Modul 10.3: Studi Kasus Waris (Wajib Latihan Corat-Coret Hitungan!)" }
+                ]
+            },
+            {
+                dateStr: "20261029", dayLabel: "Hari 14 • Kamis, 29 Okt", tag: "Ekonomi Syariah", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d14-t1", time: "Pagi (05.30)", text: "Modul 13: Ekonomi Syariah A (Kompetensi Absolut & Prinsip Dasar)" },
+                    { id: "pt-d14-t2", time: "Siang (12.15)", text: "Modul 13.1: Akad Syariah (Murabahah, Mudharabah, Musyarakah, Ijarah)" },
+                    { id: "pt-d14-t3", time: "Malam (20.30)", text: "Modul 13.2: Ekonomi Syariah B (Sengketa & Eksekusi Jaminan Syariah)" }
+                ]
+            },
+            {
+                dateStr: "20261030", dayLabel: "Hari 15 • Jumat, 30 Okt", tag: "Cakim 2017 + S2", tagBg: "background:#fef3c7; color:#92400e;",
+                tasks: [
+                    { id: "pt-d15-t1", time: "Pagi (05.30)", text: "2. Substansi Cakim 2017 (Bagian 1)" },
+                    { id: "pt-d15-t2", time: "Siang (12.15)", text: "2. Substansi Cakim 2017 (Bagian 2)" },
+                    { id: "pt-d15-t3", time: "Malam", text: "STOP BELAJAR CAKIM! Fokus Kuliah S2 & Tidur Cepat" }
+                ]
+            },
+            {
+                dateStr: "20261031", dayLabel: "Hari 16 • Sabtu, 31 Okt", tag: "Zona Bebas Cakim", tagBg: "background:#f3e8ff; color:#6b21a8;",
+                tasks: [
+                    { id: "pt-d16-t1", time: "Pagi–Sore", text: "Fokus Full Kuliah S2" },
+                    { id: "pt-d16-t2", time: "Malam", text: "Istirahat Total & Tidur Maksimal 22.00" }
+                ]
+            },
+            {
+                dateStr: "20261101", dayLabel: "Hari 17 • Minggu, 1 Nov", tag: "Modul Pelengkap", tagBg: "background:#e2e8f0; color:#1e293b;",
+                tasks: [
+                    { id: "pt-d17-t1", time: "08.00–09.30", text: "Sesi Jaring Pengaman: Menu UU Kekuasaan Kehakiman & UU MA" },
+                    { id: "pt-d17-t2", time: "09.30–11.00", text: "Skimming Cepat: 3. KEPPH, 1. Ilmu Hukum & 2. Asas Umum" },
+                    { id: "pt-d17-t3", time: "Siang & Malam", text: "Tugas S2 Siang Hari • Malam Free Time & Tidur 22.00" }
+                ]
+            }
+        ]
+    },
+    {
+        title: "MINGGU 4 & KARANTINA EMAS (2 – 12 NOVEMBER 2026)",
+        subtitle: "Penguncian 4 Pilar, Cuti/WFA/Izin Kuliah, & Eksekusi Hari H",
+        days: [
+            {
+                dateStr: "20261102", dayLabel: "Hari 18 • Senin, 2 Nov", tag: "Review Pilar 1 & 2", tagBg: "background:#ffe4e6; color:#9f1239;",
+                tasks: [
+                    { id: "pt-d18-t1", time: "Pagi & Siang", text: "Review Total Hukum Acara Perdata & PA (Buku II PA, Modul 4, 5, 7, 12, 16)" },
+                    { id: "pt-d18-t2", time: "Malam (20.30)", text: "Ulang Soal Salah di 3. HAPER Cakim 2023" }
+                ]
+            },
+            {
+                dateStr: "20261103", dayLabel: "Hari 19 • Selasa, 3 Nov", tag: "Review Perkawinan & Eksyar", tagBg: "background:#ffe4e6; color:#9f1239;",
+                tasks: [
+                    { id: "pt-d19-t1", time: "Pagi & Siang", text: "Review Total KHI Buku I (Perkawinan) & Wakaf" },
+                    { id: "pt-d19-t2", time: "Malam (20.30)", text: "Review Total Ekonomi Syariah & Akad" }
+                ]
+            },
+            {
+                dateStr: "20261104", dayLabel: "Hari 20 • Rabu, 4 Nov", tag: "Review Waris & Hibah", tagBg: "background:#ffe4e6; color:#9f1239;",
+                tasks: [
+                    { id: "pt-d20-t1", time: "Pagi & Siang", text: "Review Total KHI Buku II (Waris, Wasiat, Hibah)" },
+                    { id: "pt-d20-t2", time: "Malam (20.30)", text: "Drilling Cepat Hitungan Kasus Waris" }
+                ]
+            },
+            {
+                dateStr: "20261105", dayLabel: "Hari 21 • Kamis, 5 Nov", tag: "🔥 CUTI (Karantina 1)", tagBg: "background:#fde047; color:#0f172a;",
+                tasks: [
+                    { id: "pt-d21-t1", time: "08.00–11.30", text: "Simulasi Full Gabungan: Substansi 2017 + HAPER 2023 + Drilling HOTS UU PA" },
+                    { id: "pt-d21-t2", time: "13.30–16.00", text: "Pendalaman Fokus Materi Teknologi Informasi (TI) & E-Court/E-Litigasi" },
+                    { id: "pt-d21-t3", time: "Malam", text: "Evaluasi Singkat & Tidur Maksimal 21.30" }
+                ]
+            },
+            {
+                dateStr: "20261106", dayLabel: "Hari 22 • Jumat, 6 Nov", tag: "🔥 WFA (Karantina 2)", tagBg: "background:#fde047; color:#0f172a;",
+                tasks: [
+                    { id: "pt-d22-t1", time: "08.00–11.30", text: "Baca Tuntas Pasal-Pasal Emas KHI (Pasal 1 s.d. 170 - Perkawinan)" },
+                    { id: "pt-d22-t2", time: "13.30–16.00", text: "Baca Tuntas Pasal-Pasal Emas KHI (Pasal 171 s.d. 229 - Waris & Wakaf)" },
+                    { id: "pt-d22-t3", time: "Malam", text: "Istirahat Penuh (Mode Hemat Energi)" }
+                ]
+            },
+            {
+                dateStr: "20261107", dayLabel: "Hari 23 • Sabtu, 7 Nov", tag: "🔥 IZIN S2 (Karantina 3)", tagBg: "background:#fde047; color:#0f172a;",
+                tasks: [
+                    { id: "pt-d23-t1", time: "08.00–11.30", text: "Latihan Kerangka Tes Tertulis (Duduk Perkara -> Legal Issue -> Pertimbangan -> Amar)" },
+                    { id: "pt-d23-t2", time: "13.30–15.30", text: "Review Buku Saku PA (A, B, C) & SEMA Kamar Agama" },
+                    { id: "pt-d23-t3", time: "Malam", text: "Nabung Tidur (Sleep Banking) - Tidur Jam 21.30" }
+                ]
+            },
+            {
+                dateStr: "20261108", dayLabel: "Hari 24 • Minggu, 8 Nov", tag: "🧘 H-1 Cooling Down", tagBg: "background:#a7f3d0; color:#064e3b;",
+                tasks: [
+                    { id: "pt-d24-t1", time: "08.00–10.00", text: "Skimming Ringan Catatan yang Sering Salah (Jangan Belajar Materi Baru!)" },
+                    { id: "pt-d24-t2", time: "16.00 WIB", text: "TUTUP BUKU TOTAL! Siapkan Kartu Ujian, Pakaian, Mental Tenang & Tidur 21.00" }
+                ]
+            },
+            {
+                dateStr: "20261109", dayLabel: "9 – 10 Nov 2026", tag: "⚔️ HARI H GERBANG 1", tagBg: "background:#e11d48; color:#ffffff;",
+                tasks: [
+                    { id: "pt-d25-t1", time: "Siang/Pagi", text: "EKSEKUSI TES CAT (Fokus, Jangan Terpaku 1 Soal Macet, Jangan Bahas Soal Lalu)" },
+                    { id: "pt-d25-t2", time: "Malam", text: "Review 45 Menit Format Putusan & Hitungan Waris untuk Tes Tertulis" }
+                ]
+            },
+            {
+                dateStr: "20261111", dayLabel: "11 – 12 Nov 2026", tag: "⚔️ HARI H GERBANG 2", tagBg: "background:#e11d48; color:#ffffff;",
+                tasks: [
+                    { id: "pt-d26-t1", time: "Hari H", text: "EKSEKUSI TES TERTULIS (Tuangkan Logika Hakim: Fakta, Pasal, & Amar yang Tegas)" }
+                ]
+            }
+        ]
+    }
+];
+
+window.renderPetaTempur = () => {
+    const container = document.getElementById("renderPetaTempur");
+    if (!container) return;
+    
+    // Numpang data centangnya ke kunci Master Checklist yang lama
+    const KEY = "cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    
+    let html = "";
+    petaTempurData.forEach(phase => {
+        let daysHtml = phase.days.map(day => {
+            let tasksHtml = day.tasks.map(t => {
+                const isChecked = !!saved[t.id];
+                return `
+                    <label class="pt-task-row">
+                        <input type="checkbox" class="pt-checkbox" data-id="${t.id}" onchange="window.saveCakim()" ${isChecked ? "checked" : ""}>
+                        <span class="pt-task-text"><strong>[${t.time}]</strong> ${t.text}</span>
+                    </label>
+                `;
+            }).join("");
+
+            return `
+                <div class="pt-day-card">
+                    <div class="pt-day-header">
+                        <span class="pt-day-label">${day.dayLabel}</span>
+                        <span class="pt-day-tag" style="${day.tagBg}">${day.tag}</span>
+                    </div>
+                    <div>${tasksHtml}</div>
+                </div>
+            `;
+        }).join("");
+
+        html += `
+            <div class="pt-phase-block">
+                <div class="pt-phase-header">
+                    <span class="pt-phase-badge">${phase.title}</span>
+                    <h2 class="pt-phase-title">${phase.subtitle}</h2>
+                </div>
+                <div class="pt-day-grid">${daysHtml}</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    window.updateProgressPeta();
+};
+
+window.updateProgressPeta = () => {
+    const KEY = "cakim2026-checklist-v1";
+    let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+    
+    let total = 0;
+    let completed = 0;
+    petaTempurData.forEach(p => p.days.forEach(d => d.tasks.forEach(t => {
+        total++;
+        if (saved[t.id]) completed++;
+    })));
+
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const txt = document.getElementById("ptProgressText");
+    const bar = document.getElementById("ptProgressBar");
+    
+    if(txt) txt.textContent = `${completed} / ${total} Sesi Selesai (${pct}%)`;
+    if(bar) bar.style.width = `${pct}%`;
+
+    // Update Countdown
+    const targetDate = new Date("2026-11-09T07:00:00+07:00").getTime();
+    const now = new Date().getTime();
+    const diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+    const cdEl = document.getElementById("countdownCAT");
+    if(cdEl) {
+        if (diffDays > 0) cdEl.textContent = `🔥 Sisa ${diffDays} Hari Lagi!`;
+        else if (diffDays === 0) cdEl.textContent = `🔥 HARI H TEMPUR!`;
+        else cdEl.textContent = `Semangat Ujian!`;
+    }
+};
+
+window.resetPetaTempur = () => {
+    if(confirm("Yakin ingin menghapus semua ceklis di Peta Tempur 24 Hari?")) {
+        const KEY = "cakim2026-checklist-v1";
+        let saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+        petaTempurData.forEach(p => p.days.forEach(d => d.tasks.forEach(t => {
+            delete saved[t.id]; // Hapus cuma punya peta tempur
+        })));
+        localStorage.setItem(KEY, JSON.stringify(saved));
+        window.renderPetaTempur();
+        window.updateProgressCakim(); // Update progress bar utama master checklist juga
+    }
+};
+
+window.downloadICSPeta = () => {
+    let icsLines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Peta Tempur Cakim PA 2026//ID", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+    petaTempurData.forEach(phase => {
+        phase.days.forEach(day => {
+            const summary = `🎯 [CAKIM PA] ${day.dayLabel} (${day.tag})`;
+            const desc = day.tasks.map(t => `[${t.time}] ${t.text}`).join("\\n") + "\\n\\nWajib Tidur Jam 22.00 WIB!";
+            const dtStart = `${day.dateStr}T053000`;
+            const dtEnd = `${day.dateStr}T061500`;
+            const uid = `cakim-${day.dateStr}@etama.local`;
+
+            icsLines.push("BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:20261015T150000Z`, `DTSTART;TZID=Asia/Jakarta:${dtStart}`, `DTEND;TZID=Asia/Jakarta:${dtEnd}`, `SUMMARY:${summary}`, `DESCRIPTION:${desc}`, "BEGIN:VALARM", "TRIGGER:-PT10M", "ACTION:DISPLAY", "DESCRIPTION:Saatnya Sesi Pagi Calon Hakim PA!", "END:VALARM", "END:VEVENT");
+        });
+    });
+    icsLines.push("END:VCALENDAR");
+
+    const blob = new Blob([icsLines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Jadwal_Tempur_Cakim_PA_2026.ics";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+// Pastikan dipanggil pas init
+const originalInit = window.initJadwalCakim;
+window.initJadwalCakim = () => {
+    if(originalInit) originalInit();
+    window.renderPetaTempur();
+};
+// ==========================================
 // 📖 FITUR 60 HARI KITAB KUNING (FIREBASE VERSI OBJECT)
 // ==========================================
 window.bukaKitabKuning = () => {
