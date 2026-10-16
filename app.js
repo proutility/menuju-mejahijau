@@ -8642,3 +8642,272 @@ window.resetQuizUUPA = () => {
         window.updateProgressUUPA();
     }
 };
+// =========================================================
+// 🕌 FITUR KOMPILASI HUKUM ISLAM (KHI)
+// =========================================================
+let stateKHI = {
+    currentIndex: 0, displayMode: "single", samarActive: false,
+    theme: localStorage.getItem("khi_modern_theme") || "light",
+    fontSize: parseInt(localStorage.getItem("khi_modern_font") || "16", 10),
+    doneMap: JSON.parse(localStorage.getItem("khi_modern_done") || "{}"),
+    answersMap: JSON.parse(localStorage.getItem("khi_modern_ans") || "{}"),
+    searchFilter: "", dbMateri: []
+};
+
+window.bukaKHI = async () => {
+    const overlay = document.getElementById('khiOverlay');
+    if (!overlay) return alert("HTML KHI belum terpasang!");
+    overlay.style.display = 'flex';
+    window.applyThemeKHI(stateKHI.theme);
+    const wrap = document.getElementById('khiContentWrap');
+    if (wrap) wrap.style.fontSize = stateKHI.fontSize + "px";
+
+    if (stateKHI.dbMateri.length === 0) {
+        if (typeof PROTAMA !== 'undefined') PROTAMA.loading("Memuat Modul KHI dari Server...");
+        try {
+            const { query, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");
+            const qRef = query(collection(window.db, "khi"));
+            const snapshot = await getDocs(qRef);
+
+            if (snapshot.empty) {
+                if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+                return alert("Data KHI di Firebase masih kosong. Jalankan eksekusiUploadKHI() di Console.");
+            }
+
+            let dataTemp = [];
+            snapshot.forEach(docSnap => dataTemp.push(docSnap.data()));
+            dataTemp.sort((a, b) => (a.urutan ?? 0) - (b.urutan ?? 0));
+            stateKHI.dbMateri = dataTemp;
+            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+        } catch (err) {
+            if (typeof PROTAMA !== 'undefined') PROTAMA.close();
+            return alert("Gagal memuat KHI: " + err.message);
+        }
+    }
+    window.renderSidebarKHI();
+    window.renderStageKHI();
+    window.updateStatsKHI();
+};
+
+window.renderSidebarKHI = () => {
+    const nav = document.getElementById("khiSidebarNav");
+    if (!nav) return;
+    nav.innerHTML = "";
+    let currentGroup = "";
+    const q = stateKHI.searchFilter.toLowerCase().trim();
+
+    stateKHI.dbMateri.forEach((mod, idx) => {
+        if (q && !mod.title.toLowerCase().includes(q) && !mod.materi.toLowerCase().includes(q)) return;
+        if (mod.group && mod.group !== currentGroup) {
+            currentGroup = mod.group;
+            const secTitle = document.createElement("div");
+            secTitle.className = "nav-section-title";
+            secTitle.textContent = currentGroup;
+            nav.appendChild(secTitle);
+        }
+
+        const btn = document.createElement("button");
+        const isActive = stateKHI.displayMode === "single" && stateKHI.currentIndex === idx;
+        const isDone = !!stateKHI.doneMap[mod.id];
+        btn.className = `nav-btn ${isActive ? "active" : ""} ${isDone ? "done" : ""}`;
+        btn.onclick = () => window.selectChapterKHI(idx);
+
+        const qLen = mod.questions ? mod.questions.length : 0;
+        btn.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:8px; height:8px; border-radius:50%; background:${isDone ? '#10b981' : 'rgba(255,255,255,0.2)'};"></span>
+                <span style="text-align:left;">${mod.title}</span>
+            </div>
+            <span class="nav-pill">${qLen} Soal</span>
+        `;
+        nav.appendChild(btn);
+    });
+};
+
+window.renderStageKHI = () => {
+    const stage = document.getElementById("khiStageArea");
+    const pager = document.getElementById("khiPagerNav");
+    if (!stage) return;
+    stage.innerHTML = "";
+
+    const list = stateKHI.displayMode === "single" ? [stateKHI.dbMateri[stateKHI.currentIndex]] : stateKHI.dbMateri;
+
+    list.forEach((mod) => {
+        if(!mod) return;
+        const isDone = !!stateKHI.doneMap[mod.id];
+        const card = document.createElement("article");
+        card.className = "chapter-card";
+
+        let qHTML = "";
+        if (mod.questions) {
+            mod.questions.forEach((q) => {
+                const userPick = stateKHI.answersMap[q.no];
+                const answered = !!userPick;
+                const isCorrect = userPick === q.correct;
+
+                let fb = "";
+                if (answered) {
+                    fb = isCorrect ? `<span style="color:var(--accent); font-size:0.8rem; font-weight:bold;">✓ Tepat</span>` 
+                                   : `<span style="color:var(--danger); font-size:0.8rem; font-weight:bold;">✗ Kunci: ${q.correct}</span>`;
+                }
+
+                let optsHTML = "";
+                ["A", "B", "C", "D"].forEach((letter) => {
+                    let cls = "opt-btn";
+                    if (answered) {
+                        if (letter === q.correct) cls += " correct";
+                        else if (letter === userPick && userPick !== q.correct) cls += " wrong";
+                    }
+                    optsHTML += `
+                        <button class="${cls}" onclick="window.answerQuestionKHI(${q.no}, '${letter}')">
+                            <span class="opt-key">${letter}</span> <span>${q.options[letter]}</span>
+                        </button>`;
+                });
+
+                qHTML += `
+                    <div class="q-card">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span class="q-badge">Soal HOTS #${q.no}</span> ${fb}
+                        </div>
+                        <div style="font-weight:600; margin-bottom:15px; color:var(--text-primary);">${q.stem}</div>
+                        <div>${optsHTML}</div>
+                        <div class="exp-panel ${answered ? "show" : ""}">
+                            <div style="margin-bottom:6px;"><strong>Kunci:</strong> ${q.correct}</div>
+                            <div style="margin-bottom:6px;"><strong>Jebakan:</strong> ${q.trap || '-'}</div>
+                            <div style="margin-bottom:6px;"><strong>Analisis:</strong> ${q.analysis}</div>
+                            <div class="exp-ref">📌 Sumber: ${q.source}</div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; padding-bottom:1rem; border-bottom:1px solid var(--border-color);">
+                <div>
+                    <span style="font-size:0.7rem; font-weight:800; background:var(--accent-soft); color:var(--accent); padding:2px 10px; border-radius:99px;">${mod.bookBadge}</span>
+                    <h2 style="font-size:1.4rem; font-weight:800; color:var(--text-primary); margin-top:8px;">${mod.title}</h2>
+                </div>
+                <button class="btn-action ${isDone ? "done" : ""}" onclick="window.toggleDoneKHI('${mod.id}')" style="${isDone ? 'background:var(--accent-soft); color:var(--accent);' : ''}">
+                    ${isDone ? "✓ Dikuasai" : "○ Tandai Selesai"}
+                </button>
+            </div>
+            <div class="materi-box">${mod.materi}</div>
+            <div class="quiz-container">
+                <h3 style="color:var(--amber); font-weight:800; margin-bottom:15px;">🔥 Uji Pemahaman HOTS</h3>
+                ${qHTML}
+            </div>
+        `;
+        stage.appendChild(card);
+    });
+
+    if (stateKHI.displayMode === "single" && pager) {
+        pager.style.display = "grid";
+        const btnPrev = document.getElementById("btnKhiPrev");
+        const btnNext = document.getElementById("btnKhiNext");
+        btnPrev.disabled = stateKHI.currentIndex === 0;
+        btnNext.disabled = stateKHI.currentIndex === stateKHI.dbMateri.length - 1;
+    } else if (pager) {
+        pager.style.display = "none";
+    }
+    window.bindSamarKHI();
+};
+
+window.answerQuestionKHI = (qNo, letter) => {
+    if(!stateKHI.answersMap[qNo]) {
+        stateKHI.answersMap[qNo] = letter;
+        localStorage.setItem("khi_modern_ans", JSON.stringify(stateKHI.answersMap));
+        window.renderStageKHI();
+        window.updateStatsKHI();
+    }
+};
+
+window.toggleDoneKHI = (modId) => {
+    if (stateKHI.doneMap[modId]) delete stateKHI.doneMap[modId];
+    else stateKHI.doneMap[modId] = true;
+    localStorage.setItem("khi_modern_done", JSON.stringify(stateKHI.doneMap));
+    window.renderSidebarKHI();
+    window.renderStageKHI();
+    window.updateStatsKHI();
+};
+
+window.updateStatsKHI = () => {
+    const doneCount = Object.keys(stateKHI.doneMap).length;
+    const tC = document.getElementById("khiStatDone");
+    if(tC) tC.textContent = `${doneCount} / ${stateKHI.dbMateri.length || 8}`;
+
+    let correct = 0, total = 0;
+    stateKHI.dbMateri.forEach(m => {
+        if(m.questions) m.questions.forEach(q => { total++; if (stateKHI.answersMap[q.no] === q.correct) correct++; });
+    });
+    const sC = document.getElementById("khiStatScore");
+    if(sC) sC.textContent = `${correct} / ${total || 28}`;
+};
+
+window.selectChapterKHI = (idx) => {
+    stateKHI.currentIndex = idx;
+    window.setDisplayModeKHI("single");
+    if (window.innerWidth <= 860) document.getElementById("khiOverlay").classList.add("sidebar-minimized");
+};
+
+window.stepChapterKHI = (dir) => {
+    const t = stateKHI.currentIndex + dir;
+    if (t >= 0 && t < stateKHI.dbMateri.length) window.selectChapterKHI(t);
+};
+
+window.setDisplayModeKHI = (mode) => {
+    stateKHI.displayMode = mode;
+    const btnS = document.getElementById("btnKhiModeSingle");
+    const btnA = document.getElementById("btnKhiModeAll");
+    if(btnS) btnS.classList.toggle("primary-toggle", mode === "single");
+    if(btnA) btnA.classList.toggle("primary-toggle", mode === "all");
+    window.renderSidebarKHI();
+    window.renderStageKHI();
+    document.getElementById("khiWorkspaceScroll")?.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+window.toggleSidebarKHI = () => {
+    document.getElementById("khiOverlay")?.classList.toggle("sidebar-minimized");
+};
+
+window.filterSidebarKHI = (val) => {
+    stateKHI.searchFilter = val;
+    window.renderSidebarKHI();
+};
+
+window.toggleSamarKHI = () => {
+    stateKHI.samarActive = !stateKHI.samarActive;
+    document.getElementById("khiOverlay")?.classList.toggle("samar-active", stateKHI.samarActive);
+    const btn = document.getElementById("btnKhiSamar");
+    if(btn) btn.innerHTML = stateKHI.samarActive ? "🙈 Mode Samar: ON" : "👁️ Mode Samar: OFF";
+};
+
+window.revealCurrentSamarKHI = () => { document.querySelectorAll("#khiOverlay .samar").forEach(el => el.classList.add("revealed")); };
+window.bindSamarKHI = () => { document.querySelectorAll("#khiOverlay .samar").forEach(el => { el.onclick = () => { if (stateKHI.samarActive) el.classList.toggle("revealed"); }; }); };
+
+window.adjustFontKHI = (delta) => {
+    stateKHI.fontSize = Math.min(21, Math.max(13, stateKHI.fontSize + delta));
+    document.getElementById("khiContentWrap").style.fontSize = stateKHI.fontSize + "px";
+    localStorage.setItem("khi_modern_font", stateKHI.fontSize);
+};
+
+window.toggleThemeKHI = () => {
+    const next = stateKHI.theme === "light" ? "dark" : "light";
+    window.applyThemeKHI(next);
+};
+
+window.applyThemeKHI = (t) => {
+    stateKHI.theme = t;
+    document.getElementById("khiOverlay")?.setAttribute("data-theme", t);
+    localStorage.setItem("khi_modern_theme", t);
+    const btn = document.getElementById("btnKhiTheme");
+    if(btn) btn.innerHTML = t === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+};
+
+window.resetAnswersKHI = () => {
+    if (confirm("Reset semua jawaban kuis KHI?")) {
+        stateKHI.answersMap = {};
+        localStorage.removeItem("khi_modern_ans");
+        window.renderStageKHI();
+        window.updateStatsKHI();
+    }
+};
