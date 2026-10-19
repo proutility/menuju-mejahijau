@@ -921,7 +921,7 @@ window.switchDatabase = async function(key) {
             }
         }
 
-        // 🛑 AMANKAN & PISAHKAN KUNCI JAWABAN (TIDAK IKUT DIPANGGIL KE FRONTEND SAAT UJIAN) 🛑
+        // 🛑 PENGATURAN KUNCI JAWABAN: Terisolasi untuk Ujian Mandiri, Aktif untuk Multiplayer 🛑
         const mapKunciModul = {};
         rawQuestions.forEach((q, idx) => {
             const idSoal = q.id || `q_${idx}`;
@@ -932,11 +932,14 @@ window.switchDatabase = async function(key) {
                     cite: q.cite || "-"
                 };
             }
-            // HAPUS kunci jawaban & pembahasan dari objek soal saat ujian sedang berlangsung
-            delete q.answer;
-            delete q.kunci;
-            delete q.explanation;
-            delete q.cite;
+            // HAPUS kunci jawaban & pembahasan dari objek soal HANYA saat Ujian Mandiri (Singleplayer)
+            // Di mode Multiplayer (Room), kunci & pembahasan TETAP AKTIF untuk fitur bedah soal & live score!
+            if (currentAppMode !== 'room') {
+                delete q.answer;
+                delete q.kunci;
+                delete q.explanation;
+                delete q.cite;
+            }
         });
 
         if (Object.keys(mapKunciModul).length > 0) {
@@ -952,7 +955,7 @@ window.switchDatabase = async function(key) {
         if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room' && dataLama.soalAcak.length === jumlahSoalServer) {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
             currentQuestions = dataLama.soalAcak;
-            // Pastikan tidak ada kunci jawaban yang tertinggal di cache lama
+            // Pastikan tidak ada kunci jawaban yang tertinggal di cache lama untuk singleplayer
             currentQuestions.forEach(q => {
                 delete q.answer;
                 delete q.kunci;
@@ -981,24 +984,32 @@ window.switchDatabase = async function(key) {
                     let correctText = null;
                     if (infoKunci && infoKunci.answer !== undefined && infoKunci.answer < q.options.length) {
                         correctText = q.options[infoKunci.answer]; 
+                    } else if (q.answer !== undefined && q.answer < q.options.length) {
+                        correctText = q.options[q.answer];
                     }
 
                     if (currentAppMode !== 'room') {
                         shuffleArray(q.options); 
                     }
 
-                    if (correctText !== null && infoKunci) {
-                        // Perbarui index kunci di brankas terpisah (bukan di frontend/objek soal)
-                        infoKunci.answer = q.options.indexOf(correctText);
-                        infoKunci.correctAnswerText = correctText;
+                    if (correctText !== null) {
+                        if (infoKunci) {
+                            infoKunci.answer = q.options.indexOf(correctText);
+                            infoKunci.correctAnswerText = correctText;
+                        }
+                        if (currentAppMode === 'room') {
+                            q.answer = q.options.indexOf(correctText);
+                        }
                     }
                 }
 
-                // Bersihkan kembali properti kunci dari objek soal aktif
-                delete q.answer;
-                delete q.kunci;
-                delete q.explanation;
-                delete q.cite;
+                // Bersihkan properti kunci dari objek soal HANYA saat Ujian Mandiri
+                if (currentAppMode !== 'room') {
+                    delete q.answer;
+                    delete q.kunci;
+                    delete q.explanation;
+                    delete q.cite;
+                }
             });
 
             currentQuestions = rawQuestions;
@@ -3880,10 +3891,12 @@ window.pantauRoom = (kodeRoom) => {
 
                 const jawabanGue = data.players && data.players[myUid] ? data.players[myUid].jawabanSekarang : null;
                 
-                // 🏆 LOGIKA LIVE SCORE (Dihitung di background tanpa membocorkan kunci ke UI)
+                // 🏆 LOGIKA LIVE SCORE & PEMBAHASAN MULTIPLAYER
                 const roomKunciMap = _kunciJawabanStore.get(window.currentRoomCode) || _kunciJawabanStore.get(data.modulId) || _kunciJawabanStore.get(window.currentDatabaseId) || {};
                 const kInfo = roomKunciMap[q.id || `q_${data.currentIdx}`] || roomKunciMap[data.currentIdx];
                 const realAnswer = (typeof kInfo === 'object' && kInfo.answer !== undefined) ? kInfo.answer : (q.answer !== undefined ? q.answer : null);
+                const realExplanation = (typeof kInfo === 'object' && kInfo.explanation) ? kInfo.explanation : (q.explanation || "-");
+                const realCite = (typeof kInfo === 'object' && kInfo.cite) ? kInfo.cite : (q.cite || "-");
 
                 if (realAnswer !== null && jawabanGue === realAnswer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
@@ -3907,23 +3920,34 @@ window.pantauRoom = (kodeRoom) => {
                     el.style.pointerEvents = 'none'; 
                     el.innerHTML = el.innerHTML.replace(' ⏳ (Menunggu Waktu Habis...)', '');
                     
-                    // 🛑 JANGAN bocorkan kunci jawaban (benar/salah) saat jeda antar-soal di mode multiplayer!
-                    // Pembahasan & kunci hanya ditampilkan di akhir setelah semua soal selesai dijawab.
-                    if (jawabanGue !== null && i === jawabanGue) {
-                        el.classList.add('selected');
-                        el.style.background = '#e8f0fe';
-                        el.style.borderColor = '#1976d2';
-                        if (!el.innerHTML.includes('🔒')) el.innerHTML += ' 🔒 (Jawaban Tersimpan)';
-                    } else {
+                    if (realAnswer !== null && i === realAnswer) {
+                        el.classList.add('review-correct');
+                        if (!el.innerHTML.includes('✅')) el.innerHTML += ' ✅ (Kunci Jawaban)';
+                    } else if (jawabanGue !== null && i === jawabanGue) {
+                        el.classList.add('review-wrong');
+                        if (!el.innerHTML.includes('❌')) el.innerHTML += ' ❌ (Jawabanmu Salah)';
+                    } else if (jawabanGue === null || jawabanGue === -1) {
                         el.style.opacity = '0.5';
                     }
                 });
 
-                // 🛑 SEMBUNYIKAN KOTAK PEMBAHASAN SELAMA UJIAN MULTIPLAYER BERJALAN
+                // 💡 TAMPILKAN KOTAK PEMBAHASAN UNTUK MODE MULTIPLAYER (BEDAH SOAL BERSAMA)
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
-                    fb.style.setProperty('display', 'none', 'important');
-                    fb.classList.remove('show');
+                    fb.style.setProperty('display', 'block', 'important');
+                    fb.style.setProperty('visibility', 'visible', 'important');
+                    fb.classList.add('show');
+                    
+                    let fText = document.getElementById('feedbackText');
+                    if (fText) {
+                        if (jawabanGue === null || jawabanGue === undefined || jawabanGue === -1) {
+                            fText.innerHTML = "<b style='color:red; font-size:1.1rem;'>❌ WAKTU HABIS! ANDA TIDAK MENJAWAB (DIANGGAP SALAH)</b><br><br>" + renderLazyMedia(realExplanation);
+                        } else {
+                            fText.innerHTML = renderLazyMedia(realExplanation || "Tidak ada pembahasan spesifik.");
+                        }
+                    }
+                    const fCite = document.getElementById('feedbackCite');
+                    if (fCite) fCite.innerText = "Sumber: " + (realCite || "-");
                 }
 
                 if (jawabanGue === null || jawabanGue === undefined || jawabanGue === -1) {
@@ -3931,8 +3955,8 @@ window.pantauRoom = (kodeRoom) => {
                     if (optContainer && !document.getElementById('warningTidakJawab')) {
                         const warningBox = document.createElement('div');
                         warningBox.id = 'warningTidakJawab';
-                        warningBox.style.cssText = "background:#fff3e0; color:#e65100; padding:10px; border-radius:6px; font-weight:bold; text-align:center; margin-bottom:15px; border:2px dashed #ffb74d;";
-                        warningBox.innerHTML = "⏳ WAKTU HABIS (TIDAK MENJAWAB)";
+                        warningBox.style.cssText = "background:#ffebee; color:#c62828; padding:10px; border-radius:6px; font-weight:bold; text-align:center; margin-bottom:15px; border:2px dashed #ef9a9a;";
+                        warningBox.innerHTML = "❌ KAMU TIDAK MENJAWAB (JAWABAN DIANGGAP SALAH)";
                         optContainer.prepend(warningBox);
                     }
                 }
@@ -3944,16 +3968,16 @@ window.pantauRoom = (kodeRoom) => {
                 badgeHtml.id = 'roomBadgeKhusus';
                 badgeHtml.style.cssText = "margin-top:20px; padding:15px; background:#e3f2fd; border-radius:8px; text-align:center; border:2px dashed #90caf9;";
                 
-                // 👇 PASTIKAN HOST DAPET KENDALI "LANJUT SOAL" TANPA MEMBOCORKAN PEMBAHASAN 👇
+                // 👇 PASTIKAN HOST DAPET KENDALI "LANJUT SOAL" 👇
                 if (gueBeneranHost) {
                     badgeHtml.innerHTML = `
-                        <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Waktu selesai. Klik untuk lanjut ke soal berikutnya.</div>
+                        <div style="margin-bottom:10px; font-weight:bold; color:#1565c0;">Kendali Host: Silakan baca pembahasan bersama, lalu klik Lanjut.</div>
                         <button id="btnNextHostRoom" style="background:#1565c0; color:white; padding:12px 20px; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; font-weight:bold; width:100%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                             Lanjut Soal Berikutnya ➔
                         </button>
                     `;
                 } else {
-                    badgeHtml.innerHTML = `<b style="color:#1565c0; font-size:1.2rem;">⏳ Menunggu Host melanjutkan ke soal berikutnya...</b>`;
+                    badgeHtml.innerHTML = `<b style="color:#1565c0; font-size:1.2rem;">⏳ Menunggu Host melanjutkan ujian...</b>`;
                 }
                 
                 const optContForBadge = document.getElementById('optionsContainer');
