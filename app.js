@@ -2796,6 +2796,14 @@ window.bikinRoomLatihan = () => {
     if(!listDiv) return;
     listDiv.innerHTML = '';
     
+    // Opsi Pilih Semua Modul
+    listDiv.innerHTML += `
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:6px; border-bottom:2px solid #ddd; background:#eef2f5; border-radius:4px; font-weight:bold; color:var(--primary); margin-bottom:4px;">
+            <input type="checkbox" id="chkPilihSemuaModul" onchange="document.querySelectorAll('.chk-modul-mabar').forEach(c => c.checked = this.checked)">
+            <span>✓ Pilih Semua Modul</span>
+        </label>
+    `;
+
     document.querySelectorAll('.modul-selector .modul-btn').forEach(btn => {
         let idModul = btn.id.replace('btn-', '');
         let namaModul = btn.innerText;
@@ -2815,48 +2823,103 @@ window.eksekusiBikinRoom = async () => {
     
     if(chks.length === 0) return PROTAMA.alert("Waduh!", "Pilih minimal 1 modul buat diracik bro!", "warning");
     
+    // Ambil Pengaturan Jumlah Soal & Waktu Per Soal yang Ditentukan Host
+    const rawJumlahSoal = document.getElementById('inputJumlahSoal') ? document.getElementById('inputJumlahSoal').value.trim() : '';
+    const targetJumlahSoal = (rawJumlahSoal && !isNaN(rawJumlahSoal) && parseInt(rawJumlahSoal) > 0) ? parseInt(rawJumlahSoal) : null;
+
+    const rawWaktu = document.getElementById('inputWaktuPerSoal') ? document.getElementById('inputWaktuPerSoal').value.trim() : '';
+    const waktuPerSoal = (rawWaktu && !isNaN(rawWaktu) && parseInt(rawWaktu) >= 5) ? parseInt(rawWaktu) : 30;
+
     const waktuMulaiMilis = jadwalStr ? new Date(jadwalStr).getTime() : new Date().getTime() + 5000; 
     let selectedModuls = Array.from(chks).map(c => c.value);
     
     document.getElementById('modalBikinRoom').style.display = 'none';
     PROTAMA.loading("Meracik Soal Mabar...");
     
-    let kawahSoal = [];
     try {
-        let totalSoalTarget = 100;
-        let jumlahModul = selectedModuls.length;
-        let baseJatah = Math.floor(totalSoalTarget / jumlahModul);
-        let sisaJatah = totalSoalTarget % jumlahModul; 
-
-        const tarikanServer = selectedModuls.map(async (modId, index) => {
-            const qSnap = await getDocs(collection(window.db, "bank_soal", modId, "daftar_soal"));
+        // Fungsi helper multi-skema untuk mengambil bank soal modul
+        const ambilSoalModul = async (modId) => {
             let soalModulIni = [];
-            qSnap.forEach(docSnap => {
-                let d = docSnap.data(); d.id = docSnap.id; soalModulIni.push(d);
-            });
-            
-            shuffleArray(soalModulIni);
-            
-            let jatah = baseJatah + (index === jumlahModul - 1 ? sisaJatah : 0);
-            return soalModulIni.slice(0, jatah);
-        });
+            try {
+                // 1. Cek koleksi langsung (modulId)
+                const modulColRef = collection(window.db, modId);
+                let qSnap = await getDocs(modulColRef);
 
-        const hasilTarikan = await Promise.all(tarikanServer);
+                // 2. Fallback legacy bank_soal/{modId}/daftar_soal
+                if (qSnap.empty) {
+                    const legacyCol = collection(window.db, "bank_soal", modId, "daftar_soal");
+                    const legacySnap = await getDocs(legacyCol);
+                    if (!legacySnap.empty) {
+                        qSnap = legacySnap;
+                    } else {
+                        // 3. Fallback bank_soal_v2 array dokumen
+                        const v2Doc = await getDoc(doc(window.db, "bank_soal_v2", modId));
+                        if (v2Doc.exists() && v2Doc.data().daftar_soal_array) {
+                            const arr = v2Doc.data().daftar_soal_array;
+                            arr.forEach((item, idx) => {
+                                let d = JSON.parse(JSON.stringify(item));
+                                d.id = d.id || `${modId}_${idx}`;
+                                d._asalModul = modId;
+                                soalModulIni.push(d);
+                            });
+                        }
+                    }
+                }
+
+                if (soalModulIni.length === 0 && !qSnap.empty) {
+                    qSnap.forEach(docSnap => {
+                        let d = JSON.parse(JSON.stringify(docSnap.data()));
+                        d.id = docSnap.id;
+                        d._asalModul = modId;
+                        soalModulIni.push(d);
+                    });
+                }
+            } catch (err) {
+                console.warn(`Gagal memuat modul ${modId}:`, err);
+            }
+            return soalModulIni;
+        };
+
+        // Ambil soal dari semua modul yang dipilih secara paralel
+        const kumpulanPerModul = await Promise.all(selectedModuls.map(m => ambilSoalModul(m)));
         
-        hasilTarikan.forEach(kumpulan => {
-            kawahSoal = kawahSoal.concat(kumpulan);
-        });
+        // Acak masing-masing modul lebih dulu agar pengambilan acak merata
+        kumpulanPerModul.forEach(list => shuffleArray(list));
 
-        if(kawahSoal.length === 0) {
+        const totalSoalTersedia = kumpulanPerModul.reduce((sum, list) => sum + list.length, 0);
+
+        if (totalSoalTersedia === 0) {
             PROTAMA.close();
-            return PROTAMA.alert("Kosong", "Modul yang dipilih belum ada soalnya!", "error");
+            return PROTAMA.alert("Kosong", "Modul yang dipilih belum memiliki bank soal!", "error");
         }
 
+        // Tentukan batas soal yang diinginkan
+        let batasFinal = (targetJumlahSoal !== null && targetJumlahSoal < totalSoalTersedia) ? targetJumlahSoal : totalSoalTersedia;
+
+        // Distribusi proporsional adil (Round-Robin) antar modul yang dipilih
+        let kawahSoal = [];
+        let indexPerModul = new Array(kumpulanPerModul.length).fill(0);
+        let masihAdaSoal = true;
+
+        while (kawahSoal.length < batasFinal && masihAdaSoal) {
+            masihAdaSoal = false;
+            for (let m = 0; m < kumpulanPerModul.length; m++) {
+                if (indexPerModul[m] < kumpulanPerModul[m].length) {
+                    kawahSoal.push(kumpulanPerModul[m][indexPerModul[m]]);
+                    indexPerModul[m]++;
+                    masihAdaSoal = true;
+                    if (kawahSoal.length >= batasFinal) break;
+                }
+            }
+        }
+
+        // Acak kembali urutan soal gabungan agar tidak berurutan per modul
         shuffleArray(kawahSoal);
         let soalMabarFinal = kawahSoal; 
 
+        // Acak pilihan jawaban per soal dan kunci jawaban yang benar
         soalMabarFinal.forEach(q => {
-            if(q.options && q.answer < q.options.length) {
+            if(q.options && q.answer !== undefined && q.answer < q.options.length) {
                 let jawabanBenar = q.options[q.answer]; 
                 shuffleArray(q.options); 
                 q.answer = q.options.indexOf(jawabanBenar); 
@@ -2872,6 +2935,8 @@ window.eksekusiBikinRoom = async () => {
             modulId: selectedModuls.length > 1 ? "latihan_campuran" : selectedModuls[0], 
             soalTersimpan: soalMabarFinal, 
             jadwal_mulai: waktuMulaiMilis,
+            waktuPerSoal: waktuPerSoal, // Waktu per soal ditentukan oleh Host
+            jumlahSoalTarget: soalMabarFinal.length, // Total soal hasil racikan
             status: 'waiting', 
             currentIdx: 0,
             players: {
@@ -3103,9 +3168,12 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
             <!-- TOMBOL SALIN LINK OTOMATIS (GAIB BUAT PESERTA BIASA) -->
             ${btnInvite}
             
-            <!-- KETERANGAN MODUL -->
-            <div style="background:#e3f2fd; padding:10px; border-radius:8px; border:1px solid #90caf9; margin-bottom:20px; font-weight:bold; color:#1565c0; font-size: 0.95rem;">
-                <i class="fas fa-book-open"></i> Materi Ujian: ${namaModulBersih}
+            <!-- KETERANGAN MODUL & PENGATURAN -->
+            <div style="background:#e3f2fd; padding:12px; border-radius:8px; border:1px solid #90caf9; margin-bottom:20px; font-weight:bold; color:#1565c0; font-size: 0.95rem;">
+                <div><i class="fas fa-book-open"></i> Materi Ujian: ${namaModulBersih}</div>
+                <div id="wrInfoDetailSoal" style="margin-top:8px; font-size:0.85rem; color:#2c3e50; font-weight:600; display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+                    <span>⏳ Memuat konfigurasi room...</span>
+                </div>
             </div>
             
            <!-- LIST PESERTA YANG JOIN BARENG -->
@@ -3135,6 +3203,18 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
         if(snap.exists()) {
             let dataRoom = snap.data();
             let waktuMulai = dataRoom.jadwal_mulai;
+
+            // Render Info Konfigurasi Room (Jumlah Soal & Durasi Waktu)
+            const totalSoal = (dataRoom.soalTersimpan && Array.isArray(dataRoom.soalTersimpan)) ? dataRoom.soalTersimpan.length : (dataRoom.jumlahSoalTarget || 0);
+            const detikPerSoal = dataRoom.waktuPerSoal || 30;
+            const elInfo = document.getElementById('wrInfoDetailSoal');
+            if (elInfo) {
+                elInfo.innerHTML = `
+                    <span style="background:white; padding:4px 12px; border-radius:15px; border:1px solid #bbdefb; box-shadow:0 1px 3px rgba(0,0,0,0.05);"><i class="fas fa-list-ol" style="color:var(--primary);"></i> <b>${totalSoal} Soal</b></span>
+                    <span style="background:white; padding:4px 12px; border-radius:15px; border:1px solid #bbdefb; box-shadow:0 1px 3px rgba(0,0,0,0.05);"><i class="fas fa-stopwatch" style="color:#e67e22;"></i> <b>${detikPerSoal} Detik / Soal</b></span>
+                `;
+            }
+
             let tombolMulai = document.querySelector(`button[onclick="window.mulaiUjianRoom('${kode}')"]`);
             
             // Kalau bukan host, kita ubah div pesannya jadi tempat nampilin detik
@@ -3770,16 +3850,22 @@ window.pantauRoom = (kodeRoom) => {
                 
                 if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
                 
-                let sisaWaktuRoom = 30; 
+                let durasiPerSoal = parseInt(data.waktuPerSoal || data.durasiPerSoal || 30);
+                let sisaWaktuRoom = durasiPerSoal; 
                 
                 const setLayarTimer = (detik) => {
-                    let txt = "00:00:" + String(detik).padStart(2, '0');
+                    let menit = Math.floor(detik / 60);
+                    let sisaDetik = detik % 60;
+                    let txt = "00:" + String(menit).padStart(2, '0') + ":" + String(sisaDetik).padStart(2, '0');
                     let t1 = document.getElementById('timerDisplay');
                     let t2 = document.getElementById('floatingTimer');
                     
+                    let panicThreshold = Math.max(5, Math.floor(durasiPerSoal * 0.25));
+                    let warnThreshold = Math.max(10, Math.floor(durasiPerSoal * 0.5));
+
                     let colorClass = 'timer-green';
-                    if(detik <= 10) colorClass = 'timer-panic';
-                    else if(detik <= 20) colorClass = 'timer-yellow';
+                    if(detik <= panicThreshold) colorClass = 'timer-panic';
+                    else if(detik <= warnThreshold) colorClass = 'timer-yellow';
 
                     if (t1) { t1.innerText = txt; t1.className = 'timer-container ' + colorClass; }
                     if (t2) { t2.innerText = txt; t2.className = colorClass; }
