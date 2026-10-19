@@ -1,6 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+    getFirestore, 
+    initializeFirestore, 
+    persistentLocalCache, 
+    persistentMultipleTabManager, 
+    enableIndexedDbPersistence, 
+    collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. KONFIGURASI FIREBASE ---
 const firebaseConfig = {
@@ -76,14 +83,100 @@ window.PROTAMA = {
     close: () => { Swal.close(); }
 };
 
-// Inisialisasi Firebase
+// Inisialisasi Firebase dengan Offline Persistence
 if (firebaseConfig.apiKey) {
     const app = initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    
+    // 🛑 AKTIFKAN OFFLINE PERSISTENCE BAWAAN FIREBASE
+    try {
+        db = initializeFirestore(app, {
+            localCache: persistentLocalCache({
+                tabManager: persistentMultipleTabManager()
+            })
+        });
+        console.log("✅ Offline persistence Firebase aktif (Multi-tab cache)");
+    } catch (e) {
+        console.warn("Inisialisasi persistentLocalCache dialihkan ke fallback:", e);
+        db = getFirestore(app);
+        if (typeof enableIndexedDbPersistence === 'function') {
+            enableIndexedDbPersistence(db).catch(err => {
+                if (err.code === 'failed-precondition') {
+                    console.warn("Offline persistence gagal: Banyak tab terbuka sekaligus.");
+                } else if (err.code === 'unimplemented') {
+                    console.warn("Browser tidak mendukung offline persistence IndexedDB.");
+                }
+            });
+        }
+    }
+
     window.db = db; // Bikin global biar console aman
     provider = new GoogleAuthProvider();
 }
+
+// =========================================================================
+// 🔒 BRANKAS PRIVAT DATA KUNCI JAWABAN (DIPISAH DARI FRONTEND SAAT UJIAN)
+// =========================================================================
+const _kunciJawabanStore = new Map();
+
+// Helper untuk mengambil kunci jawaban HANYA saat ujian disubmit/selesai
+async function loadKunciJawabanUjian(key) {
+    // 1. Cek dari memori privat sesi ini
+    if (_kunciJawabanStore.has(key)) {
+        return _kunciJawabanStore.get(key);
+    }
+    
+    // 2. Jika di Firestore kunci jawaban dipisah dalam node/dokumen khusus 'kunci_jawaban'
+    try {
+        const kunciDocRef = doc(db, "kunci_jawaban", key);
+        const kunciSnap = await getDoc(kunciDocRef);
+        if (kunciSnap.exists() && kunciSnap.data()) {
+            const dataK = kunciSnap.data();
+            return dataK.kunci || dataK.daftar_kunci || dataK;
+        }
+
+        const kunciColSnap = await getDocs(collection(db, "kunci_jawaban", key, "daftar_kunci"));
+        if (!kunciColSnap.empty) {
+            const res = {};
+            kunciColSnap.forEach(d => { res[d.id] = d.data(); });
+            return res;
+        }
+    } catch(err) {
+        console.warn("Info: Node terpisah kunci_jawaban belum tersedia di Firestore:", err);
+    }
+    return {};
+}
+
+// =========================================================================
+// 🖼️ HELPER LAZY LOADING MEDIA / GAMBAR PADA SOAL
+// =========================================================================
+function renderLazyMedia(textOrHtml) {
+    if (!textOrHtml) return '';
+    // Format markdown image ![alt](url) -> <img> with lazy loading
+    let rendered = textOrHtml.replace(/!\[([^\]]*)\]\((https?:\/\/[^\s)]+)\)/gi, (match, alt, src) => {
+        return `<div class="soal-media-wrapper" style="text-align:center; margin:12px 0;">
+            <img src="${src}" alt="${alt || 'Media Soal'}" loading="lazy" decoding="async" class="soal-media-img" style="max-width:100%; max-height:360px; border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,0.12); cursor:pointer;" onclick="window.previewImageModal && window.previewImageModal('${src}')" />
+        </div>`;
+    });
+    // Injeksi loading="lazy" & decoding="async" ke seluruh tag <img> HTML jika belum ada
+    rendered = rendered.replace(/<img\s+(?![^>]*\bloading=)([^>]+)>/gi, '<img loading="lazy" decoding="async" class="soal-media-img" $1>');
+    return rendered;
+}
+
+window.previewImageModal = function(src) {
+    let modal = document.getElementById('modalImagePreview');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalImagePreview';
+        modal.style.cssText = "position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:2147483647; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:20px; box-sizing:border-box;";
+        modal.innerHTML = `<img id="previewModalImg" src="" style="max-width:95vw; max-height:90vh; border-radius:8px; box-shadow:0 8px 30px rgba(0,0,0,0.5); object-fit:contain;" /><div style="position:absolute; top:20px; right:25px; color:white; font-size:2rem; font-weight:bold;">&times;</div>`;
+        modal.onclick = () => { modal.style.display = 'none'; };
+        document.body.appendChild(modal);
+    }
+    const img = document.getElementById('previewModalImg');
+    if (img) img.src = src;
+    modal.style.display = 'flex';
+};
 
 // --- 2. DAFTAR KODE UNIK (ASAS HUKUM) ---
 const legalTerms = [
@@ -785,29 +878,69 @@ window.switchDatabase = async function(key) {
                 return;
             }
         } 
-        // 🛑 MODE SINGLEPLAYER BIASA (Cara Lama) 🛑
+        // 🛑 MODE SINGLEPLAYER CBT: HANYA memanggil get() pada collection modul yang sedang aktif 🛑
         else {
-            const docRef = doc(db, "bank_soal", key);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists() && docSnap.data().title) {
-                judulModul = docSnap.data().title;
-            }
+            // 1. Panggil langsung collection modul yang sedang aktif (sesuai paket ujian per modul)
+            const modulColRef = collection(db, key);
+            let qSnap = await getDocs(modulColRef);
 
-            const qRef = collection(db, "bank_soal", key, "daftar_soal");
-            const qSnap = await getDocs(qRef);
-
+            // Fallback kompatibilitas jika koleksi modul masih di subkoleksi bank_soal/{key}/daftar_soal
             if (qSnap.empty) {
-                alert("⚠️ Soal untuk modul ini belum di-upload ke server!");
-                if(qText) qText.innerText = "Belum ada soal.";
-                return;
+                const legacySubCol = collection(db, "bank_soal", key, "daftar_soal");
+                const legacySnap = await getDocs(legacySubCol);
+                if (!legacySnap.empty) {
+                    qSnap = legacySnap;
+                } else {
+                    const v2Doc = await getDoc(doc(db, "bank_soal_v2", key));
+                    if (v2Doc.exists() && v2Doc.data().daftar_soal_array) {
+                        judulModul = v2Doc.data().title || judulModul;
+                        const arr = v2Doc.data().daftar_soal_array;
+                        arr.forEach((item, idx) => {
+                            let d = JSON.parse(JSON.stringify(item));
+                            d.id = d.id || `${key}_${idx}`;
+                            rawQuestions.push(d);
+                        });
+                        jumlahSoalServer = rawQuestions.length;
+                    }
+                }
             }
-            
-            jumlahSoalServer = qSnap.size;
-            qSnap.forEach((doc) => { 
-                let d = JSON.parse(JSON.stringify(doc.data())); 
-                d.id = doc.id; 
-                rawQuestions.push(d); 
-            });
+
+            if (rawQuestions.length === 0) {
+                if (qSnap.empty) {
+                    alert("⚠️ Soal untuk modul ini belum tersedia atau belum di-upload!");
+                    if(qText) qText.innerText = "Belum ada soal.";
+                    return;
+                }
+                
+                jumlahSoalServer = qSnap.size;
+                qSnap.forEach((docSnap) => { 
+                    let d = JSON.parse(JSON.stringify(docSnap.data())); 
+                    d.id = docSnap.id; 
+                    rawQuestions.push(d); 
+                });
+            }
+        }
+
+        // 🛑 AMANKAN & PISAHKAN KUNCI JAWABAN (TIDAK IKUT DIPANGGIL KE FRONTEND SAAT UJIAN) 🛑
+        const mapKunciModul = {};
+        rawQuestions.forEach((q, idx) => {
+            const idSoal = q.id || `q_${idx}`;
+            if (q.answer !== undefined || q.kunci !== undefined || q.explanation) {
+                mapKunciModul[idSoal] = {
+                    answer: q.answer !== undefined ? q.answer : q.kunci,
+                    explanation: q.explanation || "-",
+                    cite: q.cite || "-"
+                };
+            }
+            // HAPUS kunci jawaban & pembahasan dari objek soal saat ujian sedang berlangsung
+            delete q.answer;
+            delete q.kunci;
+            delete q.explanation;
+            delete q.cite;
+        });
+
+        if (Object.keys(mapKunciModul).length > 0) {
+            _kunciJawabanStore.set(key, mapKunciModul);
         }
 
         const dataLama = loadProgresLokal(key);
@@ -816,6 +949,13 @@ window.switchDatabase = async function(key) {
         if (dataLama && dataLama.soalAcak && dataLama.soalAcak.length > 0 && currentAppMode !== 'room' && dataLama.soalAcak.length === jumlahSoalServer) {
             console.log(`🔄 Melanjutkan progres lama untuk modul: ${key}`);
             currentQuestions = dataLama.soalAcak;
+            // Pastikan tidak ada kunci jawaban yang tertinggal di cache lama
+            currentQuestions.forEach(q => {
+                delete q.answer;
+                delete q.kunci;
+                delete q.explanation;
+                delete q.cite;
+            });
             userAnswers = dataLama.jawaban;
             raguStatus = dataLama.ragu;
             totalExamTime = currentQuestions.length * 30; 
@@ -828,14 +968,34 @@ window.switchDatabase = async function(key) {
                 shuffleArray(rawQuestions); 
             }
             
-            rawQuestions.forEach(q => {
-                if(q.options && q.answer < q.options.length) {
-                    let correctText = q.options[q.answer]; 
+            const mapKunci = _kunciJawabanStore.get(key) || {};
+
+            rawQuestions.forEach((q, idx) => {
+                const idSoal = q.id || `q_${idx}`;
+                const infoKunci = mapKunci[idSoal];
+
+                if(q.options) {
+                    let correctText = null;
+                    if (infoKunci && infoKunci.answer !== undefined && infoKunci.answer < q.options.length) {
+                        correctText = q.options[infoKunci.answer]; 
+                    }
+
                     if (currentAppMode !== 'room') {
                         shuffleArray(q.options); 
                     }
-                    q.answer = q.options.indexOf(correctText); 
+
+                    if (correctText !== null && infoKunci) {
+                        // Perbarui index kunci di brankas terpisah (bukan di frontend/objek soal)
+                        infoKunci.answer = q.options.indexOf(correctText);
+                        infoKunci.correctAnswerText = correctText;
+                    }
                 }
+
+                // Bersihkan kembali properti kunci dari objek soal aktif
+                delete q.answer;
+                delete q.kunci;
+                delete q.explanation;
+                delete q.cite;
             });
 
             currentQuestions = rawQuestions;
@@ -1221,7 +1381,26 @@ function loadQuestion(idx) {
         }
     }
 
-    document.getElementById('questionText').innerText = q.q;
+    // Render teks pertanyaan dan gambar/media dengan Lazy Loading
+    const mediaUrl = q.image || q.gambar || q.media || q.foto || q.img || q.mediaUrl;
+    let extraMediaHtml = '';
+    if (mediaUrl) {
+        extraMediaHtml = `
+            <div class="soal-media-container" style="text-align:center; margin:14px 0;">
+                <img src="${mediaUrl}" 
+                     alt="Media Soal" 
+                     loading="lazy" 
+                     decoding="async" 
+                     class="soal-media-img" 
+                     style="max-width:100%; max-height:360px; border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,0.12); object-fit:contain; cursor:pointer;" 
+                     onclick="window.previewImageModal && window.previewImageModal('${mediaUrl}')" />
+            </div>`;
+    }
+
+    const qTextEl = document.getElementById('questionText');
+    if (qTextEl) {
+        qTextEl.innerHTML = renderLazyMedia(q.q) + extraMediaHtml;
+    }
     
     updateSidebarStatus();
     updateProgress();
@@ -1281,7 +1460,7 @@ function loadQuestion(idx) {
         const teksPembahasan = q.explanation || ""; 
         const jawabanBenar = q.options && q.answer !== undefined ? q.options[q.answer] : ""; 
         const highlightTeks = (teks, keyword) => { if (!keyword) return teks; const regex = new RegExp(`(${keyword})`, 'gi'); return teks.replace(regex, `<span style="background-color: #fff9c4; color: #004d00; font-weight: bold; padding: 0 2px; border-bottom: 2px solid #d4af37;">$1</span>`); };
-        const fText = document.getElementById('feedbackText'); if(fText) fText.innerHTML = highlightTeks(teksPembahasan, jawabanBenar);
+        const fText = document.getElementById('feedbackText'); if(fText) fText.innerHTML = renderLazyMedia(highlightTeks(teksPembahasan, jawabanBenar));
         
         const teksSumber = q.cite || "-"; const fCite = document.getElementById('feedbackCite');
         if(fCite) {
@@ -1352,20 +1531,21 @@ function loadQuestion(idx) {
     q.options.forEach((opt, i) => {
         const div = document.createElement('div');
         div.className = 'option-label';
+        const formattedOpt = renderLazyMedia(opt);
         if(isSelesaiMode) {
             div.style.cursor = 'default';
             if(userAnswers[idx] === i) {
-                div.innerHTML = i === q.answer ? opt + ' ✅' : opt + ' ❌';
+                div.innerHTML = i === q.answer ? formattedOpt + ' ✅' : formattedOpt + ' ❌';
                 div.classList.add(i === q.answer ? 'review-correct' : 'review-wrong');
             }
             else if(i === q.answer) {
-                div.innerHTML = opt + ' ⬅️ (Jawaban Benar)';
+                div.innerHTML = formattedOpt + ' ⬅️ (Jawaban Benar)';
                 div.classList.add('review-correct');
             } else {
-                div.innerHTML = opt;
+                div.innerHTML = formattedOpt;
             }
         } else {
-           div.innerHTML = opt;
+           div.innerHTML = formattedOpt;
            div.onclick = async () => { 
                 if(!isSelesaiMode && !isAnswerLocked) { 
                     
@@ -1455,7 +1635,7 @@ function loadQuestion(idx) {
 // ==========================================
 // FUNGSI SUBMIT FINAL
 // ==========================================
-window.submitQuiz = function() {
+window.submitQuiz = async function() {
     if(typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     window.speechSynthesis.cancel();
     
@@ -1467,6 +1647,21 @@ window.submitQuiz = function() {
     
     const floatTimer = document.getElementById('floatingTimer');
     if(floatTimer) floatTimer.style.setProperty('display', 'none', 'important');
+
+    // 🛑 AMBIL KUNCI JAWABAN SAAT UJIAN SELESAI (EVALUASI NILAI & PEMBAHASAN) 🛑
+    // Kunci jawaban sengaja tidak dipanggil saat ujian sedang berjalan demi integritas CBT
+    const kunciMap = await loadKunciJawabanUjian(currentDB);
+    if (currentQuestions && currentQuestions.length > 0) {
+        currentQuestions.forEach((q, idx) => {
+            const idSoal = q.id || `q_${idx}`;
+            const kData = kunciMap[idSoal] || kunciMap[idx];
+            if (kData) {
+                q.answer = typeof kData === 'object' && kData.answer !== undefined ? kData.answer : kData;
+                q.explanation = (typeof kData === 'object' && kData.explanation) ? kData.explanation : (q.explanation || "-");
+                q.cite = (typeof kData === 'object' && kData.cite) ? kData.cite : (q.cite || "-");
+            }
+        });
+    }
 
     if (currentDB === 'modul18' || currentDB.includes('papi') || currentDB === 'modul_papi') {
         document.body.classList.remove('mode-focus');
@@ -5985,11 +6180,21 @@ function simpanProgresTotal() {
     
     let progres = JSON.parse(localStorage.getItem('protama_progres')) || {};
     
+    // Pastikan data kunci jawaban tidak tersimpan ke penyimpanan browser saat ujian berlangsung
+    const safeQuestions = currentQuestions.map(q => {
+        const copy = { ...q };
+        delete copy.answer;
+        delete copy.kunci;
+        delete copy.explanation;
+        delete copy.cite;
+        return copy;
+    });
+
     progres[window.currentDatabaseId] = {
         jawaban: userAnswers,
         ragu: raguStatus,
         waktuSisa: timeRemaining,
-        soalAcak: currentQuestions,
+        soalAcak: safeQuestions,
         terakhirDisimpan: new Date().getTime() // Simpan waktu dalam milidetik
     };
     
