@@ -795,6 +795,151 @@ window.toggleMobileModul = function() {
     }
 }
 
+// ==========================================================
+// PEMBERSIH STATE MODE (ISOLASI SINGLEPLAYER VS MULTIPLAYER)
+// ==========================================================
+window.bersihkanStateMode = function(modeTarget = 'ujian') {
+    // 1. Matikan semua interval timer
+    if (window.dobrakInterval) { clearInterval(window.dobrakInterval); window.dobrakInterval = null; }
+    if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.hostReadyTimerInterval) { clearInterval(window.hostReadyTimerInterval); window.hostReadyTimerInterval = null; }
+    if (window.clientReadyTimerInterval) { clearInterval(window.clientReadyTimerInterval); window.clientReadyTimerInterval = null; }
+    if (typeof timerInterval !== 'undefined' && timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    if (typeof trainingTimerInterval !== 'undefined' && trainingTimerInterval) { clearInterval(trainingTimerInterval); trainingTimerInterval = null; }
+    if (window.hafalanCountdown) { clearInterval(window.hafalanCountdown); window.hafalanCountdown = null; }
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    // 2. Bersihkan inject CSS anti-freeze / style sisa review
+    const unfreezeStyle = document.getElementById('review-unfreeze');
+    if (unfreezeStyle) unfreezeStyle.remove();
+    const hideBtnStyle = document.getElementById('hide-kembali-mabar');
+    if (hideBtnStyle) hideBtnStyle.remove();
+
+    // 3. Bersihkan inject elemen AI Chat & Admin Quick Edit dari DOM
+    const aiChat = document.getElementById('aiChatDiv');
+    if (aiChat) aiChat.remove();
+    const adminQuick = document.getElementById('adminQuickEditDiv');
+    if (adminQuick) adminQuick.remove();
+    const roomBadge = document.getElementById('roomBadgeKhusus');
+    if (roomBadge) roomBadge.remove();
+    const warnTidakJawab = document.getElementById('warningTidakJawab');
+    if (warnTidakJawab) warnTidakJawab.remove();
+    const readyOverlay = document.getElementById('readyCheckOverlay');
+    if (readyOverlay) readyOverlay.remove();
+    const btnOutRoom = document.getElementById('btnKeluarRoomMode');
+    if (btnOutRoom) btnOutRoom.remove();
+    const floatMenu = document.getElementById('roomFloatingMenu');
+    if (floatMenu) floatMenu.remove();
+    const kahootOverlay = document.getElementById('kahootResultOverlay');
+    if (kahootOverlay) kahootOverlay.remove();
+    const roomResOverlay = document.getElementById('roomResultOverlay');
+    if (roomResOverlay) roomResOverlay.remove();
+
+    // 4. Buka SEMUA gembok & opacity kusam pada tombol (Kiri, Kanan Atas, Kanan Bawah, Finish)
+    document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish, .act-exit, .act-rank, .act-data, .act-admin, .action-box button, .right-header button, #btnShowScore, #btnAdminPanel, #btnFinish, #prevBtn, #nextBtn, .footer-nav button').forEach(btn => {
+        btn.style.removeProperty('pointer-events');
+        btn.style.removeProperty('opacity');
+        btn.style.removeProperty('cursor');
+        btn.style.setProperty('pointer-events', 'auto', 'important');
+        btn.style.setProperty('opacity', '1', 'important');
+        btn.style.setProperty('cursor', 'pointer', 'important');
+        btn.disabled = false;
+        btn.removeAttribute('disabled');
+    });
+
+    document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid, .footer-nav').forEach(el => {
+        el.style.removeProperty('pointer-events');
+        el.style.removeProperty('opacity');
+        el.style.setProperty('pointer-events', 'auto', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+    });
+
+    const rightLb = document.getElementById('rightSidebarLeaderboard');
+    const navGrid = document.getElementById('navGrid');
+    const legendContainer = document.querySelector('.legend');
+    const raguWrapper = document.querySelector('.ragu-wrapper');
+    const finishContainer = document.querySelector('.finish-container');
+    const pBtn = document.getElementById('prevBtn');
+    const nBtn = document.getElementById('nextBtn');
+    const fbBox = document.getElementById('feedbackBox');
+    const chatContainer = document.getElementById('roomChatContainer');
+    const modulContainer = document.getElementById('modulSidebarContainer');
+
+    if (modeTarget === 'room') {
+        currentAppMode = 'room';
+        window.currentAppMode = 'room';
+        document.body.classList.add('room-mode');
+
+        if (raguWrapper) raguWrapper.style.display = 'none';
+        if (finishContainer) finishContainer.style.display = 'none';
+        if (fbBox) {
+            fbBox.style.display = 'none';
+            fbBox.classList.remove('show');
+            const aiInFb = fbBox.querySelector('#aiChatDiv');
+            if (aiInFb) aiInFb.remove();
+            const admInFb = fbBox.querySelector('#adminQuickEditDiv');
+            if (admInFb) admInFb.remove();
+        }
+    } else {
+        // Mode Singleplayer / Ujian Mandiri / Lobby
+        currentAppMode = 'ujian';
+        window.currentAppMode = 'ujian';
+        currentRoomCode = null;
+        window.currentRoomCode = null;
+        isHost = false;
+        window.isHost = false;
+        isAnswerLocked = false;
+        window.isAnswerLocked = false;
+        isSubmitted = false;
+        window.isSubmitted = false;
+        isReviewMode = false;
+        window.isReviewMode = false;
+
+        document.body.classList.remove('room-mode');
+
+        if (rightLb) rightLb.style.display = 'none';
+        if (navGrid) {
+            navGrid.style.display = '';
+            navGrid.style.removeProperty('pointer-events');
+            navGrid.style.removeProperty('opacity');
+            navGrid.style.setProperty('pointer-events', 'auto', 'important');
+            navGrid.style.setProperty('opacity', '1', 'important');
+        }
+        if (legendContainer) legendContainer.style.display = 'flex';
+        if (raguWrapper) raguWrapper.style.display = '';
+        if (finishContainer) {
+            finishContainer.style.removeProperty('display');
+            finishContainer.style.display = 'block';
+        }
+        if (pBtn) {
+            pBtn.style.display = 'inline-block';
+            pBtn.style.removeProperty('pointer-events');
+            pBtn.style.removeProperty('opacity');
+            pBtn.style.setProperty('pointer-events', 'auto', 'important');
+            pBtn.style.setProperty('opacity', '1', 'important');
+        }
+        if (nBtn) {
+            nBtn.style.display = 'inline-block';
+            nBtn.style.removeProperty('pointer-events');
+            nBtn.style.removeProperty('opacity');
+            nBtn.style.setProperty('pointer-events', 'auto', 'important');
+            nBtn.style.setProperty('opacity', '1', 'important');
+        }
+
+        if (fbBox) {
+            fbBox.style.display = 'none';
+            fbBox.classList.remove('show');
+            const aiInFb = fbBox.querySelector('#aiChatDiv');
+            if (aiInFb) aiInFb.remove();
+            const admInFb = fbBox.querySelector('#adminQuickEditDiv');
+            if (admInFb) admInFb.remove();
+        }
+
+        if (chatContainer) chatContainer.style.display = 'none';
+        if (modulContainer) modulContainer.style.display = 'flex';
+    }
+};
+
 // ==========================================
 // PENGAMAN KEYBOARD SHORTCUT (NONAKTIF DI MULTIPLAYER)
 // ==========================================
@@ -831,6 +976,11 @@ window.switchDatabase = async function(key) {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     window.speechSynthesis.cancel();
     
+    // 🛑 RESET TOTAL ISOLASI JIKA MEMULAI UJIAN MANDIRI (SINGLEPLAYER) 🛑
+    if (currentAppMode !== 'room' || !window.currentRoomCode) {
+        window.bersihkanStateMode('ujian');
+    }
+
     document.getElementById('lobbySidebarContent').style.display = 'none';
     const examSide = document.getElementById('examSidebarContent');
     if(examSide) examSide.style.display = 'flex';
@@ -1024,9 +1174,31 @@ window.switchDatabase = async function(key) {
         }
 
         isSubmitted = false;
+        window.isSubmitted = false;
         isReviewMode = false;
+        window.isReviewMode = false;
         isAnswerLocked = false;
+        window.isAnswerLocked = false;
         currentIdx = 0;
+
+        if (currentAppMode !== 'room') {
+            document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish, .act-exit, .act-rank, .act-data, .act-admin, .action-box button, .right-header button, #btnShowScore, #btnAdminPanel, #btnFinish').forEach(btn => {
+                btn.style.removeProperty('pointer-events');
+                btn.style.removeProperty('opacity');
+                btn.style.removeProperty('cursor');
+                btn.style.setProperty('pointer-events', 'auto', 'important');
+                btn.style.setProperty('opacity', '1', 'important');
+                btn.style.setProperty('cursor', 'pointer', 'important');
+                btn.disabled = false;
+                btn.removeAttribute('disabled');
+            });
+            document.querySelectorAll('.sidebar-right, .nav-container, .nav-grid, .footer-nav').forEach(el => {
+                el.style.removeProperty('pointer-events');
+                el.style.removeProperty('opacity');
+                el.style.setProperty('pointer-events', 'auto', 'important');
+                el.style.setProperty('opacity', '1', 'important');
+            });
+        }
 
         let btnBalik = document.getElementById('btnSidebarKembali');
         if (btnBalik) {
@@ -1332,6 +1504,14 @@ function loadQuestion(idx) {
 // 1. DETEKSI MODE LEBIH KUAT (Cek juga apakah ada currentRoomCode)
     const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
     const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted);
+
+    // 🛑 PEMBERSIHAN KETAT MODE ROOM: AI Chat & Admin Quick Edit tidak boleh ada di Room
+    if (isModeRoom) {
+        const ai = document.getElementById('aiChatDiv');
+        if (ai) ai.remove();
+        const adm = document.getElementById('adminQuickEditDiv');
+        if (adm) adm.remove();
+    }
     // 🛑 SAFETY NET: Cetak ulang kotak nomor jika terhapus
     const navG = document.getElementById('navGrid');
     if (navG && navG.innerHTML.trim() === '' && typeof currentQuestions !== 'undefined' && currentQuestions.length > 0) {
@@ -1636,9 +1816,15 @@ function loadQuestion(idx) {
         }
     } else {
         // Balikin ke normal kalo balik ke mode latihan mandiri (Singleplayer)
-        document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish').forEach(btn => {
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
+        document.querySelectorAll('.nav-btn, .modul-btn, .btn-action, .btn-finish, .act-exit, .act-rank, .act-data, .act-admin, .action-box button, .right-header button, #btnShowScore, #btnAdminPanel, #btnFinish').forEach(btn => {
+            btn.style.removeProperty('pointer-events');
+            btn.style.removeProperty('opacity');
+            btn.style.removeProperty('cursor');
+            btn.style.setProperty('pointer-events', 'auto', 'important');
+            btn.style.setProperty('opacity', '1', 'important');
+            btn.style.setProperty('cursor', 'pointer', 'important');
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
         });
 
         if (navGridContainer) navGridContainer.style.display = ''; 
@@ -2137,6 +2323,10 @@ window.backToMenu = async function() {
     );
 
     if (yakin) {
+        if (typeof window.bersihkanStateMode === 'function') {
+            window.bersihkanStateMode('ujian');
+        }
+
         const navGrid = document.getElementById('navGrid');
         if (navGrid) navGrid.innerHTML = ''; 
         const optContainer = document.getElementById('optionsContainer');
@@ -2194,7 +2384,13 @@ window.backToMenu = async function() {
 
 window.keluarDariRoom = async () => {
     // Putus koneksi dari Room
-    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) {
+        try { roomListenerUnsubscribe(); } catch(e) {}
+    }
+
+    if (typeof window.bersihkanStateMode === 'function') {
+        window.bersihkanStateMode('ujian');
+    }
 
     // Reset Variabel Mode
     currentRoomCode = null;
@@ -3099,6 +3295,9 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
 // ==========================================================
 window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    if (typeof window.bersihkanStateMode === 'function') {
+        window.bersihkanStateMode('room');
+    }
     
     // 🛑 BASMI BOCORAN UI SINGLEPLAYER KE WAITING ROOM
     const hideElements = ['.question-header', '.footer-nav', '.ragu-wrapper', '#feedbackBox'];
@@ -4020,6 +4219,12 @@ window.pantauRoom = (kodeRoom) => {
                 // 💡 TAMPILKAN KOTAK PEMBAHASAN UNTUK MODE MULTIPLAYER (BEDAH SOAL BERSAMA)
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
+                    // Pastikan Tanya AI & Admin Quick Edit TIDAK PERNAH muncul di mode multiplayer
+                    const aiChatOld = document.getElementById('aiChatDiv');
+                    if (aiChatOld) aiChatOld.remove();
+                    const admOld = document.getElementById('adminQuickEditDiv');
+                    if (admOld) admOld.remove();
+
                     fb.style.setProperty('display', 'block', 'important');
                     fb.style.setProperty('visibility', 'visible', 'important');
                     fb.classList.add('show');
@@ -4160,6 +4365,9 @@ window.tampilkanTombolKeluarRoom = function() {
 };
 
 window.tampilkanLobby = function() {
+    if (typeof window.bersihkanStateMode === 'function') {
+        window.bersihkanStateMode('ujian');
+    }
     let hideBtnStyle = document.getElementById('hide-kembali-mabar');
     if (hideBtnStyle) hideBtnStyle.remove();
     // 🛑 3. PENGAMANAN LAPIS DUA SAAT MASUK LOBBY
@@ -4787,25 +4995,22 @@ window.konfirmasiKeluarRoom = async () => {
 };
 
 window.tutupHasilMultiplayer = () => {
-    // 1. Hapus pop up hasil
+    // 1. Bersihkan semua state room dan gembok
+    if (typeof window.bersihkanStateMode === 'function') {
+        window.bersihkanStateMode('ujian');
+    }
+
+    // 2. Hapus pop up hasil & podium
     const overlay = document.getElementById('roomResultOverlay');
     if (overlay) overlay.remove();
+    const kahootOverlay = document.getElementById('kahootResultOverlay');
+    if (kahootOverlay) kahootOverlay.remove();
     
-    // 2. Hapus tumpukan tombol di kanan bawah
+    // 3. Hapus tumpukan tombol di kanan bawah
     const floatMenu = document.getElementById('roomFloatingMenu');
     if (floatMenu) floatMenu.remove();
-    
-    // 3. Lepas gembok panel kanan atas (Singleplayer)
-    document.querySelectorAll('.action-box button, .act-exit, .btn-finish').forEach(btn => {
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-    });
 
-    // 🛑 4. BERSIHKAN CSS ANTI-FREEZE SAAT KELUAR ROOM (Agar mode biasa kembali normal)
-    const unfreezeStyle = document.getElementById('review-unfreeze');
-    if (unfreezeStyle) unfreezeStyle.remove();
-
-    // 5. Proses keluar seutuhnya
+    // 4. Proses keluar seutuhnya
     window.keluarDariRoom();
 };
 
