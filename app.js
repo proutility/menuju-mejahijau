@@ -44,15 +44,20 @@ window.PROTAMA = {
         });
     },
 
-    confirm: async (title, text) => {
+    confirm: async (title, text, confirmBtnText = 'Ya, Lanjutkan', confirmBtnColor = null) => {
+        const isDanger = confirmBtnText.toLowerCase().includes('keluarkan') || 
+                         confirmBtnText.toLowerCase().includes('batalkan') || 
+                         confirmBtnText.toLowerCase().includes('hapus') || 
+                         confirmBtnText.toLowerCase().includes('keluar');
+        const defaultColor = isDanger ? '#c0392b' : '#004d00';
         const result = await Swal.fire({
             title: title.toUpperCase(),
             html: text,
-            icon: 'warning',
+            icon: isDanger ? 'warning' : 'question',
             showCancelButton: true,
-            confirmButtonColor: '#c0392b',
+            confirmButtonColor: confirmBtnColor || defaultColor,
             cancelButtonColor: '#7f8c8d',
-            confirmButtonText: 'Ya, Keluarkan',
+            confirmButtonText: confirmBtnText,
             cancelButtonText: 'Batal',
             background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
             color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
@@ -2325,7 +2330,8 @@ window.changeQuestion = function(step) {
 window.backToMenu = async function() {  
     const yakin = await PROTAMA.confirm(
         "KEMBALI KE LOBBY", 
-        "Yakin mau kembali ke menu utama?"
+        "Yakin mau kembali ke menu utama?",
+        "Ya, Kembali"
     );
 
     if (yakin) {
@@ -2632,7 +2638,8 @@ window.resetStats = async function() {
     // 1. Ganti confirm jadul pakai PROTAMA
     const yakin = await PROTAMA.confirm(
         "HAPUS RIWAYAT?", 
-        "Yakin mau menghapus SEMUA riwayat nilai untuk modul ini? Data di Cloud akan hilang permanen."
+        "Yakin mau menghapus SEMUA riwayat nilai untuk modul ini? Data di Cloud akan hilang permanen.",
+        "Ya, Hapus"
     );
     
     // Kalau dia pencet "Batal", langsung berhenti (return)
@@ -3703,7 +3710,8 @@ window.mulaiUjianRoom = async (kode) => {
     // Pake PROTAMA.confirm biar popup modern dan gak diblokir browser
     const yakin = await PROTAMA.confirm(
         "MULAI MATCH?", 
-        "Semua peserta akan diminta menekan tombol READY dalam 20 detik."
+        "Semua peserta akan diminta menekan tombol READY dalam 20 detik.",
+        "Ya, Mulai"
     );
     
     if (!yakin) return;
@@ -3865,7 +3873,10 @@ window.pantauRoom = (kodeRoom) => {
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
 
-        let arr = Object.entries(playersObj || {}).map(([uid, p]) => ({ uid, ...p }));
+        let kickedListLS = (window.latestRoomData && window.latestRoomData.kickedUids) || [];
+        let arr = Object.entries(playersObj || {})
+            .filter(([uid, p]) => p && typeof p === 'object' && p.nama && !kickedListLS.includes(uid))
+            .map(([uid, p]) => ({ uid, ...p }));
         arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
 
         const activeUserScore = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
@@ -3936,7 +3947,8 @@ window.pantauRoom = (kodeRoom) => {
 
         const yakin = await PROTAMA.confirm(
             "Alihkan Posisi Host?",
-            `Yakin ingin menyerahkan posisi Host kepada <b>${targetNama}</b>?<br><small style="color:#666;">Kamu akan dialihkan menjadi peserta biasa.</small>`
+            `Yakin ingin menyerahkan posisi Host kepada <b>${targetNama}</b>?<br><small style="color:#666;">Kamu akan dialihkan menjadi peserta biasa.</small>`,
+            "Ya, Alihkan"
         );
         if (!yakin) return;
 
@@ -3975,19 +3987,54 @@ window.pantauRoom = (kodeRoom) => {
                 kickedUids: arrayUnion(targetUid)
             });
 
-            // Hapus instan dari data lokal memori Host agar sidebar kanan langsung bersih
-            if (window.latestRoomData && window.latestRoomData.players) {
-                delete window.latestRoomData.players[targetUid];
-                if (typeof window.renderLiveScore === 'function') {
+            // Hapus instan dari data lokal memori Host agar langsung lenyap seketika (1x klik)
+            if (window.latestRoomData) {
+                if (!window.latestRoomData.kickedUids) window.latestRoomData.kickedUids = [];
+                if (!window.latestRoomData.kickedUids.includes(targetUid)) {
+                    window.latestRoomData.kickedUids.push(targetUid);
+                }
+                if (window.latestRoomData.players) {
+                    delete window.latestRoomData.players[targetUid];
+                }
+
+                // Re-render antarmuka Waiting Room seketika jika sedang di waiting room
+                const listEl = document.getElementById('listPesertaRoom');
+                const countEl = document.getElementById('countPeserta');
+                if (listEl && window.latestRoomData.players) {
+                    listEl.innerHTML = '';
+                    let count = 0;
+                    for (let uid in window.latestRoomData.players) {
+                        if (window.latestRoomData.kickedUids.includes(uid)) continue;
+                        let p = window.latestRoomData.players[uid];
+                        if (!p || typeof p !== 'object' || !p.nama) continue;
+                        count++;
+                        let icon = uid === window.latestRoomData.hostUid ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '<i class="fas fa-user" style="color:#7f8c8d; margin-right:5px;"></i>';
+                        let isHostUser = (window.isHost && uid !== window.currentUser?.uid);
+                        let aksiHost = isHostUser ? `
+                            <div style="display:inline-flex; gap:6px; margin-left:auto;">
+                                <button onclick="window.delegasikanHost('${uid}', '${(p.nama||'').replace(/'/g, "\\'")}')" style="background:#fff3e0; border:1px solid #ffe0b2; color:#e67e22; border-radius:4px; padding:2px 8px; font-size:0.75rem; cursor:pointer;" title="Alihkan Host ke ${p.nama}"><i class="fas fa-crown"></i> Jadikan Host</button>
+                                <button onclick="window.kickPeserta('${uid}', '${(p.nama||'').replace(/'/g, "\\'")}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:4px; padding:2px 8px; font-size:0.75rem; cursor:pointer;" title="Keluarkan ${p.nama}"><i class="fas fa-times"></i> Kick</button>
+                            </div>
+                        ` : '';
+                        listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333; display:flex; align-items:center; justify-content:space-between;"><span>${icon} ${p.nama}</span> ${aksiHost}</li>`;
+                    }
+                    if (countEl) countEl.innerText = count;
+                }
+
+                // Re-render Klasemen Sementara seketika jika sedang di soal/pembahasan
+                if (typeof window.renderLiveScore === 'function' && window.latestRoomData.players) {
                     window.renderLiveScore(window.latestRoomData.players);
                 }
-                
+
                 // Evaluasi ulang progres jawaban & auto-skip seketika
                 let totalPeserta = 0;
                 let yangSudahJawab = 0;
                 for (let uid in window.latestRoomData.players) {
+                    if (window.latestRoomData.kickedUids.includes(uid)) continue;
+                    let p = window.latestRoomData.players[uid];
+                    if (!p || !p.nama) continue;
                     totalPeserta++;
-                    if (window.latestRoomData.players[uid].jawabanSekarang !== null && window.latestRoomData.players[uid].jawabanSekarang !== undefined) {
+                    if (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) {
                         yangSudahJawab++;
                     }
                 }
@@ -4207,10 +4254,13 @@ window.pantauRoom = (kodeRoom) => {
             if (listEl && data.players) {
                 listEl.innerHTML = '';
                 let count = 0;
+                let kickedListWR = data.kickedUids || [];
                 for (let uid in data.players) {
-                    count++;
+                    if (kickedListWR.includes(uid)) continue;
                     let p = data.players[uid];
-                    let icon = uid === data.hostUid ? '👑' : '👤'; 
+                    if (!p || typeof p !== 'object' || !p.nama) continue;
+                    count++;
+                    let icon = uid === data.hostUid ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '<i class="fas fa-user" style="color:#7f8c8d; margin-right:5px;"></i>'; 
                     let isHostUser = (myActiveUid && data.hostUid === myActiveUid);
                     let aksiHost = '';
                     if (isHostUser && uid !== myActiveUid) {
@@ -4257,8 +4307,11 @@ window.pantauRoom = (kodeRoom) => {
 
             let htmlDaftarPemain = '<div style="margin-top: 30px; width: 100%; max-width: 400px; max-height: 250px; overflow-y: auto; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 10px; border: 1px solid rgba(255,255,255,0.1);">';
             
+            let kickedListRC = data.kickedUids || [];
             for (let uid in data.players) {
+                if (kickedListRC.includes(uid)) continue;
                 let p = data.players[uid];
+                if (!p || typeof p !== 'object' || !p.nama) continue;
                 let iconMahkota = (data.hostUid === uid) ? '<i class="fas fa-crown" style="color:var(--gold); margin-right:5px;" title="Host"></i>' : '';
                 let statusSiap = p.isReady ? 
                     `<span style="color:#2ecc71; font-weight:bold; font-size:0.85rem;"><i class="fas fa-check-circle"></i> SIAP</span>` : 
@@ -5430,7 +5483,8 @@ window.downloadEvaluasiPesertaExcel = function() {
 window.konfirmasiKeluarRoom = async () => {
     const yakin = await PROTAMA.confirm(
         "KELUAR ROOM?", 
-        "Yakin mau keluar? Kamu tidak bisa melihat pembahasan lagi setelah keluar ke menu utama."
+        "Yakin mau keluar? Kamu tidak bisa melihat pembahasan lagi setelah keluar ke menu utama.",
+        "Ya, Keluar"
     );
     if (yakin) {
         window.tutupHasilMultiplayer();
