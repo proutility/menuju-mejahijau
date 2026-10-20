@@ -5722,7 +5722,7 @@ window.switchAdminTab = (tab) => {
         btnBack.onclick = () => window.resetAdminMenu();
         if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
     }
-    btnBack.innerHTML = isSuper ? 'â¬…ï¸ KEMBALI KE MENU ADMIN' : 'â¬…ï¸ KEMBALI KE MENU EDITOR';
+    btnBack.innerHTML = isSuper ? '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU ADMIN' : '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU EDITOR';
     btnBack.style.display = 'block';
 
     // 4. Munculkan hanya tab yang dipilih
@@ -5730,7 +5730,7 @@ window.switchAdminTab = (tab) => {
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.style.display = (id.toLowerCase().includes(tab)) ? 'block' : 'none';
+            el.style.display = (id.toLowerCase().includes(tab)) ? 'flex' : 'none';
         }
     });
 

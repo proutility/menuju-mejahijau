@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="PRO-TAMA.png">
@@ -533,9 +533,11 @@
 
     <div id="adminOverlay" class="result-overlay">
         <div id="adminModalBox" class="result-box modal-content" style="width: 800px; text-align: left; max-height: 90vh; overflow-y: auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
-                <h2 id="modalAdminTitle" style="margin:0;"><i class="fas fa-cogs"></i> Panel Admin CBT</h2>
-                <button onclick="document.getElementById('adminOverlay').style.display='none'" style="background:none; border:none; font-size:2rem; cursor:pointer;">&times;</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid var(--primary); padding-bottom: 12px; flex-shrink: 0; width: 100%;">
+                <h2 id="modalAdminTitle" style="margin:0; font-size: 1.4rem; color: var(--primary); display: flex; align-items: center; gap: 8px;"><i class="fas fa-cogs"></i> Panel Admin CBT</h2>
+                <button onclick="document.getElementById('adminOverlay').style.display='none'" class="btn-close-admin-panel" style="background: #e74c3c; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(231,76,60,0.3); transition: 0.2s;" title="Tutup Panel">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
             </div>
             <div style="background: #fff; padding: 5px; border-radius: 8px; margin-bottom: 20px;">
                 <div id="adminStatusBarContainer" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
@@ -567,8 +569,8 @@
                 <textarea id="jsonUploadArea" style="width:100%; height:200px; font-family:monospace; padding:10px; border:1px solid #ccc; border-radius:8px;" placeholder='[{"q": "...", "options": [...], "answer": 0, "explanation": "..."}]'></textarea>
                 <button onclick="window.eksekusiUpload()" class="btn" style="background:var(--success); width:100%; margin-top:10px;">🚀 UPLOAD KE FIREBASE</button>
             </div>
-            <div id="tabEdit" style="display:none;">
-                 <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <div id="tabEdit" style="display:none; flex-direction:column; flex:1; min-height:0; height: calc(100vh - 165px);">
+                 <div style="display:flex; gap:10px; margin-bottom:10px; flex-shrink:0;">
                    <select id="editModulTarget" onchange="window.loadSoalAdmin()" style="flex:1; padding:8px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; color: var(--primary); cursor: pointer;">
                         <option value="" disabled selected>-- Pilih Modul Untuk Diedit --</option>
                         <optgroup label="Hukum Dasar (Materil)">
@@ -624,58 +626,58 @@
                         </optgroup>
                     </select>
                      
-                    <button onclick="window.loadSoalAdmin()" class="btn-small" style="background:var(--primary); color: white !important;">🔍 Load Soal</button>
+                    <button onclick="window.loadSoalAdmin()" class="btn-small" style="background:var(--primary); color: white !important;"><i class="fas fa-search"></i> Load Soal</button>
                 </div>
-                <div style="display:flex; gap:20px; height: 400px;">
-                    <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
-                        <input type="text" id="searchSoalAdmin" placeholder="🔍 Cari penggalan soal..." onkeyup="window.filterSoalAdmin()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:0.85rem;">
-                        <div id="listSoalAdmin" style="flex:1; border:1px solid #ddd; overflow-y:scroll; background:#f9f9f9; padding:10px;">
+                <div style="display:flex; gap:20px; flex:1; min-height:0; height: calc(100% - 55px);">
+                    <div style="flex:1; display:flex; flex-direction:column; gap:10px; height: 100%;">
+                        <input type="text" id="searchSoalAdmin" placeholder="Cari penggalan soal..." onkeyup="window.filterSoalAdmin()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:0.85rem; flex-shrink:0;">
+                        <div id="listSoalAdmin" style="flex:1; border:1px solid #ddd; overflow-y:auto; background:#f9f9f9; padding:10px; border-radius:8px; min-height:0;">
                             <p style="color:gray;">Klik Load Soal dulu...</p>
                         </div>
                     </div>
-                    <div style="flex:1.5; display:flex; flex-direction:column; gap:8px; overflow-y:auto;">
+                    <div style="flex:1.5; display:flex; flex-direction:column; gap:8px; overflow-y:auto; height: 100%; padding-right:10px;">
                         <input type="hidden" id="editDocId">
-                        <label>Pertanyaan:</label>
-                        <textarea id="editQ"></textarea>
-                        <label>Opsi (Pisahkan dengan koma):</label>
-                        <textarea id="editOpt" placeholder="Ayam, Kucing, Bebek"></textarea>
-                        <label>Indeks Jawaban (0=A, 1=B):</label>
-                        <input type="number" id="editAns" style="width:100%;">
-                        <label>Pembahasan:</label>
-                        <textarea id="editExp"></textarea>
-                        <label>Sumber (Cite):</label>
-                        <input type="text" id="editCite" style="width:95%;">
-                        <div style="display:flex; gap:5px; margin-top:10px;">
-                            <button onclick="window.simpanPerubahan()" class="btn" style="background:var(--success); flex:1;">💾 Update</button>
-                            <button onclick="window.hapusSoal()" class="btn" style="background:var(--danger); flex:1;">🗑️ Hapus</button>
+                        <label style="font-weight:bold;">Pertanyaan:</label>
+                        <textarea id="editQ" style="min-height: 90px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
+                        <label style="font-weight:bold;">Opsi (Pisahkan dengan koma):</label>
+                        <textarea id="editOpt" placeholder="Ayam, Kucing, Bebek" style="min-height: 60px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
+                        <label style="font-weight:bold;">Indeks Jawaban (0=A, 1=B, 2=C, 3=D):</label>
+                        <input type="number" id="editAns" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+                        <label style="font-weight:bold;">Pembahasan:</label>
+                        <textarea id="editExp" style="min-height: 100px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
+                        <label style="font-weight:bold;">Sumber (Cite):</label>
+                        <input type="text" id="editCite" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+                        <div style="display:flex; gap:10px; margin-top:10px; padding-bottom: 20px;">
+                            <button onclick="window.simpanPerubahan()" class="btn" style="background:var(--success); flex:1; padding:12px; font-weight:bold;"><i class="fas fa-save"></i> Update</button>
+                            <button onclick="window.hapusSoal()" class="btn" style="background:var(--danger); flex:1; padding:12px; font-weight:bold;"><i class="fas fa-trash-alt"></i> Hapus</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <div id="tabReview" style="display:none;">
-                 <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <input type="text" id="reviewModulTarget" placeholder="ID Modul (cth: modul1)" style="flex:1; padding:8px;">
+            <div id="tabReview" style="display:none; flex-direction:column; flex:1; min-height:0; height: calc(100vh - 165px);">
+                 <div style="display:flex; gap:10px; margin-bottom:10px; flex-shrink:0;">
+                    <input type="text" id="reviewModulTarget" placeholder="ID Modul (cth: modul1)" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:6px;">
                     <button onclick="window.loadReviewPembahasan()" class="btn-small" style="background:var(--primary); color: white !important;">Cek Semua Pembahasan</button>
                 </div>
-                <div id="containerReview" style="max-height:500px; overflow-y:auto; border:1px solid #ddd; padding:10px; background:#fff;">
+                <div id="containerReview" style="flex:1; min-height:0; height: calc(100% - 55px); overflow-y:auto; border:1px solid #ddd; padding:15px; background:#fff; border-radius:8px;">
                     <p style="color:gray;">Pilih modul untuk review pembahasan...</p>
                 </div>
             </div>
-            <div id="tabLaporan" style="display:none;">
-                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+            <div id="tabLaporan" style="display:none; flex-direction:column; flex:1; min-height:0; height: calc(100vh - 165px);">
+                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-shrink:0;">
                     <h4 style="margin:0; flex:1;"><i class="fas fa-exclamation-circle" style="color:#d32f2f;"></i> Daftar Koreksi dari User</h4>
-                    <button onclick="window.loadLaporanAdmin()" class="btn-small" style="background:var(--primary); color: white !important;">🔄 Refresh Data</button>
+                    <button onclick="window.loadLaporanAdmin()" class="btn-small" style="background:var(--primary); color: white !important;"><i class="fas fa-sync-alt"></i> Refresh Data</button>
                 </div>
-                <div id="containerLaporan" style="max-height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <div id="containerLaporan" style="flex:1; min-height:0; height: calc(100% - 55px); overflow-y:auto; border:1px solid #ddd; padding:15px; background:#f9f9f9; border-radius:8px;">
                     <p style="color:gray; text-align:center;">Klik Refresh Data untuk melihat laporan terbaru...</p>
                 </div>
             </div>
-            <div id="tabStatus" style="display:none;">
-                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+            <div id="tabStatus" style="display:none; flex-direction:column; flex:1; min-height:0; height: calc(100vh - 165px);">
+                 <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-shrink:0;">
                     <h4 style="margin:0; flex:1;"><i class="fas fa-network-wired" style="color:#2980b9;"></i> Radar Peserta</h4>
-                    <button onclick="window.loadStatusAdmin()" class="btn-small" style="background:var(--primary); color: white !important;">🔄 Refresh Radar</button>
+                    <button onclick="window.loadStatusAdmin()" class="btn-small" style="background:var(--primary); color: white !important;"><i class="fas fa-sync-alt"></i> Refresh Radar</button>
                 </div>
-                <div id="containerStatus" style="max-height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; background:#f9f9f9; border-radius:8px;">
+                <div id="containerStatus" style="flex:1; min-height:0; height: calc(100% - 55px); overflow-y:auto; border:1px solid #ddd; padding:15px; background:#f9f9f9; border-radius:8px;">
                     <p style="color:gray; text-align:center;">Klik Refresh Radar untuk melihat status...</p>
                 </div>
             </div>
