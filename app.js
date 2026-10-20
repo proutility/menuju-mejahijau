@@ -307,47 +307,52 @@ if(auth) {
 
                 // 2. KALAU GAK ADA DI CACHE, BARU MINTA KE FIREBASE (BAYAR 1 READ)
                 const accessRef = doc(db, "vip_access", user.email);
-                const accessSnap = await getDoc(accessRef);
-            
-                if (accessSnap.exists()) {
-                    if (accessSnap.data().isVerified === true) {
-                        window.isVIPUser = true; 
-                        window.userRoleCakim = "VIP"; // Tandai VIP
-                        
-                        // SIMPAN KE BROWSER BIAR BESOK-BESOK GAK USAH FETCH LAGI
-                        sessionStorage.setItem("userRole_v1", "VIP");
-                        
-                        lanjutKeAplikasi();
-                    } else {
-                        showGateInput(user.displayName, user.email);
-                        window.updateUserStatus(true, "VIP Gatekeeper"); 
+                let isAlreadyVerified = false;
+
+                try {
+                    const accessSnap = await getDoc(accessRef);
+                    if (accessSnap.exists() && accessSnap.data().isVerified === true) {
+                        isAlreadyVerified = true;
                     }
-                } else {
-                    // USER BARU (Bikin Kode + Email)
+                } catch (errRead) {
+                    // Sesuai Security Rules baru:
+                    // User yang belum terverifikasi DILARANG membaca dokumennya sendiri
+                    // agar tidak bisa mengintip field 'code' di console browser!
+                    isAlreadyVerified = false;
+                }
+            
+                if (isAlreadyVerified) {
+                    window.isVIPUser = true; 
+                    window.userRoleCakim = "VIP"; // Tandai VIP
+                    
+                    // SIMPAN KE BROWSER BIAR BESOK-BESOK GAK USAH FETCH LAGI
+                    sessionStorage.setItem("userRole_v1", "VIP");
+                    
+                    lanjutKeAplikasi();
+                    return;
+                }
+
+                // USER BARU / BELUM VERIFIKASI
+                // Generate pendaftaran dokumen awal di Firestore (hanya diizinkan jika isVerified == false)
+                try {
                     const randomAsas = legalTerms[Math.floor(Math.random() * legalTerms.length)];
                     const randomNum = Math.floor(100 + Math.random() * 899);
                     const finalCode = `${randomAsas}-${randomNum}`;
 
                     await setDoc(accessRef, {
-                        name: user.displayName,
+                        name: user.displayName || user.email.split('@')[0],
                         email: user.email,
                         code: finalCode,
                         isVerified: false,
                         createdAt: new Date()
                     });
-
-                    fetch("https://script.google.com/macros/s/AKfycbwZcPxD1ZX8CgW8yhGZA9AM3S39jmpxFlti9sU_RlYP/dev", {
-                        method: "POST", mode: "no-cors",
-                        body: JSON.stringify({ user_name: user.displayName, user_email: user.email, vip_code: finalCode })
-                    }).then(() => {
-                        showGateInput(user.displayName, user.email);
-                        window.updateUserStatus(true, "VIP Gatekeeper");
-                    }).catch(err => {
-                        console.error("Gagal fetch GAS:", err);
-                        showGateInput(user.displayName, user.email);
-                        window.updateUserStatus(true, "VIP Gatekeeper");
-                    });
+                } catch (eCreate) {
+                    // Jika dokumen sudah pernah dibuat sebelumnya, setDoc ditolak oleh Rules
+                    // untuk menjaga agar kode unik yang tersimpan di DB tidak tertimpa/berubah.
                 }
+
+                showGateInput(user.displayName, user.email);
+                window.updateUserStatus(true, "VIP Gatekeeper");
             } catch (e) {
                 console.error("Error Gatekeeper:", e);
                 alert("Gagal memuat data akses: " + e.message);
@@ -462,6 +467,8 @@ function showGateInput(name, email) {
 window.verifyVipCode = async () => {
     const input = document.getElementById('inputVipCode').value.trim().toUpperCase();
     const btn = document.getElementById('btnVerifyVip');
+    const errEl = document.getElementById('vipError');
+    if (errEl) errEl.style.display = 'none';
     
     if(!input) return alert("Silahkan masukan kode unik!");
 
@@ -470,26 +477,32 @@ window.verifyVipCode = async () => {
 
     try {
         const accessRef = doc(db, "vip_access", currentUser.email);
-        const accessSnap = await getDoc(accessRef);
-
-        if (accessSnap.exists() && accessSnap.data().code === input) {
-            // Update Status Jadi Verified
-            await updateDoc(accessRef, { 
+        
+        // SERVER-SIDE VALIDATION:
+        // Firestore Rules mengecek:
+        // request.resource.data.inputCode == resource.data.code && request.resource.data.isVerified == true
+        // Client tidak perlu dan tidak bisa membaca kode rahasia terlebih dahulu!
+        await updateDoc(accessRef, { 
             isVerified: true, 
-            inputCode: input, // Kirim input untuk divalidasi server Firebase
+            inputCode: input,
             verifiedAt: new Date() 
         });
-            
-            alert("✅ Akses VIP Terbuka! Selamat Belajar.");
-            // Masuk Aplikasi
-            lanjutKeAplikasi();
-        } else {
-            document.getElementById('vipError').style.display = 'block';
-            btn.innerText = "BUKA AKSES SEKARANG";
-            btn.disabled = false;
-        }
+        
+        window.isVIPUser = true;
+        window.userRoleCakim = "VIP";
+        sessionStorage.setItem("userRole_v1", "VIP");
+
+        alert("\u2705 Akses VIP Terbuka! Selamat Belajar.");
+        lanjutKeAplikasi();
     } catch (e) { 
-        alert("Error verifikasi: " + e.message); 
+        console.error("Gagal verifikasi kode VIP:", e);
+        if (errEl) {
+            errEl.style.display = 'block';
+            errEl.innerText = "\u26A0\uFE0F Kode akses tidak sesuai atau belum diaktivasi oleh Admin!";
+        } else {
+            alert("\u26A0\uFE0F Kode akses tidak sesuai!");
+        }
+        btn.innerText = "BUKA AKSES SEKARANG";
         btn.disabled = false; 
     }
 };
@@ -6802,13 +6815,17 @@ window.loadStatusAdmin = async () => {
     container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Membuka radar peserta, melacak aktivitas, dan menarik data VIP...</div>`;
 
     try {
-        // --- 1. TARIK DATA KODE VIP ---
-        const qVip = query(collection(window.db, "vip_access"));
-        const snapVip = await getDocs(qVip);
+        // --- 1. TARIK DATA KODE VIP (KHUSUS SUPER ADMIN) ---
         let vipMap = {};
-        snapVip.forEach(doc => {
-            vipMap[doc.id] = doc.data().code; 
-        });
+        try {
+            const qVip = query(collection(window.db, "vip_access"));
+            const snapVip = await getDocs(qVip);
+            snapVip.forEach(doc => {
+                vipMap[doc.id] = doc.data().code; 
+            });
+        } catch (vipErr) {
+            console.warn("Daftar kode VIP hanya dapat diakses oleh Super Admin.");
+        }
 
         // --- 2. TARIK DATA STATUS DENGAN DAYA JANGKAU LUAS (LIMIT 100) ---
         const qStatus = query(
