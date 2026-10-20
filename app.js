@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
     getFirestore, 
@@ -213,45 +213,40 @@ if(auth) {
             const isEditor = typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(user.email);
 
             if (isSuperAdmin) {
-                window.userRoleCakim = "SUPER_ADMIN"; // 👑 Hanya Lo
+                window.userRoleCakim = "SUPER_ADMIN"; // ðŸ‘‘ Super Admin
                 document.body.classList.add('is-admin'); 
                 
                 const btnAdmin = document.getElementById('btnAdminPanel');
-                if(btnAdmin) btnAdmin.style.display = 'flex'; 
+                if(btnAdmin) {
+                    btnAdmin.style.display = 'flex'; 
+                    btnAdmin.innerHTML = '<i class="fas fa-cogs"></i> <span id="labelBtnAdminPanel">Panel Admin</span>';
+                }
                 
                 const btnAdminLobby = document.getElementById('btnAdminLobby');
-                if(btnAdminLobby) btnAdminLobby.style.display = 'block';
+                if(btnAdminLobby) {
+                    btnAdminLobby.style.display = 'block';
+                    btnAdminLobby.innerHTML = '<i class="fas fa-cogs"></i> <span id="labelBtnAdminLobby">Panel Admin</span>';
+                }
                 
                 console.log("Super Admin Login: Akses Penuh.");
             } 
             else if (isEditor) {
-                window.userRoleCakim = "EDITOR"; // 📝 Asisten
+                window.userRoleCakim = "EDITOR"; // ðŸ“ Editor
                 document.body.classList.add('is-admin'); // Tetap kasih class admin buat ngedit
                 
                 const btnAdmin = document.getElementById('btnAdminPanel');
-                if(btnAdmin) btnAdmin.style.display = 'flex'; 
+                if(btnAdmin) {
+                    btnAdmin.style.display = 'flex'; 
+                    btnAdmin.innerHTML = '<i class="fas fa-user-edit"></i> <span id="labelBtnAdminPanel">Panel Editor</span>';
+                }
                 
                 const btnAdminLobby = document.getElementById('btnAdminLobby');
-                if(btnAdminLobby) btnAdminLobby.style.display = 'block';
+                if(btnAdminLobby) {
+                    btnAdminLobby.style.display = 'block';
+                    btnAdminLobby.innerHTML = '<i class="fas fa-user-edit"></i> <span id="labelBtnAdminLobby">Panel Editor</span>';
+                }
 
-                // Sensor fitur sensitif untuk Asisten Admin
-                setTimeout(() => {  
-                    const idsToHide = [
-                        'btnToggleMaintenance', 
-                        'button[onclick="window.switchAdminTab(\'status\')"]',
-                        'button[onclick="window.downloadSoalExcel()"]',
-                        'button[onclick="window.downloadSoalJSON()"]',
-                        'button[onclick="window.switchAdminTab(\'tambah\')"]',
-                        'button[onclick="window.eksekusiUpload()"]'
-                    ];
-                    
-                    idsToHide.forEach(id => {
-                        let el = document.getElementById(id) || document.querySelector(id);
-                        if(el) el.style.display = 'none';
-                    });
-                }, 500); 
-                
-                console.log("Asisten Admin Login: Hanya bisa Edit, Review, dan Laporan.");
+                console.log("Editor Login: Akses Panel Editor (Edit, Review, dan Laporan).");
             } 
             else {
                 document.body.classList.remove('is-admin');
@@ -433,6 +428,8 @@ function lanjutKeAplikasi() {
         const roleLabel = document.querySelector('.user-role-label');
         if (ADMIN_EMAILS.includes(currentUser.email)) {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-shield" style="color:#ffd700;"></i> Administrator';
+        } else if (typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(currentUser.email)) {
+            if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-edit" style="color:#3498db;"></i> Editor CBT';
         } else {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-tie"></i> Peserta Ujian';
         }
@@ -3110,6 +3107,28 @@ window.eksekusiBikinRoom = async () => {
                     }
                 }
 
+                if (qSnap.empty && soalModulIni.length === 0) {
+                    const aliasMap = {
+                        'modul_4': ['modul_hir', 'modul_hir_rbg_rv', 'hafalan_hir_rbg_rv', 'modul_hafalan_hir'],
+                        'modul_5': ['modul_sema', 'kumpulan_sema', 'modul_kumpulan_sema'],
+                        'modul_hir': ['modul_4'],
+                        'modul_sema': ['modul_5']
+                    };
+                    if (aliasMap[modId]) {
+                        for (const altKey of aliasMap[modId]) {
+                            let altColRef = collection(window.db, altKey);
+                            let altSnap = await getDocs(altColRef);
+                            if (altSnap.empty) {
+                                altSnap = await getDocs(collection(window.db, "bank_soal", altKey, "daftar_soal"));
+                            }
+                            if (!altSnap.empty) {
+                                qSnap = altSnap;
+                                break;
+                            }
+                        }
+                    }
+                }
+
                 if (soalModulIni.length === 0 && !qSnap.empty) {
                     qSnap.forEach(docSnap => {
                         let d = JSON.parse(JSON.stringify(docSnap.data()));
@@ -5585,116 +5604,97 @@ setTimeout(() => {
 
 window.openAdminPanel = () => {
     // 1. Munculkan overlay admin
-    document.getElementById('adminOverlay').style.display = 'flex';
-    // --- Bikin Tombol Kembali (Injeksi) ---
-    const adminBox = document.querySelector('#adminOverlay .modal-content');
-    if (adminBox && !document.getElementById('btnKembaliMenuAdmin')) {
-        // Bungkus tombol Navigasi dan Status ke dalam grup biar gampang disembunyiin
-        const navDiv = document.querySelector('#adminOverlay button[onclick*="tambah"]').parentNode;
-        navDiv.id = 'adminNavButtons';
-        const statusDiv = document.querySelector('#adminOverlay').querySelectorAll('div')[1]; // asumsi teks status
-        statusDiv.classList.add('admin-status-bar');
+    const overlay = document.getElementById('adminOverlay');
+    if (!overlay) return;
+    overlay.style.display = 'flex';
 
-        const btnBack = document.createElement('button');
-        btnBack.id = 'btnKembaliMenuAdmin';
-        btnBack.className = 'btn-back-menu';
-        btnBack.innerHTML = '<i class="fas fa-arrow-left"></i> Kembali ke Menu Admin';
-        btnBack.onclick = () => window.resetAdminMenu();
-        
-        // Taruh di bawah judul "Panel Admin CBT"
-        adminBox.insertBefore(btnBack, adminBox.children[1]); 
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+
+    // Update Judul Modal: Admin CBT vs Editor CBT
+    const modalTitle = document.getElementById('modalAdminTitle');
+    if (modalTitle) {
+        modalTitle.innerHTML = isSuper 
+            ? 'âš™ï¸ Panel Admin CBT' 
+            : '<i class="fas fa-user-edit"></i> Panel Editor CBT';
     }
-    
-    // Pastikan pas baru buka, tampilannya adalah "Menu"
+
+    // Pastikan pas baru buka, tampilannya adalah "Menu" rapi (tanpa form terbuka di bawah)
     window.resetAdminMenu();
-
-    // 2. Cek apakah user saat ini adalah Editor (Bukan Super Admin)
-    const isSuper = ADMIN_EMAILS.includes(currentUser.email);
-    const isEditUser = typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(currentUser.email);
-
-    if (isEditUser && !isSuper) {
-        console.log("Menjalankan Protokol Sensor Editor...");
-        
-        setTimeout(() => {
-            // A. Sembunyikan Tombol Navigasi yang dilarang
-            // (Kata 'upload json' dan 'tambah' sudah DIHAPUS dari daftar blokir di bawah ini)
-            const semuaTombolNav = document.querySelectorAll('#adminOverlay button');
-            semuaTombolNav.forEach(btn => {
-                const teks = btn.innerText.toLowerCase();
-                const aksi = (btn.getAttribute('onclick') || '').toLowerCase();
-                
-                if (teks.includes('radar') || 
-                    teks.includes('excel') || teks.includes('backup') || 
-                    aksi.includes('status') || aksi.includes('download')) {
-                    btn.style.setProperty('display', 'none', 'important');
-                }
-            });
-
-            // B. Sembunyikan Tombol Maintenance di pojok kanan atas
-            const btnMaintenance = document.getElementById('btnToggleMaintenance');
-            if (btnMaintenance) btnMaintenance.style.setProperty('display', 'none', 'important');
-
-            // C. Sembunyikan Area Input JSON (Textarea aslinya)
-            const idsInput = ['jsonUploadArea', 'adminModulTarget'];
-            idsInput.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.style.setProperty('display', 'none', 'important');
-                    if (el.previousElementSibling) el.previousElementSibling.style.setProperty('display', 'none', 'important');
-                }
-            });
-            
-            // Sembunyikan tombol eksekusi JSON aslinya
-            const btnUploadAksi = document.querySelector('button[onclick*="eksekusiUpload"]');
-            if (btnUploadAksi) btnUploadAksi.style.setProperty('display', 'none', 'important');
-
-            // D. BUKA TAB TAMBAH & PAKSA KE MODE MANUAL
-            window.switchAdminTab('tambah'); // Langsung arahin ke tab tambah
-            
-            if (typeof window.setTambahMode === 'function') {
-                window.setTambahMode('manual'); // Otomatis aktifkan form manual
-            }
-            
-            // Sembunyikan tombol switch ke JSON biar asisten ga iseng ngeklik
-            const btnModeJson = document.getElementById('btnModeJson');
-            if (btnModeJson) btnModeJson.style.setProperty('display', 'none', 'important');
-            
-        }, 100); 
-    }
 };
+
 // ==========================================================
-// FUNGSI BALIK KE MENU ADMIN (TOMBOL MUNCUL SEMUA)
+// FUNGSI BALIK KE MENU ADMIN / EDITOR (TOMBOL MUNCUL SESUAI ROLE)
 // ==========================================================
 window.resetAdminMenu = () => {
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+
     // 1. Sembunyikan Tombol Kembali
     const btnBack = document.getElementById('btnKembaliSakti');
     if(btnBack) btnBack.style.display = 'none';
 
-    // 2. Munculkan SEMUA elemen Navigasi di atas (kecuali tab konten)
-    const modalContent = document.querySelector('#adminOverlay .modal-content');
-    if (modalContent) {
-        Array.from(modalContent.children).forEach(el => {
+    // 2. Kembalikan ukuran modal ke normal (tidak melebar)
+    const modalBox = document.getElementById('adminModalBox') || document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
+    if (modalBox) {
+        modalBox.style.width = '800px';
+        modalBox.style.maxWidth = '90vw';
+    }
+
+    // 3. Munculkan SEMUA elemen Navigasi utama (kecuali tab konten)
+    if (modalBox) {
+        Array.from(modalBox.children).forEach(el => {
             const id = el.id || '';
-            // Kalau bukan tab dan bukan tombol kembali, TAMPILKAN!
-            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'SPAN') {
+            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'SPAN') {
                 el.style.display = ''; // Balikin ke normal (flex/block)
             }
         });
     }
 
-    // 3. Sembunyikan semua isi tab
+    // 4. Sembunyikan semua isi tab agar rapi dan tidak "ke teken"
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
+
+    // 5. Atur Hak Akses Navigasi: Admin vs Editor
+    const btnMaint = document.getElementById('btnToggleMaintenance');
+    const statusTitle = document.getElementById('adminStatusTitle');
+    const statusDesc = document.getElementById('adminStatusDesc');
+    const btnUpload = document.getElementById('btnNavUploadJson') || document.querySelector('#adminOverlay button[onclick*="tambah"]');
+    const btnRadar = document.getElementById('btnNavRadar') || document.querySelector('#adminOverlay button[onclick*="status"]');
+    const toolsDiv = document.getElementById('adminToolsContainer');
+
+    if (isSuper) {
+        if (btnMaint) btnMaint.style.display = 'inline-block';
+        if (statusTitle) statusTitle.innerText = "Status Aplikasi";
+        if (statusDesc) statusDesc.innerText = "Klik tombol di kanan untuk buka/tutup akses ujian.";
+        if (btnUpload) btnUpload.style.display = 'inline-block';
+        if (btnRadar) btnRadar.style.display = 'inline-block';
+        if (toolsDiv) toolsDiv.style.display = 'flex';
+    } else {
+        // EDITOR: Hanya 3 menu (Edit / Revisi, Review Jawaban, Laporan Masuk)
+        if (btnMaint) btnMaint.style.display = 'none';
+        if (statusTitle) statusTitle.innerText = "Status Akses: Editor CBT";
+        if (statusDesc) statusDesc.innerText = "Hak akses: Edit / Revisi Soal, Review Jawaban, dan Laporan Masuk.";
+        if (btnUpload) btnUpload.style.display = 'none';
+        if (btnRadar) btnRadar.style.display = 'none';
+        if (toolsDiv) toolsDiv.style.display = 'none';
+    }
 };
 
 // ==========================================================
 // FUNGSI SWITCH TAB & MASUK MODE FULL SCREEN (ANTI CACHE)
 // ==========================================================
 window.switchAdminTab = (tab) => {
-    const modalContent = document.querySelector('#adminOverlay .modal-content');
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+
+    // Proteksi: Editor dilarang membuka tab Tambah (Upload JSON) atau Radar Status
+    if (!isSuper && (tab === 'tambah' || tab === 'status')) {
+        alert("âš ï¸ Akses terbatas: Fitur ini hanya untuk Super Admin.");
+        return;
+    }
+
+    const modalContent = document.getElementById('adminModalBox') || document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
     
     // 1. Paksa Lebarin Layar via JS (Biar lega ngetik soalnya)
     if (modalContent) {
@@ -5718,13 +5718,11 @@ window.switchAdminTab = (tab) => {
     if (!btnBack) {
         btnBack = document.createElement('button');
         btnBack.id = 'btnKembaliSakti';
-        btnBack.innerHTML = '⬅️ KEMBALI KE MENU ADMIN';
         btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; width: 100%; text-align: left; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
         btnBack.onclick = () => window.resetAdminMenu();
-        
-        // Taruh tepat di bawah judul
         if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
     }
+    btnBack.innerHTML = isSuper ? 'â¬…ï¸ KEMBALI KE MENU ADMIN' : 'â¬…ï¸ KEMBALI KE MENU EDITOR';
     btnBack.style.display = 'block';
 
     // 4. Munculkan hanya tab yang dipilih
@@ -5736,54 +5734,49 @@ window.switchAdminTab = (tab) => {
         }
     });
 
-    // 5. --- PEMBUATAN FORM MANUAL (TETAP AMAN DI SINI) ---
-    const areaTambah = document.getElementById('tabTambah');
-    if (areaTambah && !document.getElementById('switchTambahMode')) {
-        const switcher = document.createElement('div');
-        switcher.id = 'switchTambahMode';
-        switcher.style = "margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 8px; display: flex; gap: 10px;";
-        switcher.innerHTML = `
-            <button onclick="window.setTambahMode('json')" id="btnModeJson" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:var(--primary); color:white;">Mode JSON (Massal)</button>
-            <button onclick="window.setTambahMode('manual')" id="btnModeManual" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:#ddd;">Mode Manual (Satu Soal)</button>
-        `;
-        areaTambah.insertBefore(switcher, areaTambah.firstChild);
+    // 5. Khusus Super Admin: Tab Tambah Form Manual / JSON switcher
+    if (tab === 'tambah' && isSuper) {
+        const areaTambah = document.getElementById('tabTambah');
+        if (areaTambah && !document.getElementById('switchTambahMode')) {
+            const switcher = document.createElement('div');
+            switcher.id = 'switchTambahMode';
+            switcher.style = "margin-bottom: 15px; background: #eee; padding: 10px; border-radius: 8px; display: flex; gap: 10px;";
+            switcher.innerHTML = `
+                <button onclick="window.setTambahMode('json')" id="btnModeJson" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:var(--primary); color:white;">Mode JSON (Massal)</button>
+                <button onclick="window.setTambahMode('manual')" id="btnModeManual" style="flex:1; padding:8px; border:none; border-radius:5px; cursor:pointer; background:#ddd;">Mode Manual (Satu Soal)</button>
+            `;
+            areaTambah.insertBefore(switcher, areaTambah.firstChild);
 
-        // Bikin Container Form Manual
-        const formManual = document.createElement('div');
-        formManual.id = 'formTambahManual';
-        formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
-        formManual.innerHTML = `
-            <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
-                <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
-                <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
-                <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
-            </div>
-            <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
-                <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
-                <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
-                <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
-            </div>
-            <label>Kunci Jawaban:</label>
-            <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
-                <option value="0">Opsi A</option><option value="1">Opsi B</option>
-                <option value="2">Opsi C</option><option value="3">Opsi D</option>
-            </select>
-            <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
-            <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
-            <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🚀 SIMPAN SOAL KE DATABASE</button>
-        `;
-        areaTambah.appendChild(formManual);
+            const formManual = document.createElement('div');
+            formManual.id = 'formTambahManual';
+            formManual.style = "display:none; background:#fff; padding:15px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;";
+            formManual.innerHTML = `
+                <div style="margin-bottom:15px; padding:10px; background:#e8f8f5; border-radius:6px; border:1px solid #a3e4d7;">
+                    <label style="font-weight:bold; color:#16a085;">Ketik Target Modul (Bisa Pakai Cabang):</label>
+                    <input type="text" id="manModulInput" placeholder="Contoh: modul1 atau modul1.1" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-top:5px; font-weight:bold;">
+                    <div style="font-size:0.8rem; color:#555; margin-top:4px;">*Ketik ID nyambung kecil semua (misal: <b>modul2.1</b>, <b>modul15.a</b>)</div>
+                </div>
+                <label>Pertanyaan:</label><textarea id="manQ" style="width:100%; height:80px; margin-bottom:10px; border-radius:4px; border:1px solid #ccc;"></textarea>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div><label>Opsi A:</label><input type="text" id="manOptA" style="width:100%; margin-bottom:10px;"></div>
+                    <div><label>Opsi B:</label><input type="text" id="manOptB" style="width:100%; margin-bottom:10px;"></div>
+                    <div><label>Opsi C:</label><input type="text" id="manOptC" style="width:100%; margin-bottom:10px;"></div>
+                    <div><label>Opsi D:</label><input type="text" id="manOptD" style="width:100%; margin-bottom:10px;"></div>
+                </div>
+                <label>Kunci Jawaban:</label>
+                <select id="manAns" style="width:100%; margin-bottom:10px; padding:5px;">
+                    <option value="0">Opsi A</option><option value="1">Opsi B</option>
+                    <option value="2">Opsi C</option><option value="3">Opsi D</option>
+                </select>
+                <label>Pembahasan:</label><textarea id="manExp" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+                <label>Dasar Hukum/Sumber:</label><input type="text" id="manCite" style="width:100%; margin-bottom:15px;">
+                <button onclick="window.simpanSoalManual()" style="width:100%; padding:12px; background:var(--success); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">ðŸš€ SIMPAN SOAL KE DATABASE</button>
+            `;
+            areaTambah.appendChild(formManual);
+        }
     }
 
-    // 6. Khusus asisten, aktifin form manual
-    if (tab === 'tambah' && typeof window.setTambahMode === 'function') {
-        const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
-        if(!isSuper) window.setTambahMode('manual');
-    }
-
-    // 7. Auto-load data 
+    // 6. Auto-load data 
     if (tab === 'laporan' && typeof window.loadLaporanAdmin === 'function') window.loadLaporanAdmin();
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
@@ -5938,7 +5931,38 @@ window.loadSoalAdmin = async () => {
 
     try {
         const qRef = collection(db, "bank_soal", modulId, "daftar_soal");
-        const snapshot = await getDocs(qRef); 
+        let snapshot = await getDocs(qRef); 
+
+        if (snapshot.empty) {
+            const directCol = collection(db, modulId);
+            const directSnap = await getDocs(directCol);
+            if (!directSnap.empty) {
+                snapshot = directSnap;
+            } else {
+                const aliasMap = {
+                    'modul_4': ['modul_hir', 'modul_hir_rbg_rv', 'hafalan_hir_rbg_rv', 'modul_hafalan_hir'],
+                    'modul_5': ['modul_sema', 'kumpulan_sema', 'modul_kumpulan_sema'],
+                    'modul_hir': ['modul_4'],
+                    'modul_sema': ['modul_5']
+                };
+                if (aliasMap[modulId]) {
+                    for (const altKey of aliasMap[modulId]) {
+                        const altLegacy = await getDocs(collection(db, "bank_soal", altKey, "daftar_soal"));
+                        if (!altLegacy.empty) {
+                            snapshot = altLegacy;
+                            currentAdminModul = altKey;
+                            break;
+                        }
+                        const altDirect = await getDocs(collection(db, altKey));
+                        if (!altDirect.empty) {
+                            snapshot = altDirect;
+                            currentAdminModul = altKey;
+                            break;
+                        }
+                    }
+                }
+            }
+        } 
 
         listDiv.innerHTML = "";
         

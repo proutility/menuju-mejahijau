@@ -165,6 +165,8 @@
                         <button class="modul-btn" id="btn-modul_BukuIIPA" onclick="window.switchDatabase('modul_BukuIIPA')">1. BUKU II PA</button>
                         <button class="modul-btn" id="btn-modul_2" onclick="window.switchDatabase('modul_2')">2. Substansi Cakim 2017</button>
                         <button class="modul-btn" id="btn-modul_3" onclick="window.switchDatabase('modul_3')">3. HAPER Cakim 2023</button>
+                        <button class="modul-btn" id="btn-modul_4" onclick="window.switchDatabase('modul_4')">4. Hafalan HIR/RBG.RV</button>
+                        <button class="modul-btn" id="btn-modul_5" onclick="window.switchDatabase('modul_5')">5. Kumpulan SEMA</button>
                         <button class="modul-btn" id="btn-modul4" onclick="window.switchDatabase('modul4')">Modul 4: Pendaftaran & Relaas</button>
                         <button class="modul-btn" id="btn-modul5" onclick="window.switchDatabase('modul5')">Modul 5: Gugatan & Permohonan</button>
                         <button class="modul-btn" id="btn-modul7" onclick="window.switchDatabase('modul7')">Modul 7: Mediasi</button>
@@ -404,7 +406,7 @@
 
                 <div style="margin-top: auto; padding-bottom: 60px; padding-top: 15px;">
                     <button id="btnAdminLobby" class="btn" onclick="window.openAdminPanel()" style="display:none; width: 100%; margin-bottom: 10px; background: #2c3e50; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                        <i class="fas fa-cogs"></i> Panel Admin
+                        <i class="fas fa-cogs"></i> <span id="labelBtnAdminLobby">Panel Admin</span>
                      </button>
                      <button class="btn" onclick="window.openStats()" style="width: 100%; margin-bottom: 10px; background: var(--purple); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                         <i class="fas fa-chart-pie"></i> Detail Statistik
@@ -419,7 +421,7 @@
             <div id="examSidebarContent" style="display: none; flex-direction: column; height: 100%;">
                 <div class="right-header">
                     <button class="btn-action act-admin" id="btnAdminPanel" onclick="window.openAdminPanel()" style="display:none;">
-                        <i class="fas fa-cogs"></i> Admin
+                        <i class="fas fa-cogs"></i> <span id="labelBtnAdminPanel">Panel Admin</span>
                     </button>
                     <button class="btn-action act-rank" onclick="window.openLeaderboard()">
                         <i class="fas fa-trophy"></i> Peringkat
@@ -530,16 +532,16 @@
     </div>
 
     <div id="adminOverlay" class="result-overlay">
-        <div class="result-box" style="width: 800px; text-align: left; max-height: 90vh; overflow-y: auto;">
+        <div id="adminModalBox" class="result-box modal-content" style="width: 800px; text-align: left; max-height: 90vh; overflow-y: auto;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">
-                <h2 style="margin:0;">⚙️️ Panel Admin CBT</h2>
+                <h2 id="modalAdminTitle" style="margin:0;"><i class="fas fa-cogs"></i> Panel Admin CBT</h2>
                 <button onclick="document.getElementById('adminOverlay').style.display='none'" style="background:none; border:none; font-size:2rem; cursor:pointer;">&times;</button>
             </div>
             <div style="background: #fff; padding: 5px; border-radius: 8px; margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                <div id="adminStatusBarContainer" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
                     <div>
-                        <h4 style="margin:0; color: #444;">Status Aplikasi</h4>
-                        <small style="color: #888;">Klik tombol di kanan untuk buka/tutup akses ujian.</small>
+                        <h4 id="adminStatusTitle" style="margin:0; color: #444;">Status Aplikasi</h4>
+                        <small id="adminStatusDesc" style="color: #888;">Klik tombol di kanan untuk buka/tutup akses ujian.</small>
                     </div>
                     <button id="btnToggleMaintenance" onclick="window.toggleMaintenanceStatus()" class="admin-nav-btn btn-maint-off">
                         <i class="fas fa-lock-open"></i> Maintenance: OFF
@@ -547,14 +549,14 @@
                 </div>
                 <label style="font-weight:bold; display:block; margin-bottom:8px; color:#555;">Menu Navigasi:</label>
                 <div class="admin-header-controls">
-                    <button onclick="window.switchAdminTab('tambah')" class="admin-nav-btn btn-add-json"><i class="fas fa-file-import"></i> Upload JSON</button>
-                    <button onclick="window.switchAdminTab('edit')" class="admin-nav-btn btn-edit-soal"><i class="fas fa-edit"></i> Edit / Revisi</button>
-                    <button onclick="window.switchAdminTab('review')" class="admin-nav-btn btn-review"><i class="fas fa-tasks"></i> Review Jawaban</button>
-                    <button onclick="window.switchAdminTab('laporan')" class="admin-nav-btn" style="background:#d32f2f; color:white;"><i class="fas fa-flag"></i> Laporan Masuk</button>
-                    <button onclick="window.switchAdminTab('status')" class="admin-nav-btn" style="background:#795548; color:white;"><i class="fas fa-network-wired"></i> Radar Peserta</button>
-                    <div style="display:flex; gap:5px; margin-left:auto;">
-                        <button onclick="window.downloadSoalExcel()" class="admin-nav-btn btn-excel"><i class="fas fa-file-excel"></i> Excel (.xls)</button>
-                        <button onclick="window.downloadSoalJSON()" class="admin-nav-btn" style="background: #34495e; color:white;"><i class="fas fa-file-code"></i> JSON (Backup)</button>
+                    <button id="btnNavUploadJson" onclick="window.switchAdminTab('tambah')" class="admin-nav-btn btn-add-json"><i class="fas fa-file-import"></i> Upload JSON</button>
+                    <button id="btnNavEditSoal" onclick="window.switchAdminTab('edit')" class="admin-nav-btn btn-edit-soal"><i class="fas fa-edit"></i> Edit / Revisi</button>
+                    <button id="btnNavReview" onclick="window.switchAdminTab('review')" class="admin-nav-btn btn-review"><i class="fas fa-tasks"></i> Review Jawaban</button>
+                    <button id="btnNavLaporan" onclick="window.switchAdminTab('laporan')" class="admin-nav-btn" style="background:#d32f2f; color:white;"><i class="fas fa-flag"></i> Laporan Masuk</button>
+                    <button id="btnNavRadar" onclick="window.switchAdminTab('status')" class="admin-nav-btn" style="background:#795548; color:white;"><i class="fas fa-network-wired"></i> Radar Peserta</button>
+                    <div id="adminToolsContainer" style="display:flex; gap:5px; margin-left:auto;">
+                        <button id="btnNavExcel" onclick="window.downloadSoalExcel()" class="admin-nav-btn btn-excel"><i class="fas fa-file-excel"></i> Excel (.xls)</button>
+                        <button id="btnNavJsonBackup" onclick="window.downloadSoalJSON()" class="admin-nav-btn" style="background: #34495e; color:white;"><i class="fas fa-file-code"></i> JSON (Backup)</button>
                     </div>
                 </div>
             </div>
@@ -567,7 +569,7 @@
             </div>
             <div id="tabEdit" style="display:none;">
                  <div style="display:flex; gap:10px; margin-bottom:10px;">
-                   <select id="editModulTarget" style="flex:1; padding:8px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; color: var(--primary); cursor: pointer;">
+                   <select id="editModulTarget" onchange="window.loadSoalAdmin()" style="flex:1; padding:8px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; color: var(--primary); cursor: pointer;">
                         <option value="" disabled selected>-- Pilih Modul Untuk Diedit --</option>
                         <optgroup label="Hukum Dasar (Materil)">
                             <option value="modul_ilmuhukum_test">Ilmu Hukum_test</option>
@@ -601,7 +603,10 @@
                         </optgroup>
                         <optgroup label="Hukum Acara (Formil)">
                             <option value="modul_BukuIIPA">1. BUKU II PA</option>
-                            <option value="modul_2">2. Substansi Cakim 2017</option>                                           
+                            <option value="modul_2">2. Substansi Cakim 2017</option>
+                            <option value="modul_3">3. HAPER Cakim 2023</option>
+                            <option value="modul_4">4. Hafalan HIR/RBG.RV</option>
+                            <option value="modul_5">5. Kumpulan SEMA</option>                                           
                             <option value="modul4">Modul 4: Pendaftaran & Relaas</option>
                             <option value="modul5">Modul 5: Gugatan & Permohonan</option>
                             <option value="modul7">Modul 7: Mediasi</option>
