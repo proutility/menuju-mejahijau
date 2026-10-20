@@ -1,0 +1,9 @@
+# Firebase service account & credentials
+*-firebase-adminsdk-*.json
+serviceAccountKey*.json
+*.pem
+.env
+.env.local
+
+firebase-admin-tool.ps1
+

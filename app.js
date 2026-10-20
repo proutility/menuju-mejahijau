@@ -767,6 +767,7 @@ let trainingTimerInterval = null;
 let trainingCountdown = 10;
 let isAnswerLocked = false;
 let roomListenerUnsubscribe = null;
+window.roomPlayersListenerUnsubscribe = null;
 
 window.currentDatabaseId = 'modul1';
 
@@ -822,6 +823,7 @@ window.bersihkanStateMode = function(modeTarget = 'ujian') {
     // 1. Matikan semua interval timer
     if (window.dobrakInterval) { clearInterval(window.dobrakInterval); window.dobrakInterval = null; }
     if (modeTarget === 'ujian') {
+        if (window.roomPlayersListenerUnsubscribe) { try { window.roomPlayersListenerUnsubscribe(); } catch(e){} window.roomPlayersListenerUnsubscribe = null; }
         if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
         if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
         if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
@@ -1782,9 +1784,16 @@ function loadQuestion(idx) {
                         
                         userAnswers[idx] = i; 
                         
-                        await updateDoc(doc(window.db, "rooms", currentRoomCode), {
-                            [`players.${currentUser.uid}.jawabanSekarang`]: i
-                        });
+                        let uidSekarang = (currentUser && currentUser.uid) || (window.currentUser && window.currentUser.uid);
+                        if (uidSekarang) {
+                            try {
+                                const playerSubRef = doc(window.db || db, "rooms", currentRoomCode, "players", uidSekarang);
+                                setDoc(playerSubRef, {
+                                    jawabanSekarang: i,
+                                    waktuJawabTerakhir: Date.now()
+                                }, { merge: true }).catch(() => {});
+                            } catch(e) {}
+                        }
                     } 
                     else if (typeof currentAppMode !== 'undefined' && currentAppMode === 'latihan') {
                         triggerPembahasanLatihan(i); 
@@ -2421,6 +2430,9 @@ window.keluarDariRoom = async () => {
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) {
         try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e) {}
     }
+    if (typeof window.roomPlayersListenerUnsubscribe !== 'undefined' && window.roomPlayersListenerUnsubscribe) {
+        try { window.roomPlayersListenerUnsubscribe(); window.roomPlayersListenerUnsubscribe = null; } catch(e) {}
+    }
 
     const leavingRoomCode = currentRoomCode || window.currentRoomCode;
     const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
@@ -2446,9 +2458,13 @@ window.keluarDariRoom = async () => {
     const kahootOverlay = document.getElementById('kahootResultOverlay');
     if (kahootOverlay) kahootOverlay.remove();
 
-    // ðŸ›‘ PERBARUI LAST SEEN SAAT KELUAR KE LOBBY (ROOM TETAP AKTIF AGAR BISA GABUNG LAGI DARI LOBBY)
+    // 🛑 PERBARUI LAST SEEN SAAT KELUAR KE LOBBY (ROOM TETAP AKTIF AGAR BISA GABUNG LAGI DARI LOBBY)
     if (leavingRoomCode && leavingUid) {
         try {
+            // Update subkoleksi player
+            const playerSubRef = doc(window.db || db, "rooms", leavingRoomCode, "players", leavingUid);
+            setDoc(playerSubRef, { isOffline: true, lastSeen: 0 }, { merge: true }).catch(() => {});
+
             const roomRef = doc(window.db || db, "rooms", leavingRoomCode);
             let updatePayload = {
                 [`players.${leavingUid}.isOffline`]: true,
@@ -3242,6 +3258,19 @@ window.eksekusiBikinRoom = async () => {
             createdAt: new Date()
         });
 
+        // 🚀 INISIALISASI SUBKOLEKSI HOST (OPTIMASI 100 PESERTA)
+        await setDoc(doc(window.db, "rooms", kodeRoom, "players", currentUser.uid), {
+            nama: currentUser.displayName,
+            skor: 0,
+            totalWaktu: 0,
+            jawabanSekarang: null,
+            photoURL: currentUser.photoURL || null,
+            isVIP: !!window.isVIPUser,
+            email: currentUser.email || '',
+            lastSeen: Date.now(),
+            isOffline: false
+        }).catch(err => console.warn("Subkoleksi host init:", err));
+
         isHost = true;
         currentRoomCode = kodeRoom;
         currentAppMode = 'room'; 
@@ -3308,6 +3337,9 @@ window.gabungRoomLatihan = async () => {
             await updateDoc(roomRef, {
                 [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, totalWaktu: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now() }
             });
+            await setDoc(doc(window.db, "rooms", kodeRoom, "players", currentUser.uid), {
+                nama: currentUser.displayName, skor: 0, totalWaktu: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now(), isOffline: false
+            }, { merge: true }).catch(() => {});
         } else {
             // Kalau dia udah ada, sekalian kita timpa fotonya (jaga-jaga kalau kemarin fotonya kosong)
             await updateDoc(roomRef, {
@@ -3317,6 +3349,9 @@ window.gabungRoomLatihan = async () => {
                 [`players.${currentUser.uid}.isOffline`]: false,
                 hostTerputusAt: null
             });
+            await setDoc(doc(window.db, "rooms", kodeRoom, "players", currentUser.uid), {
+                photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, lastSeen: Date.now(), isOffline: false
+            }, { merge: true }).catch(() => {});
             console.log("Pemain lama reconnect. Welcome back!");
         }
 
@@ -3374,6 +3409,9 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
             await updateDoc(roomRef, {
                 [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, totalWaktu: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now() }
             });
+            await setDoc(doc(window.db, "rooms", kodeRoom, "players", currentUser.uid), {
+                nama: currentUser.displayName, skor: 0, totalWaktu: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now(), isOffline: false
+            }, { merge: true }).catch(() => {});
         } else {
             // Kalau dia udah ada, sekalian kita timpa fotonya
             await updateDoc(roomRef, {
@@ -3383,6 +3421,9 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
                 [`players.${currentUser.uid}.isOffline`]: false,
                 hostTerputusAt: null
             });
+            await setDoc(doc(window.db, "rooms", kodeRoom, "players", currentUser.uid), {
+                photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, lastSeen: Date.now(), isOffline: false
+            }, { merge: true }).catch(() => {});
         }
 
         window.isHost = (dataRoom.hostUid === currentUser.uid);
@@ -4138,7 +4179,55 @@ window.pantauRoom = (kodeRoom) => {
 
 // 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) roomListenerUnsubscribe();
+    if (typeof window.roomPlayersListenerUnsubscribe !== 'undefined' && window.roomPlayersListenerUnsubscribe) {
+        try { window.roomPlayersListenerUnsubscribe(); window.roomPlayersListenerUnsubscribe = null; } catch(e){}
+    }
     const roomRef = doc(window.db || db, "rooms", kodeRoom); 
+
+    // 🚀 LISTENER SUBKOLEKSI PLAYERS (100 PESERTA ANTI-TABRAKAN & RINGAN)
+    const playersColRef = collection(window.db || db, "rooms", kodeRoom, "players");
+    window.roomPlayersListenerUnsubscribe = onSnapshot(playersColRef, (playersSnap) => {
+        if (!window.latestRoomData) window.latestRoomData = {};
+        if (!window.latestRoomData.players) window.latestRoomData.players = {};
+
+        playersSnap.forEach((pDoc) => {
+            window.latestRoomData.players[pDoc.id] = {
+                ...(window.latestRoomData.players[pDoc.id] || {}),
+                ...pDoc.data()
+            };
+        });
+
+        // Trigger live score render seketika
+        if (typeof window.renderLiveScore === 'function') {
+            window.renderLiveScore(window.latestRoomData.players);
+        }
+
+        // Cek auto-skip jika semua sudah menjawab
+        if (window.latestRoomData.status === 'soal' && window.latestRoomData.players) {
+            let totalPeserta = 0;
+            let yangSudahJawab = 0;
+            const kickedList = window.latestRoomData.kickedUids || [];
+            for (let uid in window.latestRoomData.players) {
+                if (kickedList.includes(uid)) continue;
+                let p = window.latestRoomData.players[uid];
+                if (!p || !p.nama) continue;
+                totalPeserta++;
+                if (p.jawabanSekarang !== null && p.jawabanSekarang !== undefined) {
+                    yangSudahJawab++;
+                }
+            }
+            let txtProgress = document.getElementById('progressText');
+            if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
+
+            if (totalPeserta > 0 && yangSudahJawab >= totalPeserta && window.isHost && !window.sedangAutoSkip) {
+                window.sedangAutoSkip = true;
+                if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+                setTimeout(() => {
+                    updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                }, 500);
+            }
+        }
+    }); 
     
     roomListenerUnsubscribe = onSnapshot(roomRef, async (snap) => {
         if (!snap.exists()) {
@@ -4183,28 +4272,29 @@ window.pantauRoom = (kodeRoom) => {
             window.tampilkanWaitingRoom(kodeRoom, amIHost, data.modulId);
         }
 
-        // Heartbeat kehadiran player aktif (setiap 8 detik)
+        // 🚀 Heartbeat kehadiran player aktif (Dioptimalkan ke subkoleksi tiap 25 detik: Bebas bentrok 100 peserta)
         if (!window.roomHeartbeatTimer && myActiveUid) {
-            if ((currentRoomCode || window.currentRoomCode) && myActiveUid) {
-                updateDoc(roomRef, { 
-                    [`players.${myActiveUid}.lastSeen`]: Date.now(),
-                    [`players.${myActiveUid}.isOffline`]: false
-                }).catch(() => {});
-            }
-            window.roomHeartbeatTimer = setInterval(() => {
-                if ((currentRoomCode || window.currentRoomCode) && myActiveUid) {
-                    // Cegah player yang sudah di-kick mengirim denyut heartbeat
-                    if (window.latestRoomData && window.latestRoomData.kickedUids && window.latestRoomData.kickedUids.includes(myActiveUid)) {
+            const sendHeartbeat = () => {
+                const rCode = currentRoomCode || window.currentRoomCode;
+                if (!rCode || !myActiveUid) return;
+                if (window.latestRoomData && window.latestRoomData.kickedUids && window.latestRoomData.kickedUids.includes(myActiveUid)) {
+                    if (window.roomHeartbeatTimer) {
                         clearInterval(window.roomHeartbeatTimer);
                         window.roomHeartbeatTimer = null;
-                        return;
                     }
-                    updateDoc(roomRef, { 
-                        [`players.${myActiveUid}.lastSeen`]: Date.now(),
-                        [`players.${myActiveUid}.isOffline`]: false
-                    }).catch(() => {});
+                    return;
                 }
-            }, 8000);
+                try {
+                    const playerSubRef = doc(window.db || db, "rooms", rCode, "players", myActiveUid);
+                    setDoc(playerSubRef, { 
+                        lastSeen: Date.now(),
+                        isOffline: false
+                    }, { merge: true }).catch(() => {});
+                } catch(e) {}
+            };
+
+            sendHeartbeat();
+            window.roomHeartbeatTimer = setInterval(sendHeartbeat, 25000);
         }
 
         // PENGALIHAN HOST OTOMATIS:
@@ -4656,14 +4746,17 @@ window.pantauRoom = (kodeRoom) => {
                                 if (window.questionRenderTime) {
                                     waktuDetikSoal = Math.max(0.1, parseFloat(((Date.now() - window.questionRenderTime) / 1000).toFixed(1)));
                                 }
-                                let totalWaktuLama = (data.players && data.players[uidSekarang] && data.players[uidSekarang].totalWaktu) || 0;
+                                let totalWaktuLama = (window.latestRoomData?.players?.[uidSekarang]?.totalWaktu) || (data.players && data.players[uidSekarang] && data.players[uidSekarang].totalWaktu) || 0;
                                 let totalWaktuBaru = parseFloat((totalWaktuLama + waktuDetikSoal).toFixed(1));
 
-                                updateDoc(roomRef, { 
-                                    [`players.${uidSekarang}.jawabanSekarang`]: i,
-                                    [`players.${uidSekarang}.totalWaktu`]: totalWaktuBaru,
-                                    [`players.${uidSekarang}.waktuJawabTerakhir`]: Date.now()
-                                });
+                                try {
+                                    const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", uidSekarang);
+                                    setDoc(playerSubRef, { 
+                                        jawabanSekarang: i,
+                                        totalWaktu: totalWaktuBaru,
+                                        waktuJawabTerakhir: Date.now()
+                                    }, { merge: true }).catch(err => console.warn("Subcollection answer update:", err));
+                                } catch(e) {}
                             }
                         };
                     });
@@ -4735,10 +4828,13 @@ window.pantauRoom = (kodeRoom) => {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
                         let bobotSoal = 100 / currentQuestions.length; 
-                        let skorSekarang = parseFloat(data.players[myUid].skor || 0);
-                        updateDoc(roomRef, {
-                            [`players.${myUid}.skor`]: skorSekarang + bobotSoal
-                        }).catch(e => console.log(e));
+                        let skorSekarang = parseFloat((window.latestRoomData?.players?.[myUid]?.skor) || (data.players && data.players[myUid] && data.players[myUid].skor) || 0);
+                        try {
+                            const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", myUid);
+                            setDoc(playerSubRef, {
+                                skor: skorSekarang + bobotSoal
+                            }, { merge: true }).catch(e => console.log("Gagal skor subkoleksi:", e));
+                        } catch(e) {}
                     }
                 } else {
                     window.lastScoredIdx = data.currentIdx; 
