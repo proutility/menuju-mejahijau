@@ -535,7 +535,7 @@
         <div id="adminModalBox" class="result-box modal-content" style="width: 800px; text-align: left; max-height: 90vh; overflow-y: auto;">
             <div id="adminPanelHeader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 2px solid var(--primary); padding-bottom: 12px; flex-shrink: 0; width: 100%;">
                 <h2 id="modalAdminTitle" style="margin:0; font-size: 1.4rem; color: var(--primary); display: flex; align-items: center; gap: 8px;"><i class="fas fa-user-shield"></i> Panel Admin CBT</h2>
-                <button onclick="document.getElementById('adminOverlay').style.display='none'" class="btn-close-admin-panel" style="background: #e74c3c; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(231,76,60,0.3); transition: 0.2s; margin-left: auto;" title="Tutup Panel">
+                <button onclick="document.getElementById('adminOverlay').style.display='none'; if(window.updateUserStatus) window.updateUserStatus(true, 'Lobby Utama');" class="btn-close-admin-panel" style="background: #e74c3c; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(231,76,60,0.3); transition: 0.2s; margin-left: auto;" title="Tutup Panel">
                     <i class="fas fa-times"></i> Tutup
                 </button>
             </div>
@@ -1380,7 +1380,7 @@
                 <p class="ps-brand-sub">PRO-TAMA Learning Ecosystem • Pengadilan Agama</p>
             </div>
         </div>
-        <button class="ps-close-btn" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; document.body.style.overflow='auto';" title="Kembali ke Lobby">
+        <button class="ps-close-btn" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; document.body.style.overflow='auto'; if(window.updateUserStatus) window.updateUserStatus(true, 'Lobby Utama');" title="Kembali ke Lobby">
             <i class="fas fa-times"></i>
         </button>
     </div>
@@ -1502,7 +1502,7 @@
                 </div>
 
                 <!-- MENU 6: AYAT HUKUM (SILUMAN ADMIN - Sesuaikan nama fungsi onclick lu jika berbeda) -->
-                <div class="ps-card menu-rahasia-admin" style="display: none; --card-accent: #0d9488; --card-soft: #f0fdfa;" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; if(window.bukaAyatHukum) window.bukaAyatHukum();">
+                <div id="psCardAyatHukum" class="ps-card" style="--card-accent: #0d9488; --card-soft: #f0fdfa;" onclick="document.getElementById('pusatStudiOverlay').style.display='none'; if(window.bukaAyatHukum) window.bukaAyatHukum();">
                     <div>
                         <div class="ps-card-top">
                             <div class="ps-icon-box">

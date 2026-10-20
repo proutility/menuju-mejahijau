@@ -585,6 +585,7 @@ window.savePapiToCloud = async (status, totalFail, detail) => {
 
 // --- FUNGSI DUAL MODE LEADERBOARD (FIXED & FILTER PAPI) ---
 window.openLeaderboard = async (mode = 'local') => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Melihat Peringkat / Klasemen');
     // 1. Cek Database
     if (!window.db) { 
         console.error("Database belum siap!"); 
@@ -2665,6 +2666,7 @@ window.resetStats = async function() {
 };
 
 window.openStats = async function(mode = 'hukum') {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Melihat Statistik Belajar');
     if(!currentUser) { PROTAMA.alert("Akses Ditolak", "Login dulu bro!", "error"); return; }
     
     document.getElementById('statsOverlay').style.display = 'flex';
@@ -3018,6 +3020,7 @@ window.openStats = async function(mode = 'hukum') {
 };
     
 window.closeStats = function() {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Lobby Utama');
     document.getElementById('statsOverlay').style.display = 'none';
     const wm = document.getElementById('watermark');
     if(wm) wm.style.display = 'block';
@@ -5618,6 +5621,7 @@ window.openAdminPanel = () => {
 
     // Pastikan pas baru buka, tampilannya adalah "Menu" rapi (tanpa form terbuka di bawah)
     window.resetAdminMenu();
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Panel ' + (isSuper ? 'Admin' : 'Editor') + ': Menu Navigasi');
 };
 
 // ==========================================================
@@ -5713,6 +5717,7 @@ window.switchAdminTab = (tab) => {
         btnBack.id = 'btnKembaliSakti';
         btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%; text-align: left; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0;";
         btnBack.onclick = () => window.resetAdminMenu();
+
         if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
     }
     btnBack.innerHTML = isSuper ? '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU ADMIN' : '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU EDITOR';
@@ -5726,6 +5731,16 @@ window.switchAdminTab = (tab) => {
             el.style.display = (id.toLowerCase().includes(tab)) ? 'flex' : 'none';
         }
     });
+
+    // Radar Tracking: Update aktivitas Admin / Editor secara detail
+    if (window.updateUserStatus) {
+        const roleLabel = isSuper ? "Admin" : "Editor";
+        if (tab === "edit") window.updateUserStatus(true, "Panel " + roleLabel + ": Edit/Revisi Soal");
+        else if (tab === "review") window.updateUserStatus(true, "Panel " + roleLabel + ": Review Jawaban");
+        else if (tab === "laporan") window.updateUserStatus(true, "Panel " + roleLabel + ": Cek Laporan Masuk");
+        else if (tab === "status") window.updateUserStatus(true, "Panel Admin: Radar Peserta");
+        else if (tab === "tambah") window.updateUserStatus(true, "Panel Admin: Upload Soal JSON/Manual");
+    }
 
     // 5. Khusus Super Admin: Tab Tambah Form Manual / JSON switcher
     if (tab === 'tambah' && isSuper) {
@@ -5775,6 +5790,9 @@ window.switchAdminTab = (tab) => {
 };
     
 window.loadReviewPembahasan = async () => {
+    const isSupRev = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    const modRevTarget = document.getElementById('reviewModulTarget')?.value?.trim();
+    if (window.updateUserStatus) window.updateUserStatus(true, (isSupRev ? 'Admin' : 'Editor') + ': Review Jawaban ' + (modRevTarget || ''));
     const modulId = document.getElementById('reviewModulTarget').value.trim();
     if(!modulId) return alert("Isi ID Modul!");
     
@@ -5915,6 +5933,8 @@ window.loadSoalAdmin = async () => {
     const modulId = document.getElementById('editModulTarget').value.trim();
     if(!modulId) return alert("Isi nama modul!");
     currentAdminModul = modulId;
+    const isSupAct = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (window.updateUserStatus) window.updateUserStatus(true, (isSupAct ? 'Admin' : 'Editor') + ': Mengedit ' + modulId);
 
     const searchInput = document.getElementById('searchSoalAdmin');
     if(searchInput) searchInput.value = "";
@@ -5993,6 +6013,8 @@ window.loadSoalAdmin = async () => {
 
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
+    const isSupPop = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (window.updateUserStatus) window.updateUserStatus(true, (isSupPop ? 'Admin' : 'Editor') + ': Edit Soal (' + (currentAdminModul || 'Modul') + ')');
     document.getElementById('editQ').value = data.q;
     document.getElementById('editOpt').value = data.options.join(", "); 
     document.getElementById('editAns').value = data.answer;
@@ -6660,6 +6682,8 @@ window.submitLaporan = async () => {
 // ==========================================
 
 window.loadLaporanAdmin = async () => {
+    const isSupLap = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (window.updateUserStatus) window.updateUserStatus(true, (isSupLap ? 'Admin' : 'Editor') + ': Cek Laporan Masuk');
     const container = document.getElementById('containerLaporan');
     if(!container) return;
 
@@ -6771,34 +6795,33 @@ window.loadStatusAdmin = async () => {
     const container = document.getElementById('containerStatus');
     if(!container) return;
 
-    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Mendeteksi sinyal peserta dan menarik data VIP...</div>`;
+    container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Membuka radar peserta, melacak aktivitas, dan menarik data VIP...</div>`;
 
     try {
-        // --- 1. TARIK DATA KODE VIP DULU ---
+        // --- 1. TARIK DATA KODE VIP ---
         const qVip = query(collection(window.db, "vip_access"));
         const snapVip = await getDocs(qVip);
         let vipMap = {};
         snapVip.forEach(doc => {
-            // Kita simpan ke "kamus" dengan kunci email user
             vipMap[doc.id] = doc.data().code; 
         });
 
-        // --- 2. TARIK DATA STATUS ONLINE ---
+        // --- 2. TARIK DATA STATUS DENGAN DAYA JANGKAU LUAS (LIMIT 100) ---
         const qStatus = query(
             collection(window.db, "user_status"), 
             orderBy("lastActive", "desc"), 
-            limit(10)
+            limit(100)
         );
         const snap = await getDocs(qStatus);
         
         container.innerHTML = "";
 
         if (snap.empty) {
-            container.innerHTML = `<p style="text-align:center; padding:20px; color:gray;">Belum ada data peserta terekam.</p>`;
+            container.innerHTML = `<p style="text-align:center; padding:20px; color:gray;">Belum ada data peserta terekam pada radar.</p>`;
             return;
         }
 
-        // --- 3. BIKIN HEADER TABEL BARU (Ada Kolom Kode VIP) ---
+        // --- 3. BIKIN TABEL RADAR MODERN ---
         let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead><tr style="background:#eee; text-align:left;">
                 <th style="padding:10px;">Nama & Email</th>
@@ -6827,30 +6850,53 @@ window.loadStatusAdmin = async () => {
             let isBeneranOnline = d.isOnline;
             if (selisihMenit > 120) isBeneranOnline = false;
 
-            let aktivitasTeks = d.currentModul || 'Lobby';
-            let warnaAktivitas = 'var(--primary)';
-            let customBadge = null; // Siapin wadah buat badge custom
-            
+            let aktivitasTeks = d.currentModul || 'Lobby Utama';
+            let customBadge = null;
+
             // Highlight khusus kalau nyangkut di VIP Gatekeeper
             if (aktivitasTeks === "VIP Gatekeeper") {
-                warnaAktivitas = '#d35400'; // Warna oren gelap
-                aktivitasTeks = '<i class="fas fa-user-clock"></i> Pending Access'; // Teks aktivitas lebih keren
-                
-                // Timpa badge "Online" jadi "Unregistered" kalau dia belum masukin kode
-                customBadge = `<span style="background:#fff3e0; color:#e67e22; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟡 UNREGISTERED</span>`;
+                customBadge = `<span style="background:#fff3e0; color:#e67e22; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">UNREGISTERED</span>`;
             }
 
             // Atur Badge Status
             let badgeStatus = customBadge ? customBadge : (isBeneranOnline 
-                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🟢 ONLINE</span>` 
-                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">🔴 OFFLINE</span>`);
+                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">ONLINE</span>` 
+                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">OFFLINE</span>`);
 
-            // Atur Teks Aktivitas
+            // Atur Badge & Icon Aktivitas Luas
+            let badgeAktivitas = "";
+            if (aktivitasTeks.includes("Pusat Studi")) {
+                badgeAktivitas = `<span style="background:#e0f2fe; color:#0369a1; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #bae6fd;">
+                    <i class="fas fa-graduation-cap"></i> ${aktivitasTeks}
+                </span>`;
+            } else if (aktivitasTeks.includes("Admin") || aktivitasTeks.includes("Editor")) {
+                badgeAktivitas = `<span style="background:#f3e8ff; color:#7e22ce; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #e9d5ff;">
+                    <i class="fas fa-tools"></i> ${aktivitasTeks}
+                </span>`;
+            } else if (aktivitasTeks.includes("Multiplayer")) {
+                badgeAktivitas = `<span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #fde68a;">
+                    <i class="fas fa-users"></i> ${aktivitasTeks}
+                </span>`;
+            } else if (aktivitasTeks.startsWith("Mengerjakan")) {
+                badgeAktivitas = `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #bbf7d0;">
+                    <i class="fas fa-pencil-alt"></i> ${aktivitasTeks}
+                </span>`;
+            } else if (aktivitasTeks === "VIP Gatekeeper") {
+                badgeAktivitas = `<span style="color:#d35400; font-weight:bold;"><i class="fas fa-user-clock"></i> Pending Access</span>`;
+            } else if (aktivitasTeks.includes("Lobby")) {
+                badgeAktivitas = `<span style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #e2e8f0;">
+                    <i class="fas fa-home"></i> Lobby Utama
+                </span>`;
+            } else {
+                badgeAktivitas = `<span style="background:#f8fafc; color:#334155; padding:4px 10px; border-radius:6px; font-weight:600; display:inline-flex; align-items:center; gap:6px; border:1px solid #cbd5e1;">
+                    <i class="fas fa-desktop"></i> ${aktivitasTeks}
+                </span>`;
+            }
+
             let infoAktivitas = isBeneranOnline 
-                ? `<span style="color:${warnaAktivitas}; font-weight:bold;">${aktivitasTeks}</span>`
-                : `<span style="color:#888;">${ketWaktu}</span>`;
+                ? badgeAktivitas 
+                : `<div style="display:flex; flex-direction:column; gap:2px;"><span style="color:#888; font-size:0.85rem;"><i class="fas fa-clock"></i> ${ketWaktu}</span><small style="color:#aaa;">Terakhir: ${aktivitasTeks}</small></div>`;
 
-            // --- 4. COCOKAN EMAIL USER DENGAN KODE VIP ---
             let kodeVipUser = "Belum Buat";
             if (d.email && vipMap[d.email]) {
                 kodeVipUser = vipMap[d.email];
@@ -6858,7 +6904,7 @@ window.loadStatusAdmin = async () => {
 
             html += `<tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px; color:#444;">
-                    <strong style="display:block;">${d.nama}</strong>
+                    <strong style="display:block;">${d.nama || 'Peserta'}</strong>
                     <span style="font-size:0.75rem; color:#888;">${d.email || '-'}</span>
                 </td>
                 <td style="padding:10px;">
@@ -6872,9 +6918,7 @@ window.loadStatusAdmin = async () => {
         });
 
         html += `</tbody></table>`;
-        container.innerHTML = html;
-
-    } catch (e) {
+        container.innerHTML = html;} catch (e) {
         container.innerHTML = `<p style="color:red">Error radar: ${e.message}</p>`;
         console.error(e);
     }
@@ -7580,6 +7624,7 @@ window.resetCakimAll = () => {
 };
 
 window.bukaJadwalCakim = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Master Checklist');
     const overlay = document.getElementById('jadwalOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -8058,6 +8103,7 @@ window.initJadwalCakim = () => {
 // 📖 FITUR 60 HARI KITAB KUNING (FIREBASE VERSI OBJECT)
 // ==========================================
 window.bukaKitabKuning = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: 60 Hari Kitab Kuning');
     const overlay = document.getElementById('kitabOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -8438,12 +8484,15 @@ window.bukaPusatStudi = () => {
     
     // Tampilkan layar penuh Pusat Studi
     overlay.style.display = "flex";
+    if (window.updateUserStatus) window.updateUserStatus(true, "Pusat Studi: Menu Utama");
 
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     let menuRahasia = document.querySelectorAll('.menu-rahasia-admin');
     
-    // KUNCI SILUMAN: Cuma SUPER_ADMIN (lo) yang bisa liat! 
-    // Editor dan VIP lewattt...
-    if (window.userRoleCakim === "SUPER_ADMIN") {
+    // KUNCI HAK AKSES PUSAT STUDI CAKIM:
+    // 1. Super Admin (ilhamnp22@gmail.com & inurprtma22@gmail.com): Buka SEMUA 8 modul!
+    // 2. VIP & Editor: Memiliki 2 fitur (60 Hari Kitab Kuning & Himpunan Ayat Hukum). 6 modul lainnya disembunyikan.
+    if (isSuper) {
         menuRahasia.forEach(menu => { menu.style.display = "block"; });
     } else {
         menuRahasia.forEach(menu => { menu.style.display = "none"; });
@@ -8453,6 +8502,7 @@ window.bukaPusatStudi = () => {
 // 📖 FITUR BUKU II MA 
 // ==========================================
 window.bukaBukuDua = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Bedah Buku II PA');
     const overlay = document.getElementById('bukuDuaOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -8664,6 +8714,7 @@ window.uploadBukuDuaToFirebase = async () => {
 // ⚖️ FITUR UU MAHKAMAH AGUNG (FIREBASE)
 // ==========================================
 window.bukaUUMA = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: UU Mahkamah Agung');
     const overlay = document.getElementById('uumaOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -8793,6 +8844,7 @@ window.initUUMA = async () => {
 // ⚖️ FITUR UU KEKUASAAN KEHAKIMAN (FIREBASE)
 // ==========================================
 window.bukaUUKK = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: UU Kekuasaan Kehakiman');
     const overlay = document.getElementById('uukkOverlay');
     if (overlay) {
         overlay.style.display = 'flex';
@@ -8963,6 +9015,7 @@ window.initUUKK = async () => {
 // ==========================================
 
 window.bukaAyatHukum = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Himpunan Ayat Hukum');
     // 1. Cek Jabatan (Gatekeeper)
     let roleAsli = window.userRoleCakim || "PESERTA";
     let role = roleAsli.toLowerCase().trim(); 
@@ -9342,6 +9395,7 @@ let stateUUPA = {
 };
 
 window.bukaUUPA = async () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: UU Peradilan Agama');
     const overlay = document.getElementById('uupaOverlay');
     if (!overlay) return;
     overlay.style.display = 'flex';
@@ -9686,6 +9740,7 @@ let stateKHI = {
 };
 
 window.bukaKHI = async () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Kompilasi Hukum Islam (KHI)');
     const overlay = document.getElementById('khiOverlay');
     if (!overlay) return alert("HTML KHI belum terpasang!");
     overlay.style.display = 'flex';
