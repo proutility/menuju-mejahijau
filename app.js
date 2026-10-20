@@ -3475,7 +3475,7 @@ window.tampilkanWaitingRoom = function(kode, isHostParam, modulId = "latihan") {
                 if (!tombolMulai) {
                     const divTungguWR = document.querySelector('div.fa-spinner')?.parentNode;
                     if (divTungguWR) {
-                        divTungguWR.outerHTML = `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">ðŸš€ MULAI</button>`;
+                        divTungguWR.outerHTML = `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);"><i class="fas fa-rocket"></i> MULAI</button>`;
                         tombolMulai = document.querySelector(`button[onclick="window.mulaiUjianRoom('${kode}')"]`);
                     }
                 }
@@ -3852,7 +3852,7 @@ window.pantauRoom = (kodeRoom) => {
         let html = '';
         
         arr.forEach((p, i) => { 
-            let medal = i===0 ? 'ðŸ¥‡' : (i===1 ? 'ðŸ¥ˆ' : (i===2 ? 'ðŸ¥‰' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:22px; display:inline-block; text-align:center;">#${i+1}</span>`));
+            let medal = i===0 ? '<i class="fas fa-medal" style="color:#f1c40f; font-size:1.05rem; min-width:20px; text-align:center;" title="Juara 1"></i>' : (i===1 ? '<i class="fas fa-medal" style="color:#bdc3c7; font-size:1.05rem; min-width:20px; text-align:center;" title="Juara 2"></i>' : (i===2 ? '<i class="fas fa-medal" style="color:#cd7f32; font-size:1.05rem; min-width:20px; text-align:center;" title="Juara 3"></i>' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:20px; display:inline-block; text-align:center;">#${i+1}</span>`));
             
             let namaDepan = (p.nama || 'Peserta').split(" ")[0]; 
             let isMe = (myUidScore && p.uid === myUidScore) || (window.currentUser && p.nama === window.currentUser.displayName);
@@ -3864,9 +3864,9 @@ window.pantauRoom = (kodeRoom) => {
             let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
 
             let isThisPlayerHost = (p.uid === currentHostUid);
-            let hostCrown = isThisPlayerHost ? '<span title="Host" style="color:#f1c40f; font-size:0.8rem; margin-left:2px;">ðŸ‘‘</span>' : '';
+            let hostCrown = isThisPlayerHost ? '<i class="fas fa-crown" style="color:#f1c40f; font-size:0.85rem; margin-left:3px;" title="Host Room"></i>' : '';
 
-            let isOffline = p.lastSeen && (Date.now() - p.lastSeen > 25000);
+            let isOffline = !isMe && p.lastSeen && (Date.now() - p.lastSeen > 35000);
             let offlineIcon = isOffline ? '<i class="fas fa-wifi" style="color:#e74c3c; font-size:0.75rem; margin-left:3px;" title="Terputus / Gangguan Koneksi"></i>' : '';
 
             let kontrolHost = '';
@@ -3874,7 +3874,7 @@ window.pantauRoom = (kodeRoom) => {
                 kontrolHost = `
                     <div style="display:inline-flex; align-items:center; gap:4px; margin-left:6px;">
                         <button onclick="window.delegasikanHost('${p.uid}', '${(p.nama || '').replace(/'/g, "\\'")}')" style="background:#fff3e0; border:1px solid #ffe0b2; color:#e67e22; border-radius:4px; padding:2px 5px; font-size:0.7rem; cursor:pointer;" title="Alihkan Host ke ${p.nama}">
-                            ðŸ‘‘ Alihkan
+                            <i class="fas fa-crown"></i> Alihkan
                         </button>
                         <button onclick="window.kickPeserta('${p.uid}', '${(p.nama || '').replace(/'/g, "\\'")}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:4px; padding:2px 5px; font-size:0.7rem; cursor:pointer;" title="Keluarkan ${p.nama} (mempercepat ujian)">
                             <i class="fas fa-times"></i> Kick
@@ -4324,7 +4324,7 @@ window.pantauRoom = (kodeRoom) => {
                 currentIdx = parseInt(data.currentIdx);
                 
                 if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    // roomHeartbeatTimer tetap jalan
     if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
                 
                 let durasiPerSoal = parseInt(data.waktuPerSoal || data.durasiPerSoal || 30);
@@ -4425,7 +4425,7 @@ window.pantauRoom = (kodeRoom) => {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    // roomHeartbeatTimer tetap jalan
     if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
@@ -4438,7 +4438,7 @@ window.pantauRoom = (kodeRoom) => {
        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    // roomHeartbeatTimer tetap jalan
     if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
             
             if (window.activePembahasanIdx !== data.currentIdx) {
