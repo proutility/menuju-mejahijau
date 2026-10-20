@@ -3943,7 +3943,7 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
+        // amIHost already declared above in pantauRoom
         const chatContainer = document.getElementById('roomChatContainer');
         const modulContainer = document.getElementById('modulSidebarContainer');
         
