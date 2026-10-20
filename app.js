@@ -6,7 +6,7 @@ import {
     persistentLocalCache, 
     persistentMultipleTabManager, 
     enableIndexedDbPersistence, 
-    collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion 
+    collection, addDoc, query, where, orderBy, limit, getDocs, deleteDoc, writeBatch, doc, getDoc, updateDoc, setDoc, onSnapshot, arrayUnion, deleteField 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. KONFIGURASI FIREBASE ---
@@ -801,6 +801,8 @@ window.toggleMobileModul = function() {
 window.bersihkanStateMode = function(modeTarget = 'ujian') {
     // 1. Matikan semua interval timer
     if (window.dobrakInterval) { clearInterval(window.dobrakInterval); window.dobrakInterval = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
     if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
     if (window.hostReadyTimerInterval) { clearInterval(window.hostReadyTimerInterval); window.hostReadyTimerInterval = null; }
     if (window.clientReadyTimerInterval) { clearInterval(window.clientReadyTimerInterval); window.clientReadyTimerInterval = null; }
@@ -2383,6 +2385,53 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    const leavingRoomCode = currentRoomCode || window.currentRoomCode;
+    const leavingUid = (currentUser && currentUser.uid) || (window.currentUser && window.currentUser.uid);
+    const wasHost = (isHost || window.isHost);
+
+    // 🛑 1. UPDATE KEPESERTAAN & MIGRATION HOST KE FIREBASE SEBELUM CABUT
+    if (leavingRoomCode && leavingUid) {
+        try {
+            const roomRef = doc(window.db || db, "rooms", leavingRoomCode);
+            const snap = await getDoc(roomRef);
+            if (snap.exists()) {
+                const dataRoom = snap.data();
+                const players = dataRoom.players || {};
+                delete players[leavingUid];
+                const remainingUids = Object.keys(players);
+
+                if (remainingUids.length === 0) {
+                    await updateDoc(roomRef, {
+                        [`players.${leavingUid}`]: deleteField(),
+                        status: 'selesai'
+                    });
+                } else if (wasHost || dataRoom.hostUid === leavingUid) {
+                    // Cari penerus: PRIORITAS MEMBER VIP
+                    remainingUids.sort((a, b) => {
+                        const vipA = players[a]?.isVIP ? 1 : 0;
+                        const vipB = players[b]?.isVIP ? 1 : 0;
+                        if (vipA !== vipB) return vipB - vipA;
+                        return a.localeCompare(b);
+                    });
+                    const newHostUid = remainingUids[0];
+                    const newHostName = players[newHostUid]?.nama || "Host Baru";
+
+                    await updateDoc(roomRef, {
+                        hostUid: newHostUid,
+                        hostName: newHostName,
+                        [`players.${leavingUid}`]: deleteField()
+                    });
+                } else {
+                    await updateDoc(roomRef, {
+                        [`players.${leavingUid}`]: deleteField()
+                    });
+                }
+            }
+        } catch(e) {
+            console.log("Gagal sinkron keluar dari room:", e);
+        }
+    }
+
     // Putus koneksi dari Room
     if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) {
         try { roomListenerUnsubscribe(); } catch(e) {}
@@ -3137,7 +3186,7 @@ window.eksekusiBikinRoom = async () => {
             currentIdx: 0,
             players: {
                 // 🛑 SISIPKAN FOTO HOST DI SINI 🛑
-                [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
+                [currentUser.uid]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now() }
             },
             messages: [],
             createdAt: new Date()
@@ -3203,12 +3252,14 @@ window.gabungRoomLatihan = async () => {
         if (!isPemainLama) {
             // 🛑 SISIPKAN FOTO PESERTA JOIN MANUAL DI SINI 🛑
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now() }
             });
         } else {
             // Kalau dia udah ada, sekalian kita timpa fotonya (jaga-jaga kalau kemarin fotonya kosong)
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null
+                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null,
+                [`players.${currentUser.uid}.isVIP`]: !!window.isVIPUser,
+                [`players.${currentUser.uid}.lastSeen`]: Date.now()
             });
             console.log("Pemain lama reconnect. Welcome back!");
         }
@@ -3261,12 +3312,14 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         if (!isPemainLama) {
             // 🛑 SISIPKAN FOTO PESERTA JOIN LINK DI SINI 🛑
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null }
+                [`players.${currentUser.uid}`]: { nama: currentUser.displayName, skor: 0, jawabanSekarang: null, photoURL: currentUser.photoURL || null, isVIP: !!window.isVIPUser, email: currentUser.email || '', lastSeen: Date.now() }
             });
         } else {
             // Kalau dia udah ada, sekalian kita timpa fotonya
             await updateDoc(roomRef, {
-                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null
+                [`players.${currentUser.uid}.photoURL`]: currentUser.photoURL || null,
+                [`players.${currentUser.uid}.isVIP`]: !!window.isVIPUser,
+                [`players.${currentUser.uid}.lastSeen`]: Date.now()
             });
         }
 
@@ -3616,6 +3669,31 @@ window.klikReadyMabar = (kodeRoom) => {
         [`players.${uidGue}.isReady`]: true
     }).catch(e => console.log(e));
 };
+window.batalReadyMabar = async (kodeRoom) => {
+    if (window.hostReadyTimerInterval) { clearInterval(window.hostReadyTimerInterval); window.hostReadyTimerInterval = null; }
+    if (window.clientReadyTimerInterval) { clearInterval(window.clientReadyTimerInterval); window.clientReadyTimerInterval = null; }
+    const overlay = document.getElementById('readyCheckOverlay');
+    if (overlay) overlay.remove();
+
+    try {
+        const roomRef = doc(window.db || db, "rooms", kodeRoom);
+        const snap = await getDoc(roomRef);
+        if (snap.exists()) {
+            const data = snap.data();
+            const updates = { status: 'waiting' };
+            for (let uid in data.players) {
+                updates[`players.${uid}.isReady`] = false;
+            }
+            await updateDoc(roomRef, updates);
+            if (typeof PROTAMA !== 'undefined') {
+                PROTAMA.alert("Sesi Ready Dibatalkan", "Kembali ke Waiting Room. Silakan klik Mulai lagi jika semua peserta sudah siap.", "info");
+            }
+        }
+    } catch(e) {
+        console.error("Gagal batalkan sesi ready:", e);
+    }
+};
+
 window.pantauRoom = (kodeRoom) => {
     currentAppMode = 'room';     
     window.currentRoomCode = kodeRoom; 
@@ -3628,7 +3706,9 @@ window.pantauRoom = (kodeRoom) => {
         document.head.appendChild(hideBtnStyle);
     }
 
-    if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+    if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     
     // 2. JURUS PAKSAAN MAKSIMAL: CLONING ELEMEN CHAT (PEMBASMI BUG)
@@ -3725,7 +3805,8 @@ window.pantauRoom = (kodeRoom) => {
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:8px 12px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${medal} 
-                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:100px;">${namaDepan}</span>
+                        <img src="${p.photoURL || ((window.currentUser && p.nama === window.currentUser.displayName) ? window.currentUser.photoURL : '') || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(namaDepan) + '&background=004d00&color=fff&bold=true&size=60'}" referrerpolicy="no-referrer" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid ${i===0 ? '#f1c40f' : (i===1 ? '#bdc3c7' : (i===2 ? '#e67e22' : '#ddd'))}; flex-shrink:0;" alt="${namaDepan}">
+                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:85px;">${namaDepan}</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px;">
                         <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
@@ -3772,13 +3853,38 @@ window.pantauRoom = (kodeRoom) => {
         // ========================================================
         // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
+        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
+        const hostBerubah = (window.isHost !== amIHost);
+        window.isHost = amIHost;
+        isHost = amIHost;
+
+        // Jika host berubah saat di waiting room, render ulang kontrol host
+        if (hostBerubah && data.status === 'waiting') {
+            window.tampilkanWaitingRoom(kodeRoom, amIHost, data.modulId);
+        }
+
+        // Heartbeat kehadiran player aktif (setiap 10 detik)
+        if (!window.roomHeartbeatTimer && myUid) {
+            window.roomHeartbeatTimer = setInterval(() => {
+                if ((currentRoomCode || window.currentRoomCode) && myUid) {
+                    updateDoc(roomRef, { [`players.${myUid}.lastSeen`]: Date.now() }).catch(() => {});
+                }
+            }, 10000);
+        }
+
         if (data.players && data.hostUid) {
-            const hostMasihAda = data.players[data.hostUid];
+            const hostData = data.players[data.hostUid];
+            const hostMasihAda = hostData && (!hostData.lastSeen || (Date.now() - hostData.lastSeen <= 25000));
             
             if (!hostMasihAda) {
-                const sisaPemain = Object.keys(data.players);
+                const sisaPemain = Object.keys(data.players).filter(u => u !== data.hostUid);
                 if (sisaPemain.length > 0 && window.currentUser && sisaPemain.includes(window.currentUser.uid)) {
-                    sisaPemain.sort(); 
+                    sisaPemain.sort((a, b) => {
+                        const vipA = data.players[a]?.isVIP ? 1 : 0;
+                        const vipB = data.players[b]?.isVIP ? 1 : 0;
+                        if (vipA !== vipB) return vipB - vipA;
+                        return a.localeCompare(b);
+                    });
                     const myIndex = sisaPemain.indexOf(window.currentUser.uid);
                     
                     let delayClaim = window.isVIPUser ? (myIndex * 1500) : 6000 + (myIndex * 1500);
@@ -3787,7 +3893,7 @@ window.pantauRoom = (kodeRoom) => {
                     
                     window.hostClaimTimer = setTimeout(() => {
                         console.log("Mengambil alih posisi Host...");
-                        updateDoc(roomRef, { hostUid: window.currentUser.uid }).then(() => {
+                        updateDoc(roomRef, { hostUid: window.currentUser.uid, hostName: window.currentUser.displayName || "Host" }).then(() => {
                             if (typeof PROTAMA !== 'undefined') {
                                 PROTAMA.alert('Sistem Host Berpindah!', 'Host terputus. Karena otoritas akunmu, kamu kini dialihkan menjadi Host.', 'success');
                             }
@@ -3864,6 +3970,10 @@ window.pantauRoom = (kodeRoom) => {
         
         // --- A. WAITING ROOM ---
         if (data.status === 'waiting') {
+            const overlayReady = document.getElementById('readyCheckOverlay');
+            if (overlayReady) overlayReady.remove();
+            if (window.hostReadyTimerInterval) { clearInterval(window.hostReadyTimerInterval); window.hostReadyTimerInterval = null; }
+            if (window.clientReadyTimerInterval) { clearInterval(window.clientReadyTimerInterval); window.clientReadyTimerInterval = null; }
             const listEl = document.getElementById('listPesertaRoom');
             const countEl = document.getElementById('countPeserta');
             if (listEl && data.players) {
@@ -3941,6 +4051,9 @@ window.pantauRoom = (kodeRoom) => {
                         :
                         `<button onclick="window.klikReadyMabar('${kodeRoom}')" style="background:#3498db; color:white; border:none; padding:15px 50px; font-size:1.5rem; font-weight:bold; border-radius:30px; box-shadow: 0 0 20px rgba(52,152,219,0.6); cursor:pointer; transition:0.3s; animation: pulseReady 1s infinite;"><i class="fas fa-bolt"></i> READY!</button>`
                     }
+                    <button onclick="window.batalReadyMabar('${kodeRoom}')" style="margin-top: 15px; background: rgba(231, 76, 60, 0.2); color: #ff6b6b; border: 1.5px solid #e74c3c; padding: 10px 24px; font-size: 0.95rem; font-weight: bold; border-radius: 25px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-undo-alt"></i> Batal & Kembali ke Waiting Room
+                    </button>
                     ${htmlDaftarPemain}
                 </div>
                 <style>
@@ -3964,6 +4077,21 @@ window.pantauRoom = (kodeRoom) => {
 
                         // 👇 PAKAI DATA TERBARU DARI MEMORI GLOBAL 👇
                         let latestData = window.latestRoomData; 
+                        let totalP = Object.keys(latestData.players || {}).length;
+                        let readyP = Object.values(latestData.players || {}).filter(p => p.isReady).length;
+
+                        if (readyP < totalP) {
+                            let updates = { status: 'waiting' };
+                            for (let uid in latestData.players) {
+                                updates[`players.${uid}.isReady`] = false;
+                            }
+                            updateDoc(roomRef, updates).then(() => {
+                                if (typeof PROTAMA !== 'undefined') {
+                                    PROTAMA.alert("Sebagian Peserta Belum Siap", "Waktu 20 detik habis dan belum semua peserta menekan READY. Sesi dikembalikan ke Waiting Room agar bisa bersiap ulang.", "warning");
+                                }
+                            });
+                            return;
+                        }
                         let pemainValid = {};
                         for (let uid in latestData.players) {
                             if (latestData.players[uid].isReady) {
@@ -4047,7 +4175,9 @@ window.pantauRoom = (kodeRoom) => {
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
                 
-                if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+                if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
                 
                 let durasiPerSoal = parseInt(data.waktuPerSoal || data.durasiPerSoal || 30);
                 let sisaWaktuRoom = durasiPerSoal; 
@@ -4146,7 +4276,9 @@ window.pantauRoom = (kodeRoom) => {
                 if (totalPeserta > 0 && yangSudahJawab === totalPeserta && gueBeneranHost) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
-                        if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
+                        if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         }, 1000); // Ngasih jeda 1 detik biar puas liat kuningnya sebelum skip
@@ -4157,7 +4289,9 @@ window.pantauRoom = (kodeRoom) => {
             
        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
-            if (window.roomSyncTimer) clearInterval(window.roomSyncTimer); 
+            if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
@@ -4305,7 +4439,9 @@ window.pantauRoom = (kodeRoom) => {
        // --- E. SELESAI ---
         else if (data.status === 'selesai') {
             // 👇 1. SAPU BERSIH SEMUA TIMER MABAR BIAR GA BERAT 👇
-            if (window.roomSyncTimer) clearInterval(window.roomSyncTimer);
+            if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             if (window.hostReadyTimerInterval) clearInterval(window.hostReadyTimerInterval);
             if (window.clientReadyTimerInterval) clearInterval(window.clientReadyTimerInterval);
@@ -4544,9 +4680,9 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
 
         let htmlTop3 = `
             <div class="podium-container">
-                ${buatPodium(p2, 2, 160, '#bdc3c7', '2', 0.2)} 
-                ${buatPodium(p1, 1, 220, '#f1c40f', '1', 0.4)} 
-                ${buatPodium(p3, 3, 120, '#e67e22', '3', 0)}   
+                ${buatPodium(p2, 2, 140, '#bdc3c7', '2', 0.2)} 
+                ${buatPodium(p1, 1, 190, '#f1c40f', '1', 0.4)} 
+                ${buatPodium(p3, 3, 100, '#e67e22', '3', 0)}   
             </div>
         `;
 
@@ -4680,8 +4816,8 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     gap: 30px; 
                 }
                 
-                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin: 0; padding-top: 15px; text-transform: uppercase; text-align: center; }
-                .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 15px; height: 280px; border-bottom: 3px solid #eee; margin: 0; width: 100%; }
+                .result-title { font-size: 2.2rem; color: #2c3e50; font-weight: 900; margin: 0 0 10px 0; padding-top: 10px; text-transform: uppercase; text-align: center; letter-spacing: 2px; position: relative; z-index: 20; }
+                .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 20px; height: 350px; border-bottom: 3px solid #eee; margin: 30px 0 0 0; width: 100%; padding-top: 40px; box-sizing: border-box; position: relative; }
                 .podium-wrapper { display: flex; flex-direction: column; align-items: center; width: 140px; position: relative; }
                 .podium-block { width: 100%; border-radius: 10px 10px 0 0; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 15px; box-shadow: inset 0 -10px 20px rgba(0,0,0,0.1); }
                 .podium-rank { font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 0 4px 10px rgba(0,0,0,0.2); font-family: 'Arial Black', sans-serif; }

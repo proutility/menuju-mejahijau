@@ -979,6 +979,9 @@ div.swal2-container {
     flex: 1 1 auto !important; 
     height: 100% !important; 
     border-top: 2px solid var(--gold) !important;
+    border-bottom: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
     overflow: hidden !important;
 }
 
