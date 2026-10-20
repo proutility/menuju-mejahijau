@@ -474,7 +474,11 @@ window.verifyVipCode = async () => {
 
         if (accessSnap.exists() && accessSnap.data().code === input) {
             // Update Status Jadi Verified
-            await updateDoc(accessRef, { isVerified: true, verifiedAt: new Date() });
+            await updateDoc(accessRef, { 
+            isVerified: true, 
+            inputCode: input, // Kirim input untuk divalidasi server Firebase
+            verifiedAt: new Date() 
+        });
             
             alert("✅ Akses VIP Terbuka! Selamat Belajar.");
             // Masuk Aplikasi
