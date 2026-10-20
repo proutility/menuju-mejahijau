@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
     getFirestore, 
@@ -5613,9 +5613,7 @@ window.openAdminPanel = () => {
     // Update Judul Modal: Admin CBT vs Editor CBT
     const modalTitle = document.getElementById('modalAdminTitle');
     if (modalTitle) {
-        modalTitle.innerHTML = isSuper 
-            ? 'âš™ï¸ Panel Admin CBT' 
-            : '<i class="fas fa-user-edit"></i> Panel Editor CBT';
+        modalTitle.innerHTML = isSuper ? '<i class="fas fa-user-shield"></i> Panel Admin CBT' : '<i class="fas fa-user-edit"></i> Panel Editor CBT';
     }
 
     // Pastikan pas baru buka, tampilannya adalah "Menu" rapi (tanpa form terbuka di bawah)
@@ -5632,24 +5630,22 @@ window.resetAdminMenu = () => {
     const btnBack = document.getElementById('btnKembaliSakti');
     if(btnBack) btnBack.style.display = 'none';
 
-    // 2. Kembalikan ukuran modal ke normal (tidak melebar)
+    // 2. Munculkan Navigasi utama dan pastikan header tetap flex
     const modalBox = document.getElementById('adminModalBox') || document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
     if (modalBox) {
-        modalBox.style.width = '800px';
-        modalBox.style.maxWidth = '90vw';
-    }
-
-    // 3. Munculkan SEMUA elemen Navigasi utama (kecuali tab konten)
-    if (modalBox) {
+        modalBox.style.width = '100vw';
+        modalBox.style.maxWidth = '100vw';
         Array.from(modalBox.children).forEach(el => {
             const id = el.id || '';
-            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'SPAN') {
-                el.style.display = ''; // Balikin ke normal (flex/block)
+            if (id === 'adminPanelHeader') {
+                el.style.display = 'flex';
+            } else if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'SPAN') {
+                el.style.display = 'block';
             }
         });
     }
 
-    // 4. Sembunyikan semua isi tab agar rapi dan tidak "ke teken"
+    // 3. Sembunyikan semua isi tab
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
@@ -5690,42 +5686,39 @@ window.switchAdminTab = (tab) => {
 
     // Proteksi: Editor dilarang membuka tab Tambah (Upload JSON) atau Radar Status
     if (!isSuper && (tab === 'tambah' || tab === 'status')) {
-        alert("âš ï¸ Akses terbatas: Fitur ini hanya untuk Super Admin.");
+        alert("Peringatan: Fitur ini hanya untuk Super Admin.");
         return;
     }
 
     const modalContent = document.getElementById('adminModalBox') || document.querySelector('#adminOverlay .result-box') || document.querySelector('#adminOverlay .modal-content');
     
-    // 1. Paksa Lebarin Layar via JS (Biar lega ngetik soalnya)
+    // 1. Sembunyikan elemen Navigasi utama kecuali Header dan Tab Konten
     if (modalContent) {
-        modalContent.style.width = '95%';
-        modalContent.style.maxWidth = '1200px';
-    }
-
-    // 2. Sembunyikan SEMUA elemen Navigasi (Biar layar bersih)
-    if (modalContent) {
+        modalContent.style.width = '100vw';
+        modalContent.style.maxWidth = '100vw';
         Array.from(modalContent.children).forEach(el => {
             const id = el.id || '';
-            // Sembunyikan semuanya kecuali Judul (H2), Close (SPAN), dan Tab Konten
-            if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'H2' && el.tagName !== 'H3' && el.tagName !== 'SPAN') {
+            if (id === 'adminPanelHeader') {
+                el.style.display = 'flex'; // Header + Tombol Tutup tetap aktif di pojok kanan atas!
+            } else if (!id.includes('tab') && id !== 'btnKembaliSakti' && el.tagName !== 'SPAN') {
                 el.style.display = 'none';
             }
         });
     }
 
-    // 3. Bikin Tombol Kembali Sakti (Kalau belum ada)
+    // 2. Tombol Kembali Sakti
     let btnBack = document.getElementById('btnKembaliSakti');
     if (!btnBack) {
         btnBack = document.createElement('button');
         btnBack.id = 'btnKembaliSakti';
-        btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 20px; width: 100%; text-align: left; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);";
+        btnBack.style.cssText = "background: #2c3e50; color: #fff; padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 15px; width: 100%; text-align: left; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-shrink: 0;";
         btnBack.onclick = () => window.resetAdminMenu();
         if(modalContent) modalContent.insertBefore(btnBack, modalContent.children[1]);
     }
     btnBack.innerHTML = isSuper ? '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU ADMIN' : '<i class="fas fa-arrow-left"></i> KEMBALI KE MENU EDITOR';
     btnBack.style.display = 'block';
 
-    // 4. Munculkan hanya tab yang dipilih
+    // 3. Munculkan hanya tab yang dipilih
     const tabs = ['tabTambah', 'tabEdit', 'tabReview', 'tabLaporan', 'tabStatus'];
     tabs.forEach(id => {
         const el = document.getElementById(id);
