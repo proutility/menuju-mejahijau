@@ -31,15 +31,14 @@ window.PROTAMA = {
         const colors = { success: '#004d00', error: '#c0392b', warning: '#f39c12', info: '#3498db' };
         Swal.fire({
             title: title.toUpperCase(),
-            text: text,
+            html: text,
             icon: icon,
             confirmButtonColor: colors[icon] || '#004d00',
-            confirmButtonText: 'Seles',
+            confirmButtonText: 'Selesai',
             background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
             color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
             didOpen: () => {
-                // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan (nembus overlay apapun)
-                const swalBox = document.querySelector('.swal2-contner');
+                const swalBox = document.querySelector('.swal2-container');
                 if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
             }
         });
@@ -48,17 +47,16 @@ window.PROTAMA = {
     confirm: async (title, text) => {
         const result = await Swal.fire({
             title: title.toUpperCase(),
-            text: text,
+            html: text,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#004d00',
+            confirmButtonColor: '#c0392b',
             cancelButtonColor: '#7f8c8d',
-            confirmButtonText: 'Ya, Lanjutkan',
+            confirmButtonText: 'Ya, Keluarkan',
             cancelButtonText: 'Batal',
             background: document.body.classList.contains('dark-mode') ? '#242424' : '#fff',
             color: document.body.classList.contains('dark-mode') ? '#fff' : '#333',
             didOpen: () => {
-                // 🛑 FIX: Paksa pop-up nongol di lapisan paling depan
                 const swalBox = document.querySelector('.swal2-container');
                 if (swalBox) swalBox.style.setProperty('z-index', '2147483647', 'important');
             }
@@ -3236,6 +3234,10 @@ window.gabungRoomLatihan = async () => {
         }
 
         const dataRoom = roomSnap.data();
+        if (dataRoom.kickedUids && currentUser && dataRoom.kickedUids.includes(currentUser.uid)) {
+            PROTAMA.close();
+            return PROTAMA.alert("Akses Ditolak", "Kamu telah dikeluarkan (kick) oleh Host dari room ini dan tidak dapat bergabung kembali.", "error");
+        }
         const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
 
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
@@ -3297,6 +3299,10 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
         }
 
         const dataRoom = roomSnap.data();
+        if (dataRoom.kickedUids && currentUser && dataRoom.kickedUids.includes(currentUser.uid)) {
+            PROTAMA.close();
+            return PROTAMA.alert("Akses Ditolak", "Kamu telah dikeluarkan (kick) oleh Host dari room ini dan tidak dapat bergabung kembali.", "error");
+        }
         const isPemainLama = dataRoom.players && dataRoom.players[currentUser.uid];
 
         if (dataRoom.status !== 'waiting' && !isPemainLama) {
@@ -3957,7 +3963,7 @@ window.pantauRoom = (kodeRoom) => {
 
         const yakin = await PROTAMA.confirm(
             "Keluarkan Peserta?",
-            `Yakin ingin mengeluarkan <b>${targetNama}</b> dari room?<br><small style="color:#e67e22;">Jika peserta offline/terputus, mengeluarkannya akan mempercepat ujian tanpa harus menunggu timer habis.</small>`
+            `Keluarkan <b>${targetNama}</b> dari room tryout?<br><br><span style="font-size:0.88rem; color:#666;">Peserta yang dikeluarkan tidak akan bisa masuk kembali ke room ini. Jika ia terputus atau tidak menjawab, mengeluarkannya akan memperlancar ujian tanpa harus menunggu waktu habis.</span>`
         );
         if (!yakin) return;
 
@@ -3965,10 +3971,40 @@ window.pantauRoom = (kodeRoom) => {
         try {
             const roomRef = doc(window.db || db, "rooms", kodeRoom);
             await updateDoc(roomRef, {
-                [`players.${targetUid}`]: deleteField()
+                [`players.${targetUid}`]: deleteField(),
+                kickedUids: arrayUnion(targetUid)
             });
+
+            // Hapus instan dari data lokal memori Host agar sidebar kanan langsung bersih
+            if (window.latestRoomData && window.latestRoomData.players) {
+                delete window.latestRoomData.players[targetUid];
+                if (typeof window.renderLiveScore === 'function') {
+                    window.renderLiveScore(window.latestRoomData.players);
+                }
+                
+                // Evaluasi ulang progres jawaban & auto-skip seketika
+                let totalPeserta = 0;
+                let yangSudahJawab = 0;
+                for (let uid in window.latestRoomData.players) {
+                    totalPeserta++;
+                    if (window.latestRoomData.players[uid].jawabanSekarang !== null && window.latestRoomData.players[uid].jawabanSekarang !== undefined) {
+                        yangSudahJawab++;
+                    }
+                }
+                let txtProgress = document.getElementById('progressText');
+                if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
+
+                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && window.isHost && !window.sedangAutoSkip) {
+                    window.sedangAutoSkip = true;
+                    if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+                    setTimeout(() => {
+                        updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
+                    }, 500);
+                }
+            }
+
             PROTAMA.close();
-            PROTAMA.alert("Peserta Dikeluarkan", `<b>${targetNama}</b> berhasil dikeluarkan dari room.`, "success");
+            PROTAMA.alert("Peserta Dikeluarkan", `<b>${targetNama}</b> berhasil dikeluarkan dan diblokir dari room ini.`, "success");
         } catch (e) {
             PROTAMA.close();
             PROTAMA.alert("Gagal", "Gagal mengeluarkan peserta: " + e.message, "error");
@@ -3993,16 +4029,18 @@ window.pantauRoom = (kodeRoom) => {
         let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
         let myUid = myUser ? myUser.uid : null;
 
-        // 🛑 FIX BUG 1: GLOBAL KICK DETECTION (KEBAL BYPASS)
-        if (myUid && data.players && !data.players[myUid]) {
-            if (data.status === 'ready_check' || data.status === 'soal' || data.status === 'pembahasan' || data.status === 'waiting') {
-                const overlayReady = document.getElementById('readyCheckOverlay');
-                if (overlayReady) overlayReady.remove();
-                const msg = data.status === 'ready_check' ? 'Kamu dikeluarkan dari Room karena tidak klik Ready.' : 'Kamu telah dikeluarkan dari room oleh Host.';
-                PROTAMA.alert('KELUAR DARI ROOM', msg, 'warning');
-                if (roomListenerUnsubscribe) { try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e){} }
-                return window.keluarDariRoom();
-            }
+        // ðŸ›‘ GLOBAL KICK DETECTION (KEBAL BYPASS & RESURRECTION)
+        const isKicked = (myUid && data.kickedUids && data.kickedUids.includes(myUid)) || (myUid && data.players && !data.players[myUid] && (data.status === 'soal' || data.status === 'pembahasan'));
+        if (isKicked) {
+            if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+            if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+            if (roomListenerUnsubscribe) { try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e){} }
+            const overlayReady = document.getElementById('readyCheckOverlay');
+            if (overlayReady) overlayReady.remove();
+            
+            window.keluarDariRoom();
+            PROTAMA.alert('Dikeluarkan dari Room', 'Kamu telah dikeluarkan oleh Host dari room ini.', 'error');
+            return;
         }
 
         // ========================================================
@@ -4020,7 +4058,7 @@ window.pantauRoom = (kodeRoom) => {
             window.tampilkanWaitingRoom(kodeRoom, amIHost, data.modulId);
         }
 
-        // Heartbeat kehadiran player aktif (setiap 5 detik untuk ketepatan deteksi)
+        // Heartbeat kehadiran player aktif (setiap 8 detik)
         if (!window.roomHeartbeatTimer && myActiveUid) {
             if ((currentRoomCode || window.currentRoomCode) && myActiveUid) {
                 updateDoc(roomRef, { 
@@ -4030,20 +4068,29 @@ window.pantauRoom = (kodeRoom) => {
             }
             window.roomHeartbeatTimer = setInterval(() => {
                 if ((currentRoomCode || window.currentRoomCode) && myActiveUid) {
+                    // Cegah player yang sudah di-kick mengirim denyut heartbeat
+                    if (window.latestRoomData && window.latestRoomData.kickedUids && window.latestRoomData.kickedUids.includes(myActiveUid)) {
+                        clearInterval(window.roomHeartbeatTimer);
+                        window.roomHeartbeatTimer = null;
+                        return;
+                    }
                     updateDoc(roomRef, { 
                         [`players.${myActiveUid}.lastSeen`]: Date.now(),
                         [`players.${myActiveUid}.isOffline`]: false
                     }).catch(() => {});
                 }
-            }, 5000);
+            }, 8000);
         }
 
         // PENGALIHAN HOST OTOMATIS:
-        // HANYA AKTIF SAAT SESI BERJALAN (ready_check, soal, pembahasan).
-        // DI WAITING ROOM: Host tetap sang pembuat room sampai dimulai, tidak ada bajak host otomatis!
-        if (data.status !== 'waiting' && data.players && data.hostUid) {
+        // HANYA AKTIF SAAT PERMAINAN BERJALAN ('soal' atau 'pembahasan').
+        // SANGAT DILARANG PINDAH DI: 'waiting' ATAU 'ready_check' (Host masih pegang kendali penuh).
+        const sesiBolehPindahHost = (data.status === 'soal' || data.status === 'pembahasan');
+        if (sesiBolehPindahHost && data.players && data.hostUid) {
             const hostData = data.players[data.hostUid];
-            const hostTerputus = !hostData || hostData.isOffline || !!data.hostTerputusAt || (hostData.lastSeen && (Date.now() - hostData.lastSeen > 10000));
+            // Batas toleransi diperpanjang jadi 45 detik (tidak agresif, cegah salah deteksi koneksi)
+            // Atau host sengaja keluar ke lobby (hostTerputusAt terpasang saat keluar)
+            const hostTerputus = !hostData || (hostData.isOffline && !!data.hostTerputusAt) || (hostData.lastSeen && (Date.now() - hostData.lastSeen > 45000));
             
             if (hostTerputus) {
                 const sisaPemain = Object.keys(data.players).filter(u => u !== data.hostUid && !data.players[u]?.isOffline);
@@ -4056,10 +4103,10 @@ window.pantauRoom = (kodeRoom) => {
                     });
                     const myIndex = sisaPemain.indexOf(myActiveUid);
                     
-                    // Hitung 10 detik tepat untuk kandidat VIP pertama (#0)
-                    let waktuMulaiPutus = data.hostTerputusAt || (hostData?.lastSeen ? hostData.lastSeen + 10000 : Date.now());
-                    let sudahLewat = Math.max(0, Date.now() - waktuMulaiPutus);
-                    let sisaTunggu = Math.max(1000, 10000 - sudahLewat) + (myIndex * 2000);
+                    // Beri jeda 45 detik yang lapang agar host asli punya kesempatan reconnect
+                    let waktuPutus = data.hostTerputusAt || (hostData?.lastSeen ? hostData.lastSeen + 45000 : Date.now());
+                    let sudahLewat = Math.max(0, Date.now() - waktuPutus);
+                    let sisaTunggu = Math.max(3000, 45000 - sudahLewat) + (myIndex * 3000);
                     
                     if (window.hostClaimTimer) clearTimeout(window.hostClaimTimer);
                     
@@ -4071,7 +4118,7 @@ window.pantauRoom = (kodeRoom) => {
                             hostTerputusAt: null
                         }).then(() => {
                             if (typeof PROTAMA !== 'undefined') {
-                                PROTAMA.alert('Sistem Host Berpindah!', 'Host terputus lebih dari 10 detik. Posisi Host kini otomatis dialihkan kepadamu (Member VIP).', 'info');
+                                PROTAMA.alert('Sistem Host Berpindah!', 'Host sebelumnya terputus lebih dari 45 detik. Posisi Host kini otomatis dialihkan kepadamu (Member VIP).', 'info');
                             }
                         }).catch(e => console.log("Gagal klaim host:", e));
                     }, sisaTunggu);
@@ -4083,6 +4130,7 @@ window.pantauRoom = (kodeRoom) => {
                 }
             }
         } else {
+            // Jika di waiting room atau ready check: BATALKAN semua timer klaim host (pembuat room adalah host mutlak)
             if (window.hostClaimTimer) {
                 clearTimeout(window.hostClaimTimer);
                 window.hostClaimTimer = null;
