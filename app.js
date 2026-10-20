@@ -4219,7 +4219,12 @@ window.pantauRoom = (kodeRoom) => {
             let txtProgress = document.getElementById('progressText');
             if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
-            if (totalPeserta > 0 && yangSudahJawab >= totalPeserta && window.isHost && !window.sedangAutoSkip) {
+            // 🛑 AUTO-SKIP CERDAS: Jika mabar > 1 orang, tunggu semua jawab. Jika tes sendiri (1 orang), tunggu klik jawaban.
+            let sudahSelesaiMenjawab = (totalPeserta > 1) 
+                ? (yangSudahJawab >= totalPeserta) 
+                : (typeof userAnswers !== 'undefined' && userAnswers[window.latestRoomData.currentIdx] !== undefined && userAnswers[window.latestRoomData.currentIdx] !== null);
+
+            if (totalPeserta > 0 && sudahSelesaiMenjawab && window.isHost && !window.sedangAutoSkip) {
                 window.sedangAutoSkip = true;
                 if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
                 setTimeout(() => {
@@ -4637,6 +4642,19 @@ window.pantauRoom = (kodeRoom) => {
                 isAnswerLocked = false; 
                 window.sedangAutoSkip = false; 
                 
+                // 🛑 RESET STATUS JAWABAN PESERTA UNTUK SOAL BARU (CEGAH FALSE AUTO-SKIP)
+                if (myUid) {
+                    try {
+                        const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", myUid);
+                        setDoc(playerSubRef, { jawabanSekarang: null }, { merge: true }).catch(() => {});
+                    } catch(e) {}
+                }
+                if (window.latestRoomData?.players) {
+                    for (let pUid in window.latestRoomData.players) {
+                        window.latestRoomData.players[pUid].jawabanSekarang = null;
+                    }
+                } 
+                
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
                 const fbBox = document.getElementById('feedbackBox');
@@ -4780,12 +4798,16 @@ window.pantauRoom = (kodeRoom) => {
                 if (txtProgress) txtProgress.innerText = `Menjawab: ${yangSudahJawab} / ${totalPeserta}`;
 
                 // 👇 CEK AUTO SKIP DENGAN VARIABEL HOST YANG BENAR 👇
-                if (totalPeserta > 0 && yangSudahJawab === totalPeserta && gueBeneranHost) {
+                let sudahSelesaiMenjawab = (totalPeserta > 1) 
+                    ? (yangSudahJawab >= totalPeserta) 
+                    : (typeof userAnswers !== 'undefined' && userAnswers[data.currentIdx] !== undefined && userAnswers[data.currentIdx] !== null);
+
+                if (totalPeserta > 0 && sudahSelesaiMenjawab && gueBeneranHost) {
                     if (!window.sedangAutoSkip) {
                         window.sedangAutoSkip = true; 
                         if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    // roomHeartbeatTimer tetap jalan
-    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
+                        // roomHeartbeatTimer tetap jalan
+                        if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
                         setTimeout(() => {
                             updateDoc(roomRef, { status: 'pembahasan' }).catch(e => console.log(e));
                         }, 1000); // Ngasih jeda 1 detik biar puas liat kuningnya sebelum skip
@@ -4797,8 +4819,14 @@ window.pantauRoom = (kodeRoom) => {
        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
             if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    // roomHeartbeatTimer tetap jalan
-    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
+            // roomHeartbeatTimer tetap jalan
+            if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
+
+            // 🛑 RESET TAMPILAN TIMER SAAT PEMBAHASAN (CEGAH ANGKA FREEZE DI DETIK TERSISA)
+            let t1 = document.getElementById('timerDisplay');
+            let t2 = document.getElementById('floatingTimer');
+            if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-panic'; }
+            if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-panic'; } 
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
