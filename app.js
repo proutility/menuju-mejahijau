@@ -1785,13 +1785,14 @@ function loadQuestion(idx) {
                         userAnswers[idx] = i; 
                         
                         let uidSekarang = (currentUser && currentUser.uid) || (window.currentUser && window.currentUser.uid);
-                        if (uidSekarang) {
+                        let rCode = currentRoomCode || window.currentRoomCode;
+                        if (uidSekarang && rCode) {
                             try {
-                                const playerSubRef = doc(window.db || db, "rooms", currentRoomCode, "players", uidSekarang);
-                                setDoc(playerSubRef, {
-                                    jawabanSekarang: i,
-                                    waktuJawabTerakhir: Date.now()
-                                }, { merge: true }).catch(() => {});
+                                const rRef = doc(window.db || db, "rooms", rCode);
+                                updateDoc(rRef, {
+                                    [`players.${uidSekarang}.jawabanSekarang`]: i,
+                                    [`players.${uidSekarang}.waktuJawabTerakhir`]: Date.now()
+                                }).catch(() => {});
                             } catch(e) {}
                         }
                     } 
@@ -2461,9 +2462,9 @@ window.keluarDariRoom = async () => {
     // 🛑 PERBARUI LAST SEEN SAAT KELUAR KE LOBBY (ROOM TETAP AKTIF AGAR BISA GABUNG LAGI DARI LOBBY)
     if (leavingRoomCode && leavingUid) {
         try {
-            // Update subkoleksi player
-            const playerSubRef = doc(window.db || db, "rooms", leavingRoomCode, "players", leavingUid);
-            setDoc(playerSubRef, { isOffline: true, lastSeen: 0 }, { merge: true }).catch(() => {});
+
+
+
 
             const roomRef = doc(window.db || db, "rooms", leavingRoomCode);
             let updatePayload = {
@@ -4290,11 +4291,11 @@ window.pantauRoom = (kodeRoom) => {
                     return;
                 }
                 try {
-                    const playerSubRef = doc(window.db || db, "rooms", rCode, "players", myActiveUid);
-                    setDoc(playerSubRef, { 
-                        lastSeen: Date.now(),
-                        isOffline: false
-                    }, { merge: true }).catch(() => {});
+                    const rRef = doc(window.db || db, "rooms", rCode);
+                    updateDoc(rRef, {
+                        [`players.${myActiveUid}.lastSeen`]: Date.now(),
+                        [`players.${myActiveUid}.isOffline`]: false
+                    }).catch(() => {});
                 } catch(e) {}
             };
 
@@ -4642,18 +4643,18 @@ window.pantauRoom = (kodeRoom) => {
                 isAnswerLocked = false; 
                 window.sedangAutoSkip = false; 
                 
-                // 🛑 RESET STATUS JAWABAN PESERTA UNTUK SOAL BARU (CEGAH FALSE AUTO-SKIP)
-                if (myUid) {
-                    try {
-                        const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", myUid);
-                        setDoc(playerSubRef, { jawabanSekarang: null }, { merge: true }).catch(() => {});
-                    } catch(e) {}
-                }
-                if (window.latestRoomData?.players) {
-                    for (let pUid in window.latestRoomData.players) {
-                        window.latestRoomData.players[pUid].jawabanSekarang = null;
-                    }
-                } 
+
+
+
+
+
+
+
+
+
+
+
+                const warnOld = document.getElementById('warningTidakJawab'); if (warnOld) warnOld.remove();
                 
                 const oldBadge = document.getElementById('roomBadgeKhusus');
                 if (oldBadge) oldBadge.remove();
@@ -4764,17 +4765,17 @@ window.pantauRoom = (kodeRoom) => {
                                 if (window.questionRenderTime) {
                                     waktuDetikSoal = Math.max(0.1, parseFloat(((Date.now() - window.questionRenderTime) / 1000).toFixed(1)));
                                 }
-                                let totalWaktuLama = (window.latestRoomData?.players?.[uidSekarang]?.totalWaktu) || (data.players && data.players[uidSekarang] && data.players[uidSekarang].totalWaktu) || 0;
+                                let totalWaktuLama = (data.players && data.players[uidSekarang] && data.players[uidSekarang].totalWaktu) || 0;
                                 let totalWaktuBaru = parseFloat((totalWaktuLama + waktuDetikSoal).toFixed(1));
 
-                                try {
-                                    const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", uidSekarang);
-                                    setDoc(playerSubRef, { 
-                                        jawabanSekarang: i,
-                                        totalWaktu: totalWaktuBaru,
-                                        waktuJawabTerakhir: Date.now()
-                                    }, { merge: true }).catch(err => console.warn("Subcollection answer update:", err));
-                                } catch(e) {}
+                                updateDoc(roomRef, {
+                                    [`players.${uidSekarang}.jawabanSekarang`]: i,
+                                    [`players.${uidSekarang}.totalWaktu`]: totalWaktuBaru,
+                                    [`players.${uidSekarang}.waktuJawabTerakhir`]: Date.now()
+                                }).catch(err => console.error("Gagal update jawaban mabar:", err));
+
+
+
                             }
                         };
                     });
@@ -4843,7 +4844,9 @@ window.pantauRoom = (kodeRoom) => {
 
                 if (!myUid) return;
 
-                const jawabanGue = data.players && data.players[myUid] ? data.players[myUid].jawabanSekarang : null;
+                const jawabanGue = (data.players && data.players[myUid] && data.players[myUid].jawabanSekarang !== null && data.players[myUid].jawabanSekarang !== undefined)
+                    ? data.players[myUid].jawabanSekarang
+                    : (typeof userAnswers !== 'undefined' && userAnswers[data.currentIdx] !== null && userAnswers[data.currentIdx] !== undefined ? userAnswers[data.currentIdx] : null);
                 
                 // 🏆 LOGIKA LIVE SCORE & PEMBAHASAN MULTIPLAYER
                 const roomKunciMap = _kunciJawabanStore.get(window.currentRoomCode) || _kunciJawabanStore.get(data.modulId) || _kunciJawabanStore.get(window.currentDatabaseId) || {};
@@ -4856,13 +4859,10 @@ window.pantauRoom = (kodeRoom) => {
                     if (window.lastScoredIdx !== data.currentIdx) {
                         window.lastScoredIdx = data.currentIdx;
                         let bobotSoal = 100 / currentQuestions.length; 
-                        let skorSekarang = parseFloat((window.latestRoomData?.players?.[myUid]?.skor) || (data.players && data.players[myUid] && data.players[myUid].skor) || 0);
-                        try {
-                            const playerSubRef = doc(window.db || db, "rooms", (currentRoomCode || window.currentRoomCode || kodeRoom), "players", myUid);
-                            setDoc(playerSubRef, {
-                                skor: skorSekarang + bobotSoal
-                            }, { merge: true }).catch(e => console.log("Gagal skor subkoleksi:", e));
-                        } catch(e) {}
+                        let skorSekarang = parseFloat((data.players && data.players[myUid] && data.players[myUid].skor) || 0);
+                        updateDoc(roomRef, {
+                            [`players.${myUid}.skor`]: skorSekarang + bobotSoal
+                        }).catch(e => console.log("Gagal update skor room:", e));
                     }
                 } else {
                     window.lastScoredIdx = data.currentIdx; 
