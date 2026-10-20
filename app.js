@@ -2398,7 +2398,6 @@ window.keluarDariRoom = async () => {
     const leavingRoomCode = currentRoomCode || window.currentRoomCode;
     const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
     const leavingUid = activeUser ? activeUser.uid : null;
-    const wasHost = (isHost || window.isHost);
 
     // Reset Variabel Mode segera
     currentRoomCode = null;
@@ -2414,48 +2413,15 @@ window.keluarDariRoom = async () => {
     const kahootOverlay = document.getElementById('kahootResultOverlay');
     if (kahootOverlay) kahootOverlay.remove();
 
-    // ðŸ›‘ 1. UPDATE KEPESERTAAN & MIGRATION HOST KE FIREBASE SEBELUM CABUT
+    // ðŸ›‘ PERBARUI LAST SEEN SAAT KELUAR KE LOBBY (ROOM TETAP AKTIF AGAR BISA GABUNG LAGI DARI LOBBY)
     if (leavingRoomCode && leavingUid) {
         try {
             const roomRef = doc(window.db || db, "rooms", leavingRoomCode);
-            const snap = await getDoc(roomRef);
-            if (snap.exists()) {
-                const dataRoom = snap.data();
-                const players = dataRoom.players || {};
-                delete players[leavingUid];
-                const remainingUids = Object.keys(players);
-
-                if (remainingUids.length === 0) {
-                    // Jika keluar saat masih di waiting room, tandai room 'dibatalkan', BUKAN 'selesai'!
-                    const statusAkhir = (dataRoom.status === 'waiting') ? 'dibatalkan' : 'selesai';
-                    await updateDoc(roomRef, {
-                        [`players.${leavingUid}`]: deleteField(),
-                        status: statusAkhir
-                    });
-                } else if (wasHost || dataRoom.hostUid === leavingUid) {
-                    // Cari penerus: PRIORITAS MEMBER VIP
-                    remainingUids.sort((a, b) => {
-                        const vipA = players[a]?.isVIP ? 1 : 0;
-                        const vipB = players[b]?.isVIP ? 1 : 0;
-                        if (vipA !== vipB) return vipB - vipA;
-                        return a.localeCompare(b);
-                    });
-                    const newHostUid = remainingUids[0];
-                    const newHostName = players[newHostUid]?.nama || "Host Baru";
-
-                    await updateDoc(roomRef, {
-                        hostUid: newHostUid,
-                        hostName: newHostName,
-                        [`players.${leavingUid}`]: deleteField()
-                    });
-                } else {
-                    await updateDoc(roomRef, {
-                        [`players.${leavingUid}`]: deleteField()
-                    });
-                }
-            }
+            updateDoc(roomRef, {
+                [`players.${leavingUid}.lastSeen`]: Date.now()
+            }).catch(() => {});
         } catch(e) {
-            console.log("Gagal sinkron keluar dari room:", e);
+            console.log("Gagal sinkron lastSeen saat keluar ke lobby:", e);
         }
     }
     if (typeof window.bersihkanStateMode === 'function') {
@@ -3470,6 +3436,13 @@ window.tampilkanWaitingRoom = function(kode, isHostParam, modulId = "latihan") {
                 `<button onclick="window.keluarDariRoom()" style="background:none; border:none; color:#1565c0; text-decoration:underline; cursor:pointer; font-weight:bold; font-size:1rem;"><i class="fas fa-arrow-left"></i> Kembali ke Lobby</button>` : 
                 `<button onclick="window.tendangNonVIP()" style="background:var(--danger); color:white; padding:10px 20px; border:none; border-radius:30px; cursor:pointer; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fas fa-power-off"></i> Keluar Aplikasi</button>`
             }
+            ${effectiveIsHost ? `
+                <div style="margin-top: 15px;">
+                    <button onclick="window.hapusRoomJadwal('${kode}')" style="background:none; border:none; color:#e74c3c; font-size:0.85rem; cursor:pointer; text-decoration:underline;">
+                        <i class="fas fa-trash-alt"></i> Batalkan / Bubarkan Room Ini
+                    </button>
+                </div>
+            ` : ''}
         </div>
     `;
 
@@ -3554,7 +3527,7 @@ window.loadJadwalLobby = async () => {
     const listContainer = document.getElementById('listJadwalTryout');
     if (!listContainer) return;
 
-    listContainer.innerHTML = '<p style="color:#ccc; text-align:center; margin: 10px 0;"><i class="fas fa-spinner fa-spin"></i> Mengecek jadwal...</p>';
+    listContainer.innerHTML = '<p style="color:#ccc; text-align:center; margin: 10px 0;"><i class="fas fa-spinner fa-spin"></i> Mengecek jadwal & room aktif...</p>';
 
     try {
         const qRef = collection(window.db || db, "rooms");
@@ -3564,7 +3537,6 @@ window.loadJadwalLobby = async () => {
         let adaJadwalAktif = false;
         let waktuSekarang = new Date().getTime();
         
-        // 🛑 PERBAIKAN: Tarik data user dengan lebih akurat & kebal
         let uidSaya = null;
         let namaSaya = null;
         if (typeof currentUser !== 'undefined' && currentUser) {
@@ -3575,54 +3547,98 @@ window.loadJadwalLobby = async () => {
             namaSaya = window.currentUser.displayName;
         }
 
+        const kamusModul = {
+            "ilmu_hukum": "Ilmu Hukum Dasar",
+            "modul1": "Modul 1: Kekuasaan Kehakiman",
+            "modul2": "Modul 2: Mahkamah Agung",
+            "modul3": "Modul 3: Peradilan Agama",
+            "modul6": "Modul 6: PMH & Wanprestasi",
+            "modul8": "Modul 8: Perkawinan (KHI)",
+            "modul8_1": "Modul 8.1: Perkawinan",
+            "latihan": "Modul Latihan Campuran"
+        };
+
+        const statusAktif = ['waiting', 'ready_check', 'soal', 'pembahasan', 'ujian'];
+
         snapshot.forEach(docSnap => {
             const data = docSnap.data();
             const roomId = docSnap.id;
 
-            if (data.status === 'waiting' && data.jadwal_mulai) {
-                // Sembunyikan jadwal yang udah lewat lebih dari 2 jam
-                if (waktuSekarang - data.jadwal_mulai > (2 * 60 * 60 * 1000)) return;
+            if (statusAktif.includes(data.status)) {
+                // Sembunyikan room lama (lebih dari 6 jam)
+                let waktuBuat = (data.createdAt && data.createdAt.toMillis) ? data.createdAt.toMillis() : (data.jadwal_mulai || 0);
+                if (waktuBuat && (waktuSekarang - waktuBuat > (6 * 60 * 60 * 1000))) return;
 
                 adaJadwalAktif = true;
-                
-                let tgl = new Date(data.jadwal_mulai);
-                let strHari = tgl.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
-                let strJam = tgl.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
-                // 🛑 CEK HOST DIPERKUAT: 
-                // Cocokkan UID, ATAU Cocokkan Nama, ATAU berikan Akses Dewa khusus untuk Ilham
                 let isMyRoom = (uidSaya && data.hostUid === uidSaya) || 
-                               (namaSaya && data.hostName === namaSaya) || 
-                               (namaSaya && namaSaya.includes("Ilham Nur Pratama"));
-                
-                // 1. TOMBOL HAPUS (Khusus Host / Admin)
-                let btnHapus = isMyRoom ? 
-                    `<button onclick="window.hapusRoomJadwal('${roomId}')" style="background:transparent; color:#d32f2f; border:1px solid #d32f2f; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; transition:0.3s;" title="Batalkan/Hapus Room">
+                               (namaSaya && data.hostName === namaSaya);
+                let isAlreadyJoined = (uidSaya && data.players && !!data.players[uidSaya]);
+                let totalPeserta = Object.keys(data.players || {}).length;
+
+                let namaModul = kamusModul[data.modulId] || (data.modulId || "Modul Latihan").replace(/_/g, ' ').toUpperCase();
+
+                // 1. TOMBOL HAPUS (Khusus Host / Super Admin)
+                let btnHapus = (isMyRoom || (window.userRoleCakim === "SUPER_ADMIN")) ? 
+                    `<button onclick="window.hapusRoomJadwal('${roomId}')" style="background:transparent; color:#d32f2f; border:1px solid #d32f2f; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; transition:0.3s;" title="Batalkan / Bubarkan Room">
                         <i class="fas fa-trash-alt"></i>
                     </button>` : '';
 
                 // 2. TOMBOL COPY LINK
                 let linkRoom = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
                 let btnCopyLink = `
-                    <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Bagikan link ini ke temanmu via WhatsApp.', 'success');" style="background:transparent; color:#3498db; border:1px solid #3498db; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:8px; transition:0.3s;" title="Salin Link Invite">
+                    <button onclick="navigator.clipboard.writeText('${linkRoom}'); PROTAMA.alert('Link Disalin!', 'Bagikan link ini ke temanmu via WhatsApp.', 'success');" style="background:transparent; color:#3498db; border:1px solid #3498db; padding:7px 10px; border-radius:6px; cursor:pointer; font-size:0.85rem; margin-right:6px; transition:0.3s;" title="Salin Link Invite">
                         <i class="fas fa-link"></i>
                     </button>
                 `;
 
+                // 3. BADGE STATUS & TOMBOL AKSI
+                let badgeStatus = '';
+                let btnAksi = '';
+
+                if (data.status === 'waiting') {
+                    badgeStatus = `<span style="background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; padding:2px 8px; border-radius:12px; font-weight:bold; font-size:0.75rem;"><i class="fas fa-hourglass-half"></i> Ruang Tunggu</span>`;
+                    if (isMyRoom) {
+                        btnAksi = `<button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:#2e7d32; color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:6px;">
+                            <i class="fas fa-crown"></i> Masuk (Host)
+                        </button>`;
+                    } else if (isAlreadyJoined) {
+                        btnAksi = `<button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:#1565c0; color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:6px;">
+                            <i class="fas fa-sign-in-alt"></i> Masuk Kembali
+                        </button>`;
+                    } else {
+                        btnAksi = `<button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:var(--success); color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:6px;">
+                            <i class="fas fa-sign-in-alt"></i> GABUNG
+                        </button>`;
+                    }
+                } else {
+                    // Sedang jalan ujian / ready check / pembahasan
+                    badgeStatus = `<span style="background:#fee2e2; color:#dc2626; border:1px solid #fecaca; padding:2px 8px; border-radius:12px; font-weight:bold; font-size:0.75rem;"><i class="fas fa-bolt"></i> Live Ujian (Soal ${(data.currentIdx || 0) + 1}/${(data.soalTersimpan || []).length})</span>`;
+                    if (isAlreadyJoined || isMyRoom) {
+                        btnAksi = `<button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:#e67e22; color:white; border:none; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:6px;">
+                            <i class="fas fa-sync-alt"></i> Reconnect Mabar
+                        </button>`;
+                    } else {
+                        btnAksi = `<span style="color:#888; font-size:0.8rem; font-style:italic; padding:6px 10px; background:#eee; border-radius:6px; margin-right:6px;"><i class="fas fa-lock"></i> Sesi Berjalan</span>`;
+                    }
+                }
+
                 html += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; margin-bottom:10px; border:1px solid #e0e0e0; border-radius:8px; background:#f9f9f9; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                        <div style="flex:1;">
-                            <h6 style="margin:0; color:var(--primary); font-size:0.95rem;">${data.nama}</h6>
-                            <div style="margin-top:4px; font-size:0.8rem;">
-                                <span style="background:#fff3e0; color:#e67e22; padding:2px 6px; border-radius:4px; font-weight:bold; margin-right:5px;">
-                                    <i class="far fa-clock"></i> ${strHari} - ${strJam}
-                                </span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:14px; margin-bottom:12px; border:1px solid #e0e0e0; border-radius:10px; background:#ffffff; box-shadow:0 2px 8px rgba(0,0,0,0.03); gap:12px; flex-wrap:wrap;">
+                        <div style="flex:1; min-width:200px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; flex-wrap:wrap;">
+                                <h6 style="margin:0; color:var(--primary); font-size:1rem; font-weight:bold;">${data.nama || ('Room ' + roomId)}</h6>
+                                ${badgeStatus}
+                            </div>
+                            <div style="font-size:0.82rem; color:#666; display:flex; gap:12px; flex-wrap:wrap; margin-top:5px;">
+                                <span><i class="fas fa-key" style="color:#f39c12;"></i> Kode: <b>${roomId}</b></span>
+                                <span><i class="fas fa-book-open" style="color:var(--primary);"></i> ${namaModul}</span>
+                                <span><i class="fas fa-crown" style="color:#f1c40f;"></i> Host: <b>${data.hostName || 'Host'}</b></span>
+                                <span><i class="fas fa-users" style="color:#3498db;"></i> <b>${totalPeserta}</b> Peserta</span>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <button onclick="window.gabungRoomLatihanOtomatis('${roomId}')" style="background:var(--success); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.85rem; box-shadow:0 2px 5px rgba(0,0,0,0.1); min-width:70px; margin-right:8px;">
-                                <i class="fas fa-sign-in-alt"></i> JOIN
-                            </button>
+                            ${btnAksi}
                             ${btnCopyLink}
                             ${btnHapus}
                         </div>
@@ -3632,7 +3648,7 @@ window.loadJadwalLobby = async () => {
         });
 
         if (!adaJadwalAktif) {
-            listContainer.innerHTML = '<p style="color:#999; text-align:center; margin: 15px 0; font-style:italic;">Belum ada jadwal Tryout terdekat.</p>';
+            listContainer.innerHTML = '<p style="color:#999; text-align:center; margin: 15px 0; font-style:italic;">Belum ada room atau jadwal Tryout aktif.</p>';
         } else {
             listContainer.innerHTML = html;
         }
@@ -3642,24 +3658,25 @@ window.loadJadwalLobby = async () => {
         listContainer.innerHTML = '<p style="color:var(--danger); text-align:center; margin: 10px 0;">Gagal memuat jadwal dari server.</p>';
     }
 };
-// ==========================================================
-// FUNGSI EKSEKUSI HAPUS ROOM OLEH HOST
-// ==========================================================
+
 window.hapusRoomJadwal = async (roomId) => {
-    const yakin = await PROTAMA.confirm("Batalkan Tryout?", "Room ini akan dihapus permanen dan peserta tidak akan bisa bergabung.");
+    const yakin = await PROTAMA.confirm("Batalkan Tryout?", "Room ini akan dibatalkan permanen dan peserta lain akan dikeluarkan.");
     if (!yakin) return;
-    
-    PROTAMA.loading("Menghapus jadwal...");
+
+    PROTAMA.loading("Membatalkan Room...");
     try {
-        await deleteDoc(doc(window.db, "rooms", roomId));
+        const roomRef = doc(window.db || db, "rooms", roomId);
+        await updateDoc(roomRef, { status: 'dibatalkan' }).catch(() => {});
+        await deleteDoc(roomRef).catch(() => {});
         PROTAMA.close();
-        PROTAMA.alert("Berhasil", "Jadwal Tryout berhasil dihapus.", "success");
-        
-        // Refresh daftar jadwal di lobi secara otomatis
-        window.loadJadwalLobby();
+        PROTAMA.alert("Berhasil", "Room Tryout berhasil dibatalkan dan dihapus.", "success");
+        if (typeof window.loadJadwalLobby === 'function') window.loadJadwalLobby();
+        if (currentRoomCode === roomId || window.currentRoomCode === roomId) {
+            window.keluarDariRoom();
+        }
     } catch (e) {
         PROTAMA.close();
-        PROTAMA.alert("Error", "Gagal menghapus room: " + e.message, "error");
+        PROTAMA.alert("Error", "Gagal membatalkan room: " + e.message, "error");
     }
 };
 // ==========================================================
@@ -3824,38 +3841,120 @@ window.pantauRoom = (kodeRoom) => {
         const listContainer = document.getElementById('liveLeaderboardList');
         if (!listContainer) return;
 
-        let arr = Object.values(playersObj);
+        let arr = Object.entries(playersObj || {}).map(([uid, p]) => ({ uid, ...p }));
         arr.sort((a,b) => (b.skor || 0) - (a.skor || 0)); 
+
+        const activeUserScore = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+        const myUidScore = activeUserScore ? activeUserScore.uid : null;
+        const currentHostUid = window.latestRoomData ? window.latestRoomData.hostUid : null;
+        const amICurrentHost = !!(myUidScore && currentHostUid === myUidScore);
 
         let html = '';
         
         arr.forEach((p, i) => { 
-            let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:22px; display:inline-block; text-align:center;">#${i+1}</span>`));
+            let medal = i===0 ? 'ðŸ¥‡' : (i===1 ? 'ðŸ¥ˆ' : (i===2 ? 'ðŸ¥‰' : `<span style="color:#7f8c8d; font-weight:bold; font-size:0.85rem; min-width:22px; display:inline-block; text-align:center;">#${i+1}</span>`));
             
-            let namaDepan = p.nama.split(" ")[0]; 
-            let isMe = (window.currentUser && p.nama === window.currentUser.displayName) ? 'font-weight:bold; color:#1565c0;' : 'color:#333; font-weight:600;';
-            let bgRow = (window.currentUser && p.nama === window.currentUser.displayName) ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
+            let namaDepan = (p.nama || 'Peserta').split(" ")[0]; 
+            let isMe = (myUidScore && p.uid === myUidScore) || (window.currentUser && p.nama === window.currentUser.displayName);
+            let styleNama = isMe ? 'font-weight:bold; color:#1565c0;' : 'color:#333; font-weight:600;';
+            let bgRow = isMe ? 'background:#e3f2fd; border-color:#90caf9;' : 'background:white; border-color:#e0e0e0;';
             let skorTampil = Math.round(p.skor || 0);
 
             let isUdahJawab = p.jawabanSekarang !== null && p.jawabanSekarang !== undefined;
             let statusIcon = isUdahJawab ? '<i class="fas fa-check-circle" style="color:#2ecc71;" title="Sudah Jawab"></i>' : '<i class="fas fa-spinner fa-spin" style="color:#95a5a6;" title="Mikir..."></i>';
 
+            let isThisPlayerHost = (p.uid === currentHostUid);
+            let hostCrown = isThisPlayerHost ? '<span title="Host" style="color:#f1c40f; font-size:0.8rem; margin-left:2px;">ðŸ‘‘</span>' : '';
+
+            let isOffline = p.lastSeen && (Date.now() - p.lastSeen > 25000);
+            let offlineIcon = isOffline ? '<i class="fas fa-wifi" style="color:#e74c3c; font-size:0.75rem; margin-left:3px;" title="Terputus / Gangguan Koneksi"></i>' : '';
+
+            let kontrolHost = '';
+            if (amICurrentHost && !isMe) {
+                kontrolHost = `
+                    <div style="display:inline-flex; align-items:center; gap:4px; margin-left:6px;">
+                        <button onclick="window.delegasikanHost('${p.uid}', '${(p.nama || '').replace(/'/g, "\\'")}')" style="background:#fff3e0; border:1px solid #ffe0b2; color:#e67e22; border-radius:4px; padding:2px 5px; font-size:0.7rem; cursor:pointer;" title="Alihkan Host ke ${p.nama}">
+                            ðŸ‘‘ Alihkan
+                        </button>
+                        <button onclick="window.kickPeserta('${p.uid}', '${(p.nama || '').replace(/'/g, "\\'")}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:4px; padding:2px 5px; font-size:0.7rem; cursor:pointer;" title="Keluarkan ${p.nama} (mempercepat ujian)">
+                            <i class="fas fa-times"></i> Kick
+                        </button>
+                    </div>
+                `;
+            }
+
             html += `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:8px 12px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        ${medal} 
-                        <img src="${p.photoURL || ((window.currentUser && p.nama === window.currentUser.displayName) ? window.currentUser.photoURL : '') || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(namaDepan) + '&background=004d00&color=fff&bold=true&size=60'}" referrerpolicy="no-referrer" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid ${i===0 ? '#f1c40f' : (i===1 ? '#bdc3c7' : (i===2 ? '#e67e22' : '#ddd'))}; flex-shrink:0;" alt="${namaDepan}">
-                        <span style="${isMe} text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:85px;">${namaDepan}</span>
+                <div style="display:flex; flex-direction:column; margin-bottom:4px; padding:8px 10px; ${bgRow} border-radius:6px; border-width:1px; border-style:solid; font-size:0.85rem; box-shadow:0 1px 2px rgba(0,0,0,0.05); gap:4px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+                            ${medal} 
+                            <img src="${p.photoURL || (isMe ? (window.currentUser && window.currentUser.photoURL) : '') || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(namaDepan) + '&background=004d00&color=fff&bold=true&size=60'}" referrerpolicy="no-referrer" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid ${i===0 ? '#f1c40f' : (i===1 ? '#bdc3c7' : (i===2 ? '#e67e22' : '#ddd'))}; flex-shrink:0;" alt="${namaDepan}">
+                            <span style="${styleNama} text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:85px;">${namaDepan}</span>
+                            ${hostCrown}
+                            ${offlineIcon}
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
+                            ${statusIcon}
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-weight:900; color:#e67e22;">${skorTampil} <small style="font-size:0.6rem; color:#888;">Pts</small></span>
-                        ${statusIcon}
-                    </div>
+                    ${kontrolHost ? `<div style="display:flex; justify-content:flex-end; padding-top:2px; border-top:1px dashed #eee;">${kontrolHost}</div>` : ''}
                 </div>
             `;
         });
         
         listContainer.innerHTML = html;
+    };
+
+    window.delegasikanHost = async (targetUid, targetNama) => {
+        const kodeRoom = currentRoomCode || window.currentRoomCode;
+        if (!kodeRoom || !targetUid) return;
+
+        const yakin = await PROTAMA.confirm(
+            "Alihkan Posisi Host?",
+            `Yakin ingin menyerahkan posisi Host kepada <b>${targetNama}</b>?<br><small style="color:#666;">Kamu akan dialihkan menjadi peserta biasa.</small>`
+        );
+        if (!yakin) return;
+
+        PROTAMA.loading("Mengalihkan Host...");
+        try {
+            const roomRef = doc(window.db || db, "rooms", kodeRoom);
+            await updateDoc(roomRef, {
+                hostUid: targetUid,
+                hostName: targetNama
+            });
+            window.isHost = false;
+            isHost = false;
+            PROTAMA.close();
+            PROTAMA.alert("Host Dialihkan!", `Posisi Host sekarang resmi dipegang oleh <b>${targetNama}</b>.`, "success");
+        } catch (e) {
+            PROTAMA.close();
+            PROTAMA.alert("Gagal", "Gagal mengalihkan host: " + e.message, "error");
+        }
+    };
+
+    window.kickPeserta = async (targetUid, targetNama) => {
+        const kodeRoom = currentRoomCode || window.currentRoomCode;
+        if (!kodeRoom || !targetUid) return;
+
+        const yakin = await PROTAMA.confirm(
+            "Keluarkan Peserta?",
+            `Yakin ingin mengeluarkan <b>${targetNama}</b> dari room?<br><small style="color:#e67e22;">Jika peserta offline/terputus, mengeluarkannya akan mempercepat ujian tanpa harus menunggu timer habis.</small>`
+        );
+        if (!yakin) return;
+
+        PROTAMA.loading("Mengeluarkan Peserta...");
+        try {
+            const roomRef = doc(window.db || db, "rooms", kodeRoom);
+            await updateDoc(roomRef, {
+                [`players.${targetUid}`]: deleteField()
+            });
+            PROTAMA.close();
+            PROTAMA.alert("Peserta Dikeluarkan", `<b>${targetNama}</b> berhasil dikeluarkan dari room.`, "success");
+        } catch (e) {
+            PROTAMA.close();
+            PROTAMA.alert("Gagal", "Gagal mengeluarkan peserta: " + e.message, "error");
+        }
     };
 
 // 🛑 INI DIA NYAWA FIREBASE YANG KEHAPUS! KITA KEMBALIKAN:
@@ -3878,14 +3977,13 @@ window.pantauRoom = (kodeRoom) => {
 
         // 🛑 FIX BUG 1: GLOBAL KICK DETECTION (KEBAL BYPASS)
         if (myUid && data.players && !data.players[myUid]) {
-            // Kalau namaku tiba-tiba hilang dari database pas room udah mulai jalan
-            if (data.status === 'ready_check' || data.status === 'soal' || data.status === 'pembahasan') {
+            if (data.status === 'ready_check' || data.status === 'soal' || data.status === 'pembahasan' || data.status === 'waiting') {
                 const overlayReady = document.getElementById('readyCheckOverlay');
                 if (overlayReady) overlayReady.remove();
-                
-                PROTAMA.alert("KELUAR!", "Kamu KELUAR OTOMATIS dari Room karena tidak klik Ready.", "error");
-                if (roomListenerUnsubscribe) roomListenerUnsubscribe();
-                return window.keluarDariRoom(); // 🛑 BLOKIR TOTAL AKSES SOAL!
+                const msg = data.status === 'ready_check' ? 'Kamu dikeluarkan dari Room karena tidak klik Ready.' : 'Kamu telah dikeluarkan dari room oleh Host.';
+                PROTAMA.alert('KELUAR DARI ROOM', msg, 'warning');
+                if (roomListenerUnsubscribe) { try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e){} }
+                return window.keluarDariRoom();
             }
         }
 
@@ -4023,7 +4121,17 @@ window.pantauRoom = (kodeRoom) => {
                     count++;
                     let p = data.players[uid];
                     let icon = uid === data.hostUid ? '👑' : '👤'; 
-                    listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333;">${icon} ${p.nama}</li>`;
+                    let isHostUser = (myActiveUid && data.hostUid === myActiveUid);
+                    let aksiHost = '';
+                    if (isHostUser && uid !== myActiveUid) {
+                        aksiHost = `
+                            <div style="display:inline-flex; gap:6px; margin-left:auto;">
+                                <button onclick="window.delegasikanHost('${uid}', '${(p.nama||'').replace(/'/g, "\\'")}')" style="background:#fff3e0; border:1px solid #ffe0b2; color:#e67e22; border-radius:4px; padding:2px 8px; font-size:0.75rem; cursor:pointer;" title="Alihkan Host ke ${p.nama}"><i class="fas fa-crown"></i> Jadikan Host</button>
+                                <button onclick="window.kickPeserta('${uid}', '${(p.nama||'').replace(/'/g, "\\'")}')" style="background:#fee2e2; border:1px solid #fecaca; color:#dc2626; border-radius:4px; padding:2px 8px; font-size:0.75rem; cursor:pointer;" title="Keluarkan ${p.nama}"><i class="fas fa-times"></i> Kick</button>
+                            </div>
+                        `;
+                    }
+                    listEl.innerHTML += `<li style="padding:8px 0; border-bottom:1px solid #eee; font-weight:bold; color:#333; display:flex; align-items:center; justify-content:space-between;"><span>${icon} ${p.nama}</span> ${aksiHost}</li>`;
                 }
                 if (countEl) countEl.innerText = count;
             }
