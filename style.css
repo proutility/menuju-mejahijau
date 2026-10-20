@@ -981,7 +981,7 @@ div.swal2-container {
     border-top: 2px solid var(--gold) !important;
     border-bottom: none !important;
     border-radius: 0 !important;
-    margin-bottom: 0 !important;
+    margin-bottom: 35px !important;
     overflow: hidden !important;
 }
 

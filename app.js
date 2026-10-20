@@ -196,6 +196,7 @@ if(auth) {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             currentUser = user;
+            window.currentUser = user;
             const gateOverlay = document.getElementById('gatekeeperOverlay');
 
             // Set default peran awal
@@ -498,6 +499,7 @@ window.handleLogin = async () => {
 window.handleLogout = async () => { 
     if(auth) {
         if(currentUser) await window.updateUserStatus(false, "Offline");
+        currentUser = null; window.currentUser = null;
         signOut(auth).then(() => location.reload()); 
     }
 };
@@ -810,6 +812,8 @@ window.bersihkanStateMode = function(modeTarget = 'ujian') {
     if (typeof trainingTimerInterval !== 'undefined' && trainingTimerInterval) { clearInterval(trainingTimerInterval); trainingTimerInterval = null; }
     if (window.hafalanCountdown) { clearInterval(window.hafalanCountdown); window.hafalanCountdown = null; }
     if (window.speechSynthesis) window.speechSynthesis.cancel();
+    if (window.confettiInterval) { clearInterval(window.confettiInterval); window.confettiInterval = null; }
+    if (window.confetti && typeof window.confetti.reset === 'function') { try { window.confetti.reset(); } catch(e) {} }
 
     // 2. Bersihkan inject CSS anti-freeze / style sisa review
     const unfreezeStyle = document.getElementById('review-unfreeze');
@@ -2385,11 +2389,32 @@ window.backToMenu = async function() {
 };
 
 window.keluarDariRoom = async () => {
+    // ðŸ›‘ 0. LANGSUNG PUTUS KONEKSI SEBELUM UPDATE KE FIREBASE
+    // Agar snapshot sisa / status room tidak menimpa kembali UI lobby
+    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) {
+        try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e) {}
+    }
+
     const leavingRoomCode = currentRoomCode || window.currentRoomCode;
-    const leavingUid = (currentUser && currentUser.uid) || (window.currentUser && window.currentUser.uid);
+    const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+    const leavingUid = activeUser ? activeUser.uid : null;
     const wasHost = (isHost || window.isHost);
 
-    // 🛑 1. UPDATE KEPESERTAAN & MIGRATION HOST KE FIREBASE SEBELUM CABUT
+    // Reset Variabel Mode segera
+    currentRoomCode = null;
+    window.currentRoomCode = null;
+    isHost = false;
+    window.isHost = false;
+    currentAppMode = 'ujian'; 
+    window.currentAppMode = 'ujian';
+
+    // Matikan kembang api dan bersihkan overlay podium
+    if (window.confettiInterval) { clearInterval(window.confettiInterval); window.confettiInterval = null; }
+    if (window.confetti && typeof window.confetti.reset === 'function') { try { window.confetti.reset(); } catch(e) {} }
+    const kahootOverlay = document.getElementById('kahootResultOverlay');
+    if (kahootOverlay) kahootOverlay.remove();
+
+    // ðŸ›‘ 1. UPDATE KEPESERTAAN & MIGRATION HOST KE FIREBASE SEBELUM CABUT
     if (leavingRoomCode && leavingUid) {
         try {
             const roomRef = doc(window.db || db, "rooms", leavingRoomCode);
@@ -2401,9 +2426,11 @@ window.keluarDariRoom = async () => {
                 const remainingUids = Object.keys(players);
 
                 if (remainingUids.length === 0) {
+                    // Jika keluar saat masih di waiting room, tandai room 'dibatalkan', BUKAN 'selesai'!
+                    const statusAkhir = (dataRoom.status === 'waiting') ? 'dibatalkan' : 'selesai';
                     await updateDoc(roomRef, {
                         [`players.${leavingUid}`]: deleteField(),
-                        status: 'selesai'
+                        status: statusAkhir
                     });
                 } else if (wasHost || dataRoom.hostUid === leavingUid) {
                     // Cari penerus: PRIORITAS MEMBER VIP
@@ -2431,12 +2458,6 @@ window.keluarDariRoom = async () => {
             console.log("Gagal sinkron keluar dari room:", e);
         }
     }
-
-    // Putus koneksi dari Room
-    if (typeof roomListenerUnsubscribe !== 'undefined' && roomListenerUnsubscribe) {
-        try { roomListenerUnsubscribe(); } catch(e) {}
-    }
-
     if (typeof window.bersihkanStateMode === 'function') {
         window.bersihkanStateMode('ujian');
     }
@@ -3346,7 +3367,12 @@ window.gabungRoomLatihanOtomatis = async (kodeRoom) => {
 // ==========================================================
 // 2.5. UI WAITING ROOM & TOMBOL MULAI (UPDATED - KAMUS MODUL + ANTI BOCOR)
 // ==========================================================
-window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
+window.tampilkanWaitingRoom = function(kode, isHostParam, modulId = "latihan") {
+    const activeUser = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+    const activeUid = activeUser ? activeUser.uid : null;
+    let effectiveIsHost = (typeof isHostParam !== 'undefined') ? !!isHostParam : (window.isHost || (activeUid && window.latestRoomData && window.latestRoomData.hostUid === activeUid));
+    window.isHost = effectiveIsHost;
+    isHost = effectiveIsHost;
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (typeof window.bersihkanStateMode === 'function') {
         window.bersihkanStateMode('room');
@@ -3468,6 +3494,19 @@ window.tampilkanWaitingRoom = function(kode, isHost, modulId = "latihan") {
             }
 
             let tombolMulai = document.querySelector(`button[onclick="window.mulaiUjianRoom('${kode}')"]`);
+            const activeUserWR = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+            const activeUidWR = activeUserWR ? activeUserWR.uid : null;
+            if (activeUidWR && dataRoom.hostUid === activeUidWR) {
+                window.isHost = true;
+                isHost = true;
+                if (!tombolMulai) {
+                    const divTungguWR = document.querySelector('div.fa-spinner')?.parentNode;
+                    if (divTungguWR) {
+                        divTungguWR.outerHTML = `<button onclick="window.mulaiUjianRoom('${kode}')" style="background:var(--success); color:white; padding:15px 30px; border:none; border-radius:8px; font-size:1.2rem; font-weight:bold; cursor:pointer; margin-top:10px; width:100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">ðŸš€ MULAI</button>`;
+                        tombolMulai = document.querySelector(`button[onclick="window.mulaiUjianRoom('${kode}')"]`);
+                    }
+                }
+            }
             
             // Kalau bukan host, kita ubah div pesannya jadi tempat nampilin detik
             let divTunggu = document.querySelector('div.fa-spinner')?.parentNode;
@@ -3851,9 +3890,11 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         // ========================================================
-        // 👑 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
+        // ðŸ‘‘ 1. SISTEM TRANSFER HOST (ZOOM-STYLE DENGAN STRATA VIP)
         // ========================================================
-        const amIHost = (window.currentUser && data.hostUid === window.currentUser.uid);
+        const activeUserPR = (typeof currentUser !== 'undefined' && currentUser) || window.currentUser;
+        const myActiveUid = activeUserPR ? activeUserPR.uid : (myUid || null);
+        const amIHost = !!(myActiveUid && data.hostUid === myActiveUid);
         const hostBerubah = (window.isHost !== amIHost);
         window.isHost = amIHost;
         isHost = amIHost;
@@ -3864,10 +3905,10 @@ window.pantauRoom = (kodeRoom) => {
         }
 
         // Heartbeat kehadiran player aktif (setiap 10 detik)
-        if (!window.roomHeartbeatTimer && myUid) {
+        if (!window.roomHeartbeatTimer && myActiveUid) {
             window.roomHeartbeatTimer = setInterval(() => {
-                if ((currentRoomCode || window.currentRoomCode) && myUid) {
-                    updateDoc(roomRef, { [`players.${myUid}.lastSeen`]: Date.now() }).catch(() => {});
+                if ((currentRoomCode || window.currentRoomCode) && myActiveUid) {
+                    updateDoc(roomRef, { [`players.${myActiveUid}.lastSeen`]: Date.now() }).catch(() => {});
                 }
             }, 10000);
         }
@@ -3878,14 +3919,14 @@ window.pantauRoom = (kodeRoom) => {
             
             if (!hostMasihAda) {
                 const sisaPemain = Object.keys(data.players).filter(u => u !== data.hostUid);
-                if (sisaPemain.length > 0 && window.currentUser && sisaPemain.includes(window.currentUser.uid)) {
+                if (sisaPemain.length > 0 && myActiveUid && sisaPemain.includes(myActiveUid)) {
                     sisaPemain.sort((a, b) => {
                         const vipA = data.players[a]?.isVIP ? 1 : 0;
                         const vipB = data.players[b]?.isVIP ? 1 : 0;
                         if (vipA !== vipB) return vipB - vipA;
                         return a.localeCompare(b);
                     });
-                    const myIndex = sisaPemain.indexOf(window.currentUser.uid);
+                    const myIndex = sisaPemain.indexOf(myActiveUid);
                     
                     let delayClaim = window.isVIPUser ? (myIndex * 1500) : 6000 + (myIndex * 1500);
                     
@@ -3893,7 +3934,7 @@ window.pantauRoom = (kodeRoom) => {
                     
                     window.hostClaimTimer = setTimeout(() => {
                         console.log("Mengambil alih posisi Host...");
-                        updateDoc(roomRef, { hostUid: window.currentUser.uid, hostName: window.currentUser.displayName || "Host" }).then(() => {
+                        updateDoc(roomRef, { hostUid: myActiveUid, hostName: (activeUserPR && activeUserPR.displayName) || "Host" }).then(() => {
                             if (typeof PROTAMA !== 'undefined') {
                                 PROTAMA.alert('Sistem Host Berpindah!', 'Host terputus. Karena otoritas akunmu, kamu kini dialihkan menjadi Host.', 'success');
                             }
@@ -3907,7 +3948,6 @@ window.pantauRoom = (kodeRoom) => {
                 }
             }
         }
-
         // ========================================================
         // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
         // ========================================================
@@ -4436,19 +4476,44 @@ window.pantauRoom = (kodeRoom) => {
             }
         }
         
-       // --- E. SELESAI ---
-        else if (data.status === 'selesai') {
-            // 👇 1. SAPU BERSIH SEMUA TIMER MABAR BIAR GA BERAT 👇
+       // --- E. ROOM DIBATALKAN ---
+        else if (data.status === 'dibatalkan') {
+            if (roomListenerUnsubscribe) { try { roomListenerUnsubscribe(); roomListenerUnsubscribe = null; } catch(e) {} }
             if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
-    if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
-    if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
+            if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+            if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
+            if (typeof window.bersihkanStateMode === 'function') window.bersihkanStateMode('ujian');
+            if (currentAppMode === 'room' || window.currentAppMode === 'room') {
+                if (typeof PROTAMA !== 'undefined') {
+                    PROTAMA.alert("Room Ditutup", "Room mabar telah dibatalkan atau host telah keluar.", "info");
+                }
+                if (typeof window.keluarDariRoom === 'function') {
+                    window.keluarDariRoom();
+                }
+            }
+        }
+
+       // --- F. SELESAI ---
+        else if (data.status === 'selesai') {
+            // ðŸ‘‡ 1. SAPU BERSIH SEMUA TIMER MABAR BIAR GA BERAT ðŸ‘‡
+            if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
+            if (window.roomHeartbeatTimer) { clearInterval(window.roomHeartbeatTimer); window.roomHeartbeatTimer = null; }
+            if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; }
             if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
             if (window.hostReadyTimerInterval) clearInterval(window.hostReadyTimerInterval);
             if (window.clientReadyTimerInterval) clearInterval(window.clientReadyTimerInterval);
             
-            // 👇 2. BERSIHKAN OVERLAY READY (Jaga-jaga kalau nyangkut) 👇
+            // ðŸ‘‡ 2. BERSIHKAN OVERLAY READY (Jaga-jaga kalau nyangkut) ðŸ‘‡
             const overlayReady = document.getElementById('readyCheckOverlay');
             if (overlayReady) overlayReady.remove();
+
+            // ðŸ›‘ JANGAN TAMPILKAN PODIUM JIKA USER SUDAH TIDAK DI ROOM / ROOM DIBATALKAN DI WAITING ROOM
+            if (!currentRoomCode && !window.currentRoomCode) return;
+            if (currentAppMode !== 'room' && window.currentAppMode !== 'room') return;
+            if (!data.soalTersimpan || data.soalTersimpan.length === 0) return;
+            if (data.statusSebelumnya === 'waiting' || (window.latestRoomData && window.latestRoomData.status === 'waiting' && data.currentIdx === 0 && !data.jawabanHost)) {
+                return;
+            }
 
             window.currentAppMode = 'ujian'; 
 
@@ -4791,7 +4856,7 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
                     <!-- 👉 TOMBOL EVALUASI VIP 👈 -->
                     <button onclick="window.triggerDownloadVIP()" style="background: #2c3e50; color: white; border: 2px solid #f1c40f; padding: 12px 25px; border-radius: 30px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.4);"><i class="fas fa-crown" style="color:#f1c40f;"></i> Evaluasi (VIP)</button>
                     <!-- ================================ -->
-                    <button class="btn-tutup" onclick="document.getElementById('kahootResultOverlay').style.display='none'"><i class="fas fa-times"></i> Tutup & Kembali</button>
+                    <button class="btn-tutup" onclick="if(window.confettiInterval) clearInterval(window.confettiInterval); if(window.confetti && typeof window.confetti.reset==='function') window.confetti.reset(); const o=document.getElementById('kahootResultOverlay'); if(o) o.remove();"><i class="fas fa-times"></i> Tutup & Kembali</button>
                 </div>
             </div>
 
@@ -4847,17 +4912,28 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
         document.body.appendChild(bgOverlay);
 
         const jalankanKembangApi = () => {
+            if (window.confettiInterval) { clearInterval(window.confettiInterval); window.confettiInterval = null; }
             let durasi = 5 * 1000;
             let animationEnd = Date.now() + durasi;
             let defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 2147483649 };
 
             function randomInRange(min, max) { return Math.random() * (max - min) + min; }
-            let interval = setInterval(function() {
+            window.confettiInterval = setInterval(function() {
+                // Hentikan jika overlay sudah ditutup atau user sudah keluar
+                if (!document.getElementById('kahootResultOverlay')) {
+                    if (window.confettiInterval) clearInterval(window.confettiInterval);
+                    return;
+                }
                 let timeLeft = animationEnd - Date.now();
-                if (timeLeft <= 0) return clearInterval(interval);
+                if (timeLeft <= 0) {
+                    if (window.confettiInterval) clearInterval(window.confettiInterval);
+                    return;
+                }
                 let particleCount = 50 * (timeLeft / durasi);
-                window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                if (typeof window.confetti === 'function') {
+                    window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    window.confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }
             }, 250);
         };
 
