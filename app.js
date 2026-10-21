@@ -1711,43 +1711,23 @@ function loadQuestion(idx) {
     // ==========================================
         // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
         // ==========================================
-        let aiChatDiv = document.getElementById('aiChatDiv');
-        
-        if (isModeRoom) {
-            // 🔥 KALAU MABAR: HANCURKAN KOTAK AI SAMPAI KE AKARNYA (Anti Nyangkut) 🔥
-            if (aiChatDiv) aiChatDiv.remove();
-        } else {
-            // 🟢 KALAU SINGLEPLAYER: BIKIN ATAU MUNCULKAN
-            if (!aiChatDiv && fb) {
-                aiChatDiv = document.createElement('div');
-                aiChatDiv.id = 'aiChatDiv';
-                aiChatDiv.style.cssText = "margin-top: 20px; padding: 15px; background: rgba(142, 68, 173, 0.1); border-radius: 8px; border-left: 5px solid #8e44ad;";
-                
-                aiChatDiv.innerHTML = `
-                    <div style="font-weight: bold; color: #8e44ad; margin-bottom: 5px;"><i class="fas fa-robot"></i> Tanya AI Pro-Tama</div>
-                    <p style="font-size: 0.8rem; color: #555; margin-top: 0; margin-bottom: 12px;">Masih belum paham? Tanyakan penjelasan lebih lanjut terkait soal ini ke AI.</p>
-                    <div style="display: flex; gap: 8px;">
-                        <input type="text" id="aiInputPeserta" placeholder="Ketik pertanyaanmu di sini..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 0.9rem;">
-                        <button onclick="window.tanyaAIPeserta()" style="background: #8e44ad; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                    <div id="aiResponsePeserta" style="margin-top: 15px; padding: 12px; background: white; border: 1px dashed #8e44ad; border-radius: 6px; font-size: 0.9rem; line-height: 1.5; display: none;"></div>
-                `;
-                fb.appendChild(aiChatDiv);
+        // 🤖 INJEKSI TOMBOL TANYA MENTOR AI DI PEMBAHASAN AKHIR (REVIEW MODE)
+        let mentorAiDiv = document.getElementById('mentorAiReviewDiv');
+        if (isReviewMode && fb) {
+            if (!mentorAiDiv) {
+                mentorAiDiv = document.createElement('div');
+                mentorAiDiv.id = 'mentorAiReviewDiv';
+                mentorAiDiv.style.cssText = "margin-top: 15px; padding-top: 12px; border-top: 1px dashed #d7bde2; display: flex; justify-content: flex-end;";
+                fb.appendChild(mentorAiDiv);
             }
-            
-            // Pastikan tampil & bersihkan sisa ketikan soal sebelumnya
-            aiChatDiv = document.getElementById('aiChatDiv');
-            if (aiChatDiv) {
-                aiChatDiv.style.display = 'block';
-                
-                const aiInput = document.getElementById('aiInputPeserta');
-                const aiRes = document.getElementById('aiResponsePeserta');
-                if (aiInput) aiInput.value = '';
-                if (aiRes) {
-                    aiRes.style.display = 'none';
-                    aiRes.innerHTML = '';
-                }
-            }
+            mentorAiDiv.style.display = 'flex';
+            mentorAiDiv.innerHTML = `
+                <button onclick="window.tanyaMentorAIBedahSoal(${idx})" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(142,68,173,0.3); display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;">
+                    <i class="fas fa-robot"></i> 🤖 Tanya Mentor AI (Bedah Kasus Soal Ini)
+                </button>
+            `;
+        } else if (mentorAiDiv) {
+            mentorAiDiv.remove();
         }
         
     } else { 
@@ -7435,74 +7415,137 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
 };
 
 // ==========================================
-// 🤖 FITUR CHAT AI PESERTA (DI PEMBAHASAN - MENGGUNAKAN GROQ LLAMA 3)
+// 🤖 FITUR AI MENTOR PRO-TAMA (BEDAH KASUS REVIEW AKHIR)
 // ==========================================
-window.tanyaAIPeserta = async function() {
-    const inputEl = document.getElementById('aiInputPeserta');
-    const resDiv = document.getElementById('aiResponsePeserta');
-    const pertanyaan = inputEl.value.trim();
-    
-    if (!pertanyaan) return;
-    
-    // Tampilkan animasi loading
-    resDiv.style.display = 'block';
-    resDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin" style="color: #8e44ad;"></i> <span style="color: #555;">AI sedang mencari dasar hukum...</span>';
-    
-    const GROQ_API_KEY = "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";
+window.GEMINI_API_KEY = "";
 
-    // Ambil data soal yang lagi dibuka user
-    const q = currentQuestions[currentIdx];
+async function getGeminiApiKey() {
+    if (window.GEMINI_API_KEY) return window.GEMINI_API_KEY;
+    try {
+        const database = window.db || (typeof db !== 'undefined' ? db : null);
+        if (database) {
+            const snap = await getDoc(doc(database, "settings", "ai_config"));
+            if (snap.exists() && snap.data().apiKey) {
+                window.GEMINI_API_KEY = snap.data().apiKey;
+                return window.GEMINI_API_KEY;
+            }
+        }
+    } catch(e) {}
+    return window.GEMINI_API_KEY || "";
+}
+
+window.tanyaMentorAIBedahSoal = async function(idxSoal) {
+    const targetIdx = (idxSoal !== undefined && idxSoal !== null) ? idxSoal : currentIdx;
+    if (!currentQuestions || !currentQuestions[targetIdx]) return;
+
+    const q = currentQuestions[targetIdx];
     const teksSoal = q.q || "";
-    const teksBahas = q.explanation || "";
+    const opsiArr = q.options || [];
+    const kunciIdx = q.answer !== undefined ? q.answer : -1;
+    const jawabanKunciTeks = (kunciIdx >= 0 && opsiArr[kunciIdx]) ? opsiArr[kunciIdx] : "-";
+    const jawabanUserIdx = (userAnswers && userAnswers[targetIdx] !== undefined) ? userAnswers[targetIdx] : -1;
+    const jawabanUserTeks = (jawabanUserIdx >= 0 && opsiArr[jawabanUserIdx]) ? opsiArr[jawabanUserIdx] : "(Tidak Menjawab)";
+    const teksBahas = q.explanation || "-";
+    const sumberHukum = q.cite || "-";
 
-    const prompt = `Anda adalah Tutor Ahli Hukum di Indonesia. Seorang peserta ujian menanyakan hal terkait soal berikut:
-    
-    Konteks Soal: "${teksSoal}"
-    Pembahasan Asli: "${teksBahas}"
-    
-    Pertanyaan Peserta: "${pertanyaan}"
-    
-    Tugas: Jawab pertanyaan peserta secara ramah, profesional, ringkas, dan mudah dipahami berdasarkan konteks soal di atas. Jika perlu, sebutkan dasar hukumnya. Gunakan format Markdown standar (*tebal*, _miring_).`;
+    const modalId = 'modalMentorAI';
+    let modalEl = document.getElementById(modalId);
+    if (!modalEl) {
+        modalEl = document.createElement('div');
+        modalEl.id = modalId;
+        modalEl.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999999; display:flex; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;";
+        document.body.appendChild(modalEl);
+    }
+    modalEl.style.display = 'flex';
+    modalEl.innerHTML = `
+        <div style="background:white; border-radius:16px; width:680px; max-width:96%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.3); border-top:6px solid #8e44ad;">
+            <div style="padding:16px 20px; background:#f9f4fb; border-bottom:1px solid #ebd9f3; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:#8e44ad; color:white; display:flex; align-items:center; justify-content:center; font-size:1.1rem;"><i class="fas fa-robot"></i></div>
+                    <div>
+                        <h4 style="margin:0; color:#5b2c6f; font-size:1.05rem;">Mentor AI Bedah Kasus (Soal #${targetIdx + 1})</h4>
+                        <span style="font-size:0.75rem; color:#7d3c98;">Analisis Yuridis Resmi Google Gemini</span>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('${modalId}').style.display='none'" style="background:none; border:none; font-size:1.6rem; color:#888; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+            <div id="aiModalContent" style="padding:20px; overflow-y:auto; flex:1; font-size:0.92rem; line-height:1.6; color:#2c3e50;">
+                <div style="text-align:center; padding:40px 10px;">
+                    <i class="fas fa-circle-notch fa-spin" style="font-size:2.4rem; color:#8e44ad; margin-bottom:15px;"></i>
+                    <p style="margin:0; font-weight:600; color:#555;">Mentor AI sedang menelaah KUHPerdata, UU Peradilan Agama & KHI...</p>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const prompt = `Anda adalah Hakim Senior dan Tutor Ahli Ujian Calon Hakim (Cakim PA 2026). Tolong bedah soal berikut secara yuridis, lugas, dan edukatif:
+
+SOAL:
+"${teksSoal}"
+
+OPSI JAWABAN:
+${opsiArr.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join('\n')}
+
+KUNCI JAWABAN BENAR: ${jawabanKunciTeks}
+JAWABAN PESERTA: ${jawabanUserTeks}
+PEMBAHASAN RESMI: ${teksBahas}
+SUMBER/DASAR HUKUM: ${sumberHukum}
+
+TUGAS:
+1. Bedah secara yuridis MENGAPA kunci jawaban tersebut benar berdasarkan aturan perundang-undangan (rujuk pasal KUHPerdata, UU Peradilan Agama, KHI, HIR/RBg, atau SEMA terkait).
+2. Jika jawaban peserta keliru, jelaskan letak kekeliruan konsep hukumnya.
+3. Berikan "Tips Hakim" (1-2 kalimat cara cepat mengingat konsep hukum ini untuk ujian berikutnya).
+
+Format jawaban dengan rapi menggunakan poin-poin tebal.`;
 
     try {
-        const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+        const apiKey = await getGeminiApiKey();
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
+                'x-goog-api-key': apiKey
             },
-            body: JSON.stringify({ 
-                model: 'qwen/qwen3.8-27b',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.3 
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
             })
         });
 
         const data = await response.json();
+        const contentBox = document.getElementById('aiModalContent');
+        if (!contentBox) return;
 
         if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal terhubung ke API Groq.");
+            throw new Error(data.error?.message || "Gagal menghubungi Gemini API.");
         }
 
-        let reply = data.choices[0].message.content;
-        
-        reply = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        reply = reply.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        reply = reply.replace(/\n/g, '<br>');
-        
-        resDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-robot"></i> Jawaban AI Pro-Tama:</strong><br><br>${reply}`;
-        
-    } catch (e) {
-        resDiv.innerHTML = `<span style="color: red;"><strong>Maaf, terjadi kesalahan:</strong> ${e.message}</span>`;
+        let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI tidak dapat menghasilkan analisis.";
+        let formatted = aiText
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '<p style="margin-top:10px; margin-bottom:10px;">')
+            .replace(/\n/g, '<br>');
+
+        contentBox.innerHTML = `
+            <div style="background:#fcf8fd; border:1px solid #ebd9f3; border-radius:10px; padding:15px; margin-bottom:15px;">
+                <div style="font-weight:bold; color:#5b2c6f; margin-bottom:4px;"><i class="fas fa-balance-scale"></i> Kasus Hukum:</div>
+                <div style="font-size:0.88rem; color:#444;">${teksSoal}</div>
+            </div>
+            <div>${formatted}</div>
+        `;
+    } catch(err) {
+        const contentBox = document.getElementById('aiModalContent');
+        if (contentBox) {
+            contentBox.innerHTML = `
+                <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b; text-align:center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px;"></i>
+                    <h4 style="margin:0 0 8px 0;">Gagal Memuat Analisis AI</h4>
+                    <p style="margin:0; font-size:0.85rem;">${err.message}</p>
+                </div>
+            `;
+        }
     }
 };
-
-// Fitur tambahan: Peserta bisa tekan 'Enter' di keyboard buat ngirim pertanyaan
-document.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'aiInputPeserta') {
-        window.tanyaAIPeserta();
-    }
-});
 // ==========================================
 // SCRIPT MIGRASI HEMAT READ FIREBASE
 // ==========================================
