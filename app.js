@@ -8168,23 +8168,30 @@ window.renderChatMessages = (messages) => {
 
         let isiKonten = '';
         if (m.audio) {
-            const vnId = 'vn_' + Math.random().toString(36).substr(2, 9);
+            // Identifier unik deterministik untuk setiap pesan VN
+            const safeWaktu = (m.waktu || '').replace(/[^a-zA-Z0-9]/g, '');
+            const vnId = 'vn_' + (safeWaktu ? (safeWaktu + '_' + (m.uid ? m.uid.slice(-4) : '')) : Math.random().toString(36).substr(2, 9));
+            window.vnAudioRegistry = window.vnAudioRegistry || {};
+            window.vnAudioRegistry[vnId] = {
+                audioSrc: m.audio,
+                durasi: m.durasi || 5,
+                blobUrl: null
+            };
             const durasiStr = m.durasi ? `0:${String(m.durasi).padStart(2, '0')}` : '0:05';
             isiKonten = `
-                <div class="vn-player-card">
-                    <button type="button" class="vn-play-btn" id="btnPlay_${vnId}" onclick="window.playVoiceNote('${vnId}')">
-                        <i class="fas fa-play" id="iconPlay_${vnId}"></i>
+                <div class="vn-player-card" data-vnid="${vnId}">
+                    <button type="button" class="vn-play-btn" onclick="window.playVoiceNote('${vnId}', this)">
+                        <i class="fas fa-play"></i>
                     </button>
                     <div class="vn-waveform-container">
-                        <div class="vn-progress-bar" onclick="window.seekVoiceNote('${vnId}', event)">
-                            <div class="vn-progress-inner" id="prog_${vnId}"></div>
+                        <div class="vn-progress-bar" onclick="window.seekVoiceNote('${vnId}', this, event)">
+                            <div class="vn-progress-inner"></div>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span class="vn-time-label" id="time_${vnId}">${durasiStr}</span>
+                            <span class="vn-time-label">${durasiStr}</span>
                             <span style="font-size:0.65rem; color:#128c7e; font-weight:bold;"><i class="fas fa-microphone"></i> VN</span>
                         </div>
                     </div>
-                    <audio id="audio_${vnId}" src="${m.audio}" preload="metadata" style="display:none;"></audio>
                 </div>
             `;
         } else {
@@ -8235,65 +8242,182 @@ window.renderChatMessages = (messages) => {
 // ==========================================
 // 🎙️ SISTEM VOICE NOTE WHATSAPP-STYLE
 // ==========================================
-window.currentPlayingAudio = null;
-window.currentPlayingVnId = null;
+window.vnAudioRegistry = window.vnAudioRegistry || {};
+window.activeVnPlayer = null;
+window.activeVnVnId = null;
 
-window.playVoiceNote = function(vnId) {
-    const audio = document.getElementById('audio_' + vnId);
-    const icon = document.getElementById('iconPlay_' + vnId);
-    const prog = document.getElementById('prog_' + vnId);
-    const timeLbl = document.getElementById('time_' + vnId);
-    if (!audio) return;
+function helperDataURLtoBlob(dataurl) {
+    try {
+        if (!dataurl || typeof dataurl !== 'string') return null;
+        const parts = dataurl.split(',');
+        if (parts.length < 2) return null;
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mime = (mimeMatch && mimeMatch[1]) ? mimeMatch[1] : 'audio/webm';
+        const binaryStr = atob(parts[1]);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: mime });
+    } catch (e) {
+        console.warn("helperDataURLtoBlob error:", e);
+        return null;
+    }
+}
 
-    // Matikan audio lain jika sedang jalan
-    if (window.currentPlayingAudio && window.currentPlayingAudio !== audio) {
-        window.currentPlayingAudio.pause();
-        if (window.currentPlayingVnId) {
-            const oldIcon = document.getElementById('iconPlay_' + window.currentPlayingVnId);
-            if (oldIcon) oldIcon.className = 'fas fa-play';
+window.stopAllVoiceNotes = function() {
+    if (window.activeVnPlayer) {
+        try {
+            window.activeVnPlayer.pause();
+        } catch(e) {}
+    }
+    if (window.activeVnVnId) {
+        const oldId = window.activeVnVnId;
+        const oldData = window.vnAudioRegistry ? window.vnAudioRegistry[oldId] : null;
+        const durStr = oldData && oldData.durasi ? `0:${String(oldData.durasi).padStart(2, '0')}` : '0:05';
+        document.querySelectorAll(`.vn-player-card[data-vnid="${oldId}"]`).forEach(card => {
+            const icon = card.querySelector('.fa-pause');
+            if (icon) icon.className = 'fas fa-play';
+            const prog = card.querySelector('.vn-progress-inner');
+            if (prog) prog.style.width = '0%';
+            const timeLbl = card.querySelector('.vn-time-label');
+            if (timeLbl) timeLbl.innerText = durStr;
+        });
+    }
+    window.activeVnPlayer = null;
+    window.activeVnVnId = null;
+};
+
+window.playVoiceNote = function(vnId, btnElem) {
+    const vnData = window.vnAudioRegistry ? window.vnAudioRegistry[vnId] : null;
+    if (!vnData || !vnData.audioSrc) {
+        console.error("Data VN tidak ditemukan untuk id:", vnId);
+        return;
+    }
+
+    // Jika yang diklik adalah VN yang sedang aktif
+    if (window.activeVnVnId === vnId && window.activeVnPlayer) {
+        if (!window.activeVnPlayer.paused) {
+            // Sedang main -> Pause
+            window.activeVnPlayer.pause();
+            document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+                const icon = card.querySelector('.fa-pause');
+                if (icon) icon.className = 'fas fa-play';
+            });
+            return;
+        } else {
+            // Sedang pause -> Resume
+            window.activeVnPlayer.play().then(() => {
+                document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+                    const icon = card.querySelector('.fa-play');
+                    if (icon) icon.className = 'fas fa-pause';
+                });
+            }).catch(e => console.error("Resume VN error:", e));
+            return;
         }
     }
 
-    if (audio.paused) {
-        audio.play().then(() => {
-            window.currentPlayingAudio = audio;
-            window.currentPlayingVnId = vnId;
-            if (icon) icon.className = 'fas fa-pause';
-        }).catch(e => console.error("Play VN error:", e));
+    // Jika ada VN lain yang sedang main, hentikan dulu
+    window.stopAllVoiceNotes();
 
-        audio.ontimeupdate = () => {
-            if (audio.duration && audio.duration > 0) {
-                const pct = (audio.currentTime / audio.duration) * 100;
-                if (prog) prog.style.width = pct + '%';
-                const sisa = Math.ceil(audio.duration - audio.currentTime);
-                if (timeLbl) timeLbl.innerText = `0:${String(Math.max(0, sisa)).padStart(2, '0')}`;
+    // Dapatkan URL audio yang kompatibel (Blob URL atau fallback Data URL)
+    if (!vnData.blobUrl) {
+        const blob = helperDataURLtoBlob(vnData.audioSrc);
+        if (blob) {
+            try {
+                vnData.blobUrl = URL.createObjectURL(blob);
+            } catch(e) {
+                vnData.blobUrl = vnData.audioSrc;
             }
-        };
-
-        audio.onended = () => {
-            if (icon) icon.className = 'fas fa-play';
-            if (prog) prog.style.width = '0%';
-            const total = Math.ceil(audio.duration || 0);
-            if (timeLbl) timeLbl.innerText = `0:${String(total).padStart(2, '0')}`;
-            window.currentPlayingAudio = null;
-            window.currentPlayingVnId = null;
-        };
-    } else {
-        audio.pause();
-        if (icon) icon.className = 'fas fa-play';
-        window.currentPlayingAudio = null;
-        window.currentPlayingVnId = null;
+        } else {
+            vnData.blobUrl = vnData.audioSrc;
+        }
     }
+
+    const audio = new Audio();
+    audio.src = vnData.blobUrl;
+    window.activeVnPlayer = audio;
+    window.activeVnVnId = vnId;
+
+    // Error fallback: jika blob url gagal, coba langsung data url
+    audio.onerror = (e) => {
+        console.warn("Audio error pada blob url, mencoba langsung data url:", e);
+        if (audio.src !== vnData.audioSrc) {
+            audio.src = vnData.audioSrc;
+            audio.play().catch(err2 => console.error("Direct data url error:", err2));
+        }
+    };
+
+    audio.ontimeupdate = () => {
+        if (!window.activeVnPlayer || window.activeVnVnId !== vnId) return;
+        const dur = (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) ? audio.duration : (vnData.durasi || 5);
+        const cur = audio.currentTime || 0;
+        const pct = Math.min(100, (cur / dur) * 100);
+        const sisa = Math.max(0, Math.ceil(dur - cur));
+        const sisaStr = `0:${String(sisa).padStart(2, '0')}`;
+
+        document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+            const prog = card.querySelector('.vn-progress-inner');
+            const timeLbl = card.querySelector('.vn-time-label');
+            if (prog) prog.style.width = pct + '%';
+            if (timeLbl) timeLbl.innerText = sisaStr;
+        });
+    };
+
+    audio.onended = () => {
+        const total = Math.ceil(audio.duration || vnData.durasi || 5);
+        const totalStr = `0:${String(total).padStart(2, '0')}`;
+        document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+            const icon = card.querySelector('.fa-pause');
+            if (icon) icon.className = 'fas fa-play';
+            const prog = card.querySelector('.vn-progress-inner');
+            if (prog) prog.style.width = '0%';
+            const timeLbl = card.querySelector('.vn-time-label');
+            if (timeLbl) timeLbl.innerText = totalStr;
+        });
+        window.activeVnPlayer = null;
+        window.activeVnVnId = null;
+    };
+
+    audio.play().then(() => {
+        document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+            const icon = card.querySelector('.fa-play');
+            if (icon) icon.className = 'fas fa-pause';
+        });
+    }).catch(err => {
+        console.error("Gagal putar Voice Note:", err);
+        if (audio.src !== vnData.audioSrc) {
+            audio.src = vnData.audioSrc;
+            audio.play().then(() => {
+                document.querySelectorAll(`.vn-player-card[data-vnid="${vnId}"]`).forEach(card => {
+                    const icon = card.querySelector('.fa-play');
+                    if (icon) icon.className = 'fas fa-pause';
+                });
+            }).catch(e2 => {
+                console.error("Gagal putar via direct data url:", e2);
+                window.stopAllVoiceNotes();
+            });
+        } else {
+            window.stopAllVoiceNotes();
+        }
+    });
 };
 
-window.seekVoiceNote = function(vnId, event) {
-    const audio = document.getElementById('audio_' + vnId);
-    if (!audio || !audio.duration) return;
-    const bar = event.currentTarget;
-    const rect = bar.getBoundingClientRect();
-    const clickX = event.clientX - rect.left;
-    const pct = Math.max(0, Math.min(1, clickX / rect.width));
-    audio.currentTime = pct * audio.duration;
+window.seekVoiceNote = function(vnId, barElem, event) {
+    if (!window.activeVnPlayer || window.activeVnVnId !== vnId) {
+        window.playVoiceNote(vnId, barElem);
+    }
+    if (window.activeVnPlayer && window.activeVnVnId === vnId) {
+        const rect = barElem.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const pct = Math.max(0, Math.min(1, clickX / rect.width));
+        const vnData = window.vnAudioRegistry ? window.vnAudioRegistry[vnId] : null;
+        const dur = (window.activeVnPlayer.duration && isFinite(window.activeVnPlayer.duration)) 
+            ? window.activeVnPlayer.duration 
+            : (vnData ? vnData.durasi : 5);
+        window.activeVnPlayer.currentTime = pct * dur;
+    }
 };
 
 let activeMediaRecorder = null;
