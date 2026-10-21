@@ -928,6 +928,7 @@ window.bersihkanStateMode = function(modeTarget = 'ujian') {
         window.isSubmitted = false;
         isReviewMode = false;
         window.isReviewMode = false;
+        window.isReviewSelesai = false;
 
         document.body.classList.remove('room-mode');
 
@@ -1211,6 +1212,7 @@ window.switchDatabase = async function(key) {
         window.isSubmitted = false;
         isReviewMode = false;
         window.isReviewMode = false;
+        window.isReviewSelesai = false;
         isAnswerLocked = false;
         window.isAnswerLocked = false;
         currentIdx = 0;
@@ -1537,7 +1539,7 @@ window.skipTrainingCountdown = async function() {
 function loadQuestion(idx) {
 // 1. DETEKSI MODE LEBIH KUAT (Cek juga apakah ada currentRoomCode)
     const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
-    const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted);
+    const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted) || (typeof isReviewMode !== 'undefined' && isReviewMode) || (typeof window.isReviewMode !== 'undefined' && window.isReviewMode) || (typeof window.isReviewSelesai !== 'undefined' && window.isReviewSelesai) || (typeof currentAppMode !== 'undefined' && currentAppMode === 'room' && window.latestRoomData && window.latestRoomData.status === 'selesai');
 
     // 🛑 PEMBERSIHAN KETAT MODE ROOM: AI Chat & Admin Quick Edit tidak boleh ada di Room
     if (isModeRoom) {
@@ -1711,9 +1713,9 @@ function loadQuestion(idx) {
     // ==========================================
         // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
         // ==========================================
-        // 🤖 INJEKSI TOMBOL TANYA MENTOR AI DI PEMBAHASAN AKHIR (REVIEW MODE)
+        // 🤖 INJEKSI TOMBOL TANYA MENTOR AI DI PEMBAHASAN AKHIR (REVIEW / SELESAI UJIAN)
         let mentorAiDiv = document.getElementById('mentorAiReviewDiv');
-        if (isReviewMode && fb) {
+        if (isSelesaiMode && fb) {
             if (!mentorAiDiv) {
                 mentorAiDiv = document.createElement('div');
                 mentorAiDiv.id = 'mentorAiReviewDiv';
@@ -1722,7 +1724,7 @@ function loadQuestion(idx) {
             }
             mentorAiDiv.style.display = 'flex';
             mentorAiDiv.innerHTML = `
-                <button onclick="window.tanyaMentorAIBedahSoal(${idx})" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(142,68,173,0.3); display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;">
+                <button onclick="window.tanyaMentorAIBedahSoal(${idx})" style="background: linear-gradient(135deg, #8e44ad, #5b2c6f); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(142,68,173,0.3); display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;">
                     <i class="fas fa-robot"></i> 🤖 Tanya Mentor AI (Bedah Kasus Soal Ini)
                 </button>
             `;
@@ -1810,7 +1812,7 @@ function loadQuestion(idx) {
     const legendContainer = document.querySelector('.legend'); // Legend warna Menjawab/Kosong
     let rightLb = document.getElementById('rightSidebarLeaderboard');
 
-    if (currentAppMode === 'room') {
+    if (currentAppMode === 'room' && !isSelesaiMode) {
         const pBtn = document.getElementById('prevBtn');
         const nBtn = document.getElementById('nextBtn');
         const rWrap = document.querySelector('.ragu-wrapper');
@@ -2179,6 +2181,10 @@ window.closeResult = function() {
     }
     document.getElementById('resultOverlay').style.display = 'none';
     isReviewMode = false; 
+    window.isReviewMode = false;
+    isSubmitted = true;
+    window.isSubmitted = true;
+    window.isReviewSelesai = true; 
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
@@ -2228,6 +2234,10 @@ window.startReviewWrong = function() {
         if (sb && sb.classList.contains('show-mobile')) window.toggleMobileSidebar();
     }
     isReviewMode = true;
+    window.isReviewMode = true;
+    isSubmitted = true;
+    window.isSubmitted = true;
+    window.isReviewSelesai = true;
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
@@ -2275,13 +2285,17 @@ window.startReviewWrong = function() {
 // ==========================================================
 // B. REVIEW MULTIPLAYER (Mengunci Tombol Kanan Atas)
 // ==========================================================
-window.startReviewMultiplayer = function() {
+window.startReviewMultiplayer = async function() {
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     if (window.innerWidth <= 768) {
         const sb = document.querySelector('.sidebar-right');
         if (sb && sb.classList.contains('show-mobile')) window.toggleMobileSidebar();
     }
     isReviewMode = false; 
+    window.isReviewMode = false;
+    isSubmitted = true;
+    window.isSubmitted = true;
+    window.isReviewSelesai = true;
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
@@ -2302,6 +2316,29 @@ window.startReviewMultiplayer = function() {
     const ind = document.getElementById('modeIndicator');
     if (ind) { ind.innerText = "REVIEW MULTIPLAYER"; ind.style.background = "#f3e5f5"; ind.style.color = "#8e24aa"; ind.style.border = "1px solid #ce93d8"; }
     
+    // Pastikan kunci jawaban dan pembahasan terpasang di currentQuestions
+    try {
+        const rCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
+        const dbKey = window.currentDatabaseId || (window.latestRoomData && window.latestRoomData.modulId) || rCode;
+        const roomKunciMap = _kunciJawabanStore.get(rCode) || _kunciJawabanStore.get(dbKey) || (typeof loadKunciJawabanUjian === 'function' ? await loadKunciJawabanUjian(dbKey) : {});
+        if (currentQuestions && currentQuestions.length > 0 && roomKunciMap) {
+            currentQuestions.forEach((q, idx) => {
+                const kInfo = roomKunciMap[q.id || `q_${idx}`] || roomKunciMap[idx];
+                if (kInfo) {
+                    if (typeof kInfo === 'object') {
+                        if (kInfo.answer !== undefined) q.answer = kInfo.answer;
+                        if (kInfo.explanation) q.explanation = kInfo.explanation;
+                        if (kInfo.cite) q.cite = kInfo.cite;
+                    } else {
+                        q.answer = kInfo;
+                    }
+                }
+            });
+        }
+    } catch(e) {
+        console.warn("Gagal inject kunci jawaban mabar:", e);
+    }
+
     loadQuestion(0);
     window.isAnswerLocked = true; 
 
@@ -2366,7 +2403,10 @@ window.backToMenu = async function() {
         currentIdx = 0;
         isAnswerLocked = false;
         isReviewMode = false;
+        window.isReviewMode = false;
         isSubmitted = false; 
+        window.isSubmitted = false;
+        window.isReviewSelesai = false; 
         
         window.currentDatabaseId = null; 
 
@@ -2477,7 +2517,10 @@ window.keluarDariRoom = async () => {
     currentQuestions = [];
     isAnswerLocked = false;
     isReviewMode = false;
+    window.isReviewMode = false;
     isSubmitted = false; 
+    window.isSubmitted = false;
+    window.isReviewSelesai = false; 
     currentIdx = 0;
     window.currentDatabaseId = null; 
 
@@ -5577,9 +5620,10 @@ window.tampilkanHasilMultiplayer = async (kodeRoom) => {
             const bgOverlay = document.getElementById('kahootResultOverlay');
             if (bgOverlay) bgOverlay.style.display = 'none';
 
-            // 2. Eksekusi fungsi review bawaan sistem
-            const btnReviewReal = document.querySelector('.btn-action[onclick*="showReview()"]');
-            if (btnReviewReal) btnReviewReal.click();
+            // 2. Jalankan review mode multiplayer
+            if (typeof window.startReviewMultiplayer === 'function') {
+                window.startReviewMultiplayer();
+            }
 
             // 3. BERSIHKAN RAM BROWSER (Matikan interval lama jika masih nyangkut)
             if (window.dobrakInterval) clearInterval(window.dobrakInterval);
@@ -7337,7 +7381,7 @@ function hapusProgresModul(idModul) {
     }
 }
 // ==========================================
-// FITUR VALIDASI AI (ADMIN - MENGGUNAKAN GROQ LLAMA 3)
+// FITUR VALIDASI AI (ADMIN - MENGGUNAKAN GOOGLE GEMINI)
 // ==========================================
 window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc) => {
     // Decode data yang dikirim dari tombol
@@ -7352,8 +7396,6 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     btn.disabled = true;
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `<span style="color: #8e44ad;"><i class="fas fa-cog fa-spin"></i> AI sedang menganalisis akurasi hukum...</span>`;
-
-    const GROQ_API_KEY = "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";
 
     // Bikin perintah (Prompt) khusus hukum buat AI
     const prompt = `Anda adalah Hakim Agung di Indonesia. Tolong validasi soal ujian Calon Hakim (Cakim) berikut ini:
@@ -7371,40 +7413,33 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
     2. Apakah pembahasan dan dasar hukumnya akurat?
     3. Jika ada yang salah atau kurang tepat, tolong koreksi!
     
-    Berikan kesimpulan di awal (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, padat, dan profesional. Gunakan format Markdown standar (*tebal*, _miring_).`;
+    Berikan kesimpulan di awal (contoh: **VALID** atau **TIDAK VALID**), lalu jelaskan alasannya dengan singkat, padat, dan profesional.`;
 
     try {
-        const response = await fetch(`https://api.groq.com/openai/v1/chat/completions`, {
+        const apiKey = await getGeminiApiKey();
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GROQ_API_KEY}`
+                'X-goog-api-key': apiKey
             },
             body: JSON.stringify({ 
-                model: 'qwen/qwen3.8-27b',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.1 
+                contents: [{ parts: [{ text: prompt }] }]
             })
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal terhubung ke API Groq.");
+            throw new Error(data.error?.message || "Gagal terhubung ke Gemini API.");
         }
 
-        if (data.choices && data.choices.length > 0) {
-             let aiReply = data.choices[0].message.content;
-             
-             // Bersihkan Markdown biar rapi jadi HTML
-             aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-             aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
-             aiReply = aiReply.replace(/\n/g, '<br>'); 
-             
-             resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-gavel"></i> Analisis Hakim AI:</strong><br><br>${aiReply}`;
-        } else {
-             resultDiv.innerHTML = `<span style="color: red;"><strong>Error:</strong> AI gagal memberikan jawaban yang valid.</span>`;
-        }
+        let aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI tidak menghasilkan jawaban valid.";
+        aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+        aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
+        aiReply = aiReply.replace(/\n/g, '<br>'); 
+        
+        resultDiv.innerHTML = `<strong style="color: #8e44ad;"><i class="fas fa-gavel"></i> Analisis Hakim AI:</strong><br><br>${aiReply}`;
         
     } catch (e) {
         resultDiv.innerHTML = `<span style="color: red;"><strong>Error dari API:</strong> ${e.message}</span>`;
