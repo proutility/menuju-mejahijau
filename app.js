@@ -1031,6 +1031,10 @@ window.closeMobileChatModal = function() {
 };
 
 window.kirimPesanMobileChat = function() {
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+        window.stopAndSendVoiceNote();
+        return;
+    }
     const mInput = document.getElementById('mChatInput');
     const dInput = document.getElementById('chatInput');
     if (!mInput || !mInput.value.trim()) return;
@@ -8085,6 +8089,10 @@ window.migrasiModulBiarHemat = async function(modulId) {
     }
 };
 window.kirimPesanChat = async () => {
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+        window.stopAndSendVoiceNote();
+        return;
+    }
     const roomCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
     if (!roomCode) return console.error("❌ Error: Kode Room hilang!");
     
@@ -8142,11 +8150,13 @@ window.renderChatMessages = (messages) => {
     else if (window.currentUser) myUid = window.currentUser.uid;
 
     messages.forEach(m => {
+        const isDark = document.body.classList.contains('dark-mode');
         const isMe = (myUid && m.uid === myUid);
         const align = isMe ? 'flex-end' : 'flex-start';
-        const bg = isMe ? '#dcf8c6' : '#ffffff'; 
+        const bg = isMe ? (isDark ? '#1b4332' : '#dcf8c6') : (isDark ? '#1e293b' : '#ffffff'); 
+        const textColor = isDark ? '#f1f5f9' : '#333333';
         const radius = isMe ? '12px 12px 0 12px' : '12px 12px 12px 0'; 
-        const namaWarna = isMe ? '#2e7d32' : '#d35400';
+        const namaWarna = isMe ? (isDark ? '#4ade80' : '#2e7d32') : (isDark ? '#fb923c' : '#d35400');
         
         let jam = "";
         if (m.waktu) {
@@ -8184,7 +8194,7 @@ window.renderChatMessages = (messages) => {
         html += `
             <div style="align-self: ${align}; max-width: 85%; display:flex; flex-direction:column; margin-bottom:8px;">
                 <span style="font-size: 0.65rem; color: ${namaWarna}; font-weight:bold; margin-bottom: 2px; text-align: ${isMe ? 'right' : 'left'}">${isMe ? 'Kamu' : m.nama}</span>
-                <div style="background: ${bg}; padding: 6px 10px 18px 10px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; color:#333; position:relative; min-width: 80px;">
+                <div style="background: ${bg}; padding: 6px 10px 18px 10px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; color:${textColor}; position:relative; min-width: 80px;">
                     ${isiKonten}
                     <span style="font-size: 0.6rem; color: #888; position: absolute; bottom: 3px; right: 7px;">${jam}</span>
                 </div>
