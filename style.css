@@ -481,7 +481,7 @@ body.mode-focus #floatingTimer { display: block !important; }
 
     /* 1. CONTAINER LOBBY DASHBOARD */
     #mobileLobbyDashboard {
-        display: flex !important;
+        display: flex;
         flex-direction: column;
         width: 100%;
         min-height: 100dvh;
@@ -493,6 +493,20 @@ body.mode-focus #floatingTimer { display: block !important; }
 
     body.dark-mode #mobileLobbyDashboard {
         background: #0f172a;
+    }
+
+    /* KUNCI VISIBILITAS LOBBY VS UJIAN */
+    body.ujian-berjalan #mobileLobbyDashboard {
+        display: none !important;
+    }
+
+    body:not(.ujian-berjalan) #mobileExamHeader,
+    body:not(.ujian-berjalan) #mobileExamFooter {
+        display: none !important;
+    }
+
+    body:not(.ujian-berjalan) .main-content {
+        display: none !important;
     }
 
     /* Header Bar */
@@ -956,6 +970,10 @@ body.mode-focus #floatingTimer { display: block !important; }
         overflow: hidden !important;
     }
 
+    body.ujian-berjalan #mobileLobbyDashboard {
+        display: none !important;
+    }
+
     body.ujian-berjalan #mobileBottomNav {
         display: none !important;
     }
@@ -967,20 +985,26 @@ body.mode-focus #floatingTimer { display: block !important; }
 
     body.ujian-berjalan .main-content {
         display: block !important;
+        position: relative !important;
+        z-index: 10 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 70px 14px 85px 14px !important;
+        padding: 72px 14px 90px 14px !important;
         height: 100dvh !important;
         overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
+        -webkit-overflow-scrolling: touch !important;
         box-sizing: border-box !important;
     }
 
     body.ujian-berjalan #cardSoalUjian {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: #ffffff !important;
         border-radius: 18px !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.04) !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06) !important;
         padding: 18px 16px !important;
-        margin-bottom: 20px !important;
+        margin: 0 0 30px 0 !important;
     }
 
     /* Sembunyikan header dan footer bawaan desktop */

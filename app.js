@@ -794,9 +794,15 @@ window.currentDatabaseId = 'modul1';
 // ==============================================================
 
 // 1. Bottom Sheet Open / Close Controls
-window.openMobileModulSheet = function() {
+window.openMobileModulSheet = function(category) {
     const sheet = document.getElementById('mobileSheetModul');
     if (sheet) sheet.classList.add('show');
+    if (category === 'psikotes') {
+        setTimeout(() => {
+            const psikoEl = document.getElementById('mCatPsikotes');
+            if (psikoEl) psikoEl.scrollIntoView({ behavior: 'smooth' });
+        }, 200);
+    }
 };
 
 window.closeMobileModulSheet = function() {
@@ -840,7 +846,7 @@ window.closeMobileAccountSheet = function() {
 };
 
 window.openMobilePsikotesSheet = function() {
-    window.switchDatabaseMobile('psikotes_cakim');
+    window.openMobileModulSheet('psikotes');
 };
 
 window.goToMobileHome = function() {
@@ -892,14 +898,20 @@ window.toggleMobileRagu = function() {
 
 // 5. Konfirmasi Keluar Ujian Mobile
 window.konfirmasiKeluarUjian = function() {
-    if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
-        PROTAMA.confirm("Keluar Ujian?", "Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?", "warning", () => {
-            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-            window.tampilkanLobby();
-        });
-    } else if (confirm("Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?")) {
+    const isRoom = !!(currentRoomCode || window.currentRoomCode);
+    const msg = isRoom ? "Apakah Anda yakin ingin keluar dari room mabar dan kembali ke lobby?" : "Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?";
+    const doExit = () => {
         if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
-        window.tampilkanLobby();
+        if (isRoom && typeof window.keluarDariRoom === 'function') {
+            window.keluarDariRoom();
+        } else {
+            window.tampilkanLobby();
+        }
+    };
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
+        PROTAMA.confirm("Keluar Sesi?", msg, "warning", doExit);
+    } else if (confirm(msg)) {
+        doExit();
     }
 };
 
@@ -1744,6 +1756,9 @@ window.skipTrainingCountdown = async function() {
     }
 };
 function loadQuestion(idx) {
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('ujian-berjalan');
+    }
 // 1. DETEKSI MODE LEBIH KUAT (Cek juga apakah ada currentRoomCode)
     const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
     const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted) || (typeof isReviewMode !== 'undefined' && isReviewMode) || (typeof window.isReviewMode !== 'undefined' && window.isReviewMode) || (typeof window.isReviewSelesai !== 'undefined' && window.isReviewSelesai) || (typeof currentAppMode !== 'undefined' && currentAppMode === 'room' && window.latestRoomData && window.latestRoomData.status === 'selesai');
@@ -3713,6 +3728,18 @@ window.tampilkanWaitingRoom = function(kode, isHostParam, modulId = "latihan") {
         }
     });
 
+    if (window.innerWidth <= 768) {
+        document.body.classList.add('ujian-berjalan');
+        const mModul = document.getElementById('mExamModulTitle');
+        const mQNum = document.getElementById('mExamQNumber');
+        const mTimer = document.getElementById('mExamTimerPill');
+        const mFooter = document.getElementById('mobileExamFooter');
+        if (mModul) mModul.innerText = "Room " + kode;
+        if (mQNum) mQNum.innerText = "Waiting";
+        if (mTimer) mTimer.innerText = "Lobby";
+        if (mFooter) mFooter.style.display = 'none';
+    }
+
     document.getElementById('lobbySidebarContent').style.display = 'none';
     document.getElementById('examSidebarContent').style.display = 'flex';
     
@@ -4603,6 +4630,10 @@ window.pantauRoom = (kodeRoom) => {
         // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
         // ========================================================
         if (data.status === 'soal' || data.status === 'pembahasan') {
+            document.body.classList.add('ujian-berjalan');
+            if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
+                syncMobileExamUI(data.currentIdx || 0);
+            }
             const navGrid = document.getElementById('navGrid');
             if (navGrid) navGrid.innerHTML = ''; 
             
@@ -4831,6 +4862,10 @@ window.pantauRoom = (kodeRoom) => {
         }
        // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
+            document.body.classList.add('ujian-berjalan');
+            if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
+                syncMobileExamUI(data.currentIdx || 0);
+            }
             
             // 👇 PEMBERSIH LAYAR READY CHECK 👇
             const overlayReady = document.getElementById('readyCheckOverlay');
@@ -5066,6 +5101,10 @@ window.pantauRoom = (kodeRoom) => {
             
        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
+            document.body.classList.add('ujian-berjalan');
+            if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
+                syncMobileExamUI(data.currentIdx || 0);
+            }
             if (window.roomSyncTimer) { clearInterval(window.roomSyncTimer); window.roomSyncTimer = null; }
             // roomHeartbeatTimer tetap jalan
             if (window.hostClaimTimer) { clearTimeout(window.hostClaimTimer); window.hostClaimTimer = null; } 
@@ -9145,12 +9184,52 @@ window.bukaPusatStudi = () => {
     
     // KUNCI HAK AKSES PUSAT STUDI CAKIM:
     // 1. Super Admin (ilhamnp22@gmail.com & inurprtma22@gmail.com): Buka SEMUA 8 modul!
-    // 2. VIP & Editor: Memiliki 2 fitur (60 Hari Kitab Kuning & Himpunan Ayat Hukum). 6 modul lainnya disembunyikan.
-    if (isSuper) {
-        menuRahasia.forEach(menu => { menu.style.display = "block"; });
-    } else {
-        menuRahasia.forEach(menu => { menu.style.display = "none"; });
-    }
+    // 2. VIP & Editor: Kitab Kuning & Ayat Hukum aktif. 6 modul lainnya tampil dengan label 'Segera Hadir' & popup info.
+    menuRahasia.forEach(menu => {
+        menu.style.display = "block"; // Tampilkan di grid
+        
+        let tagAkanHadir = menu.querySelector('.tag-akan-hadir');
+        if (isSuper) {
+            menu.style.opacity = "1";
+            menu.style.cursor = "pointer";
+            if (tagAkanHadir) tagAkanHadir.remove();
+            if (menu._originalClick) {
+                menu.onclick = menu._originalClick;
+            }
+        } else {
+            menu.style.opacity = "0.75";
+            menu.style.cursor = "pointer";
+            menu.style.position = "relative";
+            
+            if (!tagAkanHadir) {
+                const badge = document.createElement('div');
+                badge.className = 'tag-akan-hadir';
+                badge.style.cssText = "position: absolute; top: 12px; right: 12px; background: #f59e0b; color: #000; font-size: 0.72rem; font-weight: 800; padding: 4px 10px; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; letter-spacing: 0.3px;";
+                badge.innerHTML = "<i class='fas fa-clock'></i> Segera Hadir";
+                menu.appendChild(badge);
+            }
+            
+            if (!menu._originalClick && menu.onclick) {
+                menu._originalClick = menu.onclick;
+            }
+            
+            menu.onclick = (e) => {
+                e.stopPropagation();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Segera Hadir!',
+                        text: 'Materi ini sedang dalam tahap kurasi kurikulum dan akan segera hadir untuk seluruh member VIP.',
+                        confirmButtonColor: '#004d00'
+                    });
+                } else if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+                    PROTAMA.alert('Segera Hadir!', 'Materi ini sedang dalam tahap kurasi kurikulum dan akan segera hadir untuk seluruh member VIP.', 'info');
+                } else {
+                    alert('Materi ini sedang dalam tahap kurasi kurikulum dan akan segera hadir untuk seluruh member VIP.');
+                }
+            };
+        }
+    });
 };
 // ==========================================
 // 📖 FITUR BUKU II MA 
