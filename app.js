@@ -1595,6 +1595,7 @@ function loadQuestion(idx) {
     document.querySelector('.question-header').style.visibility = 'visible';
     document.querySelector('.footer-nav').style.visibility = 'visible';
     currentIdx = idx;
+    window.currentIdx = idx;
     const q = currentQuestions[idx];
     if (!q) return;
 
@@ -1714,8 +1715,14 @@ function loadQuestion(idx) {
         // 🤖 INJEKSI KOTAK TANYA AI DI PEMBAHASAN PESERTA
         // ==========================================
         // 🤖 INJEKSI TOMBOL TANYA MENTOR AI DI PEMBAHASAN AKHIR (REVIEW / SELESAI UJIAN)
+        // 🛑 KONTROL KETAT MENTOR AI:
+        // HANYA MUNCUL DI SESI PEMBAHASAN AKHIR / REVIEW SALAH SETELAH UJIAN SELESAI
+        // SANGAT DILARANG MUNCUL SAAT UJIAN AKTIF (TERUTAMA MULTIPLAYER MABAR)
+        const isRoomSedangJalan = isModeRoom && (!window.latestRoomData || window.latestRoomData.status !== 'selesai' || !window.isReviewSelesai);
+        const isBolehMentorAI = !isRoomSedangJalan && !!(window.isReviewSelesai || (typeof isReviewMode !== 'undefined' && isReviewMode) || (typeof window.isReviewMode !== 'undefined' && window.isReviewMode));
+
         let mentorAiDiv = document.getElementById('mentorAiReviewDiv');
-        if (isSelesaiMode && fb) {
+        if (isBolehMentorAI && isSelesaiMode && fb) {
             if (!mentorAiDiv) {
                 mentorAiDiv = document.createElement('div');
                 mentorAiDiv.id = 'mentorAiReviewDiv';
@@ -4624,6 +4631,9 @@ window.pantauRoom = (kodeRoom) => {
             
             isSubmitted = false;
             window.isSubmitted = false;
+            isReviewMode = false;
+            window.isReviewMode = false;
+            window.isReviewSelesai = false;
             
             // 🛑 FIX KRISIS IDENTITAS HOST: Deteksi pakai cara kebal!
             let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
@@ -4686,6 +4696,8 @@ window.pantauRoom = (kodeRoom) => {
                     fbBox.style.setProperty('display', 'none', 'important'); 
                     fbBox.classList.remove('show'); 
                 }
+                const mAi = document.getElementById('mentorAiReviewDiv');
+                if (mAi) mAi.remove();
                 
                 loadQuestion(data.currentIdx);
                 currentIdx = parseInt(data.currentIdx);
@@ -4914,11 +4926,13 @@ window.pantauRoom = (kodeRoom) => {
                 // 💡 TAMPILKAN KOTAK PEMBAHASAN UNTUK MODE MULTIPLAYER (BEDAH SOAL BERSAMA)
                 const fb = document.getElementById('feedbackBox');
                 if (fb) {
-                    // Pastikan Tanya AI & Admin Quick Edit TIDAK PERNAH muncul di mode multiplayer
+                    // Pastikan Tanya AI & Admin Quick Edit TIDAK PERNAH muncul di mode multiplayer saat ujian berlangsung
                     const aiChatOld = document.getElementById('aiChatDiv');
                     if (aiChatOld) aiChatOld.remove();
                     const admOld = document.getElementById('adminQuickEditDiv');
                     if (admOld) admOld.remove();
+                    const mAiPb = document.getElementById('mentorAiReviewDiv');
+                    if (mAiPb) mAiPb.remove();
 
                     fb.style.setProperty('display', 'block', 'important');
                     fb.style.setProperty('visibility', 'visible', 'important');
@@ -7417,21 +7431,41 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
 
     try {
         const apiKey = await getGeminiApiKey();
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-goog-api-key': apiKey
-            },
-            body: JSON.stringify({ 
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
+        if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
-        const data = await response.json();
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        let aiReply = "";
+        let lastError = null;
 
-        if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal terhubung ke Gemini API.");
+        for (const m of models) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    aiReply = data.candidates[0].content.parts[0].text;
+                    break;
+                } else {
+                    lastError = new Error(data.error?.message || `HTTP ${response.status}`);
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            } catch(err) {
+                lastError = err;
+                await new Promise(r => setTimeout(r, 600));
+            }
+        }
+
+        if (!aiReply) {
+            throw lastError || new Error("Gagal terhubung ke Gemini API.");
         }
 
         let aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI tidak menghasilkan jawaban valid.";
@@ -7470,18 +7504,65 @@ async function getGeminiApiKey() {
 }
 
 window.tanyaMentorAIBedahSoal = async function(idxSoal) {
-    const targetIdx = (idxSoal !== undefined && idxSoal !== null) ? idxSoal : currentIdx;
-    if (!currentQuestions || !currentQuestions[targetIdx]) return;
+    let targetIdx = (typeof currentIdx === 'number' && currentIdx >= 0) ? currentIdx : 0;
+    if (typeof idxSoal === 'number' && !isNaN(idxSoal) && idxSoal >= 0) {
+        targetIdx = idxSoal;
+    }
 
-    const q = currentQuestions[targetIdx];
-    const teksSoal = q.q || "";
-    const opsiArr = q.options || [];
-    const kunciIdx = q.answer !== undefined ? q.answer : -1;
-    const jawabanKunciTeks = (kunciIdx >= 0 && opsiArr[kunciIdx]) ? opsiArr[kunciIdx] : "-";
-    const jawabanUserIdx = (userAnswers && userAnswers[targetIdx] !== undefined) ? userAnswers[targetIdx] : -1;
+    // 🎯 SINKRONISASI MUTLAK: Selalu cocokkan dengan soal yang sedang terbuka di layar pengguna!
+    const elQText = document.getElementById('questionText');
+    const layarTeksSoal = elQText ? elQText.innerText.replace(/[\r\n]+/g, ' ').trim() : "";
+
+    let q = (currentQuestions && currentQuestions[targetIdx]) ? currentQuestions[targetIdx] : null;
+
+    if (currentQuestions && currentQuestions.length > 0 && layarTeksSoal) {
+        const cleanLayar = layarTeksSoal.substring(0, 40).toLowerCase();
+        // Cek apakah soal saat ini berbeda dengan yang di layar
+        if (!q || !q.q || !q.q.toLowerCase().includes(cleanLayar)) {
+            const matchIdx = currentQuestions.findIndex(item => item && item.q && (item.q.toLowerCase().includes(cleanLayar) || cleanLayar.includes(item.q.substring(0, 30).toLowerCase())));
+            if (matchIdx !== -1) {
+                targetIdx = matchIdx;
+                q = currentQuestions[matchIdx];
+                currentIdx = matchIdx;
+                window.currentIdx = matchIdx;
+            }
+        }
+    }
+
+    const teksSoal = (q && q.q) ? q.q : (layarTeksSoal || "Soal tidak terbaca");
+    
+    // Opsi Jawaban
+    let opsiArr = (q && q.options && Array.isArray(q.options) && q.options.length > 0) ? q.options : [];
+    if (opsiArr.length === 0) {
+        const domLabels = document.querySelectorAll('#optionsContainer .option-label');
+        if (domLabels.length > 0) {
+            opsiArr = Array.from(domLabels).map(l => l.innerText.replace(/[✅❌⬅️⏳\(\)]/g, '').trim());
+        }
+    }
+
+    // Kunci Jawaban
+    let kunciIdx = (q && q.answer !== undefined) ? q.answer : -1;
+    if (kunciIdx === -1) {
+        const rCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
+        const dbKey = window.currentDatabaseId || (window.latestRoomData && window.latestRoomData.modulId) || rCode;
+        if (typeof _kunciJawabanStore !== 'undefined') {
+            const roomKunciMap = _kunciJawabanStore.get(rCode) || _kunciJawabanStore.get(dbKey) || {};
+            const kInfo = roomKunciMap[q?.id || `q_${targetIdx}`] || roomKunciMap[targetIdx];
+            if (kInfo) {
+                kunciIdx = (typeof kInfo === 'object' && kInfo.answer !== undefined) ? kInfo.answer : (typeof kInfo === 'number' ? kInfo : -1);
+            }
+        }
+    }
+
+    const jawabanKunciTeks = (kunciIdx >= 0 && opsiArr[kunciIdx]) ? opsiArr[kunciIdx] : (q?.jawabanBenarTeks || "-");
+    const jawabanUserIdx = (typeof userAnswers !== 'undefined' && userAnswers && userAnswers[targetIdx] !== undefined) ? userAnswers[targetIdx] : -1;
     const jawabanUserTeks = (jawabanUserIdx >= 0 && opsiArr[jawabanUserIdx]) ? opsiArr[jawabanUserIdx] : "(Tidak Menjawab)";
-    const teksBahas = q.explanation || "-";
-    const sumberHukum = q.cite || "-";
+    
+    const elFText = document.getElementById('feedbackText');
+    const teksBahas = (q && q.explanation) ? q.explanation : (elFText ? elFText.innerText.trim() : "-");
+    
+    const elFCite = document.getElementById('feedbackCite');
+    const sumberHukum = (q && q.cite) ? q.cite : (elFCite ? elFCite.innerText.replace('Sumber:', '').trim() : "-");
 
     const modalId = 'modalMentorAI';
     let modalEl = document.getElementById(modalId);
@@ -7535,26 +7616,51 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
 
     try {
         const apiKey = await getGeminiApiKey();
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'X-goog-api-key': apiKey
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
-            })
-        });
+        if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
-        const data = await response.json();
+        // 🛡️ MULTI-MODEL FALLBACK ENGINE:
+        // Jika gemini-flash-latest mengalami 503 high demand spike, langsung otomatis fallback ke gemini-flash-lite-latest
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        let aiText = "";
+        let lastError = null;
+
+        for (const m of models) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    aiText = data.candidates[0].content.parts[0].text;
+                    break; // Berhasil!
+                } else {
+                    const errDetail = data.error?.message || `HTTP ${response.status}`;
+                    lastError = new Error(errDetail);
+                    console.warn(`Model ${m} mengembalikan error: ${errDetail}. Mencoba fallback...`);
+                    // Delay sekejap sebelum mencoba model berikutnya
+                    await new Promise(res => setTimeout(res, 600));
+                }
+            } catch(fetchErr) {
+                lastError = fetchErr;
+                await new Promise(res => setTimeout(res, 600));
+            }
+        }
+
+        if (!aiText) {
+            throw lastError || new Error("Semua model Gemini sedang mengalami lonjakan antrean. Silakan coba lagi.");
+        }
+
         const contentBox = document.getElementById('aiModalContent');
         if (!contentBox) return;
 
-        if (!response.ok) {
-            throw new Error(data.error?.message || "Gagal menghubungi Gemini API.");
-        }
-
-        let aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI tidak dapat menghasilkan analisis.";
         let formatted = aiText
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -7563,7 +7669,7 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
 
         contentBox.innerHTML = `
             <div style="background:#fcf8fd; border:1px solid #ebd9f3; border-radius:10px; padding:15px; margin-bottom:15px;">
-                <div style="font-weight:bold; color:#5b2c6f; margin-bottom:4px;"><i class="fas fa-balance-scale"></i> Kasus Hukum:</div>
+                <div style="font-weight:bold; color:#5b2c6f; margin-bottom:4px;"><i class="fas fa-balance-scale"></i> Kasus Hukum (Soal #${targetIdx + 1}):</div>
                 <div style="font-size:0.88rem; color:#444;">${teksSoal}</div>
             </div>
             <div>${formatted}</div>
@@ -7572,10 +7678,13 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
         const contentBox = document.getElementById('aiModalContent');
         if (contentBox) {
             contentBox.innerHTML = `
-                <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b; text-align:center;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px;"></i>
-                    <h4 style="margin:0 0 8px 0;">Gagal Memuat Analisis AI</h4>
-                    <p style="margin:0; font-size:0.85rem;">${err.message}</p>
+                <div style="background:#fee2e2; border:1px solid #fecaca; border-radius:10px; padding:20px; color:#991b1b; text-align:center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2.2rem; margin-bottom:10px;"></i>
+                    <h4 style="margin:0 0 8px 0; font-size:1.05rem;">Server AI Sedang Sibuk (High Demand)</h4>
+                    <p style="margin:0 0 14px 0; font-size:0.88rem; color:#7f1d1d;">${err.message || 'Layanan Google Gemini sedang mengalami antrean sementara di server pusat.'}</p>
+                    <button onclick="window.tanyaMentorAIBedahSoal(${targetIdx})" style="background:#8e44ad; color:white; border:none; padding:10px 22px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.9rem; box-shadow:0 3px 8px rgba(142,68,173,0.3); display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fas fa-redo"></i> Coba Analisis Lagi
+                    </button>
                 </div>
             `;
         }
