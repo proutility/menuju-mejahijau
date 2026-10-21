@@ -7468,7 +7468,6 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
             throw lastError || new Error("Gagal terhubung ke Gemini API.");
         }
 
-        let aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "AI tidak menghasilkan jawaban valid.";
         aiReply = aiReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
         aiReply = aiReply.replace(/\*(.*?)\*/g, '<em>$1</em>'); 
         aiReply = aiReply.replace(/\n/g, '<br>'); 
