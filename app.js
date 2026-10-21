@@ -945,10 +945,12 @@ window.syncMobileExamUI = function(idx) {
     const mFooter = document.getElementById('mobileExamFooter');
 
     if (isModeRoom && !isSelesaiMode) {
-        if (mFooter) mFooter.style.display = 'none';
+        document.body.classList.add('room-mode');
+        if (mFooter) mFooter.style.setProperty('display', 'none', 'important');
     } else {
+        document.body.classList.remove('room-mode');
         if (mFooter && document.body.classList.contains('ujian-berjalan')) {
-            mFooter.style.display = 'flex';
+            mFooter.style.setProperty('display', 'flex', 'important');
         }
     }
 
@@ -1521,6 +1523,7 @@ window.switchDatabase = async function(key) {
             modeInd.innerText = "Mode: Ujian";
             modeInd.style = "color: var(--warning); font-weight: bold; background:#fff3e0; padding:5px 15px; border-radius:20px; border:1px solid #ffe0b2; display:block;";
         }
+        document.body.classList.remove('room-mode');
         
         const finishCont = document.querySelector('.finish-container');
         if(finishCont) finishCont.style.display = 'block';
@@ -4722,7 +4725,7 @@ window.pantauRoom = (kodeRoom) => {
         // 🧹 2. PEMBERSIH LAYAR BUAT YANG TELAT JOIN (RECONNECT BUG)
         // ========================================================
         if (data.status === 'soal' || data.status === 'pembahasan') {
-            document.body.classList.add('ujian-berjalan');
+            document.body.classList.add('ujian-berjalan', 'room-mode');
             if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
                 syncMobileExamUI(data.currentIdx || 0);
             }
@@ -4954,7 +4957,7 @@ window.pantauRoom = (kodeRoom) => {
         }
        // --- C. MENJAWAB SOAL (TIMER 30 DETIK) ---
         else if (data.status === 'soal') {
-            document.body.classList.add('ujian-berjalan');
+            document.body.classList.add('ujian-berjalan', 'room-mode');
             if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
                 syncMobileExamUI(data.currentIdx || 0);
             }
@@ -5193,7 +5196,7 @@ window.pantauRoom = (kodeRoom) => {
             
        // --- D. PEMBAHASAN BARENG & HITUNG POIN OTOMATIS ---
         else if (data.status === 'pembahasan') {
-            document.body.classList.add('ujian-berjalan');
+            document.body.classList.add('ujian-berjalan', 'room-mode');
             if (window.innerWidth <= 768 && typeof syncMobileExamUI === 'function') {
                 syncMobileExamUI(data.currentIdx || 0);
             }

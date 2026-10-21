@@ -1174,6 +1174,16 @@ body.mode-focus #floatingTimer { display: block !important; }
         border-top-color: #334155;
     }
 
+    /* SEMBUNYIKAN FOOTER PREV / NEXT DI MULTIPLAYER / MABAR */
+    body.room-mode #mobileExamFooter,
+    body.ujian-berjalan.room-mode #mobileExamFooter {
+        display: none !important;
+    }
+
+    body.ujian-berjalan.room-mode .main-content {
+        padding-bottom: 95px !important;
+    }
+
     .m-footer-btn {
         height: 44px;
         border-radius: 12px;
