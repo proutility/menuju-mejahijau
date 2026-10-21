@@ -22,6 +22,18 @@ body:not(.is-admin) * { -webkit-user-select: none; -ms-user-select: none; user-s
 body.is-admin * { -webkit-user-select: text !important; -ms-user-select: text !important; user-select: text !important; }
 input, textarea { -webkit-user-select: text !important; user-select: text !important; }
 
+/* Pengecualian Khusus: Area Analisis Mentor AI Boleh Dipilih & Dicopy oleh Member VIP */
+#modalMentorAI,
+#modalMentorAI *,
+.allow-copy,
+.allow-copy *,
+.ai-copyable,
+.ai-copyable * {
+    -webkit-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-image: url('ma.jpeg'); 
@@ -1812,7 +1824,10 @@ body.mode-focus #floatingTimer { display: block !important; }
     #mobileSheetMabar,
     #mobileSheetUU,
     #mobileSheetAccount,
-    #mobileSheetExamNav {
+    #mobileSheetExamNav,
+    #mMultiplayerToolbar,
+    #mPrevBtn,
+    #mNextBtn {
         display: none !important;
     }
 

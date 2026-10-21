@@ -924,6 +924,17 @@ window.konfirmasiKeluarUjian = function() {
 window.syncMobileExamUI = function(idx) {
     if (!currentQuestions || currentQuestions.length === 0) return;
     
+    const mFooter = document.getElementById('mobileExamFooter');
+    const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
+
+    // 🛑 PROTEKSI TOTAL DESKTOP / LAPTOP:
+    // Jika lebar layar > 768px (Desktop/Laptop), UI Mobile WAJIB 100% TERSEMBUNYI!
+    if (window.innerWidth > 768) {
+        if (mFooter) mFooter.style.setProperty('display', 'none', 'important');
+        if (mMultiToolbar) mMultiToolbar.style.setProperty('display', 'none', 'important');
+        return;
+    }
+
     const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
     const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted) || (typeof isReviewMode !== 'undefined' && isReviewMode) || (typeof window.isReviewMode !== 'undefined' && window.isReviewMode);
 
@@ -942,7 +953,6 @@ window.syncMobileExamUI = function(idx) {
     const mPrev = document.getElementById('mPrevBtn');
     const mNext = document.getElementById('mNextBtn');
     const mRagu = document.getElementById('mRaguBtn');
-    const mFooter = document.getElementById('mobileExamFooter');
 
     if (isModeRoom && !isSelesaiMode) {
         document.body.classList.add('room-mode');
@@ -994,6 +1004,16 @@ window.syncMobileExamUI = function(idx) {
         mMultiToolbar.style.display = (isModeRoom && !isSelesaiMode) ? 'flex' : 'none';
     }
 };
+
+// Pengawas Resize Layar: Cegah Kebocoran UI Mobile ke Desktop
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+        const mFooter = document.getElementById('mobileExamFooter');
+        if (mFooter) mFooter.style.setProperty('display', 'none', 'important');
+        const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
+        if (mMultiToolbar) mMultiToolbar.style.setProperty('display', 'none', 'important');
+    }
+});
 
 // 6.b Modal Handlers: Live Klasemen & Live Chat di Mobile
 window.openMobileKlasemenModal = function() {
@@ -1256,6 +1276,10 @@ document.addEventListener('keydown', function(event) {
     // 🛑 JIKA SEDANG DI LOBBY, DI MODAL, ATAU DI MODE ROOM (MULTIPLAYER), MATIKAN SEMUA SHORTCUT!
     if (document.getElementById('appSection').style.display === 'none') return;
     if (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') return;
+
+    // Jangan tangkap shortcut jika modal Mentor AI sedang terbuka
+    const modalAI = document.getElementById('modalMentorAI');
+    if (modalAI && modalAI.style.display !== 'none') return;
 
     // Tombol panah dan pilihan ganda hanya aktif di Singleplayer / Latihan Mandiri
     switch(event.key) {
@@ -7036,28 +7060,41 @@ window.downloadSoalJSON = async () => {
 // ANTI CHEAT & FUNGSI DETAIL (GABUNG DARI SCRIPT KEDUA)
 // ==========================================
 
-// 1. Matikan Klik Kanan
+// 1. Matikan Klik Kanan (Kecuali di area Mentor AI)
 document.addEventListener('contextmenu', event => {
     if (document.body.classList.contains('is-admin')) return; // ADMIN BEBAS
+    if (event.target && event.target.closest && event.target.closest('#modalMentorAI, .allow-copy, .ai-copyable')) return; // KHUSUS AI BOLEH
     event.preventDefault();
 });
 
-// 2. Matikan Blok/Select Teks
+// 2. Matikan Blok/Select Teks (Kecuali di area Mentor AI)
 document.addEventListener('selectstart', event => {
     if (document.body.classList.contains('is-admin')) return; // ADMIN BEBAS
+    if (event.target && event.target.closest && event.target.closest('#modalMentorAI, .allow-copy, .ai-copyable')) return; // KHUSUS AI BOLEH
     event.preventDefault();
 });
 
 document.addEventListener('dragstart', event => {
     if (document.body.classList.contains('is-admin')) return; // ADMIN BEBAS
+    if (event.target && event.target.closest && event.target.closest('#modalMentorAI, .allow-copy, .ai-copyable')) return; // KHUSUS AI BOLEH
     event.preventDefault();
 });
 
-// 3. Matikan Shortcut Keyboard
+// 3. Matikan Shortcut Keyboard (Kecuali Copy & Select All di area Mentor AI)
 document.addEventListener('keydown', function(e) {
     if (document.body.classList.contains('is-admin')) return; // ADMIN BEBAS
 
-    // Cegah F12, Inspect, Copy Paste
+    // Pengecualian Khusus: Jika user sedang berada di dalam modal AI atau menyeleksi teks AI
+    const targetEl = e.target || document.activeElement;
+    const isInAI = (targetEl && targetEl.closest && targetEl.closest('#modalMentorAI, .allow-copy, .ai-copyable')) ||
+                   (document.activeElement && document.activeElement.closest && document.activeElement.closest('#modalMentorAI, .allow-copy, .ai-copyable'));
+    const isCopyOrSelectAll = (e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'a' || e.key === 'A');
+
+    if (isInAI && isCopyOrSelectAll) {
+        return; // IZINKAN COPY (Ctrl+C) & SELECT ALL (Ctrl+A) KHUSUS DI AREA AI!
+    }
+
+    // Cegah F12, Inspect, Copy Paste di luar AI
     if (
         e.key === 'F12' || 
         (e.ctrlKey && e.shiftKey && e.key === 'I') || 
@@ -7929,7 +7966,7 @@ window.tanyaMentorAIBedahSoal = async function(idxSoal) {
     }
     modalEl.style.display = 'flex';
     modalEl.innerHTML = `
-        <div style="background:white; border-radius:16px; width:680px; max-width:96%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.3); border-top:6px solid #8e44ad;">
+        <div class="allow-copy ai-copyable" style="background:white; border-radius:16px; width:680px; max-width:96%; max-height:88vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.3); border-top:6px solid #8e44ad; user-select:text !important; -webkit-user-select:text !important;">
             <div style="padding:16px 20px; background:#f9f4fb; border-bottom:1px solid #ebd9f3; display:flex; justify-content:space-between; align-items:center;">
                 <div style="display:flex; align-items:center; gap:10px;">
                     <div style="width:36px; height:36px; border-radius:50%; background:#8e44ad; color:white; display:flex; align-items:center; justify-content:center; font-size:1.1rem;"><i class="fas fa-robot"></i></div>
@@ -7938,9 +7975,14 @@ window.tanyaMentorAIBedahSoal = async function(idxSoal) {
                         <span style="font-size:0.75rem; color:#7d3c98;">Analisis Yuridis Resmi Google Gemini</span>
                     </div>
                 </div>
-                <button onclick="document.getElementById('${modalId}').style.display='none'" style="background:none; border:none; font-size:1.6rem; color:#888; cursor:pointer; line-height:1;">&times;</button>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button id="btnCopyMentorAI" onclick="window.salinAnalisisMentorAI()" title="Salin Teks Analisis AI" style="display:none; background:#8e44ad; color:white; border:none; padding:6px 14px; border-radius:8px; cursor:pointer; font-weight:bold; font-size:0.82rem; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(142,68,173,0.3); transition:0.2s;">
+                        <i class="fas fa-copy"></i> Salin Analisis
+                    </button>
+                    <button onclick="document.getElementById('${modalId}').style.display='none'" style="background:none; border:none; font-size:1.6rem; color:#888; cursor:pointer; line-height:1;">&times;</button>
+                </div>
             </div>
-            <div id="aiModalContent" style="padding:20px; overflow-y:auto; flex:1; font-size:0.92rem; line-height:1.6; color:#2c3e50;">
+            <div id="aiModalContent" class="allow-copy ai-copyable" style="padding:20px; overflow-y:auto; flex:1; font-size:0.92rem; line-height:1.6; color:#2c3e50; user-select:text !important; -webkit-user-select:text !important;">
                 <div style="text-align:center; padding:40px 10px;">
                     <i class="fas fa-circle-notch fa-spin" style="font-size:2.4rem; color:#8e44ad; margin-bottom:15px;"></i>
                     <p style="margin:0; font-weight:600; color:#555;">Mentor AI sedang menelaah KUHPerdata, UU Peradilan Agama & KHI...</p>
@@ -8023,12 +8065,15 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
             .replace(/\n/g, '<br>');
 
         contentBox.innerHTML = `
-            <div style="background:#fcf8fd; border:1px solid #ebd9f3; border-radius:10px; padding:15px; margin-bottom:15px;">
+            <div class="allow-copy ai-copyable" style="background:#fcf8fd; border:1px solid #ebd9f3; border-radius:10px; padding:15px; margin-bottom:15px; user-select:text !important; -webkit-user-select:text !important;">
                 <div style="font-weight:bold; color:#5b2c6f; margin-bottom:4px;"><i class="fas fa-balance-scale"></i> Kasus Hukum (Soal #${targetIdx + 1}):</div>
                 <div style="font-size:0.88rem; color:#444;">${teksSoal}</div>
             </div>
-            <div>${formatted}</div>
+            <div class="allow-copy ai-copyable" style="user-select:text !important; -webkit-user-select:text !important;">${formatted}</div>
         `;
+
+        const btnCopy = document.getElementById('btnCopyMentorAI');
+        if (btnCopy) btnCopy.style.display = 'inline-flex';
     } catch(err) {
         const contentBox = document.getElementById('aiModalContent');
         if (contentBox) {
@@ -8045,6 +8090,57 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
         }
     }
 };
+
+// ==========================================
+// 📋 FUNGSI SALIN ANALISIS MENTOR AI (KHUSUS VIP / USER)
+// ==========================================
+window.salinAnalisisMentorAI = function() {
+    const content = document.getElementById('aiModalContent');
+    if (!content) return;
+    const text = content.innerText || content.textContent;
+
+    const setSuccessUI = () => {
+        const btn = document.getElementById('btnCopyMentorAI');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+            btn.style.background = '#27ae60';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-copy"></i> Salin Analisis';
+                btn.style.background = '#8e44ad';
+            }, 2500);
+        }
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.toast) {
+            PROTAMA.toast("Analisis Mentor AI berhasil disalin!", "success");
+        }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(setSuccessUI).catch(err => {
+            console.warn("Clipboard API rejected, falling back to textarea:", err);
+            fallbackCopyMentorAI(text, setSuccessUI);
+        });
+    } else {
+        fallbackCopyMentorAI(text, setSuccessUI);
+    }
+};
+
+function fallbackCopyMentorAI(text, onSuccess) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.top = '-9999px';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if (successful && onSuccess) onSuccess();
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+    }
+    document.body.removeChild(textarea);
+}
 // ==========================================
 // SCRIPT MIGRASI HEMAT READ FIREBASE
 // ==========================================
