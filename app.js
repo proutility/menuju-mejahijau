@@ -227,6 +227,11 @@ if(auth) {
                     btnAdminLobby.style.display = 'block';
                     btnAdminLobby.innerHTML = '<i class="fas fa-cogs"></i> <span id="labelBtnAdminLobby">Panel Admin</span>';
                 }
+
+                // Tampilkan Modul Khusus Super Admin (Laptop & Mobile)
+                document.querySelectorAll('.admin-only-modul').forEach(el => {
+                    el.style.display = el.tagName === 'BUTTON' ? 'flex' : 'block';
+                });
                 
                 console.log("Super Admin Login: Akses Penuh.");
             } 
@@ -980,6 +985,78 @@ window.syncMobileExamUI = function(idx) {
     }
 
     updateSidebarStatus();
+
+    // Toggle Multiplayer Toolbar di Mobile (Klasemen & Chat)
+    const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
+    if (mMultiToolbar) {
+        mMultiToolbar.style.display = (isModeRoom && !isSelesaiMode) ? 'flex' : 'none';
+    }
+};
+
+// 6.b Modal Handlers: Live Klasemen & Live Chat di Mobile
+window.openMobileKlasemenModal = function() {
+    const sheet = document.getElementById('mobileSheetKlasemen');
+    if (sheet) {
+        sheet.classList.add('show');
+        if (window.latestRoomData && window.latestRoomData.players && typeof window.renderLiveScore === 'function') {
+            window.renderLiveScore(window.latestRoomData.players);
+        }
+    }
+};
+
+window.closeMobileKlasemenModal = function() {
+    const sheet = document.getElementById('mobileSheetKlasemen');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.openMobileChatModal = function() {
+    const sheet = document.getElementById('mobileSheetChat');
+    const badge = document.getElementById('mChatBadgeCount');
+    if (badge) {
+        badge.innerText = '0';
+        badge.style.display = 'none';
+    }
+    if (sheet) {
+        sheet.classList.add('show');
+        const box = document.getElementById('mListChatMabar');
+        if (box) setTimeout(() => { box.scrollTop = box.scrollHeight; }, 100);
+    }
+};
+
+window.closeMobileChatModal = function() {
+    const sheet = document.getElementById('mobileSheetChat');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.kirimPesanMobileChat = function() {
+    const mInput = document.getElementById('mChatInput');
+    const dInput = document.getElementById('chatInput');
+    if (!mInput || !mInput.value.trim()) return;
+    if (dInput) {
+        dInput.value = mInput.value.trim();
+        mInput.value = '';
+        if (typeof window.kirimPesanChat === 'function') {
+            window.kirimPesanChat();
+        }
+    }
+};
+
+window.kirimStikerMobile = function(teks) {
+    const dInput = document.getElementById('chatInput');
+    if (dInput) {
+        dInput.value = teks;
+        if (typeof window.kirimPesanChat === 'function') {
+            window.kirimPesanChat();
+        }
+    }
+};
+
+window.bukaBankRegulasiNotice = function() {
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+        PROTAMA.alert("Segera Hadir ⏳", "Fitur Bank Regulasi terpisah sedang dipersiapkan. Untuk saat ini materi UU dan regulasi telah terintegrasi di dalam menu Pusat Studi Cakim.", "info");
+    } else {
+        alert("Fitur Bank Regulasi sedang dipersiapkan dan telah terintegrasi di menu Pusat Studi Cakim.");
+    }
 };
 
 // 7. Sync Mobile Lobby UI
@@ -1024,6 +1101,8 @@ window.bersihkanStateMode = function(modeTarget = 'ujian') {
         window.sudahPernahDiRoom = false;
         window.activeRoomCodeLoaded = null;
         window.questionRenderTime = null;
+        const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
+        if (mMultiToolbar) mMultiToolbar.style.display = 'none';
     }
     if (typeof timerInterval !== 'undefined' && timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (typeof trainingTimerInterval !== 'undefined' && trainingTimerInterval) { clearInterval(trainingTimerInterval); trainingTimerInterval = null; }
@@ -2784,6 +2863,8 @@ window.keluarDariRoom = async () => {
     if (finishContainer) finishContainer.style.display = 'block';
     
     document.body.classList.remove('ujian-berjalan', 'room-mode');
+    const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
+    if (mMultiToolbar) mMultiToolbar.style.display = 'none';
 
     // Buka Lobby
     setTimeout(() => {
@@ -4039,9 +4120,18 @@ window.loadJadwalLobby = async () => {
             listContainer.innerHTML = html;
         }
 
+        const listMobile = document.getElementById('mListJadwal');
+        if (listMobile) {
+            listMobile.innerHTML = listContainer.innerHTML;
+        }
+
     } catch (e) {
         console.error("Gagal load jadwal:", e);
         listContainer.innerHTML = '<p style="color:var(--danger); text-align:center; margin: 10px 0;">Gagal memuat jadwal dari server.</p>';
+        const listMobile = document.getElementById('mListJadwal');
+        if (listMobile) {
+            listMobile.innerHTML = listContainer.innerHTML;
+        }
     }
 };
 
@@ -4328,6 +4418,8 @@ window.pantauRoom = (kodeRoom) => {
         });
         
         listContainer.innerHTML = html;
+        const mListScore = document.getElementById('mListKlasemenMabar');
+        if (mListScore) mListScore.innerHTML = html;
     };
 
     window.delegasikanHost = async (targetUid, targetNama) => {
@@ -8073,6 +8165,23 @@ window.renderChatMessages = (messages) => {
     });
     
     chatBox.innerHTML = html;
+
+    const mChatBox = document.getElementById('mListChatMabar');
+    if (mChatBox) {
+        mChatBox.innerHTML = html;
+        mChatBox.scrollTop = mChatBox.scrollHeight;
+    }
+
+    const mBadge = document.getElementById('mChatBadgeCount');
+    const sheetChat = document.getElementById('mobileSheetChat');
+    if (mBadge && sheetChat && !sheetChat.classList.contains('show')) {
+        let diff = messages.length - prevCount;
+        if (diff > 0) {
+            let curr = parseInt(mBadge.innerText) || 0;
+            mBadge.innerText = curr + diff;
+            mBadge.style.display = 'inline-block';
+        }
+    }
 
     const body = document.getElementById('chatBody');
     const badge = document.getElementById('chatNotifBadge');

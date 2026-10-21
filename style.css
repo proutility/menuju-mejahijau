@@ -467,6 +467,20 @@ body.mode-focus #floatingTimer { display: block !important; }
         display: none !important;
     }
 
+    .watermark {
+        display: none !important;
+    }
+
+    #appSection {
+        position: relative !important;
+        width: 100% !important;
+        min-height: 100dvh !important;
+        height: auto !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        display: block !important;
+    }
+
     body {
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
@@ -486,9 +500,11 @@ body.mode-focus #floatingTimer { display: block !important; }
         width: 100%;
         min-height: 100dvh;
         box-sizing: border-box;
-        padding: 16px 16px 95px 16px;
+        padding: 16px 16px 115px 16px !important;
         gap: 16px;
         background: #f8fafc;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     body.dark-mode #mobileLobbyDashboard {
@@ -614,19 +630,29 @@ body.mode-focus #floatingTimer { display: block !important; }
     .m-hero-card {
         background: linear-gradient(135deg, #004d00 0%, #002d00 100%);
         border-radius: 20px;
-        padding: 18px 20px;
+        padding: 16px 18px;
         color: white;
         box-shadow: 0 8px 20px rgba(0, 77, 0, 0.25);
         position: relative;
-        overflow: hidden;
-        border: 1px solid rgba(212, 175, 55, 0.3);
+        overflow: visible !important;
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    .m-hero-content {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .m-hero-top {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 14px;
+        margin-bottom: 4px;
     }
 
     .m-hero-badge {
@@ -666,27 +692,30 @@ body.mode-focus #floatingTimer { display: block !important; }
     .m-hero-stats {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: space-around;
         background: rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 10px 16px;
-        margin-bottom: 14px;
+        border-radius: 14px;
+        padding: 10px 14px;
+        margin: 0;
         backdrop-filter: blur(5px);
+        box-sizing: border-box;
     }
 
     .m-stat-item {
         display: flex;
         flex-direction: column;
+        text-align: center;
     }
 
     .m-stat-label {
         font-size: 0.7rem;
         color: rgba(255, 255, 255, 0.75);
         font-weight: 500;
+        margin-bottom: 2px;
     }
 
     .m-stat-value {
-        font-size: 1.2rem;
+        font-size: 1.25rem;
         font-weight: 800;
         color: #ffffff;
     }
@@ -700,10 +729,10 @@ body.mode-focus #floatingTimer { display: block !important; }
     .m-btn-hero-cta {
         width: 100%;
         background: linear-gradient(135deg, #d4af37, #f59e0b);
-        color: #000;
+        color: #052e16;
         border: none;
-        border-radius: 12px;
-        padding: 12px 16px;
+        border-radius: 14px;
+        padding: 13px 16px;
         font-size: 0.95rem;
         font-weight: 800;
         cursor: pointer;
@@ -711,8 +740,10 @@ body.mode-focus #floatingTimer { display: block !important; }
         align-items: center;
         justify-content: center;
         gap: 8px;
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
-        transition: transform 0.15s;
+        box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+        transition: transform 0.15s, box-shadow 0.15s;
+        box-sizing: border-box;
+        text-align: center;
     }
 
     .m-btn-hero-cta:active {
@@ -876,8 +907,11 @@ body.mode-focus #floatingTimer { display: block !important; }
     }
 
     .m-widget-content {
-        padding: 14px;
+        padding: 12px;
         min-height: 120px;
+        max-height: 380px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     .m-empty-state {
@@ -1197,59 +1231,68 @@ body.mode-focus #floatingTimer { display: block !important; }
         box-shadow: 0 4px 10px rgba(22, 163, 74, 0.35) !important;
     }
 
-    /* Pilihan Ganda Kartu Sentuh */
+    /* Pilihan Ganda Kartu Sentuh Duolingo Style */
     .option-label {
         background: #ffffff !important;
-        border: 1.5px solid #e2e8f0 !important;
+        border: 2px solid #e2e8f0 !important;
+        border-bottom: 3.5px solid #cbd5e1 !important;
         border-radius: 14px !important;
         padding: 14px 16px !important;
         font-size: 0.95rem !important;
         line-height: 1.5 !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 12px !important;
         display: flex !important;
         align-items: center !important;
         cursor: pointer !important;
-        transition: all 0.15s ease !important;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.02) !important;
+        transition: all 0.12s ease !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+        user-select: none !important;
+        -webkit-tap-highlight-color: transparent !important;
     }
 
     body.dark-mode .option-label {
         background: #1e293b !important;
         border-color: #334155 !important;
+        border-bottom-color: #475569 !important;
         color: #f1f5f9 !important;
     }
 
     .option-label:active {
-        transform: scale(0.98);
+        transform: translateY(2px) !important;
+        border-bottom-width: 1.5px !important;
         border-color: var(--primary) !important;
     }
 
     .option-label.selected {
-        background: #ecfdf5 !important;
-        border-color: #10b981 !important;
-        color: #065f46 !important;
+        background: #f0fdf4 !important;
+        border-color: #22c55e !important;
+        border-bottom: 3.5px solid #16a34a !important;
+        color: #14532d !important;
         font-weight: 700 !important;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2) !important;
     }
 
     body.dark-mode .option-label.selected {
         background: #064e3b !important;
-        border-color: #10b981 !important;
+        border-color: #22c55e !important;
+        border-bottom-color: #16a34a !important;
         color: #ecfdf5 !important;
     }
 
     .option-label.review-correct {
         background: #dcfce7 !important;
         border-color: #22c55e !important;
+        border-bottom: 3.5px solid #16a34a !important;
         color: #15803d !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
     }
 
     .option-label.review-wrong {
         background: #fee2e2 !important;
         border-color: #ef4444 !important;
-        color: #b91c1c !important;
-        font-weight: 700 !important;
+        border-bottom: 3.5px solid #dc2626 !important;
+        color: #991b1b !important;
+        font-weight: 800 !important;
     }
 
     /* 3. BOTTOM SHEETS */
@@ -1713,6 +1756,35 @@ body.mode-focus #floatingTimer { display: block !important; }
         background: #c0392b !important;
         color: white !important;
         border-color: #c0392b !important;
+    }
+
+    /* Admin Modal Mobile Optimization */
+    #adminModalBox {
+        max-width: 95% !important;
+        width: 95% !important;
+        padding: 16px 14px 60px 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    #adminPanelHeader {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    #modalAdminTitle {
+        font-size: 1.15rem !important;
+        flex: 1 !important;
+        min-width: 160px !important;
+    }
+
+    .btn-close-admin-panel {
+        padding: 6px 14px !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Mabar Floating Pill Active State */
+    .m-mabar-pill:active {
+        transform: scale(0.95);
     }
 }
 
