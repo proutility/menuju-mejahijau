@@ -8156,11 +8156,36 @@ window.renderChatMessages = (messages) => {
             jam = `${h}:${min}`;
         }
 
+        let isiKonten = '';
+        if (m.audio) {
+            const vnId = 'vn_' + Math.random().toString(36).substr(2, 9);
+            const durasiStr = m.durasi ? `0:${String(m.durasi).padStart(2, '0')}` : '0:05';
+            isiKonten = `
+                <div class="vn-player-card">
+                    <button type="button" class="vn-play-btn" id="btnPlay_${vnId}" onclick="window.playVoiceNote('${vnId}')">
+                        <i class="fas fa-play" id="iconPlay_${vnId}"></i>
+                    </button>
+                    <div class="vn-waveform-container">
+                        <div class="vn-progress-bar" onclick="window.seekVoiceNote('${vnId}', event)">
+                            <div class="vn-progress-inner" id="prog_${vnId}"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="vn-time-label" id="time_${vnId}">${durasiStr}</span>
+                            <span style="font-size:0.65rem; color:#128c7e; font-weight:bold;"><i class="fas fa-microphone"></i> VN</span>
+                        </div>
+                    </div>
+                    <audio id="audio_${vnId}" src="${m.audio}" preload="metadata" style="display:none;"></audio>
+                </div>
+            `;
+        } else {
+            isiKonten = `<span style="display:block; line-height: 1.4;">${m.teks || ''}</span>`;
+        }
+
         html += `
             <div style="align-self: ${align}; max-width: 85%; display:flex; flex-direction:column; margin-bottom:8px;">
                 <span style="font-size: 0.65rem; color: ${namaWarna}; font-weight:bold; margin-bottom: 2px; text-align: ${isMe ? 'right' : 'left'}">${isMe ? 'Kamu' : m.nama}</span>
-                <div style="background: ${bg}; padding: 6px 10px 18px 10px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; color:#333; position:relative; min-width: 70px;">
-                    <span style="display:block; line-height: 1.4;">${m.teks}</span>
+                <div style="background: ${bg}; padding: 6px 10px 18px 10px; border-radius: ${radius}; font-size: 0.85rem; box-shadow: 0 1px 2px rgba(0,0,0,0.15); word-wrap: break-word; color:#333; position:relative; min-width: 80px;">
+                    ${isiKonten}
                     <span style="font-size: 0.6rem; color: #888; position: absolute; bottom: 3px; right: 7px;">${jam}</span>
                 </div>
             </div>
@@ -8196,6 +8221,261 @@ window.renderChatMessages = (messages) => {
         chatBox.scrollTop = chatBox.scrollHeight;
     }, 50);
 };
+
+// ==========================================
+// 🎙️ SISTEM VOICE NOTE WHATSAPP-STYLE
+// ==========================================
+window.currentPlayingAudio = null;
+window.currentPlayingVnId = null;
+
+window.playVoiceNote = function(vnId) {
+    const audio = document.getElementById('audio_' + vnId);
+    const icon = document.getElementById('iconPlay_' + vnId);
+    const prog = document.getElementById('prog_' + vnId);
+    const timeLbl = document.getElementById('time_' + vnId);
+    if (!audio) return;
+
+    // Matikan audio lain jika sedang jalan
+    if (window.currentPlayingAudio && window.currentPlayingAudio !== audio) {
+        window.currentPlayingAudio.pause();
+        if (window.currentPlayingVnId) {
+            const oldIcon = document.getElementById('iconPlay_' + window.currentPlayingVnId);
+            if (oldIcon) oldIcon.className = 'fas fa-play';
+        }
+    }
+
+    if (audio.paused) {
+        audio.play().then(() => {
+            window.currentPlayingAudio = audio;
+            window.currentPlayingVnId = vnId;
+            if (icon) icon.className = 'fas fa-pause';
+        }).catch(e => console.error("Play VN error:", e));
+
+        audio.ontimeupdate = () => {
+            if (audio.duration && audio.duration > 0) {
+                const pct = (audio.currentTime / audio.duration) * 100;
+                if (prog) prog.style.width = pct + '%';
+                const sisa = Math.ceil(audio.duration - audio.currentTime);
+                if (timeLbl) timeLbl.innerText = `0:${String(Math.max(0, sisa)).padStart(2, '0')}`;
+            }
+        };
+
+        audio.onended = () => {
+            if (icon) icon.className = 'fas fa-play';
+            if (prog) prog.style.width = '0%';
+            const total = Math.ceil(audio.duration || 0);
+            if (timeLbl) timeLbl.innerText = `0:${String(total).padStart(2, '0')}`;
+            window.currentPlayingAudio = null;
+            window.currentPlayingVnId = null;
+        };
+    } else {
+        audio.pause();
+        if (icon) icon.className = 'fas fa-play';
+        window.currentPlayingAudio = null;
+        window.currentPlayingVnId = null;
+    }
+};
+
+window.seekVoiceNote = function(vnId, event) {
+    const audio = document.getElementById('audio_' + vnId);
+    if (!audio || !audio.duration) return;
+    const bar = event.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    audio.currentTime = pct * audio.duration;
+};
+
+let activeMediaRecorder = null;
+let activeAudioStream = null;
+let activeAudioChunks = [];
+let vnTimerInterval = null;
+let vnSeconds = 0;
+let vnRecordingTarget = 'desktop';
+
+window.toggleVoiceNoteRecording = async function(target = 'desktop') {
+    if (activeMediaRecorder && activeMediaRecorder.state === 'recording') {
+        window.stopAndSendVoiceNote();
+        return;
+    }
+    window.startVoiceNoteRecording(target);
+};
+
+window.startVoiceNoteRecording = async function(target = 'desktop') {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+            PROTAMA.alert("Tidak Didukung", "Browser Anda belum mendukung perekaman audio.", "error");
+        } else {
+            alert("Browser Anda belum mendukung perekaman audio.");
+        }
+        return;
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        activeAudioStream = stream;
+        activeAudioChunks = [];
+        vnRecordingTarget = target;
+        vnSeconds = 0;
+
+        let mimeType = 'audio/webm;codecs=opus';
+        if (typeof MediaRecorder.isTypeSupported === 'function') {
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 
+                          (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 
+                          (MediaRecorder.isTypeSupported('audio/ogg') ? 'audio/ogg' : ''));
+            }
+        } else {
+            mimeType = '';
+        }
+
+        const options = mimeType ? { mimeType, audioBitsPerSecond: 24000 } : {};
+        activeMediaRecorder = new MediaRecorder(stream, options);
+
+        activeMediaRecorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) activeAudioChunks.push(e.data);
+        };
+
+        activeMediaRecorder.start(250);
+
+        // Update UI
+        if (target === 'mobile') {
+            const recBar = document.getElementById('mVoiceRecordingBar');
+            const normBox = document.getElementById('mNormalChatInputBox');
+            if (recBar && normBox) {
+                recBar.style.display = 'flex';
+                normBox.style.display = 'none';
+            }
+        } else {
+            const recBar = document.getElementById('dVoiceRecordingBar');
+            const inp = document.getElementById('chatInput');
+            const mic = document.getElementById('dBtnVoiceNote');
+            if (recBar) recBar.style.display = 'flex';
+            if (inp) inp.style.display = 'none';
+            if (mic) mic.style.display = 'none';
+        }
+
+        const updateTimers = () => {
+            const timeText = `0:${String(vnSeconds).padStart(2, '0')}`;
+            const mText = document.getElementById('mVoiceTimerText');
+            const dText = document.getElementById('dVoiceTimerText');
+            if (mText) mText.innerText = timeText;
+            if (dText) dText.innerText = timeText;
+        };
+        updateTimers();
+
+        if (vnTimerInterval) clearInterval(vnTimerInterval);
+        vnTimerInterval = setInterval(() => {
+            vnSeconds++;
+            updateTimers();
+            if (vnSeconds >= 15) {
+                window.stopAndSendVoiceNote();
+            }
+        }, 1000);
+
+    } catch (err) {
+        console.error("Gagal akses mikrofon:", err);
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+            PROTAMA.alert("Izin Mikrofon Diperlukan", "Silakan berikan izin akses mikrofon untuk merekam Voice Note.", "warning");
+        } else {
+            alert("Izin akses mikrofon diperlukan untuk merekam Voice Note.");
+        }
+    }
+};
+
+window.batalVoiceNote = function() {
+    if (vnTimerInterval) { clearInterval(vnTimerInterval); vnTimerInterval = null; }
+    if (activeMediaRecorder && activeMediaRecorder.state !== 'inactive') {
+        try { activeMediaRecorder.stop(); } catch(e) {}
+    }
+    if (activeAudioStream) {
+        activeAudioStream.getTracks().forEach(t => t.stop());
+        activeAudioStream = null;
+    }
+    activeAudioChunks = [];
+    activeMediaRecorder = null;
+    window.resetVoiceNoteUI();
+};
+
+window.resetVoiceNoteUI = function() {
+    const mRecBar = document.getElementById('mVoiceRecordingBar');
+    const mNormBox = document.getElementById('mNormalChatInputBox');
+    if (mRecBar && mNormBox) {
+        mRecBar.style.display = 'none';
+        mNormBox.style.display = 'flex';
+    }
+    const dRecBar = document.getElementById('dVoiceRecordingBar');
+    const dInp = document.getElementById('chatInput');
+    const dMic = document.getElementById('dBtnVoiceNote');
+    if (dRecBar) dRecBar.style.display = 'none';
+    if (dInp) dInp.style.display = 'block';
+    if (dMic) dMic.style.display = 'block';
+};
+
+window.stopAndSendVoiceNote = function() {
+    if (!activeMediaRecorder || activeMediaRecorder.state === 'inactive') return;
+    if (vnTimerInterval) { clearInterval(vnTimerInterval); vnTimerInterval = null; }
+
+    const recordedSec = Math.max(1, vnSeconds);
+
+    activeMediaRecorder.onstop = async () => {
+        if (activeAudioStream) {
+            activeAudioStream.getTracks().forEach(t => t.stop());
+            activeAudioStream = null;
+        }
+
+        if (activeAudioChunks.length === 0) {
+            window.resetVoiceNoteUI();
+            return;
+        }
+
+        const blobType = activeAudioChunks[0].type || 'audio/webm';
+        const audioBlob = new Blob(activeAudioChunks, { type: blobType });
+        activeAudioChunks = [];
+        activeMediaRecorder = null;
+        window.resetVoiceNoteUI();
+
+        // Convert Blob to Base64 Data URL
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64Audio = reader.result;
+            await window.kirimAudioChat(base64Audio, recordedSec);
+        };
+        reader.readAsDataURL(audioBlob);
+    };
+
+    try {
+        activeMediaRecorder.stop();
+    } catch(e) {
+        console.error("Stop VN error:", e);
+        window.resetVoiceNoteUI();
+    }
+};
+
+window.kirimAudioChat = async function(base64Audio, durasi) {
+    const roomCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
+    if (!roomCode) return console.error("Kode room hilang saat kirim VN");
+
+    const database = window.db || (typeof db !== 'undefined' ? db : null);
+    const userSkrg = window.currentUser || (typeof currentUser !== 'undefined' ? currentUser : null);
+    if (!database || !userSkrg) return;
+
+    try {
+        const roomRef = doc(database, "rooms", roomCode);
+        await updateDoc(roomRef, {
+            messages: arrayUnion({
+                uid: userSkrg.uid,
+                nama: (userSkrg.displayName || "Peserta").split(" ")[0],
+                audio: base64Audio,
+                durasi: durasi,
+                waktu: new Date().toISOString()
+            })
+        });
+    } catch (e) {
+        console.error("Gagal kirim Voice Note ke Firebase:", e);
+    }
+};
+
 // ==========================================
 // LOGIKA UI CHAT: MINIMIZE & DRAG
 // ==========================================

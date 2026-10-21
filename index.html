@@ -734,12 +734,31 @@
                     <button type="button" onclick="window.kirimStikerMobile('🤔 Susah banget!')" style="background:#fff; border:1px solid #cbd5e1; border-radius:16px; padding:4px 10px; font-size:0.75rem; font-weight:700; cursor:pointer; white-space:nowrap;">🤔 Susah!</button>
                     <button type="button" onclick="window.kirimStikerMobile('😂 Wkwkwk')" style="background:#fff; border:1px solid #cbd5e1; border-radius:16px; padding:4px 10px; font-size:0.75rem; font-weight:700; cursor:pointer; white-space:nowrap;">😂 Wkwk</button>
                 </div>
-                <!-- Input Box -->
-                <div style="display:flex; gap:8px; padding:10px 12px; border-top:1px solid #e2e8f0; background:#ffffff;">
-                    <input type="text" id="mChatInput" placeholder="Ketik pesan chat..." style="flex:1; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:24px; font-size:0.9rem; outline:none;" onkeypress="if(event.key==='Enter') window.kirimPesanMobileChat()">
-                    <button type="button" onclick="window.kirimPesanMobileChat()" style="background:#004d00; color:white; border:none; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,77,0,0.3);">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                <!-- Input Box & Voice Note Bar -->
+                <div id="mChatInputWrapper" style="padding:10px 12px; border-top:1px solid #e2e8f0; background:#ffffff;">
+                    <div id="mVoiceRecordingBar" class="vn-recording-bar" style="display:none;">
+                        <div class="vn-rec-info">
+                            <span class="vn-rec-dot"></span>
+                            <span>Merekam VN <b id="mVoiceTimerText">0:00</b> / 0:15</span>
+                        </div>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" onclick="window.batalVoiceNote()" style="background:#fee2e2; border:1px solid #fca5a5; color:#dc2626; border-radius:16px; padding:4px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;" title="Batal">
+                                <i class="fas fa-trash"></i> Batal
+                            </button>
+                            <button type="button" onclick="window.stopAndSendVoiceNote()" style="background:#25d366; border:none; color:white; border-radius:16px; padding:4px 12px; font-size:0.75rem; font-weight:700; cursor:pointer; box-shadow:0 2px 5px rgba(37,211,102,0.3);" title="Kirim Voice Note">
+                                <i class="fas fa-paper-plane"></i> Kirim
+                            </button>
+                        </div>
+                    </div>
+                    <div id="mNormalChatInputBox" style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="mChatInput" placeholder="Ketik pesan..." style="flex:1; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:24px; font-size:0.9rem; outline:none;" onkeypress="if(event.key==='Enter') window.kirimPesanMobileChat()">
+                        <button type="button" id="mBtnVoiceNote" onclick="window.toggleVoiceNoteRecording('mobile')" style="background:#f1f5f9; color:#128c7e; border:1.5px solid #cbd5e1; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.15rem; flex-shrink:0; transition:0.2s;" title="Rekam Voice Note">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button type="button" onclick="window.kirimPesanMobileChat()" style="background:#004d00; color:white; border:none; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 2px 6px rgba(0,77,0,0.3); flex-shrink:0;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -945,8 +964,23 @@
                             </div>
                         </div>
             
+                        <div id="dVoiceRecordingBar" class="vn-recording-bar" style="display:none; flex:1;">
+                            <div class="vn-rec-info">
+                                <span class="vn-rec-dot"></span>
+                                <span>Merekam VN <b id="dVoiceTimerText">0:00</b> / 0:15</span>
+                            </div>
+                            <div style="display:flex; gap:6px; align-items:center;">
+                                <button type="button" onclick="window.batalVoiceNote()" style="background:#fee2e2; border:1px solid #fca5a5; color:#dc2626; border-radius:14px; padding:3px 8px; font-size:0.75rem; font-weight:bold; cursor:pointer;" title="Batal"><i class="fas fa-trash"></i></button>
+                                <button type="button" onclick="window.stopAndSendVoiceNote()" style="background:#25d366; border:none; color:white; border-radius:14px; padding:3px 10px; font-size:0.75rem; font-weight:bold; cursor:pointer;" title="Kirim"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+
                         <input type="text" id="chatInput" autocomplete="off" placeholder="Ketik pesan..." style="flex: 1; min-width: 0; padding: 10px 15px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 0.85rem; box-sizing: border-box; position: relative; z-index: 1000;" onkeypress="if(event.key === 'Enter') window.kirimPesanChat()">
                         
+                        <button type="button" id="dBtnVoiceNote" onclick="window.toggleVoiceNoteRecording('desktop')" style="background: transparent; color: #128c7e; border: none; font-size: 1.25rem; cursor: pointer; padding: 0 4px; flex-shrink: 0; position: relative; z-index: 1000; transition: transform 0.15s;" title="Voice Note (Maks 15 dtk)">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+
                         <button onclick="window.kirimPesanChat()" style="background: var(--primary); color: white; border: none; width: 38px; height: 38px; min-width: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0; margin-right: 2px; position: relative; z-index: 1000;">
                             <i class="fas fa-paper-plane"></i>
                         </button>
