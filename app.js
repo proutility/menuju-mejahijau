@@ -999,7 +999,6 @@ window.syncMobileExamUI = function(idx) {
     updateSidebarStatus();
 
     // Toggle Multiplayer Toolbar di Mobile (Klasemen & Chat)
-    const mMultiToolbar = document.getElementById('mMultiplayerToolbar');
     if (mMultiToolbar) {
         mMultiToolbar.style.display = (isModeRoom && !isSelesaiMode) ? 'flex' : 'none';
     }
