@@ -425,7 +425,7 @@ function lanjutKeAplikasi() {
     // Panggil Logic Lobby
     if(typeof window.tampilkanLobby === 'function') window.tampilkanLobby();
     
-    // Update Profil Sidebar
+    // Update Profil Sidebar & Mobile Dashboard
     if(currentUser) {
         document.getElementById('roleDisplay').innerText = currentUser.displayName; 
         document.getElementById('userAvatar').src = currentUser.photoURL;
@@ -437,6 +437,24 @@ function lanjutKeAplikasi() {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-edit" style="color:#3498db;"></i> Editor CBT';
         } else {
             if(roleLabel) roleLabel.innerHTML = '<i class="fas fa-user-tie"></i> Peserta Ujian';
+        }
+
+        // 📱 UPDATE PROFIL MOBILE DASHBOARD & ACCOUNT SHEET
+        const mNameEl = document.getElementById('mUserName');
+        if (mNameEl) mNameEl.innerText = currentUser.displayName ? currentUser.displayName.split(" ")[0] : "Peserta";
+        const mAvatarEl = document.getElementById('mUserAvatar');
+        if (mAvatarEl && currentUser.photoURL) mAvatarEl.src = currentUser.photoURL;
+
+        const mSheetName = document.getElementById('mSheetUserName');
+        if (mSheetName) mSheetName.innerText = currentUser.displayName || "Peserta Ujian";
+        const mSheetEmail = document.getElementById('mSheetUserEmail');
+        if (mSheetEmail) mSheetEmail.innerText = currentUser.email || "";
+        const mSheetAvatar = document.getElementById('mSheetAvatar');
+        if (mSheetAvatar && currentUser.photoURL) mSheetAvatar.src = currentUser.photoURL;
+
+        const mBtnAdmin = document.getElementById('mBtnAdminPanel');
+        if (mBtnAdmin) {
+            mBtnAdmin.style.display = (ADMIN_EMAILS.includes(currentUser.email) || (typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(currentUser.email))) ? 'flex' : 'none';
         }
     }
 
@@ -771,50 +789,209 @@ window.roomPlayersListenerUnsubscribe = null;
 
 window.currentDatabaseId = 'modul1';
 
-// --- FIX TOGGLE SIDEBAR HP (AUTO HIDE BUTTONS) ---
-window.toggleMobileSidebar = function() {
-    const sidebar = document.querySelector('.sidebar-right');
-    const floatingTimer = document.getElementById('floatingTimer');
-    const mobileFooter = document.getElementById('mobileFooter');
+// ==============================================================
+// 📱 CONTROLLER SUITE MOBILE APP (PRO-TAMA MOBILE EXPERIENCE)
+// ==============================================================
 
-    sidebar.classList.toggle('show-mobile');
+// 1. Bottom Sheet Open / Close Controls
+window.openMobileModulSheet = function() {
+    const sheet = document.getElementById('mobileSheetModul');
+    if (sheet) sheet.classList.add('show');
+};
 
-    if (sidebar.classList.contains('show-mobile')) {
-        if(floatingTimer) floatingTimer.style.setProperty('display', 'none', 'important');
-        if(mobileFooter) mobileFooter.style.display = 'none';
+window.closeMobileModulSheet = function() {
+    const sheet = document.getElementById('mobileSheetModul');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.switchDatabaseMobile = function(key) {
+    window.closeMobileModulSheet();
+    window.switchDatabase(key);
+};
+
+window.openMobileMabarSheet = function() {
+    const sheet = document.getElementById('mobileSheetMabar');
+    if (sheet) sheet.classList.add('show');
+};
+
+window.closeMobileMabarSheet = function() {
+    const sheet = document.getElementById('mobileSheetMabar');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.openMobileUUSheet = function() {
+    const sheet = document.getElementById('mobileSheetUU');
+    if (sheet) sheet.classList.add('show');
+};
+
+window.closeMobileUUSheet = function() {
+    const sheet = document.getElementById('mobileSheetUU');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.openMobileAccountSheet = function() {
+    const sheet = document.getElementById('mobileSheetAccount');
+    if (sheet) sheet.classList.add('show');
+};
+
+window.closeMobileAccountSheet = function() {
+    const sheet = document.getElementById('mobileSheetAccount');
+    if (sheet) sheet.classList.remove('show');
+};
+
+window.openMobilePsikotesSheet = function() {
+    window.switchDatabaseMobile('psikotes_cakim');
+};
+
+window.goToMobileHome = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const dash = document.getElementById('mobileLobbyDashboard');
+    if (dash) dash.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// 2. Tab Switcher di Lobby Mobile (Jadwal vs Top 3)
+window.switchMobileLobbyTab = function(tab) {
+    const btnJadwal = document.getElementById('mTabBtnJadwal');
+    const btnTop = document.getElementById('mTabBtnTop');
+    const contentJadwal = document.getElementById('mTabContentJadwal');
+    const contentTop = document.getElementById('mTabContentTop');
+    
+    if (tab === 'jadwal') {
+        if (btnJadwal) btnJadwal.classList.add('active');
+        if (btnTop) btnTop.classList.remove('active');
+        if (contentJadwal) contentJadwal.style.display = 'block';
+        if (contentTop) contentTop.style.display = 'none';
     } else {
-        if (document.body.classList.contains('ujian-berjalan')) {
-            if(floatingTimer) floatingTimer.style.display = 'block';
-            if(mobileFooter) mobileFooter.style.display = 'flex';
+        if (btnJadwal) btnJadwal.classList.remove('active');
+        if (btnTop) btnTop.classList.add('active');
+        if (contentJadwal) contentJadwal.style.display = 'none';
+        if (contentTop) contentTop.style.display = 'block';
+    }
+};
+
+// 3. Exam Grid Bottom Sheet
+window.toggleMobileExamSheet = function(forceState) {
+    const sheet = document.getElementById('mobileSheetExamNav');
+    if (!sheet) return;
+    if (typeof forceState === 'boolean') {
+        if (forceState) sheet.classList.add('show');
+        else sheet.classList.remove('show');
+    } else {
+        sheet.classList.toggle('show');
+    }
+};
+
+// 4. Ragu-Ragu Toggle Mobile
+window.toggleMobileRagu = function() {
+    const chk = document.getElementById('checkRagu');
+    if (chk) {
+        chk.checked = !chk.checked;
+        window.toggleRagu();
+    }
+};
+
+// 5. Konfirmasi Keluar Ujian Mobile
+window.konfirmasiKeluarUjian = function() {
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
+        PROTAMA.confirm("Keluar Ujian?", "Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?", "warning", () => {
+            if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+            window.tampilkanLobby();
+        });
+    } else if (confirm("Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?")) {
+        if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+        window.tampilkanLobby();
+    }
+};
+
+// 6. Sync Mobile Exam UI State
+window.syncMobileExamUI = function(idx) {
+    if (!currentQuestions || currentQuestions.length === 0) return;
+    
+    const isModeRoom = (typeof currentAppMode !== 'undefined' && currentAppMode === 'room') || (typeof currentRoomCode !== 'undefined' && currentRoomCode !== null && currentRoomCode !== "");
+    const isSelesaiMode = (typeof isSubmitted !== 'undefined' && isSubmitted) || (typeof isReviewMode !== 'undefined' && isReviewMode) || (typeof window.isReviewMode !== 'undefined' && window.isReviewMode);
+
+    // Update Header
+    const mModul = document.getElementById('mExamModulTitle');
+    const dModul = document.getElementById('modulTitle');
+    if (mModul && dModul) mModul.innerText = dModul.innerText;
+
+    const mQNum = document.getElementById('mExamQNumber');
+    if (mQNum) mQNum.innerText = `${idx + 1}/${currentQuestions.length}`;
+
+    const mProg = document.getElementById('mobileProgressBarInner');
+    if (mProg) mProg.style.width = `${((idx + 1) / currentQuestions.length) * 100}%`;
+
+    // Update Footer Buttons
+    const mPrev = document.getElementById('mPrevBtn');
+    const mNext = document.getElementById('mNextBtn');
+    const mRagu = document.getElementById('mRaguBtn');
+    const mFooter = document.getElementById('mobileExamFooter');
+
+    if (isModeRoom && !isSelesaiMode) {
+        if (mFooter) mFooter.style.display = 'none';
+    } else {
+        if (mFooter && document.body.classList.contains('ujian-berjalan')) {
+            mFooter.style.display = 'flex';
         }
     }
 
-    if (!document.getElementById('btnCloseMobile')) {
-        const btnClose = document.createElement('button');
-        btnClose.id = 'btnCloseMobile';
-        btnClose.className = 'close-sidebar-btn';
-        btnClose.innerHTML = 'Tutup Daftar Soal ✖️';
-        btnClose.onclick = window.toggleMobileSidebar;
-        sidebar.insertBefore(btnClose, sidebar.firstChild);
+    if (mPrev) {
+        mPrev.disabled = (idx === 0);
+        mPrev.style.opacity = (idx === 0) ? '0.4' : '1';
     }
-}
 
-// --- FIX TOGGLE MODUL HP (AUTO HIDE BUTTONS) ---
-window.toggleMobileModul = function() {
-    const sidebar = document.querySelector('.sidebar-left');
-    const timer = document.getElementById('floatingTimer');
-    const mobileFooter = document.getElementById('mobileFooter');
-
-    if (sidebar.style.display === 'flex') {
-        sidebar.style.display = ''; 
-        if(timer && document.body.classList.contains('ujian-berjalan')) timer.style.display = 'block';
-        if(mobileFooter) mobileFooter.style.display = 'flex';
-    } else {
-        sidebar.style.display = 'flex'; 
-        if(timer) timer.style.display = 'none';
-        if(mobileFooter) mobileFooter.style.display = 'none';
+    if (mRagu) {
+        mRagu.style.display = isModeRoom ? 'none' : 'flex';
+        if (raguStatus && raguStatus[idx]) {
+            mRagu.classList.add('active');
+        } else {
+            mRagu.classList.remove('active');
+        }
     }
-}
+
+    if (mNext) {
+        if (idx === currentQuestions.length - 1) {
+            if (isSelesaiMode) {
+                mNext.style.display = 'none';
+            } else {
+                mNext.style.display = 'flex';
+                mNext.innerHTML = 'Selesai <i class="fas fa-check-circle"></i>';
+                mNext.className = 'm-footer-btn m-btn-next btn-finish';
+                mNext.onclick = window.confirmFinish;
+            }
+        } else {
+            mNext.style.display = 'flex';
+            mNext.innerHTML = (isReviewMode ? 'Lanjut (Salah) ' : 'Next ') + '<i class="fas fa-arrow-right"></i>';
+            mNext.className = 'm-footer-btn m-btn-next';
+            mNext.onclick = () => window.changeQuestion(1);
+        }
+    }
+
+    updateSidebarStatus();
+};
+
+// 7. Sync Mobile Lobby UI
+window.syncMobileLobbyUI = function() {
+    const avgD = document.getElementById('avgScoreText');
+    const avgM = document.getElementById('mAvgScoreText');
+    if (avgD && avgM) avgM.innerText = avgD.innerText + " Pts";
+
+    const jDesktop = document.getElementById('listJadwalTryout');
+    const jMobile = document.getElementById('mListJadwal');
+    if (jDesktop && jMobile && jDesktop.innerHTML.trim() !== '') {
+        jMobile.innerHTML = jDesktop.innerHTML;
+    }
+
+    const tDesktop = document.getElementById('miniLeaderboardList');
+    const tMobile = document.getElementById('mMiniLeaderboardList');
+    if (tDesktop && tMobile && tDesktop.innerHTML.trim() !== '') {
+        tMobile.innerHTML = tDesktop.innerHTML;
+    }
+};
+
+// Backward compatibility
+window.toggleMobileSidebar = () => window.toggleMobileExamSheet();
+window.toggleMobileModul = () => window.openMobileModulSheet();
 
 // ==========================================================
 // PEMBERSIH STATE MODE (ISOLASI SINGLEPLAYER VS MULTIPLAYER)
@@ -1285,13 +1462,7 @@ window.switchDatabase = async function(key) {
         
         if(window.innerWidth <= 768) {
             document.body.classList.add('ujian-berjalan'); 
-            const mobileFooter = document.getElementById('mobileFooter');
-            if(mobileFooter) mobileFooter.style.display = 'flex';
-            
-            const timer = document.getElementById('floatingTimer');
-            if(timer) timer.style.display = 'block';
-            const sbLeft = document.querySelector('.sidebar-left');
-            if(sbLeft) sbLeft.style.display = ''; 
+            if (typeof syncMobileExamUI === 'function') syncMobileExamUI(0);
         }
 
     // 👇 INI DIA SI PENUTUP YANG HILANG 👇
@@ -1370,21 +1541,27 @@ function updateTimerDisplay() {
     const textWaktu = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
     const t1 = document.getElementById('timerDisplay');
     const t2 = document.getElementById('floatingTimer');
+    const mTimer = document.getElementById('mExamTimerPill');
     if(t1) t1.innerText = textWaktu;
     if(t2) t2.innerText = textWaktu;
+    if(mTimer) mTimer.innerText = textWaktu;
     let persentase = (timeRemaining / totalExamTime) * 100;
     let colorClass = 'timer-green';
     if (persentase <= 10) colorClass = 'timer-panic';
     else if (persentase <= 30) colorClass = 'timer-yellow';
     if(t1) t1.className = 'timer-container ' + colorClass;
     if(t2) t2.className = colorClass;
+    if(mTimer) mTimer.className = 'm-exam-timer-pill ' + colorClass;
 }
 
 function finishTime() { alert("Waktu Habis!"); window.submitQuiz(); }
 
 function renderSidebarGrid() {
     const grid = document.getElementById('navGrid');
-    grid.innerHTML = '';
+    const mGrid = document.getElementById('mobileNavGrid');
+    if (grid) grid.innerHTML = '';
+    if (mGrid) mGrid.innerHTML = '';
+
     currentQuestions.forEach((_, idx) => {
         const btn = document.createElement('div');
         btn.className = 'nav-btn';
@@ -1399,7 +1576,20 @@ function renderSidebarGrid() {
                   }
             }
         };
-        grid.appendChild(btn);
+        if (grid) grid.appendChild(btn);
+
+        // Grid Mobile Bottom Sheet
+        if (mGrid) {
+            const mBtn = document.createElement('div');
+            mBtn.className = 'm-nav-btn';
+            mBtn.id = `m-nav-${idx}`;
+            mBtn.innerText = idx + 1;
+            mBtn.onclick = () => {
+                loadQuestion(idx);
+                window.toggleMobileExamSheet(false);
+            };
+            mGrid.appendChild(mBtn);
+        }
     });
     updateSidebarStatus();
 }
@@ -1407,15 +1597,32 @@ function renderSidebarGrid() {
 function updateSidebarStatus() {
     currentQuestions.forEach((q, idx) => {
         const btn = document.getElementById(`nav-${idx}`);
-        if(!btn) return;
-        btn.classList.remove('active', 'filled', 'correct', 'wrong', 'ragu');
-        if (idx === currentIdx) btn.classList.add('active');
+        const mBtn = document.getElementById(`m-nav-${idx}`);
+        
+        if (btn) btn.classList.remove('active', 'filled', 'correct', 'wrong', 'ragu');
+        if (mBtn) mBtn.classList.remove('active', 'filled', 'correct', 'wrong', 'ragu');
+
+        if (idx === currentIdx) {
+            if (btn) btn.classList.add('active');
+            if (mBtn) mBtn.classList.add('active');
+        }
+
         if (isSubmitted) {
-            if (userAnswers[idx] === q.answer) btn.classList.add('correct');
-            else btn.classList.add('wrong');
+            if (userAnswers[idx] === q.answer) {
+                if (btn) btn.classList.add('correct');
+                if (mBtn) mBtn.classList.add('correct');
+            } else {
+                if (btn) btn.classList.add('wrong');
+                if (mBtn) mBtn.classList.add('wrong');
+            }
         } else {
-            if (raguStatus[idx]) btn.classList.add('ragu');
-            else if (userAnswers[idx] !== null) btn.classList.add('filled');
+            if (raguStatus[idx]) {
+                if (btn) btn.classList.add('ragu');
+                if (mBtn) mBtn.classList.add('ragu');
+            } else if (userAnswers[idx] !== null) {
+                if (btn) btn.classList.add('filled');
+                if (mBtn) mBtn.classList.add('filled');
+            }
         }
     });
 }
@@ -1861,6 +2068,11 @@ function loadQuestion(idx) {
         if (navGridContainer) navGridContainer.style.display = ''; 
         if (legendContainer) legendContainer.style.display = 'flex';
         if (rightLb) rightLb.style.display = 'none';
+    }
+
+    // 📱 SYNC STATE UI MOBILE EXAM
+    if (typeof syncMobileExamUI === 'function') {
+        syncMobileExamUI(idx);
     }
 } // <--- PASTIKAN KURUNG KURAWAL INI TETAP ADA SEBAGAI PENUTUP SEBAGAI PENUTUP
 // ==========================================
@@ -5149,6 +5361,7 @@ window.tampilkanLobby = function() {
     // 🛑 3. PENGAMANAN LAPIS DUA SAAT MASUK LOBBY
     window.isAnswerLocked = false;
     window.isReviewMode = false;
+    document.body.classList.remove('ujian-berjalan');
     
     // Hancurkan ulang DOM untuk memastikan bersih 100%
     const navGrid = document.getElementById('navGrid');
@@ -5241,6 +5454,9 @@ window.tampilkanLobby = function() {
 
     if(typeof window.loadRiwayatLobby === 'function') setTimeout(window.loadRiwayatLobby, 500);
     if(typeof window.loadJadwalLobby === 'function') window.loadJadwalLobby();
+    setTimeout(() => {
+        if (typeof window.syncMobileLobbyUI === 'function') window.syncMobileLobbyUI();
+    }, 800);
 }
 // ==========================================
 // FUNGSI GANTI TAB LOBBY
@@ -6505,6 +6721,8 @@ window.loadLobbyData = async () => {
         }
         const txtAvg = document.getElementById('avgScoreText');
         if(txtAvg) txtAvg.innerText = avg;
+        const mAvg = document.getElementById('mAvgScoreText');
+        if(mAvg) mAvg.innerText = avg + " Pts";
         const ctx = document.getElementById('lobbyMiniChart');
         if (ctx) {
             if (window.lobbyChartInstance) window.lobbyChartInstance.destroy();

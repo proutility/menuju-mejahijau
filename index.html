@@ -53,7 +53,44 @@
 
     <!-- LOGIN SCREEN -->
     <div id="loginOverlay">
-        <nav class="landing-nav">
+        <!-- 📱 TAMPILAN KHUSUS HP (MOBILE NATIVE APP ONBOARDING) -->
+        <div class="mobile-login-view mobile-only-ui">
+            <div class="mobile-login-top">
+                <div class="mobile-logo-ring">
+                    <img src="PRO-TAMA.png" alt="PRO-TAMA" class="m-login-logo" loading="lazy" decoding="async">
+                </div>
+                <h1 class="mobile-brand-title">PRO-TAMA</h1>
+                <div class="mobile-brand-badge"><i class="fas fa-balance-scale"></i> CBT CAKIM PA 2026</div>
+                <p class="mobile-brand-quote">
+                    Wadah Penggemblengan & Uji Kompetensi Calon Hakim Peradilan Agama Mahkamah Agung RI
+                </p>
+                <div class="mobile-login-pills">
+                    <div class="m-login-pill"><i class="fas fa-bolt"></i> Bank Soal Terlengkap</div>
+                    <div class="m-login-pill"><i class="fas fa-users"></i> Live Arena CBT</div>
+                    <div class="m-login-pill"><i class="fas fa-gavel"></i> Bedah Hukum & Kitab</div>
+                </div>
+            </div>
+
+            <div class="mobile-login-bottom-card">
+                <div class="m-card-handle"></div>
+                <h3 class="m-card-title">Selamat Datang, Calon Hakim!</h3>
+                <p class="m-card-desc">Silakan masuk dengan akun Google untuk memulai latihan soal dan melihat peringkat nasional.</p>
+                
+                <button class="mobile-google-btn" onclick="window.handleLogin()">
+                    <img src="https://img.icons8.com/color/48/google-logo.png" alt="Google">
+                    <span>Lanjut dengan Google</span>
+                </button>
+
+                <div class="m-trust-badge">
+                    <i class="fas fa-shield-alt"></i> Sistem CBT Terenkripsi & Resmi
+                </div>
+                <div class="m-dev-note">
+                    Developed by Ilham Nur Pratama | Content by APP 23
+                </div>
+            </div>
+        </div>
+
+        <nav class="landing-nav desktop-only-ui">
             <div class="nav-brand">
                 <img src="PRO-TAMA.png" alt="Logo" class="landing-logo" loading="lazy" decoding="async">
                 <div class="brand-text-wrapper">
@@ -66,7 +103,7 @@
                 <span>Continue with Google</span>
             </button>
         </nav>
-        <section class="hero-section">
+        <section class="hero-section desktop-only-ui">
             <div class="hero-left">
                 <h1 class="hero-quote">
                     Lelah Dalam Belajar Adalah Investasi,<br>
@@ -96,6 +133,476 @@
     <!-- MAIN APP AREA -->
     <div id="appSection" style="display:none;">
         <div class="watermark" id="watermark">Developed by Ilham Nur Pratama | Content by Febrillian Kusuma Raafi, dkk. - APP 23 - PA Serang</div>
+        
+        <!-- ============================================================== -->
+        <!-- 📱 MOBILE LOBBY DASHBOARD (HANYA AKTIF DI HP & LOBBY MODE)     -->
+        <!-- ============================================================== -->
+        <div id="mobileLobbyDashboard" class="mobile-only-ui">
+            <!-- 1. Header Pengguna Mobile -->
+            <div class="m-header-bar">
+                <div class="m-user-profile">
+                    <img id="mUserAvatar" src="https://img.icons8.com/color/96/user-male-circle--v1.png" alt="Avatar" class="m-avatar">
+                    <div class="m-user-info">
+                        <span class="m-user-greeting">Halo, Calon Hakim 👋</span>
+                        <div class="m-user-name-row">
+                            <span id="mUserName" class="m-user-name">Peserta</span>
+                            <span id="mUserBadge" class="m-badge-vip"><i class="fas fa-crown"></i> VIP</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="m-header-actions">
+                    <button class="m-action-circle" onclick="window.toggleDarkMode()" title="Mode Gelap">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="m-action-circle" onclick="window.openMobileAccountSheet()" title="Menu Akun">
+                        <i class="fas fa-user-cog"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Hero Card Progres Belajar -->
+            <div class="m-hero-card">
+                <div class="m-hero-top">
+                    <span class="m-hero-badge"><i class="fas fa-balance-scale"></i> TARGET CAKIM PA 2026</span>
+                    <span class="m-hero-status"><span class="m-status-dot"></span> Sesi Siap</span>
+                </div>
+                <div class="m-hero-content">
+                    <div class="m-hero-stats">
+                        <div class="m-stat-item">
+                            <span class="m-stat-label">Rata-Rata Nilai</span>
+                            <span id="mAvgScoreText" class="m-stat-value">0 Pts</span>
+                        </div>
+                        <div class="m-stat-divider"></div>
+                        <div class="m-stat-item">
+                            <span class="m-stat-label">Status Akun</span>
+                            <span class="m-stat-value" id="mUserRankText">Aktif</span>
+                        </div>
+                    </div>
+                    <button class="m-btn-hero-cta" onclick="window.openMobileModulSheet()">
+                        <i class="fas fa-play"></i> Mulai Latihan CBT Mandiri
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. Grid Menu Utama (6 Ikon App Saku) -->
+            <div class="m-section-heading">
+                <h4>Menu Utama</h4>
+                <span>Pilih Fitur</span>
+            </div>
+            <div class="m-menu-grid">
+                <!-- 1. CBT Mandiri -->
+                <div class="m-menu-item" onclick="window.openMobileModulSheet()">
+                    <div class="m-menu-icon icon-cbt">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <span class="m-menu-title">CBT Mandiri</span>
+                    <span class="m-menu-desc">8+ Modul Soal</span>
+                </div>
+
+                <!-- 2. Arena Mabar -->
+                <div class="m-menu-item" onclick="window.openMobileMabarSheet()">
+                    <div class="m-menu-icon icon-mabar">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <span class="m-menu-title">Arena Mabar</span>
+                    <span class="m-menu-desc">Live Multiplayer</span>
+                </div>
+
+                <!-- 3. Pusat Studi -->
+                <div class="m-menu-item" onclick="window.bukaPusatStudi()">
+                    <div class="m-menu-icon icon-studi">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <span class="m-menu-title">Pusat Studi</span>
+                    <span class="m-menu-desc">Kitab Kuning & Ayat</span>
+                </div>
+
+                <!-- 4. Kompilasi UU -->
+                <div class="m-menu-item" onclick="window.openMobileUUSheet()">
+                    <div class="m-menu-icon icon-hukum">
+                        <i class="fas fa-gavel"></i>
+                    </div>
+                    <span class="m-menu-title">Bank Regulasi</span>
+                    <span class="m-menu-desc">UU MA, PA, KHI</span>
+                </div>
+
+                <!-- 5. Simulasi Psikotes -->
+                <div class="m-menu-item" onclick="window.openMobilePsikotesSheet()">
+                    <div class="m-menu-icon icon-psiko">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <span class="m-menu-title">Psikotes</span>
+                    <span class="m-menu-desc">Kecermatan & Sikap</span>
+                </div>
+
+                <!-- 6. Peringkat Nasional -->
+                <div class="m-menu-item" onclick="window.openLeaderboard('global')">
+                    <div class="m-menu-icon icon-rank">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <span class="m-menu-title">Klasemen</span>
+                    <span class="m-menu-desc">Peringkat Nasional</span>
+                </div>
+            </div>
+
+            <!-- 4. Tab Widget: Jadwal Tryout & Top 3 -->
+            <div class="m-widget-box">
+                <div class="m-widget-tabs">
+                    <button id="mTabBtnJadwal" class="m-tab-btn active" onclick="window.switchMobileLobbyTab('jadwal')">
+                        <i class="fas fa-calendar-alt"></i> Jadwal Tryout Live
+                    </button>
+                    <button id="mTabBtnTop" class="m-tab-btn" onclick="window.switchMobileLobbyTab('top')">
+                        <i class="fas fa-crown"></i> Top 3 Peserta
+                    </button>
+                </div>
+                <div id="mTabContentJadwal" class="m-widget-content">
+                    <div id="mListJadwal" class="m-feed-list">
+                        <div class="m-empty-state"><i class="fas fa-spinner fa-spin"></i> Memuat jadwal...</div>
+                    </div>
+                </div>
+                <div id="mTabContentTop" class="m-widget-content" style="display:none;">
+                    <div id="mMiniLeaderboardList" class="m-feed-list">
+                        <div class="m-empty-state"><i class="fas fa-spinner fa-spin"></i> Memuat peringkat...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- 📱 MOBILE STICKY EXAM HEADER & FOOTER                          -->
+        <!-- ============================================================== -->
+        <div id="mobileExamHeader" class="mobile-only-ui">
+            <button class="m-btn-exam-back" onclick="window.konfirmasiKeluarUjian()" title="Keluar Sesi">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="m-exam-center">
+                <span id="mExamModulTitle" class="m-exam-modul-title">Modul Ujian</span>
+                <div id="mExamTimerPill" class="m-exam-timer-pill">00:00:00</div>
+            </div>
+            <button class="m-btn-exam-sheet" onclick="window.toggleMobileExamSheet()" title="Buka Nomor Soal">
+                <i class="fas fa-th"></i>
+                <span id="mExamQNumber">1/1</span>
+            </button>
+            <div id="mobileProgressBar" class="m-exam-progress-bar">
+                <div id="mobileProgressBarInner" class="m-exam-progress-inner"></div>
+            </div>
+        </div>
+
+        <div id="mobileExamFooter" class="mobile-only-ui">
+            <button class="m-footer-btn m-btn-prev" id="mPrevBtn" onclick="window.changeQuestion(-1)">
+                <i class="fas fa-arrow-left"></i> Prev
+            </button>
+            <button class="m-footer-btn m-btn-ragu" id="mRaguBtn" onclick="window.toggleMobileRagu()">
+                <i class="fas fa-flag"></i> <span id="mRaguText">Ragu</span>
+            </button>
+            <button class="m-footer-btn m-btn-next" id="mNextBtn" onclick="window.changeQuestion(1)">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- 📱 MOBILE BOTTOM NAVIGATION BAR (FIXED DI LOBBY)                -->
+        <!-- ============================================================== -->
+        <nav id="mobileBottomNav" class="mobile-only-ui">
+            <button class="m-nav-item active" id="mNavHome" onclick="window.goToMobileHome()">
+                <i class="fas fa-home"></i>
+                <span>Beranda</span>
+            </button>
+            <button class="m-nav-item" id="mNavModul" onclick="window.openMobileModulSheet()">
+                <i class="fas fa-book-open"></i>
+                <span>Modul</span>
+            </button>
+            <button class="m-nav-item m-nav-mabar" onclick="window.openMobileMabarSheet()">
+                <div class="m-nav-fab"><i class="fas fa-gamepad"></i></div>
+                <span>Mabar</span>
+            </button>
+            <button class="m-nav-item" id="mNavStats" onclick="window.openStats('hukum')">
+                <i class="fas fa-chart-pie"></i>
+                <span>Statistik</span>
+            </button>
+            <button class="m-nav-item" id="mNavAkun" onclick="window.openMobileAccountSheet()">
+                <i class="fas fa-user"></i>
+                <span>Akun</span>
+            </button>
+        </nav>
+
+        <!-- ============================================================== -->
+        <!-- 📱 MOBILE BOTTOM SHEETS (DRAWER SLIDE-UP DARI BAWAH)           -->
+        <!-- ============================================================== -->
+
+        <!-- 1. Bottom Sheet: Pilih Modul Soal -->
+        <div id="mobileSheetModul" class="m-bottom-sheet-overlay mobile-only-ui" onclick="if(event.target===this) window.closeMobileModulSheet()">
+            <div class="m-bottom-sheet">
+                <div class="m-sheet-drag-handle"></div>
+                <div class="m-sheet-header">
+                    <h3><i class="fas fa-book"></i> Pilih Modul CBT</h3>
+                    <button class="m-sheet-close-btn" onclick="window.closeMobileModulSheet()">✕</button>
+                </div>
+                <div class="m-sheet-body">
+                    <!-- Kategori 1: Hukum Dasar & Materil -->
+                    <div class="m-sheet-category">
+                        <span class="m-cat-title"><i class="fas fa-balance-scale"></i> Hukum Dasar & Materil</span>
+                        <div class="m-modul-btn-grid">
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul_ilmuhukum')">
+                                <span class="m-mcb-num">1</span>
+                                <span class="m-mcb-name">Ilmu Hukum Dasar</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul_Asas Umum')">
+                                <span class="m-mcb-num">2</span>
+                                <span class="m-mcb-name">Asas Umum Hukum</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul_Asas Peradilan Agama')">
+                                <span class="m-mcb-num">2.1</span>
+                                <span class="m-mcb-name">Asas Peradilan Agama</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul_KEPPH')">
+                                <span class="m-mcb-num">3</span>
+                                <span class="m-mcb-name">KEPPH & Etika Hakim</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul1')">
+                                <span class="m-mcb-num">M1</span>
+                                <span class="m-mcb-name">Kekuasaan Kehakiman</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul2')">
+                                <span class="m-mcb-num">M2</span>
+                                <span class="m-mcb-name">Mahkamah Agung RI</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul3')">
+                                <span class="m-mcb-num">M3</span>
+                                <span class="m-mcb-name">Peradilan Agama</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul6')">
+                                <span class="m-mcb-num">M6</span>
+                                <span class="m-mcb-name">PMH & Wanprestasi</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul8')">
+                                <span class="m-mcb-num">M8</span>
+                                <span class="m-mcb-name">Perkawinan (KHI)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul8.1')">
+                                <span class="m-mcb-num">M8.1</span>
+                                <span class="m-mcb-name">Perkawinan (Lanjutan)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul8.2')">
+                                <span class="m-mcb-num">M8.2</span>
+                                <span class="m-mcb-name">Perkawinan (Akhir)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul8.3')">
+                                <span class="m-mcb-num">M8.3</span>
+                                <span class="m-mcb-name">Perkawinan (UU 1/1974)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul8.4')">
+                                <span class="m-mcb-num">M8.4</span>
+                                <span class="m-mcb-name">Pelaksana (PP 9/1975)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul9')">
+                                <span class="m-mcb-num">M9</span>
+                                <span class="m-mcb-name">Perwalian & Pengangkatan</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul10')">
+                                <span class="m-mcb-num">M10</span>
+                                <span class="m-mcb-name">Waris Islam (Dasar)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul10.1')">
+                                <span class="m-mcb-num">M10.1</span>
+                                <span class="m-mcb-name">Waris Islam (KHI)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul10.2')">
+                                <span class="m-mcb-num">M10.2</span>
+                                <span class="m-mcb-name">Waris (BW / Perdata)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul11')">
+                                <span class="m-mcb-num">M11</span>
+                                <span class="m-mcb-name">Wasiat, Hibah & Wakaf</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul12')">
+                                <span class="m-mcb-num">M12</span>
+                                <span class="m-mcb-name">Ekonomi Syariah</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul13')">
+                                <span class="m-mcb-num">M13</span>
+                                <span class="m-mcb-name">Jinayat Aceh (Qanun)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Kategori 2: Hukum Acara (Formil) -->
+                    <div class="m-sheet-category">
+                        <span class="m-cat-title"><i class="fas fa-file-contract"></i> Hukum Acara (Formil)</span>
+                        <div class="m-modul-btn-grid">
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul4')">
+                                <span class="m-mcb-num">M4</span>
+                                <span class="m-mcb-name">Hukum Acara Perdata</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul5')">
+                                <span class="m-mcb-num">M5</span>
+                                <span class="m-mcb-name">Sita & Eksekusi Putusan</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul7')">
+                                <span class="m-mcb-num">M7</span>
+                                <span class="m-mcb-name">Upaya Hukum & Kasasi</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul7.1')">
+                                <span class="m-mcb-num">M7.1</span>
+                                <span class="m-mcb-name">Peninjauan Kembali (PK)</span>
+                            </button>
+                            <button class="m-modul-card-btn" onclick="window.switchDatabaseMobile('modul14')">
+                                <span class="m-mcb-num">M14</span>
+                                <span class="m-mcb-name">Administrasi Perkara E-Court</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Bottom Sheet: Arena Mabar -->
+        <div id="mobileSheetMabar" class="m-bottom-sheet-overlay mobile-only-ui" onclick="if(event.target===this) window.closeMobileMabarSheet()">
+            <div class="m-bottom-sheet">
+                <div class="m-sheet-drag-handle"></div>
+                <div class="m-sheet-header">
+                    <h3><i class="fas fa-gamepad"></i> Arena Mabar (Multiplayer)</h3>
+                    <button class="m-sheet-close-btn" onclick="window.closeMobileMabarSheet()">✕</button>
+                </div>
+                <div class="m-sheet-body">
+                    <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Adu cepat menjawab soal CBT bersama rekan sesama Cakim secara realtime!</p>
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <button class="m-action-big-btn btn-green" onclick="window.closeMobileMabarSheet(); window.bikinRoomLatihan();">
+                            <i class="fas fa-plus-circle"></i>
+                            <div>
+                                <strong>Buat Room Baru</strong>
+                                <span>Pilih modul & bagikan kode ke teman</span>
+                            </div>
+                        </button>
+                        <button class="m-action-big-btn btn-orange" onclick="window.closeMobileMabarSheet(); window.gabungRoomLatihan();">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <div>
+                                <strong>Gabung Room</strong>
+                                <span>Masukkan 6 digit kode dari Host</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Bottom Sheet: Bank Regulasi & UU -->
+        <div id="mobileSheetUU" class="m-bottom-sheet-overlay mobile-only-ui" onclick="if(event.target===this) window.closeMobileUUSheet()">
+            <div class="m-bottom-sheet">
+                <div class="m-sheet-drag-handle"></div>
+                <div class="m-sheet-header">
+                    <h3><i class="fas fa-gavel"></i> Bank Regulasi & UU</h3>
+                    <button class="m-sheet-close-btn" onclick="window.closeMobileUUSheet()">✕</button>
+                </div>
+                <div class="m-sheet-body">
+                    <div class="m-uu-list">
+                        <button class="m-uu-card-btn" onclick="window.closeMobileUUSheet(); window.bukaUUMA();">
+                            <div class="m-uu-icon" style="background:#e0f2fe; color:#0284c7;"><i class="fas fa-landmark"></i></div>
+                            <div class="m-uu-text">
+                                <strong>UU Mahkamah Agung</strong>
+                                <span>UU 14/1985 jo UU 5/2004 jo UU 3/2009</span>
+                            </div>
+                        </button>
+                        <button class="m-uu-card-btn" onclick="window.closeMobileUUSheet(); window.bukaUUPA();">
+                            <div class="m-uu-icon" style="background:#ecfdf5; color:#059669;"><i class="fas fa-balance-scale"></i></div>
+                            <div class="m-uu-text">
+                                <strong>UU Peradilan Agama</strong>
+                                <span>UU 7/1989 jo UU 3/2006 jo UU 50/2009</span>
+                            </div>
+                        </button>
+                        <button class="m-uu-card-btn" onclick="window.closeMobileUUSheet(); window.bukaKHI();">
+                            <div class="m-uu-icon" style="background:#fef3c7; color:#d97706;"><i class="fas fa-book-open"></i></div>
+                            <div class="m-uu-text">
+                                <strong>Kompilasi Hukum Islam (KHI)</strong>
+                                <span>Inpres No. 1 Tahun 1991 (Buku I, II, III)</span>
+                            </div>
+                        </button>
+                        <button class="m-uu-card-btn" onclick="window.closeMobileUUSheet(); window.bukaUUKK();">
+                            <div class="m-uu-icon" style="background:#f3e8ff; color:#9333ea;"><i class="fas fa-gavel"></i></div>
+                            <div class="m-uu-text">
+                                <strong>UU Kekuasaan Kehakiman</strong>
+                                <span>UU No. 48 Tahun 2009</span>
+                            </div>
+                        </button>
+                        <button class="m-uu-card-btn" onclick="window.closeMobileUUSheet(); window.bukaPusatStudi();">
+                            <div class="m-uu-icon" style="background:#dcfce7; color:#16a34a;"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="m-uu-text">
+                                <strong>Pusat Studi Cakim Lengkap</strong>
+                                <span>Kitab Kuning & Himpunan Ayat Hukum</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Bottom Sheet: Akun & Pengaturan -->
+        <div id="mobileSheetAccount" class="m-bottom-sheet-overlay mobile-only-ui" onclick="if(event.target===this) window.closeMobileAccountSheet()">
+            <div class="m-bottom-sheet">
+                <div class="m-sheet-drag-handle"></div>
+                <div class="m-sheet-header">
+                    <h3><i class="fas fa-user-circle"></i> Profil & Pengaturan</h3>
+                    <button class="m-sheet-close-btn" onclick="window.closeMobileAccountSheet()">✕</button>
+                </div>
+                <div class="m-sheet-body">
+                    <div class="m-account-card">
+                        <img id="mSheetAvatar" src="https://img.icons8.com/color/96/user-male-circle--v1.png" alt="Avatar" class="m-account-avatar">
+                        <div class="m-account-info">
+                            <h4 id="mSheetUserName">Calon Hakim</h4>
+                            <span id="mSheetUserEmail">email@example.com</span>
+                            <span id="mSheetUserBadge" class="m-badge-vip"><i class="fas fa-crown"></i> Akun Terverifikasi</span>
+                        </div>
+                    </div>
+                    
+                    <div class="m-setting-list">
+                        <button id="mBtnAdminPanel" class="m-setting-item" style="display:none;" onclick="window.closeMobileAccountSheet(); window.openAdminPanel();">
+                            <i class="fas fa-cogs" style="color:#2c3e50;"></i>
+                            <span>Panel Admin / Editor Soal</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </button>
+                        <button class="m-setting-item" onclick="window.closeMobileAccountSheet(); window.openStats('hukum');">
+                            <i class="fas fa-chart-line" style="color:var(--purple);"></i>
+                            <span>Detail Statistik Belajar</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </button>
+                        <button class="m-setting-item" onclick="window.closeMobileAccountSheet(); window.openLaporModal();">
+                            <i class="fas fa-flag" style="color:#e74c3c;"></i>
+                            <span>Lapor Kesalahan / Kendala</span>
+                            <i class="fas fa-chevron-right arrow"></i>
+                        </button>
+                        <button class="m-setting-item" onclick="window.toggleDarkMode();">
+                            <i class="fas fa-moon" style="color:#f39c12;"></i>
+                            <span>Mode Gelap / Terang</span>
+                            <i class="fas fa-adjust arrow"></i>
+                        </button>
+                    </div>
+
+                    <button class="m-btn-logout" onclick="window.handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Keluar dari Aplikasi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Bottom Sheet: Grid Nomor Soal Ujian Mobile -->
+        <div id="mobileSheetExamNav" class="m-bottom-sheet-overlay mobile-only-ui" onclick="if(event.target===this) window.toggleMobileExamSheet()">
+            <div class="m-bottom-sheet">
+                <div class="m-sheet-drag-handle"></div>
+                <div class="m-sheet-header">
+                    <h3><i class="fas fa-th"></i> Daftar Nomor Soal</h3>
+                    <button class="m-sheet-close-btn" onclick="window.toggleMobileExamSheet()">✕</button>
+                </div>
+                <div class="m-sheet-body">
+                    <div class="m-exam-legend">
+                        <div class="m-leg-item"><span class="m-leg-dot isi"></span> Sudah Dijawab</div>
+                        <div class="m-leg-item"><span class="m-leg-dot ragu"></span> Ragu-Ragu</div>
+                        <div class="m-leg-item"><span class="m-leg-dot kosong"></span> Belum</div>
+                    </div>
+                    <div id="mobileNavGrid" class="m-nav-grid-container"></div>
+                </div>
+            </div>
+        </div>
+
         
         <!-- SIDEBAR KIRI (DAFTAR MODUL) -->
         <div class="sidebar-left">
