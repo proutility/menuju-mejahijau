@@ -1393,15 +1393,16 @@ window.switchDatabase = async function(key) {
                     }
                     if (qSnap.empty) {
                         const v2Doc = await getDoc(doc(db, "bank_soal_v2", key));
-                    if (v2Doc.exists() && v2Doc.data().daftar_soal_array) {
-                        judulModul = v2Doc.data().title || judulModul;
-                        const arr = v2Doc.data().daftar_soal_array;
-                        arr.forEach((item, idx) => {
-                            let d = JSON.parse(JSON.stringify(item));
-                            d.id = d.id || `${key}_${idx}`;
-                            rawQuestions.push(d);
-                        });
-                        jumlahSoalServer = rawQuestions.length;
+                        if (v2Doc.exists() && v2Doc.data().daftar_soal_array) {
+                            judulModul = v2Doc.data().title || judulModul;
+                            const arr = v2Doc.data().daftar_soal_array;
+                            arr.forEach((item, idx) => {
+                                let d = JSON.parse(JSON.stringify(item));
+                                d.id = d.id || `${key}_${idx}`;
+                                rawQuestions.push(d);
+                            });
+                            jumlahSoalServer = rawQuestions.length;
+                        }
                     }
                 }
             }
