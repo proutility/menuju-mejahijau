@@ -9984,10 +9984,10 @@ window.bukaPusatStudi = () => {
     let menuRahasia = document.querySelectorAll('.menu-rahasia-admin');
     
     // KUNCI HAK AKSES PUSAT STUDI CAKIM:
-    // 1. Super Admin (ilhamnp22@gmail.com & inurprtma22@gmail.com): Buka SEMUA 8 modul!
-    // 2. VIP & Editor: Kitab Kuning & Ayat Hukum aktif. 6 modul lainnya tampil dengan label 'Segera Hadir' & popup info.
+    // 1. Super Admin (ilhamnp22@gmail.com & inurprtma22@gmail.com): Buka SEMUA modul!
+    // 2. VIP & Editor: Strategi, Checklist, Kitab Kuning & Ayat Hukum aktif. Modul regulasi lainnya tampil dengan label 'Segera Hadir' & popup info.
     menuRahasia.forEach(menu => {
-        menu.style.display = "block"; // Tampilkan di grid
+        menu.style.display = "flex"; // Tampilkan di grid dengan display flex rapi
         
         let tagAkanHadir = menu.querySelector('.tag-akan-hadir');
         if (isSuper) {
@@ -10031,6 +10031,29 @@ window.bukaPusatStudi = () => {
             };
         }
     });
+};
+
+// ==========================================
+// 👑 FITUR STRATEGI TES CAKIM (37 SLIDE KOMPREHENSIF)
+// ==========================================
+window.bukaStrategiCakim = () => {
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Strategi Tes Cakim');
+    const overlay = document.getElementById('strategiCakimOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+        const iframe = document.getElementById('iframeStrategiCakim');
+        if (iframe && !iframe.getAttribute('src')) {
+            iframe.setAttribute('src', 'strategi-cakim.html');
+        }
+    }
+};
+
+window.tutupStrategiCakim = () => {
+    const overlay = document.getElementById('strategiCakimOverlay');
+    if (overlay) overlay.style.display = 'none';
+    const pusatStudi = document.getElementById('pusatStudiOverlay');
+    if (pusatStudi) pusatStudi.style.display = 'flex';
+    if (window.updateUserStatus) window.updateUserStatus(true, 'Pusat Studi: Menu Utama');
 };
 // ==========================================
 // 📖 FITUR BUKU II MA 

@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategi Persiapan Tes Calon Hakim (37 Slide)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ma: {
+                            navy: '#0f172a',
+                            gold: '#ca8a04',
+                            light: '#f8fafc',
+                            darkgold: '#a16207'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Reveal Animation on Scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Flip Card 3D Effect */
+        .flip-card {
+            perspective: 1000px;
+            height: 280px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner, .flip-card:focus .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .flip-card-front {
+            background-color: white;
+            color: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-top: 4px solid #ca8a04;
+        }
+        .flip-card-back {
+            background-color: #0f172a;
+            color: white;
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 4px solid #ca8a04;
+        }
+
+        /* Modern CSS Grid Accordion */
+        .accordion-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.4s ease-out;
+        }
+        .accordion-content > div {
+            overflow: hidden;
+        }
+        .accordion-btn.active .icon-rotate {
+            transform: rotate(180deg);
+        }
+        .accordion-btn.active + .accordion-content {
+            grid-template-rows: 1fr;
+        }
+        
+        /* Navbar Blur */
+        .nav-scrolled {
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom Scrollbar for long lists */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-ma-light text-slate-800 antialiased font-sans overflow-x-hidden">
+
+    <!-- Header / Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-transparent text-white py-4 px-6 md:px-12 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-scale-balanced text-ma-gold text-2xl"></i>
+            <span class="font-serif font-bold text-xl tracking-wide hidden md:block">PTA Bali • Strategi Cakim</span>
+        </div>
+        <div class="hidden lg:flex gap-6 font-medium text-sm tracking-wide items-center">
+            <a href="#esensi" class="hover:text-ma-gold transition-colors">Esensi</a>
+            <a href="#materi" class="hover:text-ma-gold transition-colors">Materi & Strategi</a>
+            <a href="#kisi-kisi" class="hover:text-ma-gold transition-colors">Kisi-Kisi SKB</a>
+            <a href="#wawancara" class="hover:text-ma-gold transition-colors">Wawancara & Etika</a>
+            <button onclick="if(window.parent && window.parent.tutupStrategiCakim){window.parent.tutupStrategiCakim();}else{window.close();}" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-900 px-3.5 py-1.5 rounded-lg border border-amber-500/40 text-xs font-bold transition-all flex items-center gap-2 ml-4">
+                <i class="fa-solid fa-arrow-left"></i> Kembali ke Pusat Studi
+            </button>
+        </div>
+        <div class="lg:hidden flex items-center gap-3">
+            <button onclick="if(window.parent && window.parent.tutupStrategiCakim){window.parent.tutupStrategiCakim();}else{window.close();}" class="bg-amber-500/20 text-amber-300 px-3 py-1 rounded-lg text-xs font-bold border border-amber-500/40">
+                <i class="fa-solid fa-arrow-left"></i> Pusat Studi
+            </button>
+            <button id="mobileMenuBtn" class="text-2xl focus:outline-none text-ma-gold">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative min-h-screen flex items-center justify-center bg-ma-navy text-white text-center px-4 overflow-hidden pt-20">
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+            <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full border-4 border-ma-gold"></div>
+            <div class="absolute bottom-10 right-10 w-64 h-64 rounded-full border-2 border-ma-gold"></div>
+        </div>
+        
+        <div class="relative z-10 max-w-4xl mx-auto reveal active">
+            <span class="inline-block py-1 px-4 rounded-full bg-ma-gold/20 text-ma-gold font-semibold text-sm mb-6 border border-ma-gold/50 tracking-wider">
+                BERDASARKAN 37 SLIDE MATERI
+            </span>
+            <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Strategi Komprehensif <br>Persiapan Tes <span class="text-ma-gold">Calon Hakim</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-300 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+                Membangun Kompetensi Intelektual, Integritas Yudisial, dan Karakter Calon Hakim yang Berkeadilan.
+            </p>
+            <a href="#esensi" class="inline-block bg-ma-gold text-ma-navy px-8 py-3 rounded-md font-bold hover:bg-ma-darkgold hover:text-white transition-all shadow-[0_0_20px_rgba(202,138,4,0.4)]">
+                Mulai Eksplorasi Materi
+            </a>
+        </div>
+    </header>
+
+    <!-- Bagian 1: Esensi & Peta Kompetensi -->
+    <section id="esensi" class="py-20 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="text-center mb-16 reveal">
+            <h2 class="font-serif text-3xl md:text-4xl font-bold text-ma-navy mb-4">Peta Kompetensi Calon Hakim</h2>
+            <div class="h-1 w-24 bg-ma-gold mx-auto rounded"></div>
+            <p class="mt-6 text-gray-600 max-w-3xl mx-auto">
+                Kecerdasan akademik harus berjalan beriringan dengan integritas. Hakim pintar tapi tidak jujur berisiko menyalahgunakan wewenang; Hakim baik hati tapi tidak menguasai hukum berisiko memutus tidak tepat.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
+            <!-- 4 Cards -->
+            <div class="flip-card"><div class="flip-card-inner">
+                <div class="flip-card-front"><i class="fa-solid fa-brain text-4xl text-ma-navy mb-4"></i><h3 class="font-bold text-lg mb-1">Intelektual</h3><p class="text-xs text-gray-500">Tap to flip</p></div>
+                <div class="flip-card-back"><h3 class="font-bold text-lg text-ma-gold mb-2">Intelektual</h3><p class="text-sm text-gray-300">Pengetahuan hukum, logika, ketajaman analisis, dan pemecahan masalah.</p></div>
+            </div></div>
+            <div class="flip-card"><div class="flip-card-inner">
+                <div class="flip-card-front"><i class="fa-solid fa-gavel text-4xl text-ma-navy mb-4"></i><h3 class="font-bold text-lg mb-1">Yudisial</h3><p class="text-xs text-gray-500">Tap to flip</p></div>
+                <div class="flip-card-back"><h3 class="font-bold text-lg text-ma-gold mb-2">Yudisial</h3><p class="text-sm text-gray-300">Hukum materiil, hukum acara pembuktian, dan penalaran penyusunan putusan.</p></div>
+            </div></div>
+            <div class="flip-card"><div class="flip-card-inner">
+                <div class="flip-card-front"><i class="fa-solid fa-shield-halved text-4xl text-ma-navy mb-4"></i><h3 class="font-bold text-lg mb-1">Integritas & Etika</h3><p class="text-xs text-gray-500">Tap to flip</p></div>
+                <div class="flip-card-back"><h3 class="font-bold text-lg text-ma-gold mb-2">Integritas</h3><p class="text-sm text-gray-300">Kejujuran, independensi, imparsialitas, dan prinsip teguh antikorupsi.</p></div>
+            </div></div>
+            <div class="flip-card"><div class="flip-card-inner">
+                <div class="flip-card-front"><i class="fa-solid fa-heart-pulse text-4xl text-ma-navy mb-4"></i><h3 class="font-bold text-lg mb-1">Kematangan</h3><p class="text-xs text-gray-500">Tap to flip</p></div>
+                <div class="flip-card-back"><h3 class="font-bold text-lg text-ma-gold mb-2">Kematangan</h3><p class="text-sm text-gray-300">Empati, ketegasan, komunikasi efektif, serta pengendalian diri & emosi.</p></div>
+            </div></div>
+        </div>
+    </section>
+
+    <!-- Bagian 2: Materi Prioritas & Strategi -->
+    <section id="materi" class="py-20 bg-slate-50 border-y border-gray-200">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-serif text-3xl md:text-4xl font-bold text-ma-navy mb-4">Strategi & Program Belajar</h2>
+                <div class="h-1 w-24 bg-ma-gold mx-auto rounded"></div>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-12">
+                <!-- Kiri: Program 30 Hari & Formula -->
+                <div class="reveal space-y-8">
+                    <!-- Formula 70-20-10 -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-ma-gold">
+                        <h3 class="text-xl font-bold text-ma-navy mb-3"><i class="fa-solid fa-chart-pie text-ma-gold mr-2"></i>Formula Belajar 70-20-10</h3>
+                        <div class="grid grid-cols-3 gap-4 text-center">
+                            <div class="bg-slate-50 p-3 rounded"><div class="text-2xl font-bold text-ma-navy">70%</div><div class="text-xs text-gray-600 mt-1">Materi Inti (Hukum, Logika, Regulasi)</div></div>
+                            <div class="bg-slate-50 p-3 rounded"><div class="text-2xl font-bold text-ma-navy">20%</div><div class="text-xs text-gray-600 mt-1">Simulasi Soal & Analisis Kasus</div></div>
+                            <div class="bg-slate-50 p-3 rounded"><div class="text-2xl font-bold text-ma-navy">10%</div><div class="text-xs text-gray-600 mt-1">Evaluasi, Istirahat & Mentalitas</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Program 30 Hari -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-xl font-bold text-ma-navy mb-4"><i class="fa-regular fa-calendar-check text-ma-gold mr-2"></i>Program Belajar 30 Hari</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-4"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-ma-navy text-ma-gold flex items-center justify-center font-bold">1</div><div><h4 class="font-bold text-sm">Pemetaan & Fondasi</h4><p class="text-xs text-gray-600">Pelajari pengumuman, ukur kemampuan, perkuat dasar hukum & logika.</p></div></div>
+                            <div class="flex gap-4"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-ma-navy text-ma-gold flex items-center justify-center font-bold">2</div><div><h4 class="font-bold text-sm">Pendalaman Hukum</h4><p class="text-xs text-gray-600">Fokus Hukum Acara, Kompetensi PA, Keluarga, Ekonomi Syariah, Etika.</p></div></div>
+                            <div class="flex gap-4"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-ma-navy text-ma-gold flex items-center justify-center font-bold">3</div><div><h4 class="font-bold text-sm">Latihan Intensif</h4><p class="text-xs text-gray-600">Kerjakan soal berbatas waktu, analisis kasus, catat dan perbaiki kesalahan.</p></div></div>
+                            <div class="flex gap-4"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-ma-navy text-ma-gold flex items-center justify-center font-bold">4</div><div><h4 class="font-bold text-sm">Simulasi & Pemantapan</h4><p class="text-xs text-gray-600">Simulasi format resmi, latihan wawancara, jaga kesehatan & tidur.</p></div></div>
+                        </div>
+                        <div class="mt-4 p-3 bg-ma-gold/10 text-ma-darkgold text-xs rounded-lg font-medium">
+                            *Rutinitas Harian: 60m membaca, 60m soal, 30m evaluasi, 30m latihan kasus/wawancara.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kanan: Accordions (Strategi Taktis) -->
+                <div class="reveal space-y-4">
+                    <!-- Acara -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <button class="accordion-btn w-full px-6 py-4 text-left font-semibold text-ma-navy flex justify-between items-center focus:outline-none" onclick="toggleAccordion(this)">
+                            <span><i class="fa-solid fa-code-branch text-ma-gold mr-3"></i>Alur Berpikir Hukum Acara</span>
+                            <i class="fa-solid fa-chevron-down icon-rotate transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content bg-slate-50"><div class="px-6 py-4 text-sm text-gray-700">
+                            <ol class="list-decimal pl-4 space-y-2">
+                                <li><strong>Identifikasi:</strong> Siapa pihak, apa objek, dan apa tuntutan?</li>
+                                <li><strong>Kewenangan:</strong> Apakah masuk kewenangan absolut/relatif pengadilan?</li>
+                                <li><strong>Hukum Acara:</strong> Bagaimana gugatan diajukan & diperiksa?</li>
+                                <li><strong>Pembuktian:</strong> Fakta apa yang dibuktikan & dengan alat bukti apa?</li>
+                                <li><strong>Terapkan Hukum:</strong> Hubungkan fakta dengan norma yang tepat.</li>
+                                <li><strong>Putusan:</strong> Bangun alasan hukum logis & konsisten.</li>
+                            </ol>
+                        </div></div>
+                    </div>
+
+                    <!-- IRAC -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <button class="accordion-btn w-full px-6 py-4 text-left font-semibold text-ma-navy flex justify-between items-center focus:outline-none" onclick="toggleAccordion(this)">
+                            <span><i class="fa-solid fa-pen-nib text-ma-gold mr-3"></i>Pola IRAC (Argumentasi Hukum)</span>
+                            <i class="fa-solid fa-chevron-down icon-rotate transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content bg-slate-50"><div class="px-6 py-4 text-sm text-gray-700 space-y-2">
+                            <p class="mb-2">Gunakan pola ini untuk melatih penalaran terstruktur:</p>
+                            <p><span class="font-bold text-ma-navy">I - Issue:</span> Apa persoalan hukum utama yang harus dijawab?</p>
+                            <p><span class="font-bold text-ma-navy">R - Rule:</span> Norma aturan apa yang berlaku dan unsur-unsurnya?</p>
+                            <p><span class="font-bold text-ma-navy">A - Apply:</span> Bagaimana fakta memenuhi/tidak memenuhi norma?</p>
+                            <p><span class="font-bold text-ma-navy">C - Conclusion:</span> Apa kesimpulan hukum yang paling tepat?</p>
+                        </div></div>
+                    </div>
+
+                    <!-- Pilihan Ganda -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <button class="accordion-btn w-full px-6 py-4 text-left font-semibold text-ma-navy flex justify-between items-center focus:outline-none" onclick="toggleAccordion(this)">
+                            <span><i class="fa-solid fa-list-check text-ma-gold mr-3"></i>Teknik Menjawab Pilihan Ganda</span>
+                            <i class="fa-solid fa-chevron-down icon-rotate transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content bg-slate-50"><div class="px-6 py-4 text-sm text-gray-700">
+                            <ul class="space-y-2">
+                                <li><strong>BACA:</strong> Pahami inti pertanyaan (perhatikan kata: <em>kecuali, paling tepat</em>).</li>
+                                <li><strong>ANALISIS:</strong> Identifikasi isu hukum, unsur aturan, dan fakta.</li>
+                                <li><strong>ELIMINASI:</strong> Singkirkan pilihan yang jelas bertentangan hukum/fakta.</li>
+                                <li><strong>VERIFIKASI:</strong> Periksa kembali jawaban terhadap bunyi soal.</li>
+                            </ul>
+                            <p class="mt-3 text-xs italic text-gray-500">Tips: Jangan terpaku lama pada 1 soal. Tandai jika belum yakin. Jangan ubah jawaban karena cemas, ubah hanya jika menemukan alasan substantif.</p>
+                        </div></div>
+                    </div>
+
+                    <!-- Materi Prioritas PA -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <button class="accordion-btn w-full px-6 py-4 text-left font-semibold text-ma-navy flex justify-between items-center focus:outline-none" onclick="toggleAccordion(this)">
+                            <span><i class="fa-solid fa-book-quran text-ma-gold mr-3"></i>Kewenangan PA (Pasal 49 UU PA)</span>
+                            <i class="fa-solid fa-chevron-down icon-rotate transition-transform duration-300"></i>
+                        </button>
+                        <div class="accordion-content bg-slate-50"><div class="px-6 py-4 text-sm text-gray-700">
+                            <p class="mb-2 font-medium">Kuasai regulasi dan kewenangan untuk 9 bidang ini:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Perkawinan</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Waris</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Wasiat</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Hibah</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Wakaf</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Zakat</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Infak</span>
+                                <span class="bg-white px-2 py-1 border rounded text-xs">Sedekah</span>
+                                <span class="bg-ma-gold text-white font-bold px-2 py-1 border border-ma-gold rounded text-xs shadow-sm">Ekonomi Syariah</span>
+                            </div>
+                        </div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bagian 3: Kisi-kisi Lengkap SKB -->
+    <section id="kisi-kisi" class="py-20 bg-white">
+        <div class="max-w-5xl mx-auto px-6 md:px-12">
+            <div class="text-center mb-12 reveal">
+                <h2 class="font-serif text-3xl md:text-4xl font-bold text-ma-navy mb-4">Detail Kisi-Kisi Soal SKB</h2>
+                <div class="h-1 w-24 bg-ma-gold mx-auto rounded mb-6"></div>
+                <p class="text-gray-600">Berdasarkan data historis struktur ujian Kamar Agama MA (Tahun 2017/2021).<br>Nilai SKB CAT merupakan nilai utama (Bobot Terbesar).</p>
+            </div>
+
+            <!-- Sistem Penilaian Summary -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 reveal text-center">
+                <div class="bg-slate-100 p-4 rounded-lg"><div class="text-xl font-bold text-ma-navy">60%</div><div class="text-xs mt-1">Bobot Total SKB terhadap Nilai Akhir CPNS</div></div>
+                <div class="bg-ma-navy text-white p-4 rounded-lg"><div class="text-xl font-bold text-ma-gold">50%</div><div class="text-xs mt-1">Bobot Ujian CAT (Paling Rendah) di dalam SKB</div></div>
+                <div class="bg-slate-100 p-4 rounded-lg"><div class="text-xl font-bold text-ma-navy">30%</div><div class="text-xs mt-1">Bobot Maks. Ujian Wawancara di SKB</div></div>
+                <div class="bg-slate-100 p-4 rounded-lg"><div class="text-xl font-bold text-ma-navy">20%</div><div class="text-xs mt-1">Bobot Maks. Ujian Kompetensi Lain (Psikotes)</div></div>
+            </div>
+
+            <div class="space-y-4 reveal">
+                <!-- 1. Ilmu Hukum -->
+                <div class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-ma-gold/50 transition-colors">
+                    <button class="accordion-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-slate-50" onclick="toggleAccordion(this)">
+                        <div>
+                            <span class="font-bold text-lg text-ma-navy block">Ilmu Hukum, Teori & Filsafat Hukum</span>
+                            <span class="text-xs font-semibold text-ma-gold uppercase tracking-wider">Bobot: 20% dari CAT</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down icon-rotate text-ma-navy transition-transform duration-300"></i>
+                    </button>
+                    <div class="accordion-content bg-white"><div class="px-6 py-5 text-sm text-gray-700 custom-scrollbar max-h-96 overflow-y-auto">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Ilmu Hukum & Ketatanegaraan</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs">
+                                    <li>Kedudukan MA dalam ketatanegaraan.</li>
+                                    <li>Pembagian Kamar MA (Pasal 18 UU MA & SK KMA).</li>
+                                    <li>Pengertian <em>One Roof System</em> peradilan.</li>
+                                    <li>Kedudukan & tugas Komisi Yudisial & Mahkamah Konstitusi.</li>
+                                    <li>Kedudukan, tugas, fungsi PTA dan PA.</li>
+                                    <li>Pejabat yang mengangkat sumpah Ketua MA (Presiden) & KPTA.</li>
+                                    <li>Hirarki perundang-undangan (UU No. 12/2011 Pasal 7).</li>
+                                    <li>Faktor penegakan hukum (Struktur, Substansi, Budaya).</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Teori & Filsafat Hukum</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs">
+                                    <li>Asas Hukum: <em>Lex specialis, Lex superior, Ius curia novit, Equality before the law</em>.</li>
+                                    <li>Tujuan Hukum (Keadilan, Kemanfaatan, Kepastian).</li>
+                                    <li>Aliran penemuan hukum (Legisme, Historis, dll).</li>
+                                    <li>Macam penafsiran (Gramatikal, A contrario, Futuristis).</li>
+                                    <li>Teori Keadilan (Komutatif, Distributif, Substantif, Prosedural).</li>
+                                    <li>Penemuan hukum (<em>rechtsvinding</em>) vs pembentukan hukum (<em>rechtsvorming</em>), <em>Contra legem</em>.</li>
+                                    <li>Fungsi hukum (<em>Social control, Dispute settlement, Social engineering</em>).</li>
+                                </ul>
+                            </div>
+                            <div class="md:col-span-2">
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Hukum Islam & Etika (KEPPH)</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs grid md:grid-cols-2 gap-x-4">
+                                    <li>Beda syariah & fikih, Asas hukum Islam, Kaidah ushuliyyah & fiqhiyah.</li>
+                                    <li>Maqashid al-syariah, Ijma', qiyas, istihsan, istishab, maslahah mursalah, 'urf.</li>
+                                    <li>Penalaran bayani, qiyasi, istishlahi. Beda zahir, nash, mufassar, muhkam.</li>
+                                    <li>Beda ijtihad istinbathi (penemuan) & tathbiqi (penerapan).</li>
+                                    <li>Makna Etika Hakim: Mandiri, Adil, Jujur, Profesional, Berintegritas (SKB MA & KY 2009).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div></div>
+                </div>
+
+                <!-- 2. Hukum Formil -->
+                <div class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-ma-gold/50 transition-colors">
+                    <button class="accordion-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-slate-50" onclick="toggleAccordion(this)">
+                        <div>
+                            <span class="font-bold text-lg text-ma-navy block">Hukum Formil (Hukum Acara) Peradilan Agama</span>
+                            <span class="text-xs font-semibold text-ma-gold uppercase tracking-wider">Bobot: 30% dari CAT</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down icon-rotate text-ma-navy transition-transform duration-300"></i>
+                    </button>
+                    <div class="accordion-content bg-white"><div class="px-6 py-5 text-sm text-gray-700 custom-scrollbar max-h-96 overflow-y-auto">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Gugatan & Persiapan Sidang</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs">
+                                    <li>Perbedaan <em>voluntair</em> & <em>contentiosa</em>.</li>
+                                    <li>Asas tempat gugat (<em>actor sequitur forum rei, forum rei sitae</em>).</li>
+                                    <li>Unsur gugatan (Identitas, Posita/Feitelijk & Rechtelijk gronden, Petitum).</li>
+                                    <li>Gugatan provisi, kumulasi (subjektif/objektif), concursus.</li>
+                                    <li>Syarat & konsekuensi perubahan/pencabutan gugatan.</li>
+                                    <li>Surat kuasa (umum, khusus, insidentil, istimewa).</li>
+                                    <li>Istilah: <em>Legal standing, plurium litis consortium, error in persona, obscuur libel, ne bis in idem</em>.</li>
+                                    <li>Pemanggilan (Relaas), Tabayun/Delegasi, Panggilan Ghaib.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Mediasi, Jawaban & Pembuktian</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs">
+                                    <li>Mediasi (Perma No 1/2016): Kaukus, Iktikad baik, Kesepakatan perdamaian sebagian.</li>
+                                    <li>Eksepsi kewenangan (diperiksa sebelum pokok perkara) vs Eksepsi di luar kewenangan (diperiksa bersama pokok perkara).</li>
+                                    <li>Gugatan rekonvensi, Intervensi (<em>voeging, vrijwaring, tussenkomst</em>).</li>
+                                    <li>Alat Bukti Perdata: Tertulis, Saksi, Pengakuan, Sumpah, Persangkaan.</li>
+                                    <li>Batas minimal saksi, <em>Unus testis nullus testis</em>, saksi <em>de auditu</em>.</li>
+                                    <li>Pemeriksaan Setempat (<em>Descente</em>) & Keterangan Ahli.</li>
+                                </ul>
+                            </div>
+                            <div class="md:col-span-2">
+                                <h4 class="font-bold text-ma-navy mb-2 border-b pb-1">Putusan, Penyitaan & Eksekusi</h4>
+                                <ul class="list-disc pl-4 space-y-1 text-xs grid md:grid-cols-2 gap-x-4">
+                                    <li>Sifat Putusan: Declaratoir, Constitutif, Condemnatoir.</li>
+                                    <li>Amar: Tidak dapat diterima (NO), Dikabulkan, Ditolak, Digugurkan.</li>
+                                    <li>Putusan sela vs akhir. Putusan Verstek vs Contradictoir dan upaya hukumnya.</li>
+                                    <li>Sita: Conservatoir, Revindicatoir, Marital/Harta Bersama, Eksekusi.</li>
+                                    <li>Perlawanan pihak ketiga terhadap sita (Derden Verzet).</li>
+                                    <li>Eksekusi riil vs pembayaran uang, Eksekusi non-eksekutabel.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div></div>
+                </div>
+
+                <!-- 3. Hukum Materiil -->
+                <div class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-ma-gold/50 transition-colors">
+                    <button class="accordion-btn w-full px-6 py-5 text-left flex justify-between items-center focus:outline-none bg-slate-50" onclick="toggleAccordion(this)">
+                        <div>
+                            <span class="font-bold text-lg text-ma-navy block">Hukum Materiil Peradilan Agama</span>
+                            <span class="text-xs font-semibold text-ma-gold uppercase tracking-wider">Bobot: 50% (Sisanya dibagi rata Jinayat, Keluarga, EkSyariah, Perdata)</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down icon-rotate text-ma-navy transition-transform duration-300"></i>
+                    </button>
+                    <div class="accordion-content bg-white"><div class="px-6 py-5 text-sm text-gray-700">
+                        <ul class="grid sm:grid-cols-2 gap-4">
+                            <li class="bg-slate-50 p-3 rounded border border-gray-100">
+                                <span class="font-bold text-ma-navy block mb-1">Hukum Keluarga (KHI/UU Perkawinan)</span>
+                                <span class="text-xs text-gray-600">Perceraian, nafkah, hadhanah, harta bersama, waris, wasiat, hibah, wakaf, zakat.</span>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded border border-gray-100">
+                                <span class="font-bold text-ma-navy block mb-1">Ekonomi Syariah (KHES/Perma 2/2008)</span>
+                                <span class="text-xs text-gray-600">Akad, wanprestasi, sengketa pembiayaan syariah, perbankan syariah.</span>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded border border-gray-100">
+                                <span class="font-bold text-ma-navy block mb-1">Hukum Jinayat</span>
+                                <span class="text-xs text-gray-600">Khusus wilayah yang menerapkan (Qanun Aceh).</span>
+                            </li>
+                            <li class="bg-slate-50 p-3 rounded border border-gray-100">
+                                <span class="font-bold text-ma-navy block mb-1">Hukum Perdata Umum</span>
+                                <span class="text-xs text-gray-600">Buku I, II, III, IV KUHPerdata yang relevan dengan kewenangan PA.</span>
+                            </li>
+                        </ul>
+                    </div></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Bagian 4: Wawancara & Karakter -->
+    <section id="wawancara" class="py-20 bg-ma-navy text-white border-t-4 border-ma-gold">
+        <div class="max-w-7xl mx-auto px-6 md:px-12">
+            <div class="text-center mb-16 reveal">
+                <h2 class="font-serif text-3xl md:text-4xl font-bold text-white mb-4">Strategi Wawancara & Pembentukan Karakter</h2>
+                <div class="h-1 w-24 bg-ma-gold mx-auto rounded"></div>
+                <p class="mt-6 text-gray-300 max-w-2xl mx-auto">Wawancara menilai 3 Lapisan: Substansi (Kebenaran Hukum), Cara Penyampaian (Ketenangan), dan Karakter (Kejujuran & Integritas).</p>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                
+                <!-- Kolom 1: Simulasi Dilema -->
+                <div class="lg:col-span-2 space-y-6 reveal">
+                    <h3 class="text-2xl font-bold text-ma-gold mb-4 border-b border-ma-gold/30 pb-2">Simulasi Pertanyaan Kritis & Dilema</h3>
+                    
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <!-- Q1 -->
+                        <div class="bg-white/10 p-5 rounded-lg border border-white/20 hover:border-ma-gold transition-all">
+                            <h4 class="font-bold text-lg mb-2"><i class="fa-solid fa-sack-dollar text-ma-gold mr-2"></i>Ditawari Uang/Hadiah?</h4>
+                            <p class="text-sm text-gray-300"><strong>Jawaban:</strong> Tolak dengan tegas, karena mengancam independensi. Catat dan laporkan sesuai mekanisme resmi, serta jaga kerahasiaan. (Menunjukkan kepatuhan prosedur).</p>
+                        </div>
+                        <!-- Q2 -->
+                        <div class="bg-white/10 p-5 rounded-lg border border-white/20 hover:border-ma-gold transition-all">
+                            <h4 class="font-bold text-lg mb-2"><i class="fa-solid fa-users text-ma-gold mr-2"></i>Keluarga Minta Bantuan?</h4>
+                            <p class="text-sm text-gray-300"><strong>Jawaban:</strong> Jelaskan secara santun proses hukum yang berlaku. Tidak menjanjikan hasil/memengaruhi hakim lain. Jika muncul konflik kepentingan, ambil langkah mundur (recuse).</p>
+                        </div>
+                        <!-- Q3 -->
+                        <div class="bg-white/10 p-5 rounded-lg border border-white/20 hover:border-ma-gold transition-all">
+                            <h4 class="font-bold text-lg mb-2"><i class="fa-solid fa-person-circle-question text-ma-gold mr-2"></i>Tidak Tahu Hukumnya?</h4>
+                            <p class="text-sm text-gray-300"><strong>Jawaban:</strong> Sampaikan batas pengetahuan dengan jujur. Jangan mengarang dasar hukum. Sampaikan bahwa Anda akan menelaah peraturan dan putusan relevan untuk menarik kesimpulan. (Kejujuran intelektual).</p>
+                        </div>
+                        <!-- Q4 -->
+                        <div class="bg-white/10 p-5 rounded-lg border border-white/20 hover:border-ma-gold transition-all">
+                            <h4 class="font-bold text-lg mb-2"><i class="fa-solid fa-scale-unbalanced text-ma-gold mr-2"></i>Hukum Terasa Tidak Adil?</h4>
+                            <p class="text-sm text-gray-300"><strong>Jawaban:</strong> Telaah aturan secara sistematis, pertimbangkan prinsip konstitusi. Tafsirkan dalam koridor kewenangan yang sah untuk menyeimbangkan Kepastian Hukum, Keadilan, dan Kemanfaatan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Motivasi & Kelemahan -->
+                    <div class="bg-gradient-to-r from-slate-800 to-ma-navy p-6 rounded-lg border-l-4 border-ma-gold shadow-lg mt-6">
+                        <h4 class="font-bold text-lg mb-3 text-ma-gold">Pertanyaan Wajib:</h4>
+                        <div class="space-y-3 text-sm text-gray-300">
+                            <p><strong><i class="fa-solid fa-circle-right text-xs mr-1 text-ma-gold"></i> Mengapa ingin jadi Hakim?</strong> Hindari jawaban soal status/kekuasaan. Jawab sebagai amanah penegakan hukum, pelayanan masyarakat, dan komitmen menjaga integritas.</p>
+                            <p><strong><i class="fa-solid fa-circle-right text-xs mr-1 text-ma-gold"></i> Siap ditempatkan jauh?</strong> Tunjukkan kedewasaan. "Siap mengelola tanggung jawab keluarga agar tidak mengganggu tugas negara secara disiplin."</p>
+                            <p><strong><i class="fa-solid fa-circle-right text-xs mr-1 text-ma-gold"></i> Apa kelemahan terbesar?</strong> Jangan bilang "tidak punya". Sebutkan kelemahan nyata (misal: terlalu detail jadi lambat), tapi langsung berikan SOLUSI konkret yang sedang Anda lakukan (misal: belajar manajemen waktu).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom 2: 5K & Do's Dont's -->
+                <div class="space-y-6 reveal">
+                    <!-- 5K Rumus Sukses -->
+                    <div>
+                        <h3 class="text-2xl font-bold text-ma-gold mb-4 border-b border-ma-gold/30 pb-2">Rumus 5K Calon Hakim</h3>
+                        <div class="flex flex-col gap-2">
+                            <div class="bg-white/5 border border-white/10 p-3 rounded flex items-center"><div class="w-8 h-8 rounded bg-ma-gold text-ma-navy font-bold flex justify-center items-center mr-3">1</div><div><strong class="block text-sm">Kompetensi</strong><span class="text-xs text-gray-400">Penguasaan & analisis</span></div></div>
+                            <div class="bg-white/5 border border-white/10 p-3 rounded flex items-center"><div class="w-8 h-8 rounded bg-ma-gold text-ma-navy font-bold flex justify-center items-center mr-3">2</div><div><strong class="block text-sm">Kedisiplinan</strong><span class="text-xs text-gray-400">Belajar terukur</span></div></div>
+                            <div class="bg-white/5 border border-white/10 p-3 rounded flex items-center"><div class="w-8 h-8 rounded bg-ma-gold text-ma-navy font-bold flex justify-center items-center mr-3">3</div><div><strong class="block text-sm">Karakter</strong><span class="text-xs text-gray-400">Jujur & matang</span></div></div>
+                            <div class="bg-white/5 border border-white/10 p-3 rounded flex items-center"><div class="w-8 h-8 rounded bg-ma-gold text-ma-navy font-bold flex justify-center items-center mr-3">4</div><div><strong class="block text-sm">Kemandirian</strong><span class="text-xs text-gray-400">Tahan intervensi</span></div></div>
+                            <div class="bg-white/5 border border-white/10 p-3 rounded flex items-center"><div class="w-8 h-8 rounded bg-ma-gold text-ma-navy font-bold flex justify-center items-center mr-3">5</div><div><strong class="block text-sm">Ketakwaan</strong><span class="text-xs text-gray-400">Landasan moral ke Allah SWT</span></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Kesalahan Fatal & Body Language -->
+                    <div class="bg-white text-ma-navy p-5 rounded-lg shadow-lg">
+                        <h4 class="font-bold border-b border-gray-200 pb-2 mb-3">Bahasa Tubuh (Do's & Don'ts)</h4>
+                        <ul class="text-sm space-y-2 mb-4">
+                            <li><i class="fa-solid fa-check text-green-600 mr-2"></i> Duduk tegap, rileks, kontak mata wajar.</li>
+                            <li><i class="fa-solid fa-check text-green-600 mr-2"></i> Bicara jelas, intonasi tenang, gestur natural.</li>
+                            <li><i class="fa-solid fa-xmark text-red-500 mr-2"></i> Jangan memotong pembicaraan penguji.</li>
+                            <li><i class="fa-solid fa-xmark text-red-500 mr-2"></i> Hindari sikap defensif jika dikritik.</li>
+                            <li><i class="fa-solid fa-xmark text-red-500 mr-2"></i> Kesombongan intelektual / merasa paling tahu.</li>
+                        </ul>
+                        
+                        <h4 class="font-bold border-b border-gray-200 pb-2 mb-3 text-red-600">Kesalahan Fatal!</h4>
+                        <ul class="text-xs space-y-1 text-gray-700">
+                            <li>- Belajar tanpa strategi / SKS.</li>
+                            <li>- Menghafal tanpa memahami alur.</li>
+                            <li>- Menjawab normatif tanpa tindakan konkret.</li>
+                            <li>- Mengabaikan kesehatan fisik & mental jelang tes.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white text-center py-16 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+        <div class="relative z-10">
+            <i class="fa-solid fa-scale-balanced text-5xl text-ma-gold mb-6 drop-shadow-[0_0_15px_rgba(202,138,4,0.5)]"></i>
+            <h2 class="font-serif text-2xl md:text-3xl lg:text-4xl font-bold mb-4">"Hakim Bukan Sekadar Profesi, <span class="text-ma-gold">Tetapi Amanah</span>"</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto text-sm md:text-base mb-8 italic">
+                "Jangan hanya mempersiapkan diri agar diterima menjadi hakim. Persiapkan diri agar kelak layak dipercaya ketika memegang amanah untuk menegakkan keadilan."
+            </p>
+            <div class="text-gray-500 text-xs border-t border-gray-800 pt-8 uppercase tracking-widest">
+                &copy; 2026 Mahkamah Agung Republik Indonesia - Pengadilan Tinggi Agama Bali
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Navbar Scroll Effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('nav-scrolled', 'py-3');
+                navbar.classList.remove('py-4');
+            } else {
+                navbar.classList.remove('nav-scrolled', 'py-3');
+                navbar.classList.add('py-4');
+            }
+        });
+
+        // Reveal Animation on Scroll (Intersection Observer)
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); 
+                }
+            });
+        }, {
+            root: null,
+            threshold: 0.1, 
+            rootMargin: "0px 0px -50px 0px"
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // Modern CSS Grid Accordion Logic
+        function toggleAccordion(button) {
+            const isCurrentlyActive = button.classList.contains('active');
+            
+            // Optional: If you want to close other accordions in the same group, uncomment below
+            /*
+            const allBtns = document.querySelectorAll('.accordion-btn');
+            allBtns.forEach(btn => {
+                if(btn !== button && btn.classList.contains('active')) {
+                    btn.classList.remove('active');
+                }
+            });
+            */
+
+            // Toggle current
+            if (!isCurrentlyActive) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        }
+    </script>
+</body>
+</html>
