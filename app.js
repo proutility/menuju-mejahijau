@@ -1373,7 +1373,26 @@ window.switchDatabase = async function(key) {
                 if (!legacySnap.empty) {
                     qSnap = legacySnap;
                 } else {
-                    const v2Doc = await getDoc(doc(db, "bank_soal_v2", key));
+                    const altKeys = {
+                        'modul_acara_jinayat': ['modul_jinayat', 'modul_hk_jinayat', 'modul_hukum_acara_jinayat', 'modul_jinayah'],
+                        'modul_jinayat': ['modul_acara_jinayat']
+                    };
+                    if (altKeys[key]) {
+                        for (const alt of altKeys[key]) {
+                            const altSnap = await getDocs(collection(db, "bank_soal", alt, "daftar_soal"));
+                            if (!altSnap.empty) {
+                                qSnap = altSnap;
+                                break;
+                            }
+                            const altDirect = await getDocs(collection(db, alt));
+                            if (!altDirect.empty) {
+                                qSnap = altDirect;
+                                break;
+                            }
+                        }
+                    }
+                    if (qSnap.empty) {
+                        const v2Doc = await getDoc(doc(db, "bank_soal_v2", key));
                     if (v2Doc.exists() && v2Doc.data().daftar_soal_array) {
                         judulModul = v2Doc.data().title || judulModul;
                         const arr = v2Doc.data().daftar_soal_array;
@@ -6461,7 +6480,12 @@ window.loadReviewPembahasan = async () => {
     container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Sabar, lagi narik data...</div>`;
     
     try {
-        const qSnap = await getDocs(collection(db, "bank_soal", modulId, "daftar_soal"));
+        let qSnap = await getDocs(collection(db, "bank_soal", modulId, "daftar_soal"));
+        if (qSnap.empty && (modulId === 'modul_acara_jinayat' || modulId === 'modul_jinayat')) {
+            const alt = modulId === 'modul_acara_jinayat' ? 'modul_jinayat' : 'modul_acara_jinayat';
+            const altSnap = await getDocs(collection(db, "bank_soal", alt, "daftar_soal"));
+            if (!altSnap.empty) qSnap = altSnap;
+        }
         container.innerHTML = "";
         
         if (qSnap.empty) {
@@ -6617,7 +6641,9 @@ window.loadSoalAdmin = async () => {
                     'modul_4': ['modul_hir', 'modul_hir_rbg_rv', 'hafalan_hir_rbg_rv', 'modul_hafalan_hir'],
                     'modul_5': ['modul_sema', 'kumpulan_sema', 'modul_kumpulan_sema'],
                     'modul_hir': ['modul_4'],
-                    'modul_sema': ['modul_5']
+                    'modul_sema': ['modul_5'],
+                    'modul_acara_jinayat': ['modul_jinayat', 'modul_hk_jinayat', 'modul_hukum_acara_jinayat', 'modul_jinayah'],
+                    'modul_jinayat': ['modul_acara_jinayat']
                 };
                 if (aliasMap[modulId]) {
                     for (const altKey of aliasMap[modulId]) {
