@@ -7531,9 +7531,26 @@ window.addEventListener('beforeunload', () => {
     if (currentUser) window.updateUserStatus(false, "Offline");
 });
 
-// 3. Fungsi Admin buat nampilin data di tabel (Update: Ditambah Kode VIP, Status Verifikasi & Aksi Cepat)
+// 3. Fungsi Admin buat nampilin data di tabel (Update: Ditambah Kode VIP, Status Verifikasi & Aksi Cepat - Khusus Super Admin)
 window.loadStatusAdmin = async () => {
+    // 🛑 STRICT GUARD: Hanya Super Admin yang diizinkan mengakses Radar Peserta (Editor Ditolak)
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     const container = document.getElementById('containerStatus');
+
+    if (!isSuper) {
+        console.warn("Akses ditolak: Radar Peserta khusus Super Admin.");
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:40px 20px; color:#e74c3c;">
+                    <i class="fas fa-user-lock" style="font-size:3rem; margin-bottom:15px; color:#e74c3c;"></i>
+                    <h3 style="margin-bottom:8px; color:#c0392b;">Akses Terbatas: Khusus Super Admin</h3>
+                    <p style="color:#7f8c8d; font-size:0.9rem;">Akun Editor tidak memiliki izin untuk memantau radar aktivitas peserta maupun mengelola kode VIP.</p>
+                </div>
+            `;
+        }
+        return;
+    }
+
     if(!container) return;
 
     container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Membuka radar peserta, melacak aktivitas, dan menarik data VIP...</div>`;
@@ -7721,9 +7738,11 @@ window.loadStatusAdmin = async () => {
 };
 
 // ==========================================
-// AKSI CEPAT RADAR (CABUT VIP / AKTIVASI / HAPUS)
+// AKSI CEPAT RADAR (CABUT VIP / AKTIVASI / HAPUS - KHUSUS SUPER ADMIN)
 // ==========================================
 window.cabutAksesVIP = async (email) => {
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (!isSuper) return alert("Akses Ditolak: Fitur ini khusus Super Admin.");
     if (!email) return;
     if (!confirm(`Cabut akses VIP untuk ${email}?\n\nJika user sedang membuka aplikasi, sistem akan langsung menendangnya secara real-time.`)) return;
     try {
@@ -7737,6 +7756,8 @@ window.cabutAksesVIP = async (email) => {
 };
 
 window.aktivasiVIPLangsung = async (email) => {
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (!isSuper) return alert("Akses Ditolak: Fitur ini khusus Super Admin.");
     if (!email) return;
     if (!confirm(`Aktifkan akses VIP untuk ${email} sekarang?`)) return;
     try {
@@ -7750,6 +7771,8 @@ window.aktivasiVIPLangsung = async (email) => {
 };
 
 window.hapusStatusRadar = async (docId, email) => {
+    const isSuper = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
+    if (!isSuper) return alert("Akses Ditolak: Fitur ini khusus Super Admin.");
     if (!docId) return;
     if (!confirm(`Hapus entri radar untuk ${email || docId}?\n(Data aktivitas lama akan dibersihkan)`)) return;
     try {
