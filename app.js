@@ -264,31 +264,6 @@ if(auth) {
             document.getElementById('gateLoading').style.display = 'block';
             document.getElementById('gateInputArea').style.display = 'none';
 
-            // 🛑 JALUR TOL: CEK APAKAH USER BAWA LINK ROOM? (BYPASS VIP)
-            const urlParams = new URLSearchParams(window.location.search);
-            const roomTarget = urlParams.get('room');
-
-            if (roomTarget) {
-                console.log("Jalur VIP Bypass Aktif untuk Room:", roomTarget);
-                lanjutKeAplikasi();
-                
-                setTimeout(async () => {
-                    window.isVIPUser = false;
-                    try {
-                        const accRef = doc(db, "vip_access", user.email);
-                        const accSnap = await getDoc(accRef);
-                        if(accSnap.exists() && accSnap.data().isVerified === true) {
-                            window.isVIPUser = true;
-                            window.userRoleCakim = "VIP";
-                        }
-                    } catch(e) {}
-                    
-                    window.gabungRoomLatihanOtomatis(roomTarget);
-                }, 1000);
-                
-                return; // BERHENTI DI SINI
-            }
-
             // 🛑 JALUR TOL KHUSUS ADMIN & EDITOR (BYPASS GERBANG VIP)
             if (window.userRoleCakim === "SUPER_ADMIN" || window.userRoleCakim === "EDITOR") {
                 console.log(`Jalur Bebas Hambatan untuk: ${window.userRoleCakim}`);
@@ -297,20 +272,12 @@ if(auth) {
                 return;                  
             }
 
-            // --- PROSES NORMAL JIKA TIDAK BAWA LINK ROOM (PESERTA BIASA) ---
-            try {
-                // 1. CEK DULU DI CACHE BROWSER (GRATIS, GAK PAKAI FIREBASE READ)
-                let cachedRole = sessionStorage.getItem("userRole_v1");
-                
-                if (cachedRole === "VIP" || cachedRole === "SUPER_ADMIN" || cachedRole === "EDITOR") {
-                    console.log("Akses dari Cache! Hemat 1 Read Firebase.");
-                    window.isVIPUser = true;
-                    window.userRoleCakim = cachedRole;
-                    lanjutKeAplikasi();
-                    return; // BERHENTI DI SINI, GAK JADI MANGGIL FIREBASE
-                }
+            // 🛑 CEK APAKAH USER BAWA LINK ROOM?
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomTarget = urlParams.get('room');
 
-                // 2. KALAU GAK ADA DI CACHE, BARU MINTA KE FIREBASE (BAYAR 1 READ)
+            // --- PROSES VERIFIKASI WAJIB REAL-TIME FIREBASE (ANTI-BYPASS) ---
+            try {
                 const accessRef = doc(db, "vip_access", user.email);
                 let isAlreadyVerified = false;
 
@@ -320,25 +287,92 @@ if(auth) {
                         isAlreadyVerified = true;
                     }
                 } catch (errRead) {
-                    // Sesuai Security Rules baru:
-                    // User yang belum terverifikasi DILARANG membaca dokumennya sendiri
-                    // agar tidak bisa mengintip field 'code' di console browser!
                     isAlreadyVerified = false;
                 }
             
                 if (isAlreadyVerified) {
                     window.isVIPUser = true; 
-                    window.userRoleCakim = "VIP"; // Tandai VIP
-                    
-                    // SIMPAN KE BROWSER BIAR BESOK-BESOK GAK USAH FETCH LAGI
+                    window.userRoleCakim = "VIP";
                     sessionStorage.setItem("userRole_v1", "VIP");
-                    
+
+                    // 🛡️ LISTENER REAL-TIME CABUT AKSES:
+                    // Jika Admin mencabut/menghapus VIP di Firebase secara langsung,
+                    // aplikasi user akan otomatis terkunci seketika tanpa perlu reload!
+                    if (window.vipAccessUnsubscribe) window.vipAccessUnsubscribe();
+                    window.vipAccessUnsubscribe = onSnapshot(accessRef, (snap) => {
+                        if (!snap.exists() || snap.data()?.isVerified !== true) {
+                            if (!ADMIN_EMAILS.includes(user.email) && !(typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(user.email))) {
+                                console.warn("Akses VIP dicabut oleh Admin!");
+                                window.isVIPUser = false;
+                                window.userRoleCakim = "PESERTA";
+                                sessionStorage.removeItem("userRole_v1");
+                                document.getElementById('appSection').style.display = 'none';
+                                if (gateOverlay) gateOverlay.style.display = 'flex';
+                                showGateInput(user.displayName, user.email);
+                                window.updateUserStatus(true, "VIP Gatekeeper");
+                                if (typeof PROTAMA !== 'undefined') {
+                                    PROTAMA.alert("Akses Dinonaktifkan", "Akses VIP akun Anda telah dinonaktifkan atau dihapus oleh Administrator.", "warning");
+                                } else {
+                                    alert("Akses VIP akun Anda telah dinonaktifkan oleh Administrator.");
+                                }
+                            }
+                        }
+                    }, (errSnap) => {
+                        if (!ADMIN_EMAILS.includes(user.email) && !(typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(user.email))) {
+                            window.isVIPUser = false;
+                            window.userRoleCakim = "PESERTA";
+                            sessionStorage.removeItem("userRole_v1");
+                            document.getElementById('appSection').style.display = 'none';
+                            if (gateOverlay) gateOverlay.style.display = 'flex';
+                            showGateInput(user.displayName, user.email);
+                            window.updateUserStatus(true, "VIP Gatekeeper");
+                        }
+                    });
+
+                    // Bawa link room Mabar?
+                    if (roomTarget) {
+                        lanjutKeAplikasi();
+                        setTimeout(() => {
+                            window.gabungRoomLatihanOtomatis(roomTarget);
+                        }, 500);
+                        return;
+                    }
+
                     lanjutKeAplikasi();
                     return;
                 }
 
-                // USER BARU / BELUM VERIFIKASI
-                // Generate pendaftaran dokumen awal di Firestore (hanya diizinkan jika isVerified == false)
+                // --- JIKA TIDAK / BELUM TERVERIFIKASI (NON-VIP) ---
+                sessionStorage.removeItem("userRole_v1");
+                window.isVIPUser = false;
+                window.userRoleCakim = "PESERTA";
+
+                // Jika dia mengklik link Room Mabar:
+                if (roomTarget) {
+                    console.log("Peserta Non-VIP mengakses link Room:", roomTarget);
+                    try {
+                        const rRef = doc(db, "rooms", roomTarget);
+                        const rSnap = await getDoc(rRef);
+                        if (rSnap.exists() && (rSnap.data().status === 'waiting' || (rSnap.data().players && rSnap.data().players[user.uid]))) {
+                            // Masuk HANYA ke arena room Mabar (bukan Lobby Utama!)
+                            lanjutKeAplikasi();
+                            window.updateUserStatus(true, "Multiplayer: Room " + roomTarget);
+                            setTimeout(() => {
+                                window.gabungRoomLatihanOtomatis(roomTarget);
+                            }, 500);
+                            return;
+                        } else {
+                            window.history.replaceState(null, null, window.location.pathname);
+                            if (typeof PROTAMA !== 'undefined') {
+                                PROTAMA.alert("Room Tidak Ditemukan", "Room Mabar tidak ditemukan atau sudah selesai. Silakan hubungi Admin untuk mendapatkan kode akses VIP.", "warning");
+                            }
+                        }
+                    } catch (eRoom) {
+                        window.history.replaceState(null, null, window.location.pathname);
+                    }
+                }
+
+                // USER BARU / BELUM VERIFIKASI (TETAP DI GATEKEEPER)
                 try {
                     const randomAsas = legalTerms[Math.floor(Math.random() * legalTerms.length)];
                     const randomNum = Math.floor(100 + Math.random() * 899);
@@ -351,10 +385,7 @@ if(auth) {
                         isVerified: false,
                         createdAt: new Date()
                     });
-                } catch (eCreate) {
-                    // Jika dokumen sudah pernah dibuat sebelumnya, setDoc ditolak oleh Rules
-                    // untuk menjaga agar kode unik yang tersimpan di DB tidak tertimpa/berubah.
-                }
+                } catch (eCreate) {}
 
                 showGateInput(user.displayName, user.email);
                 window.updateUserStatus(true, "VIP Gatekeeper");
@@ -1305,6 +1336,13 @@ function selectKey(idx) {
 }
 
 window.switchDatabase = async function(key) {
+    // 🛑 CEGAH AKSES NON-VIP MASUK KE UJIAN / MODUL
+    if (window.isVIPUser === false && !ADMIN_EMAILS.includes(currentUser?.email) && !(typeof EDITOR_EMAILS !== 'undefined' && EDITOR_EMAILS.includes(currentUser?.email))) {
+        if (typeof window.tendangNonVIP === 'function') return window.tendangNonVIP();
+        window.location.reload();
+        return;
+    }
+
     if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
     window.speechSynthesis.cancel();
     
@@ -7493,7 +7531,7 @@ window.addEventListener('beforeunload', () => {
     if (currentUser) window.updateUserStatus(false, "Offline");
 });
 
-// 3. Fungsi Admin buat nampilin data di tabel (Update: Ditambah Kode VIP)
+// 3. Fungsi Admin buat nampilin data di tabel (Update: Ditambah Kode VIP, Status Verifikasi & Aksi Cepat)
 window.loadStatusAdmin = async () => {
     const container = document.getElementById('containerStatus');
     if(!container) return;
@@ -7501,13 +7539,17 @@ window.loadStatusAdmin = async () => {
     container.innerHTML = `<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Membuka radar peserta, melacak aktivitas, dan menarik data VIP...</div>`;
 
     try {
-        // --- 1. TARIK DATA KODE VIP (KHUSUS SUPER ADMIN) ---
+        // --- 1. TARIK DATA KODE VIP & STATUS VERIFIKASI (KHUSUS SUPER ADMIN) ---
         let vipMap = {};
         try {
             const qVip = query(collection(window.db, "vip_access"));
             const snapVip = await getDocs(qVip);
-            snapVip.forEach(doc => {
-                vipMap[doc.id] = doc.data().code; 
+            snapVip.forEach(docSnap => {
+                const data = docSnap.data();
+                vipMap[docSnap.id] = {
+                    code: data.code || "-",
+                    isVerified: data.isVerified === true
+                };
             });
         } catch (vipErr) {
             console.warn("Daftar kode VIP hanya dapat diakses oleh Super Admin.");
@@ -7532,15 +7574,17 @@ window.loadStatusAdmin = async () => {
         let html = `<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
             <thead><tr style="background:#eee; text-align:left;">
                 <th style="padding:10px;">Nama & Email</th>
-                <th style="padding:10px; color:var(--primary);">Kode VIP</th>
-                <th style="padding:10px;">Status</th>
+                <th style="padding:10px; color:var(--primary);">Status & Kode VIP</th>
+                <th style="padding:10px;">Status Radar</th>
                 <th style="padding:10px;">Aktivitas Terakhir</th>
+                <th style="padding:10px; text-align:center;">Aksi Cepat</th>
             </tr></thead><tbody>`;
 
         const sekarang = new Date();
 
         snap.forEach(docSnap => {
             const d = docSnap.data();
+            const emailUser = d.email || "";
             const waktu = d.lastActive ? d.lastActive.toDate() : new Date();
             
             const selisihMs = sekarang - waktu;
@@ -7554,21 +7598,25 @@ window.loadStatusAdmin = async () => {
             else if (selisihJam < 24) ketWaktu = `${selisihJam} jam lalu`;
             else ketWaktu = `${selisihHari} hari lalu`;
 
+            // Timeout presensi: jika tidak ada aktivitas lebih dari 15 menit, otomatis dianggap Offline
             let isBeneranOnline = d.isOnline;
-            if (selisihMenit > 120) isBeneranOnline = false;
+            if (selisihMenit > 15) isBeneranOnline = false;
+
+            const isAdminOrEditor = (emailUser && ADMIN_EMAILS.includes(emailUser)) || (typeof EDITOR_EMAILS !== 'undefined' && emailUser && EDITOR_EMAILS.includes(emailUser));
+            const vipData = emailUser ? vipMap[emailUser] : null;
+            const isVipVerified = isAdminOrEditor || (vipData && vipData.isVerified === true);
 
             let aktivitasTeks = d.currentModul || 'Lobby Utama';
-            let customBadge = null;
 
-            // Highlight khusus kalau nyangkut di VIP Gatekeeper
-            if (aktivitasTeks === "VIP Gatekeeper") {
-                customBadge = `<span style="background:#fff3e0; color:#e67e22; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">UNREGISTERED</span>`;
+            // Atur Badge Status Radar
+            let badgeStatus = "";
+            if (!isVipVerified) {
+                badgeStatus = `<span style="background:#fee2e2; color:#b91c1c; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.75rem; border:1px solid #fca5a5;"><i class="fas fa-ban"></i> NON-VIP</span>`;
+            } else if (isBeneranOnline) {
+                badgeStatus = `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem; border:1px solid #a5d6a7;"><i class="fas fa-circle" style="font-size:0.55rem; vertical-align:middle; margin-right:4px;"></i>ONLINE</span>`;
+            } else {
+                badgeStatus = `<span style="background:#f1f5f9; color:#64748b; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">OFFLINE</span>`;
             }
-
-            // Atur Badge Status
-            let badgeStatus = customBadge ? customBadge : (isBeneranOnline 
-                ? `<span style="background:#e8f5e9; color:#2e7d32; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">ONLINE</span>` 
-                : `<span style="background:#ffebee; color:#c62828; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:0.8rem;">OFFLINE</span>`);
 
             // Atur Badge & Icon Aktivitas Luas
             let badgeAktivitas = "";
@@ -7604,30 +7652,112 @@ window.loadStatusAdmin = async () => {
                 ? badgeAktivitas 
                 : `<div style="display:flex; flex-direction:column; gap:2px;"><span style="color:#888; font-size:0.85rem;"><i class="fas fa-clock"></i> ${ketWaktu}</span><small style="color:#aaa;">Terakhir: ${aktivitasTeks}</small></div>`;
 
-            let kodeVipUser = "Belum Buat";
-            if (d.email && vipMap[d.email]) {
-                kodeVipUser = vipMap[d.email];
+            // Tampilan Kolom Kode VIP
+            let tampilanVip = "";
+            if (isAdminOrEditor) {
+                tampilanVip = `<span style="background:#f3e8ff; color:#7e22ce; padding:5px 10px; border-radius:6px; font-weight:bold; border:1px solid #e9d5ff; font-size:0.8rem;"><i class="fas fa-shield-alt"></i> ADMIN</span>`;
+            } else if (vipData) {
+                if (vipData.isVerified) {
+                    tampilanVip = `<div style="display:flex; flex-direction:column; gap:3px;">
+                        <span style="background:#ecfdf5; color:#047857; padding:4px 8px; border-radius:6px; font-family:monospace; font-weight:bold; border:1px solid #6ee7b7; font-size:0.85rem;">
+                            <i class="fas fa-check-circle" style="color:#10b981; margin-right:3px;"></i>${vipData.code}
+                        </span>
+                        <small style="color:#059669; font-size:0.75rem; font-weight:600;">Terverifikasi</small>
+                    </div>`;
+                } else {
+                    tampilanVip = `<div style="display:flex; flex-direction:column; gap:3px;">
+                        <span style="background:#fff7ed; color:#c2410c; padding:4px 8px; border-radius:6px; font-family:monospace; font-weight:bold; border:1px solid #fdba74; font-size:0.85rem;">
+                            ${vipData.code}
+                        </span>
+                        <small style="color:#ea580c; font-size:0.75rem; font-weight:600;">Belum Aktif / Ditolak</small>
+                    </div>`;
+                }
+            } else {
+                tampilanVip = `<span style="background:#f1f5f9; color:#94a3b8; padding:4px 8px; border-radius:6px; font-size:0.8rem; border:1px solid #e2e8f0;">Belum Ada</span>`;
+            }
+
+            // Kolom Aksi Cepat
+            let htmlAksi = "";
+            if (isAdminOrEditor) {
+                htmlAksi = `<span style="color:#aaa; font-size:0.8rem;">-</span>`;
+            } else {
+                const btnCabut = (vipData && vipData.isVerified) ? `
+                    <button onclick="window.cabutAksesVIP('${emailUser}')" title="Cabut Akses VIP & Tendang User Seketika" style="background:#fee2e2; color:#b91c1c; border:1px solid #f87171; padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                        <i class="fas fa-user-times"></i> Cabut VIP
+                    </button>
+                ` : `
+                    <button onclick="window.aktivasiVIPLangsung('${emailUser}')" title="Aktivasi Akun ini menjadi VIP Langsung" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+                        <i class="fas fa-check-circle"></i> Aktivasi
+                    </button>
+                `;
+
+                const btnHapus = `
+                    <button onclick="window.hapusStatusRadar('${docSnap.id}', '${emailUser}')" title="Hapus Riwayat dari Radar" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; padding:4px 8px; border-radius:6px; font-size:0.75rem; cursor:pointer;">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+
+                htmlAksi = `<div style="display:inline-flex; gap:6px; align-items:center; justify-content:center;">${btnCabut} ${btnHapus}</div>`;
             }
 
             html += `<tr style="border-bottom:1px solid #eee;">
                 <td style="padding:10px; color:#444;">
                     <strong style="display:block;">${d.nama || 'Peserta'}</strong>
-                    <span style="font-size:0.75rem; color:#888;">${d.email || '-'}</span>
+                    <span style="font-size:0.75rem; color:#888;">${emailUser || '-'}</span>
                 </td>
-                <td style="padding:10px;">
-                    <span style="background:#fff3e0; color:#d35400; padding:5px 10px; border-radius:6px; font-family:monospace; font-weight:bold; border:1px solid #ffe0b2;">
-                        ${kodeVipUser}
-                    </span>
-                </td>
+                <td style="padding:10px;">${tampilanVip}</td>
                 <td style="padding:10px;">${badgeStatus}</td>
                 <td style="padding:10px;">${infoAktivitas}</td>
+                <td style="padding:10px; text-align:center; white-space:nowrap;">${htmlAksi}</td>
             </tr>`;
         });
 
         html += `</tbody></table>`;
-        container.innerHTML = html;} catch (e) {
+        container.innerHTML = html;
+    } catch (e) {
         container.innerHTML = `<p style="color:red">Error radar: ${e.message}</p>`;
         console.error(e);
+    }
+};
+
+// ==========================================
+// AKSI CEPAT RADAR (CABUT VIP / AKTIVASI / HAPUS)
+// ==========================================
+window.cabutAksesVIP = async (email) => {
+    if (!email) return;
+    if (!confirm(`Cabut akses VIP untuk ${email}?\n\nJika user sedang membuka aplikasi, sistem akan langsung menendangnya secara real-time.`)) return;
+    try {
+        const vipRef = doc(window.db, "vip_access", email);
+        await setDoc(vipRef, { isVerified: false, revokedAt: new Date() }, { merge: true });
+        alert(`Akses VIP untuk ${email} telah berhasil dicabut.`);
+        if (typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
+    } catch (e) {
+        alert("Gagal mencabut VIP: " + e.message);
+    }
+};
+
+window.aktivasiVIPLangsung = async (email) => {
+    if (!email) return;
+    if (!confirm(`Aktifkan akses VIP untuk ${email} sekarang?`)) return;
+    try {
+        const vipRef = doc(window.db, "vip_access", email);
+        await setDoc(vipRef, { isVerified: true, verifiedAt: new Date() }, { merge: true });
+        alert(`Akun ${email} sekarang resmi berstatus VIP!`);
+        if (typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
+    } catch (e) {
+        alert("Gagal mengaktifkan VIP: " + e.message);
+    }
+};
+
+window.hapusStatusRadar = async (docId, email) => {
+    if (!docId) return;
+    if (!confirm(`Hapus entri radar untuk ${email || docId}?\n(Data aktivitas lama akan dibersihkan)`)) return;
+    try {
+        await deleteDoc(doc(window.db, "user_status", docId));
+        alert("Entri radar berhasil dihapus.");
+        if (typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
+    } catch (e) {
+        alert("Gagal menghapus entri radar: " + e.message);
     }
 };
 
