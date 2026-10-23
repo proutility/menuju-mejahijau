@@ -405,44 +405,86 @@ if(auth) {
         }
     });
 }
-// Fungsi Sakti: Auto-Cari & Auto-Klik Soal dari Laporan
+// Fungsi Sakti: Auto-Cari & Auto-Klik Soal dari Laporan (Resilient & Cross-Module Search)
 window.editSoalDariLaporan = async (modulId, encSnippet) => {
-    // Decode teks penggalan dan buang titik-titiknya biar gampang dicari
-    const snippet = decodeURIComponent(encSnippet).replace("...", "").trim();
-    
-    // 1. Pindah tab ke "Edit" dan isi target modul
-    document.getElementById('editModulTarget').value = modulId;
+    // 1. Decode teks penggalan dan buang titik-titik/karakter pemisah
+    let rawSnippet = decodeURIComponent(encSnippet || "").replace(/\.{2,}/g, "").trim();
+    // Ambil kata kunci pencarian (35 karakter pertama yang bersih)
+    const snippetKeyword = rawSnippet.substring(0, 35).toLowerCase().trim();
+
+    window.openAdminPanel();
     window.switchAdminTab('edit');
-    
-    // 2. Load daftar soal (wajib pakai await biar datanya kelar ditarik dulu)
-    PROTAMA.loading("Mencari soal yang dilaporkan...");
-    await window.loadSoalAdmin();
-    
-    // 3. Otomatis ketik di kolom pencarian & filter daftarnya
-    const searchInput = document.getElementById('searchSoalAdmin');
-    if (searchInput) {
-        searchInput.value = snippet;
-        window.filterSoalAdmin(); // Panggil fungsi filter lo
+
+    const selectModul = document.getElementById('editModulTarget');
+    if (!selectModul) return;
+
+    // Ambil semua daftar modul yang valid di dropdown
+    const availableOptions = Array.from(selectModul.options).filter(o => o.value && o.value.trim() !== "" && o.value !== "latihan_campuran");
+
+    // Tentukan urutan modul yang akan diperiksa
+    let listModulToCheck = [];
+    const directMatch = availableOptions.find(o => o.value === modulId);
+    if (directMatch) {
+        listModulToCheck.push(directMatch);
+        // Sisanya jadikan fallback
+        availableOptions.forEach(o => {
+            if (o.value !== directMatch.value) listModulToCheck.push(o);
+        });
+    } else {
+        // Jika modulId === 'latihan_campuran' atau tidak valid, periksa semua modul
+        listModulToCheck = availableOptions;
     }
-    
-    // 4. Auto-Klik soal yang cocok biar Form Edit langsung keisi!
-    const listContainer = document.getElementById("listSoalAdmin");
-    const items = listContainer.getElementsByTagName("div");
+
+    PROTAMA.loading("Mencari soal yang dilaporkan...");
+
     let ketemu = false;
-    
-    for (let i = 0; i < items.length; i++) {
-        // Cari elemen div yang nggak ke-hide (hasil filter)
-        if (items[i].style.display !== "none") {
-            items[i].click(); // Simulasikan klik
-            ketemu = true;
-            break;
+    let modulDitemukanText = "";
+
+    for (let opt of listModulToCheck) {
+        selectModul.value = opt.value;
+        currentAdminModul = opt.value;
+
+        // Panggil pemuat soal modul ini (silent mode)
+        await window.loadSoalAdmin(true);
+
+        const listContainer = document.getElementById("listSoalAdmin");
+        const items = listContainer.getElementsByClassName("soal-item-admin");
+
+        if (items && items.length > 0) {
+            for (let i = 0; i < items.length; i++) {
+                const itemText = (items[i].textContent || items[i].innerText || "").toLowerCase();
+                if (snippetKeyword && itemText.includes(snippetKeyword)) {
+                    ketemu = true;
+                    modulDitemukanText = opt.text;
+
+                    // Isi kolom search dan filter daftar
+                    const searchInput = document.getElementById('searchSoalAdmin');
+                    if (searchInput) {
+                        searchInput.value = rawSnippet.substring(0, 30);
+                        window.filterSoalAdmin();
+                    }
+
+                    // Klik item soal yang ditemukan agar form terisi
+                    items[i].click();
+                    try { items[i].scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+                    break;
+                }
+            }
         }
+
+        if (ketemu) break;
     }
 
     PROTAMA.close();
-    
-    if (!ketemu) {
-        PROTAMA.alert("Oops!", "Soalnya nggak ketemu. Mungkin udah pernah dihapus/diedit sebelumnya.", "warning");
+
+    if (ketemu) {
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.toast) {
+            PROTAMA.toast(`Soal ditemukan di modul: ${modulDitemukanText}`, "success");
+        }
+    } else {
+        // Jika tidak ditemukan di semua modul
+        if (directMatch) selectModul.value = directMatch.value;
+        PROTAMA.alert("Oops!", "Soalnya nggak ketemu di semua modul bank soal. Mungkin sudah pernah diedit atau dihapus.", "warning");
     }
 };
 
@@ -6683,9 +6725,12 @@ window.eksekusiUpload = async () => {
 
 let currentAdminModul = "";
 
-window.loadSoalAdmin = async () => {
+window.loadSoalAdmin = async (silent = false) => {
     const modulId = document.getElementById('editModulTarget').value.trim();
-    if(!modulId) return alert("Isi nama modul!");
+    if(!modulId) {
+        if (!silent) alert("Pilih modul terlebih dahulu!");
+        return;
+    }
     currentAdminModul = modulId;
     const isSupAct = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     if (window.updateUserStatus) window.updateUserStatus(true, (isSupAct ? 'Admin' : 'Editor') + ': Mengedit ' + modulId);
@@ -6763,18 +6808,91 @@ window.loadSoalAdmin = async () => {
         
     } catch (e) {
         console.error(e); 
-        alert("Gagal load: " + e.message + "\n\nTips: Cek apakah ID Modul persis sama (huruf besar/kecil)?");
+        if (!silent) alert("Gagal load: " + e.message + "\n\nTips: Cek apakah ID Modul persis sama (huruf besar/kecil)?");
     }
+};
+
+// 🎯 SINKRONISASI KUNCI JAWABAN & PILIHAN OPSI ADMIN
+window.syncEditKeyRadio = function(idx) {
+    const i = parseInt(idx);
+    document.getElementById('editAns').value = i;
+    const sel = document.getElementById('editAnsSelect');
+    if (sel) sel.value = i;
+    window.highlightActiveEditOptionKey(i);
+};
+
+window.syncEditKeySelect = function(idx) {
+    const i = parseInt(idx);
+    document.getElementById('editAns').value = i;
+    const radios = document.getElementsByName('editKeyRadio');
+    radios.forEach((r, idxRadio) => {
+        r.checked = (idxRadio === i);
+    });
+    window.highlightActiveEditOptionKey(i);
+};
+
+window.highlightActiveEditOptionKey = function(ansIdx) {
+    const letters = ['a', 'b', 'c', 'd', 'e'];
+    letters.forEach((l, idx) => {
+        const badge = document.querySelector('.badge-opt-' + l);
+        const input = document.getElementById('editOpt' + l.toUpperCase());
+        if (badge) {
+            if (idx === ansIdx) {
+                badge.style.background = '#16a34a';
+                badge.style.boxShadow = '0 0 0 2px #bbf7d0';
+            } else {
+                badge.style.background = (idx === 4) ? '#64748b' : '#2563eb';
+                badge.style.boxShadow = 'none';
+            }
+        }
+        if (input) {
+            if (idx === ansIdx) {
+                input.style.borderColor = '#16a34a';
+                input.style.background = '#f0fdf4';
+            } else {
+                input.style.borderColor = '#cbd5e1';
+                input.style.background = '#ffffff';
+            }
+        }
+    });
+};
+
+window.syncEditOptToLegacy = function() {
+    const optA = (document.getElementById('editOptA')?.value || '').trim();
+    const optB = (document.getElementById('editOptB')?.value || '').trim();
+    const optC = (document.getElementById('editOptC')?.value || '').trim();
+    const optD = (document.getElementById('editOptD')?.value || '').trim();
+    const optE = (document.getElementById('editOptE')?.value || '').trim();
+    const arr = [optA, optB, optC, optD];
+    if (optE) arr.push(optE);
+    const legacy = document.getElementById('editOpt');
+    if (legacy) legacy.value = arr.filter(Boolean).join(', ');
 };
 
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
     const isSupPop = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     if (window.updateUserStatus) window.updateUserStatus(true, (isSupPop ? 'Admin' : 'Editor') + ': Edit Soal (' + (currentAdminModul || 'Modul') + ')');
-    document.getElementById('editQ').value = data.q;
-    document.getElementById('editOpt').value = data.options.join(", "); 
-    document.getElementById('editAns').value = data.answer;
-    document.getElementById('editExp').value = data.explanation;
+    document.getElementById('editQ').value = data.q || data.pertanyaan || "";
+    
+    // Pecah opsi ke masing-masing kolom A, B, C, D, E
+    const rawOpts = data.options;
+    const opts = Array.isArray(rawOpts) ? rawOpts : (rawOpts ? String(rawOpts).split(',') : []);
+    if (document.getElementById('editOptA')) document.getElementById('editOptA').value = opts[0] || '';
+    if (document.getElementById('editOptB')) document.getElementById('editOptB').value = opts[1] || '';
+    if (document.getElementById('editOptC')) document.getElementById('editOptC').value = opts[2] || '';
+    if (document.getElementById('editOptD')) document.getElementById('editOptD').value = opts[3] || '';
+    if (document.getElementById('editOptE')) document.getElementById('editOptE').value = opts[4] || '';
+    if (document.getElementById('editOpt')) document.getElementById('editOpt').value = opts.join(", "); 
+
+    const ansIdx = (data.answer !== undefined && data.answer !== null && !isNaN(data.answer)) ? parseInt(data.answer) : 0;
+    document.getElementById('editAns').value = ansIdx;
+    if (document.getElementById('editAnsSelect')) document.getElementById('editAnsSelect').value = ansIdx;
+    const radios = document.getElementsByName('editKeyRadio');
+    radios.forEach((r, i) => { r.checked = (i === ansIdx); });
+    window.highlightActiveEditOptionKey(ansIdx);
+
+    document.getElementById('editExp').value = data.explanation || "";
     document.getElementById('editCite').value = data.cite || "";
 
     // --- INJEKSI KODINGAN LANGKAH 2B (HIGHLIGHT SOAL AKTIF) ---
@@ -6793,14 +6911,37 @@ window.simpanPerubahan = async () => {
     const id = document.getElementById('editDocId').value;
     if(!id) return alert("Pilih soal dulu!");
 
-    const optionsArray = document.getElementById('editOpt').value.split(",").map(s => s.trim()); 
+    const optA = (document.getElementById('editOptA')?.value || '').trim();
+    const optB = (document.getElementById('editOptB')?.value || '').trim();
+    const optC = (document.getElementById('editOptC')?.value || '').trim();
+    const optD = (document.getElementById('editOptD')?.value || '').trim();
+    const optE = (document.getElementById('editOptE')?.value || '').trim();
+
+    let optionsArray = [];
+    if (optA || optB || optC || optD) {
+        if (!optA || !optB || !optC || !optD) {
+            return alert("Pilihan A, B, C, dan D wajib diisi minimal 4 pilihan jawaban!");
+        }
+        optionsArray = [optA, optB, optC, optD];
+        if (optE) optionsArray.push(optE);
+    } else {
+        const legacyVal = document.getElementById('editOpt')?.value || '';
+        optionsArray = legacyVal.split(",").map(s => s.trim()).filter(Boolean);
+    }
+
+    if (optionsArray.length < 2) {
+        return alert("Pilihan jawaban minimal harus ada 2 opsi!");
+    }
+
+    const rawAns = document.getElementById('editAns').value;
+    const ans = (rawAns !== '' && !isNaN(rawAns)) ? parseInt(rawAns) : 0;
 
     const newData = {
-        q: document.getElementById('editQ').value,
+        q: document.getElementById('editQ').value.trim(),
         options: optionsArray,
-        answer: parseInt(document.getElementById('editAns').value),
-        explanation: document.getElementById('editExp').value,
-        cite: document.getElementById('editCite').value
+        answer: ans,
+        explanation: document.getElementById('editExp').value.trim(),
+        cite: document.getElementById('editCite').value.trim()
     };
 
     try {
@@ -6855,17 +6996,18 @@ window.editSoalSekarang = function() {
         return;
     }
     
-    // 1. Isi semua form edit secara otomatis!
-    document.getElementById('editDocId').value = q.id;
-    document.getElementById('editQ').value = q.q || q.pertanyaan || "";
-    document.getElementById('editOpt').value = (q.options || []).join(", ");
-    document.getElementById('editAns').value = q.answer;
-    document.getElementById('editExp').value = q.explanation || "";
-    document.getElementById('editCite').value = q.cite || "";
+    // 1. Isi semua form edit secara otomatis (termasuk kolom A-E & kunci)!
+    populateEditForm(q.id, q);
     
-    // 2. Set target modulnya biar gak salah save
-    document.getElementById('editModulTarget').value = window.currentDatabaseId;
-    currentAdminModul = window.currentDatabaseId; // Wajib diset biar fungsi save nya tau
+    // 2. Set target modulnya biar gak salah save (prioritaskan _asalModul jika room mabar campuran)
+    const targetModul = q._asalModul || q.asalModul || q.modulId || q.modul_id || window.currentDatabaseId;
+    if (targetModul && targetModul !== 'latihan_campuran') {
+        document.getElementById('editModulTarget').value = targetModul;
+        currentAdminModul = targetModul;
+    } else {
+        document.getElementById('editModulTarget').value = window.currentDatabaseId;
+        currentAdminModul = window.currentDatabaseId;
+    }
     
     // 3. Buka Pop-up & Pindah Tab Edit
     window.openAdminPanel();
@@ -7413,7 +7555,13 @@ window.submitLaporan = async () => {
 
     // Ambil teks soalnya sekalian biar lo sebagai admin gampang ngeceknya
     const qData = currentQuestions[currentIdx];
-    const teksSoal = qData ? qData.q : "Teks soal tidak ditemukan";
+    const teksSoal = qData ? (qData.q || qData.pertanyaan || "Teks soal tidak ditemukan") : "Teks soal tidak ditemukan";
+
+    // Tentukan modul asal yang akurat (sangat penting jika dalam room mabar campuran!)
+    let modulTarget = (qData && (qData._asalModul || qData.asalModul || qData.modulId || qData.modul_id)) || window.currentDatabaseId || "modul1";
+    if ((modulTarget === 'latihan_campuran' || modulTarget === 'room') && qData && qData._asalModul) {
+        modulTarget = qData._asalModul;
+    }
 
     // Ubah tombol biar ada efek loading
     btnSubmit.innerText = "Mengirim...";
@@ -7425,7 +7573,7 @@ window.submitLaporan = async () => {
         await addDoc(collection(window.db, "laporan_soal"), {
             uid_pelapor: currentUser.uid,
             nama_pelapor: currentUser.displayName,
-            modul_id: window.currentDatabaseId, // Modul apa (cth: modul1)
+            modul_id: modulTarget,              // Modul akurat (cth: modul8)
             nomor_soal_index: currentIdx + 1,     // Index soal (ditambah 1 biar sesuai nomor layar)
             teks_soal_penggalan: teksSoal.substring(0, 50) + "...", // Penggalan buat clue
             alasan: alasan,

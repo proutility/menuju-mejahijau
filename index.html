@@ -1422,10 +1422,81 @@
                         <input type="hidden" id="editDocId">
                         <label style="font-weight:bold;">Pertanyaan:</label>
                         <textarea id="editQ" style="min-height: 90px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
-                        <label style="font-weight:bold;">Opsi (Pisahkan dengan koma):</label>
-                        <textarea id="editOpt" placeholder="Ayam, Kucing, Bebek" style="min-height: 60px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
-                        <label style="font-weight:bold;">Indeks Jawaban (0=A, 1=B, 2=C, 3=D):</label>
-                        <input type="number" id="editAns" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+                        <!-- Pilihan Jawaban per Kolom A, B, C, D, E -->
+                        <input type="hidden" id="editOpt">
+                        <input type="hidden" id="editAns">
+
+                        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; margin:4px 0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <label style="font-weight:bold; color:var(--primary); font-size:0.92rem; margin:0;">
+                                    <i class="fas fa-list-ol"></i> Pilihan Jawaban (A - E):
+                                </label>
+                                <span style="font-size:0.75rem; color:#64748b;">
+                                    <i class="fas fa-check-circle" style="color:#16a34a;"></i> Pilih radio untuk Kunci Benar
+                                </span>
+                            </div>
+
+                            <!-- Opsi A -->
+                            <div class="admin-opt-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Pilih Opsi A sebagai Kunci Jawaban">
+                                    <input type="radio" name="editKeyRadio" id="radioAns0" value="0" onchange="window.syncEditKeyRadio(0)">
+                                    <span class="badge-opt-letter badge-opt-a" style="background:#2563eb; color:white; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; user-select:none;">A</span>
+                                </label>
+                                <input type="text" id="editOptA" placeholder="Teks Pilihan Jawaban A" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" oninput="window.syncEditOptToLegacy()">
+                            </div>
+
+                            <!-- Opsi B -->
+                            <div class="admin-opt-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Pilih Opsi B sebagai Kunci Jawaban">
+                                    <input type="radio" name="editKeyRadio" id="radioAns1" value="1" onchange="window.syncEditKeyRadio(1)">
+                                    <span class="badge-opt-letter badge-opt-b" style="background:#2563eb; color:white; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; user-select:none;">B</span>
+                                </label>
+                                <input type="text" id="editOptB" placeholder="Teks Pilihan Jawaban B" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" oninput="window.syncEditOptToLegacy()">
+                            </div>
+
+                            <!-- Opsi C -->
+                            <div class="admin-opt-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Pilih Opsi C sebagai Kunci Jawaban">
+                                    <input type="radio" name="editKeyRadio" id="radioAns2" value="2" onchange="window.syncEditKeyRadio(2)">
+                                    <span class="badge-opt-letter badge-opt-c" style="background:#2563eb; color:white; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; user-select:none;">C</span>
+                                </label>
+                                <input type="text" id="editOptC" placeholder="Teks Pilihan Jawaban C" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" oninput="window.syncEditOptToLegacy()">
+                            </div>
+
+                            <!-- Opsi D -->
+                            <div class="admin-opt-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Pilih Opsi D sebagai Kunci Jawaban">
+                                    <input type="radio" name="editKeyRadio" id="radioAns3" value="3" onchange="window.syncEditKeyRadio(3)">
+                                    <span class="badge-opt-letter badge-opt-d" style="background:#2563eb; color:white; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; user-select:none;">D</span>
+                                </label>
+                                <input type="text" id="editOptD" placeholder="Teks Pilihan Jawaban D" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" oninput="window.syncEditOptToLegacy()">
+                            </div>
+
+                            <!-- Opsi E -->
+                            <div class="admin-opt-row" style="display:flex; align-items:center; gap:8px;">
+                                <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="Pilih Opsi E sebagai Kunci Jawaban">
+                                    <input type="radio" name="editKeyRadio" id="radioAns4" value="4" onchange="window.syncEditKeyRadio(4)">
+                                    <span class="badge-opt-letter badge-opt-e" style="background:#64748b; color:white; font-weight:800; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.85rem; user-select:none;">E</span>
+                                </label>
+                                <input type="text" id="editOptE" placeholder="Teks Pilihan Jawaban E (Opsional)" style="flex:1; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem;" oninput="window.syncEditOptToLegacy()">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                            <label style="font-weight:bold; color:var(--primary); font-size:0.88rem; white-space:nowrap;">
+                                <i class="fas fa-check-double" style="color:var(--gold);"></i> Kunci Jawaban Benar:
+                            </label>
+                            <select id="editAnsSelect" onchange="window.syncEditKeySelect(this.value)" style="flex:1; padding:8px 12px; border:1.5px solid #2e7d32; border-radius:8px; font-weight:bold; color:#1b5e20; background:#f0fdf4; cursor:pointer;">
+                                <option value="0">Opsi A</option>
+                                <option value="1">Opsi B</option>
+                                <option value="2">Opsi C</option>
+                                <option value="3">Opsi D</option>
+                                <option value="4">Opsi E</option>
+                            </select>
+                        </div>
+
+
+
                         <label style="font-weight:bold;">Pembahasan:</label>
                         <textarea id="editExp" style="min-height: 100px; border:1px solid #ccc; border-radius:6px; padding:8px;"></textarea>
                         <label style="font-weight:bold;">Sumber (Cite):</label>

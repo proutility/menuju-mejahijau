@@ -2771,7 +2771,19 @@ div.swal2-container {
     color: var(--primary) !important; /* Warna teks jadi hijau tua */
 }
 
-<style>
+/* Styling Form Edit Opsi Admin CBT */
+.admin-opt-row input[type="text"] {
+    transition: all 0.2s ease;
+}
+.admin-opt-row input[type="text"]:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    outline: none !important;
+}
+.badge-opt-letter {
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+}
 /* ========================================= */
 /* CSS KHUSUS MASTER CHECKLIST CAKIM 2026    */
 /* ========================================= */
