@@ -7016,6 +7016,241 @@ window.updateOptionLengthCounters = function() {
     }
 };
 
+// 🤖 FITUR AI HOMOGENISASI PILIHAN JAWABAN (GOOGLE GEMINI)
+window._backupSebelumAIHomogen = null;
+
+window.undoAIHomogenkan = function() {
+    if (!window._backupSebelumAIHomogen) {
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.alert("Info", "Tidak ada riwayat perubahan AI yang dapat di-undo.", "info");
+        }
+        return;
+    }
+    const b = window._backupSebelumAIHomogen;
+    if (document.getElementById('editOptA')) document.getElementById('editOptA').value = b.optA || '';
+    if (document.getElementById('editOptB')) document.getElementById('editOptB').value = b.optB || '';
+    if (document.getElementById('editOptC')) document.getElementById('editOptC').value = b.optC || '';
+    if (document.getElementById('editOptD')) document.getElementById('editOptD').value = b.optD || '';
+    if (document.getElementById('editOptE')) document.getElementById('editOptE').value = b.optE || '';
+
+    window.syncEditOptToLegacy();
+    window.updateOptionLengthCounters();
+
+    const btnUndo = document.getElementById('btnUndoAIHomogen');
+    if (btnUndo) btnUndo.style.display = 'none';
+    window._backupSebelumAIHomogen = null;
+
+    if (typeof PROTAMA !== 'undefined') {
+        PROTAMA.alert("Berhasil Undo", "Pilihan jawaban telah dikembalikan ke teks sebelum dihomogenkan AI.", "info");
+    }
+};
+
+window.homogenkanOpsiDenganAI = async function() {
+    const qText = (document.getElementById('editQ')?.value || '').trim();
+    const optA = (document.getElementById('editOptA')?.value || '').trim();
+    const optB = (document.getElementById('editOptB')?.value || '').trim();
+    const optC = (document.getElementById('editOptC')?.value || '').trim();
+    const optD = (document.getElementById('editOptD')?.value || '').trim();
+    const optE = (document.getElementById('editOptE')?.value || '').trim();
+    const ansIdx = parseInt(document.getElementById('editAns')?.value || '0');
+    const expText = (document.getElementById('editExp')?.value || '').trim();
+    const citeText = (document.getElementById('editCite')?.value || '').trim();
+
+    if (!qText) {
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.alert("Soal Kosong", "Pilih atau tulis teks soal terlebih dahulu sebelum menjalankan AI!", "warning");
+        } else {
+            alert("Pilih atau tulis teks soal terlebih dahulu!");
+        }
+        return;
+    }
+
+    if (!optA || !optB || !optC || !optD) {
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.alert("Opsi Belum Lengkap", "Minimal isi teks pilihan jawaban A, B, C, dan D sebelum dihomogenkan AI!", "warning");
+        } else {
+            alert("Minimal isi pilihan A, B, C, dan D!");
+        }
+        return;
+    }
+
+    const hasOptE = Boolean(optE);
+    const letters = ['A', 'B', 'C', 'D'];
+    const currentOpts = [optA, optB, optC, optD];
+    if (hasOptE) {
+        letters.push('E');
+        currentOpts.push(optE);
+    }
+    const letterKunci = letters[ansIdx] || 'A';
+
+    // Konfirmasi dulu agar admin sadar
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
+        const setuju = await PROTAMA.confirm(
+            "AI HOMOGENISASI OPSI",
+            `AI Gemini akan menyeimbangkan panjang karakter pilihan jawaban A-${letters[letters.length - 1]} agar setara, dengan tetap mempertahankan kebenaran Kunci Jawaban (Opsi <b>${letterKunci}</b>) dan konsep hukumnya.<br><br>Lanjutkan proses?`,
+            "Ya, Homogenkan dengan AI",
+            "#7c3aed"
+        );
+        if (!setuju) return;
+    }
+
+    // Backup teks sebelumnya untuk tombol Undo
+    window._backupSebelumAIHomogen = {
+        optA, optB, optC, optD, optE,
+        ansIdx
+    };
+
+    const btnAI = document.getElementById('btnAIHomogenkan');
+    const originalBtnHtml = btnAI ? btnAI.innerHTML : '';
+    if (btnAI) {
+        btnAI.disabled = true;
+        btnAI.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Meracik...`;
+    }
+
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.loading) {
+        PROTAMA.loading("AI Gemini sedang menelaah materi hukum & menyelaraskan panjang opsi agar homogen...");
+    }
+
+    try {
+        const apiKey = typeof getGeminiApiKey === 'function' ? await getGeminiApiKey() : "";
+        if (!apiKey) {
+            throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config. Silakan hubungi Super Admin.");
+        }
+
+        const prompt = `Anda adalah Ahli Penyusun Soal Ujian Calon Hakim Mahkamah Agung RI (Pakar Psikometri & Substansi Hukum Positif).
+Tugas Anda adalah melakukan HOMOGENISASI PANJANG PILIHAN JAWABAN (membuat panjang karakter dan struktur kalimat tiap opsi A sampai ${letters[letters.length - 1]} menjadi seragam, berbobot setara, dan seimbang).
+
+PERTANYAAN SOAL:
+"${qText}"
+
+PILIHAN JAWABAN SAAT INI:
+${currentOpts.map((o, idx) => `${letters[idx]}. ${o} (${o.length} karakter)`).join('\n')}
+
+KUNCI JAWABAN BENAR: Opsi ${letterKunci} (Index ${ansIdx})
+${expText ? `PEMBAHASAN RESMI: ${expText}` : ''}
+${citeText ? `DASAR HUKUM/PASAL: ${citeText}` : ''}
+
+PEDOMAN MUTLAK HOMOGENISASI UJIAN CALON HAKIM:
+1. TARGET HOMOGENITAS: Semua pilihan jawaban (A sampai ${letters[letters.length - 1]}) harus memiliki panjang karakter yang HAMPIR SAMA / SETARA (toleransi perbedaan panjang antar opsi maksimal 10-15%).
+2. KUNCI JAWABAN BENAR (Opsi ${letterKunci}):
+   - Posisinya HARUS TETAP di Opsi ${letterKunci}. Jangan menukar posisi opsi!
+   - Substansi hukumnya HARUS TETAP 100% BENAR dan akurat secara hukum positif Indonesia.
+3. DISTRAKTOR (Opsi yang Salah):
+   - Posisinya HARUS TETAP di opsi masing-masing.
+   - HARUS TETAP SALAH secara hukum, namun dibuat logis dan mengecoh secara akademis (plausible distractor).
+   - JANGAN sampai penambahan kata pada distraktor membuatnya berubah menjadi benar.
+4. METODE PENYELARASAN:
+   - Jika opsi terlalu pendek: Tambahkan konteks hukum pelengkap, klausul syarat, atau rincian administratif yang relevan sehingga panjangnya seimbang.
+   - Jika opsi terlalu panjang: Ringkas kalimatnya menjadi padat dan lugas tanpa mengurangi makna inti.
+   - Gunakan struktur kalimat dan pembukaan frasa yang paralel/setara.
+
+OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
+{
+  "options": [
+    "Teks Opsi A baru",
+    "Teks Opsi B baru",
+    "Teks Opsi C baru",
+    "Teks Opsi D baru"${hasOptE ? ',\n    "Teks Opsi E baru"' : ''}
+  ],
+  "ringkasan": "Penjelasan singkat bagaimana opsi diselaraskan"
+}`;
+
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        let jsonText = "";
+        let lastError = null;
+
+        for (const m of models) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-goog-api-key': apiKey
+                    },
+                    body: JSON.stringify({ 
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.2
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    jsonText = data.candidates[0].content.parts[0].text;
+                    break;
+                } else {
+                    lastError = new Error(data.error?.message || `HTTP ${response.status}`);
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            } catch(err) {
+                lastError = err;
+                await new Promise(r => setTimeout(r, 600));
+            }
+        }
+
+        if (!jsonText) {
+            throw lastError || new Error("Gagal memperoleh respon dari Gemini API.");
+        }
+
+        // Parsing JSON yang dihasilkan AI
+        let cleanJson = jsonText.trim();
+        cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+        const startBrace = cleanJson.indexOf('{');
+        const endBrace = cleanJson.lastIndexOf('}');
+        if (startBrace !== -1 && endBrace !== -1) {
+            cleanJson = cleanJson.substring(startBrace, endBrace + 1);
+        }
+
+        const parsed = JSON.parse(cleanJson);
+        if (!parsed.options || !Array.isArray(parsed.options) || parsed.options.length < 4) {
+            throw new Error("Format respon AI tidak memuat opsi yang valid.");
+        }
+
+        // Terapkan hasil AI ke masing-masing kotak teks opsi
+        if (document.getElementById('editOptA')) document.getElementById('editOptA').value = parsed.options[0] || optA;
+        if (document.getElementById('editOptB')) document.getElementById('editOptB').value = parsed.options[1] || optB;
+        if (document.getElementById('editOptC')) document.getElementById('editOptC').value = parsed.options[2] || optC;
+        if (document.getElementById('editOptD')) document.getElementById('editOptD').value = parsed.options[3] || optD;
+        if (hasOptE && document.getElementById('editOptE')) {
+            document.getElementById('editOptE').value = parsed.options[4] || optE;
+        }
+
+        window.syncEditOptToLegacy();
+        window.updateOptionLengthCounters();
+
+        // Tampilkan tombol Undo
+        const btnUndo = document.getElementById('btnUndoAIHomogen');
+        if (btnUndo) btnUndo.style.display = 'inline-flex';
+
+        if (typeof PROTAMA !== 'undefined') {
+            if (PROTAMA.close) PROTAMA.close();
+            const ringkasan = parsed.ringkasan ? `<div style="margin-top:10px; padding:10px; background:#f0fdf4; border-radius:8px; border:1px solid #bbf7d0; font-size:0.85rem; color:#166534; text-align:left;"><b>Catatan AI:</b><br>${parsed.ringkasan}</div>` : '';
+            PROTAMA.alert(
+                "Homogenisasi Berhasil!",
+                `✨ <b>Pilihan jawaban berhasil dihomogenkan oleh AI!</b><br>Panjang kalimat antar opsi kini seimbang dan setara.<br>${ringkasan}<br><small style="color:#666;">Jika hasil cocok, silakan klik <b>Simpan Perubahan</b> di bawah. Jika ingin membatalkan, klik tombol <b>Undo</b>.</small>`,
+                "success"
+            );
+        } else {
+            alert("✅ Pilihan jawaban berhasil dihomogenkan oleh AI!");
+        }
+
+    } catch (e) {
+        console.error("Gagal AI Homogenisasi:", e);
+        if (typeof PROTAMA !== 'undefined') {
+            if (PROTAMA.close) PROTAMA.close();
+            PROTAMA.alert("Gagal Homogenisasi", "Terjadi kesalahan saat memproses AI: " + e.message, "error");
+        } else {
+            alert("Gagal AI: " + e.message);
+        }
+    } finally {
+        if (btnAI) {
+            btnAI.disabled = false;
+            btnAI.innerHTML = originalBtnHtml || `<i class="fas fa-wand-magic-sparkles"></i> AI Homogenkan Opsi`;
+        }
+    }
+};
+
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
     const isSupPop = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
@@ -7034,6 +7269,11 @@ function populateEditForm(id, data) {
 
     // Update penghitung panjang karakter & bar homogenitas
     window.updateOptionLengthCounters();
+
+    // Sembunyikan tombol Undo AI jika ada soal baru dimuat
+    const btnUndo = document.getElementById('btnUndoAIHomogen');
+    if (btnUndo) btnUndo.style.display = 'none';
+    window._backupSebelumAIHomogen = null;
 
     const ansIdx = (data.answer !== undefined && data.answer !== null && !isNaN(data.answer)) ? parseInt(data.answer) : 0;
     document.getElementById('editAns').value = ansIdx;
