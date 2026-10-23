@@ -1663,7 +1663,12 @@
             <div id="tabLaporan" style="display:none; flex-direction:column; flex:1; min-height:0; height: calc(100vh - 165px);">
                  <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-shrink:0;">
                     <h4 style="margin:0; flex:1;"><i class="fas fa-exclamation-circle" style="color:#d32f2f;"></i> Daftar Koreksi dari User</h4>
-                    <button onclick="window.loadLaporanAdmin()" class="btn-small" style="background:var(--primary); color: white !important;"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button id="btnHapusSemuaLaporan" onclick="window.hapusSemuaLaporanAdmin()" class="btn-small" style="background:#e74c3c; color: white !important; font-weight:bold; display:none; align-items:center; gap:6px; cursor:pointer;" title="Hapus semua laporan sekaligus">
+                            <i class="fas fa-trash-alt"></i> Hapus Semua Sekaligus
+                        </button>
+                        <button onclick="window.loadLaporanAdmin()" class="btn-small" style="background:var(--primary); color: white !important; display:inline-flex; align-items:center; gap:6px; cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                    </div>
                 </div>
                 <div id="containerLaporan" style="flex:1; min-height:0; height: calc(100% - 55px); overflow-y:auto; border:1px solid #ddd; padding:15px; background:#f9f9f9; border-radius:8px;">
                     <p style="color:gray; text-align:center;">Klik Refresh Data untuk melihat laporan terbaru...</p>

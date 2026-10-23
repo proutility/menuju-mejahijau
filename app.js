@@ -8014,9 +8014,16 @@ window.loadLaporanAdmin = async () => {
         
         container.innerHTML = "";
 
+        const btnHapusSemua = document.getElementById('btnHapusSemuaLaporan');
         if (snap.empty) {
+            if (btnHapusSemua) btnHapusSemua.style.display = 'none';
             container.innerHTML = `<div style="text-align:center; padding:20px; color:green; font-weight:bold;"><i class="fas fa-check-circle"></i> Mantap! Belum ada laporan masuk.</div>`;
             return;
+        }
+
+        if (btnHapusSemua) {
+            btnHapusSemua.style.display = 'inline-flex';
+            btnHapusSemua.innerHTML = `<i class="fas fa-trash-alt"></i> Hapus Semua Sekaligus (${snap.size})`;
         }
 
         snap.forEach(docSnap => {
@@ -8113,6 +8120,67 @@ window.hapusLaporan = async (idDoc, switchKembaliKeLaporan = false) => {
             alert("Gagal menghapus laporan: " + error.message);
         }
         return false;
+    }
+};
+
+window.hapusSemuaLaporanAdmin = async () => {
+    try {
+        const snap = await getDocs(collection(window.db, "laporan_soal"));
+        if (snap.empty) {
+            if (typeof PROTAMA !== 'undefined') {
+                PROTAMA.alert("Daftar Kosong", "Belum ada laporan yang masuk untuk dihapus.", "info");
+            } else {
+                alert("Tidak ada laporan yang masuk!");
+            }
+            return;
+        }
+
+        const total = snap.size;
+        let setuju = false;
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
+            setuju = await PROTAMA.confirm(
+                "HAPUS SEMUA LAPORAN?",
+                `Apakah Anda yakin ingin menghapus <b>SEMUA (${total}) laporan</b> masuk sekaligus?<br><br><span style="color:#e74c3c; font-size:0.85rem;">⚠️ Tindakan ini permanen dan tidak dapat dibatalkan.</span>`,
+                "Ya, Hapus Semua!",
+                "#d32f2f"
+            );
+        } else {
+            setuju = confirm(`Yakin mau menghapus SEMUA (${total}) laporan sekaligus?`);
+        }
+
+        if (!setuju) return;
+
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.loading) {
+            PROTAMA.loading(`Sedang menghapus ${total} laporan...`);
+        }
+
+        const docs = snap.docs;
+        const chunkSize = 400;
+        for (let i = 0; i < docs.length; i += chunkSize) {
+            const batch = writeBatch(window.db);
+            const chunk = docs.slice(i, i + chunkSize);
+            chunk.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+        }
+
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.close();
+            PROTAMA.alert("Berhasil!", `🗑️ Sebanyak <b>${total} laporan</b> berhasil dihapus dari database!`, "success");
+        } else {
+            alert(`Berhasil menghapus ${total} laporan!`);
+        }
+
+        if (typeof window.loadLaporanAdmin === 'function') {
+            await window.loadLaporanAdmin();
+        }
+    } catch (e) {
+        console.error("Gagal hapus semua laporan:", e);
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.close();
+            PROTAMA.alert("Gagal", "Terjadi kesalahan saat menghapus laporan: " + e.message, "error");
+        } else {
+            alert("Gagal: " + e.message);
+        }
     }
 };
 
