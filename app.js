@@ -437,10 +437,18 @@ window.editSoalDariLaporan = async (modulId, encSnippet, encAlasan = "", encDasa
             if (btnSelesai) {
                 btnSelesai.onclick = async () => {
                     if (idDocLaporan && typeof window.hapusLaporan === 'function') {
-                        await window.hapusLaporan(idDocLaporan);
-                        banner.style.display = 'none';
+                        const sukses = await window.hapusLaporan(idDocLaporan, true);
+                        if (sukses) {
+                            banner.style.display = 'none';
+                            if (typeof window.switchAdminTab === 'function') {
+                                window.switchAdminTab('laporan');
+                            }
+                        }
                     } else {
                         banner.style.display = 'none';
+                        if (typeof window.switchAdminTab === 'function') {
+                            window.switchAdminTab('laporan');
+                        }
                     }
                 };
             }
@@ -8060,15 +8068,50 @@ window.loadLaporanAdmin = async () => {
     }
 };
 
-window.hapusLaporan = async (idDoc) => {
-    if(!confirm("Udah beres direvisi? Yakin mau hapus laporan ini dari daftar?")) return;
+window.hapusLaporan = async (idDoc, switchKembaliKeLaporan = false) => {
+    let setuju = false;
+    if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
+        setuju = await PROTAMA.confirm(
+            "HAPUS LAPORAN?",
+            "Udah beres direvisi? Yakin mau menghapus laporan ini dari daftar laporan masuk?",
+            "Ya, Hapus Laporan",
+            "#d32f2f"
+        );
+    } else {
+        setuju = confirm("Udah beres direvisi? Yakin mau hapus laporan ini dari daftar?");
+    }
+
+    if (!setuju) return false;
     
     try {
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.loading) {
+            PROTAMA.loading("Menghapus laporan...");
+        }
         await deleteDoc(doc(window.db, "laporan_soal", idDoc));
-        alert("Laporan berhasil dihapus!");
-        loadLaporanAdmin(); // Refresh list otomatis
+        
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.close();
+            PROTAMA.alert("Laporan Selesai", "✅ Laporan berhasil diselesaikan dan dihapus dari daftar!", "success");
+        } else {
+            alert("Laporan berhasil dihapus!");
+        }
+
+        if (typeof window.loadLaporanAdmin === 'function') {
+            await window.loadLaporanAdmin(); // Refresh list otomatis
+        }
+
+        if (switchKembaliKeLaporan && typeof window.switchAdminTab === 'function') {
+            window.switchAdminTab('laporan');
+        }
+        return true;
     } catch (error) {
-        alert("Gagal menghapus laporan: " + error.message);
+        if (typeof PROTAMA !== 'undefined') {
+            PROTAMA.close();
+            PROTAMA.alert("Gagal Hapus", "Gagal menghapus laporan: " + error.message, "error");
+        } else {
+            alert("Gagal menghapus laporan: " + error.message);
+        }
+        return false;
     }
 };
 
