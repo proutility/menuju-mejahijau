@@ -406,11 +406,54 @@ if(auth) {
     });
 }
 // Fungsi Sakti: Auto-Cari & Auto-Klik Soal dari Laporan (Resilient & Cross-Module Search)
-window.editSoalDariLaporan = async (modulId, encSnippet) => {
-    // 1. Decode teks penggalan dan buang titik-titik/karakter pemisah
+window.editSoalDariLaporan = async (modulId, encSnippet, encAlasan = "", encDasarHukum = "", encPelapor = "", idDocLaporan = "") => {
+    // 1. Tampilkan banner catatan laporan di atas form edit
+    const alasan = encAlasan ? decodeURIComponent(encAlasan) : "";
+    const dasarHukum = encDasarHukum ? decodeURIComponent(encDasarHukum) : "";
+    const pelapor = encPelapor ? decodeURIComponent(encPelapor) : "";
+
+    const banner = document.getElementById('bannerCatatanLaporan');
+    if (banner) {
+        if (alasan) {
+            banner.style.display = 'block';
+            const elAlasan = document.getElementById('laporAlasanText');
+            if (elAlasan) elAlasan.innerText = alasan;
+            
+            const elPelapor = document.getElementById('laporPelaporText');
+            if (elPelapor) elPelapor.innerText = pelapor ? `(Pelapor: ${pelapor})` : "";
+            
+            const rowHukum = document.getElementById('laporDasarHukumRow');
+            const elHukum = document.getElementById('laporDasarHukumText');
+            if (rowHukum && elHukum) {
+                if (dasarHukum && dasarHukum !== 'Tidak melampirkan dasar hukum') {
+                    rowHukum.style.display = 'block';
+                    elHukum.innerText = dasarHukum;
+                } else {
+                    rowHukum.style.display = 'none';
+                }
+            }
+
+            const btnSelesai = document.getElementById('btnSelesaikanLaporan');
+            if (btnSelesai) {
+                btnSelesai.onclick = async () => {
+                    if (idDocLaporan && typeof window.hapusLaporan === 'function') {
+                        await window.hapusLaporan(idDocLaporan);
+                        banner.style.display = 'none';
+                    } else {
+                        banner.style.display = 'none';
+                    }
+                };
+            }
+        } else {
+            banner.style.display = 'none';
+        }
+    }
+
+    // 2. Decode teks penggalan dan bersihkan karakter pemisah
     let rawSnippet = decodeURIComponent(encSnippet || "").replace(/\.{2,}/g, "").trim();
-    // Ambil kata kunci pencarian (35 karakter pertama yang bersih)
-    const snippetKeyword = rawSnippet.substring(0, 35).toLowerCase().trim();
+    // Gunakan penggalan yang cukup panjang agar spesifik (tidak rancu dengan banyak soal yang awalan mirip)
+    const longKeyword = rawSnippet.substring(0, 55).toLowerCase().trim();
+    const shortKeyword = rawSnippet.substring(0, 30).toLowerCase().trim();
 
     window.openAdminPanel();
     window.switchAdminTab('edit');
@@ -421,17 +464,14 @@ window.editSoalDariLaporan = async (modulId, encSnippet) => {
     // Ambil semua daftar modul yang valid di dropdown
     const availableOptions = Array.from(selectModul.options).filter(o => o.value && o.value.trim() !== "" && o.value !== "latihan_campuran");
 
-    // Tentukan urutan modul yang akan diperiksa
     let listModulToCheck = [];
     const directMatch = availableOptions.find(o => o.value === modulId);
     if (directMatch) {
         listModulToCheck.push(directMatch);
-        // Sisanya jadikan fallback
         availableOptions.forEach(o => {
             if (o.value !== directMatch.value) listModulToCheck.push(o);
         });
     } else {
-        // Jika modulId === 'latihan_campuran' atau tidak valid, periksa semua modul
         listModulToCheck = availableOptions;
     }
 
@@ -444,31 +484,48 @@ window.editSoalDariLaporan = async (modulId, encSnippet) => {
         selectModul.value = opt.value;
         currentAdminModul = opt.value;
 
-        // Panggil pemuat soal modul ini (silent mode)
         await window.loadSoalAdmin(true);
 
         const listContainer = document.getElementById("listSoalAdmin");
         const items = listContainer.getElementsByClassName("soal-item-admin");
 
         if (items && items.length > 0) {
+            // Coba cari kecocokan persis/panjang terlebih dahulu
+            let matchedItem = null;
             for (let i = 0; i < items.length; i++) {
                 const itemText = (items[i].textContent || items[i].innerText || "").toLowerCase();
-                if (snippetKeyword && itemText.includes(snippetKeyword)) {
-                    ketemu = true;
-                    modulDitemukanText = opt.text;
-
-                    // Isi kolom search dan filter daftar
-                    const searchInput = document.getElementById('searchSoalAdmin');
-                    if (searchInput) {
-                        searchInput.value = rawSnippet.substring(0, 30);
-                        window.filterSoalAdmin();
-                    }
-
-                    // Klik item soal yang ditemukan agar form terisi
-                    items[i].click();
-                    try { items[i].scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+                if (longKeyword && itemText.includes(longKeyword)) {
+                    matchedItem = items[i];
                     break;
                 }
+            }
+
+            // Jika belum ketemu kecocokan panjang, coba kecocokan pendek
+            if (!matchedItem && shortKeyword) {
+                for (let i = 0; i < items.length; i++) {
+                    const itemText = (items[i].textContent || items[i].innerText || "").toLowerCase();
+                    if (itemText.includes(shortKeyword)) {
+                        matchedItem = items[i];
+                        break;
+                    }
+                }
+            }
+
+            if (matchedItem) {
+                ketemu = true;
+                modulDitemukanText = opt.text;
+
+                // Isi search box dengan keyword spesifik dan filter
+                const searchInput = document.getElementById('searchSoalAdmin');
+                if (searchInput) {
+                    searchInput.value = longKeyword ? rawSnippet.substring(0, 45) : rawSnippet.substring(0, 25);
+                    window.filterSoalAdmin();
+                }
+
+                // Klik item soal yang ditemukan agar form terisi
+                matchedItem.click();
+                try { matchedItem.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+                break;
             }
         }
 
@@ -482,7 +539,6 @@ window.editSoalDariLaporan = async (modulId, encSnippet) => {
             PROTAMA.toast(`Soal ditemukan di modul: ${modulDitemukanText}`, "success");
         }
     } else {
-        // Jika tidak ditemukan di semua modul
         if (directMatch) selectModul.value = directMatch.value;
         PROTAMA.alert("Oops!", "Soalnya nggak ketemu di semua modul bank soal. Mungkin sudah pernah diedit atau dihapus.", "warning");
     }
@@ -6869,6 +6925,97 @@ window.syncEditOptToLegacy = function() {
     if (legacy) legacy.value = arr.filter(Boolean).join(', ');
 };
 
+// 📏 HITUNG PANJANG KARAKTER & ANALISIS HOMOGENITAS PILIHAN JAWABAN
+window.updateOptionLengthCounters = function() {
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const lengths = {};
+    const texts = {};
+
+    letters.forEach(l => {
+        const input = document.getElementById('editOpt' + l);
+        const val = input ? (input.value || '').trim() : '';
+        texts[l] = val;
+        lengths[l] = val.length;
+
+        const badge = document.getElementById('optLen' + l);
+        if (badge) {
+            badge.innerText = `${val.length} huruf`;
+            if (val.length === 0) {
+                badge.style.background = '#f1f5f9';
+                badge.style.color = '#94a3b8';
+            } else {
+                badge.style.background = '#e0f2fe';
+                badge.style.color = '#0369a1';
+            }
+        }
+    });
+
+    // Kontrol visibilitas opsi E di bar visual
+    const hasOptE = lengths['E'] > 0;
+    const labelBarE = document.getElementById('labelBarE');
+    const boxBarE = document.getElementById('boxBarE');
+    if (labelBarE && boxBarE) {
+        labelBarE.style.display = hasOptE ? 'inline' : 'none';
+        boxBarE.style.display = hasOptE ? 'block' : 'none';
+    }
+
+    // Opsi yang aktif dihitung
+    const activeLetters = ['A', 'B', 'C', 'D'];
+    if (hasOptE) activeLetters.push('E');
+
+    const activeLens = activeLetters.map(l => ({ letter: l, len: lengths[l] }));
+    const maxLen = Math.max(...activeLens.map(o => o.len), 0);
+    const minLen = Math.min(...activeLens.map(o => o.len), 0);
+    const totalLen = activeLens.reduce((acc, o) => acc + o.len, 0);
+    const avgLen = activeLens.length > 0 ? (totalLen / activeLens.length) : 0;
+
+    // Update bar visual
+    activeLetters.forEach(l => {
+        const bar = document.getElementById('barLen' + l);
+        if (bar) {
+            const pct = maxLen > 0 ? Math.round((lengths[l] / maxLen) * 100) : 0;
+            bar.style.width = pct + '%';
+        }
+    });
+
+    const statusBadge = document.getElementById('homogeneityStatusBadge');
+    const detailText = document.getElementById('homogeneityDetailText');
+
+    if (!statusBadge || !detailText) return;
+
+    if (totalLen === 0) {
+        statusBadge.innerHTML = 'Belum ada opsi';
+        statusBadge.style.background = '#f1f5f9';
+        statusBadge.style.color = '#64748b';
+        detailText.innerText = 'Panjang rata-rata: 0 karakter.';
+        return;
+    }
+
+    const selisih = maxLen - minLen;
+    const diffPct = avgLen > 0 ? Math.round((selisih / avgLen) * 100) : 0;
+    const longestObj = activeLens.find(o => o.len === maxLen);
+    const shortestObj = activeLens.find(o => o.len === minLen);
+    const longest = longestObj ? longestObj.letter : 'A';
+    const shortest = shortestObj ? shortestObj.letter : 'A';
+
+    if (diffPct <= 20) {
+        statusBadge.innerHTML = '✅ Sangat Homogen';
+        statusBadge.style.background = '#dcfce7';
+        statusBadge.style.color = '#15803d';
+        detailText.innerHTML = `Panjang opsi seimbang & setara (rata-rata <b>${Math.round(avgLen)}</b> huruf, selisih <b>${selisih}</b> huruf / ${diffPct}%). Opsi seimbang tidak memberi petunjuk jawaban berdasarkan panjang kalimat.`;
+    } else if (diffPct <= 45) {
+        statusBadge.innerHTML = '⚖️ Cukup Seimbang';
+        statusBadge.style.background = '#fef3c7';
+        statusBadge.style.color = '#b45309';
+        detailText.innerHTML = `Selisih panjang <b>${selisih}</b> huruf (${diffPct}% dari rata-rata <b>${Math.round(avgLen)}</b> huruf). Rentang: Opsi ${shortest} (${minLen}) s/d Opsi ${longest} (${maxLen}).`;
+    } else {
+        statusBadge.innerHTML = '⚠️ Belum Homogen';
+        statusBadge.style.background = '#ffe4e6';
+        statusBadge.style.color = '#be123c';
+        detailText.innerHTML = `Perbedaan panjang mencolok (selisih <b>${selisih}</b> huruf / ${diffPct}%). Terpanjang: <b>Opsi ${longest}</b> (${maxLen} huruf), Terpendek: <b>Opsi ${shortest}</b> (${minLen} huruf). Sebaiknya diselaraskan agar peserta tidak menebak dari panjang teks.`;
+    }
+};
+
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
     const isSupPop = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
@@ -6884,6 +7031,9 @@ function populateEditForm(id, data) {
     if (document.getElementById('editOptD')) document.getElementById('editOptD').value = opts[3] || '';
     if (document.getElementById('editOptE')) document.getElementById('editOptE').value = opts[4] || '';
     if (document.getElementById('editOpt')) document.getElementById('editOpt').value = opts.join(", "); 
+
+    // Update penghitung panjang karakter & bar homogenitas
+    window.updateOptionLengthCounters();
 
     const ansIdx = (data.answer !== undefined && data.answer !== null && !isNaN(data.answer)) ? parseInt(data.answer) : 0;
     document.getElementById('editAns').value = ansIdx;
@@ -7656,7 +7806,7 @@ window.loadLaporanAdmin = async () => {
                     <button onclick="hapusLaporan('${idDoc}')" style="background:#e74c3c; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
                         <i class="fas fa-trash"></i> Hapus Laporan
                     </button>
-                    <button onclick="window.editSoalDariLaporan('${d.modul_id}', '${encodeURIComponent(d.teks_soal_penggalan || "")}')" style="background:var(--gold); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
+                    <button onclick="window.editSoalDariLaporan('${d.modul_id}', '${encodeURIComponent(d.teks_soal_penggalan || "")}', '${encodeURIComponent(d.alasan || "")}', '${encodeURIComponent(d.dasar_hukum || "")}', '${encodeURIComponent(d.nama_pelapor || "Anonim")}', '${idDoc}')" style="background:var(--gold); color:#333; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; font-weight:bold;">
                         <i class="fas fa-magic"></i> Auto-Edit Soal
                     </button>
                 </div>
