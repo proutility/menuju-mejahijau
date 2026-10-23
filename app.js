@@ -7006,21 +7006,22 @@ window.updateOptionLengthCounters = function() {
     const longest = longestObj ? longestObj.letter : 'A';
     const shortest = shortestObj ? shortestObj.letter : 'A';
 
-    if (diffPct <= 20) {
+    // 🎯 KRITERIA HOMOGENITAS (Toleransi selisih 1-7 huruf tergolong Sangat Homogen)
+    if (selisih <= 7 || diffPct <= 15) {
         statusBadge.innerHTML = '✅ Sangat Homogen';
         statusBadge.style.background = '#dcfce7';
         statusBadge.style.color = '#15803d';
-        detailText.innerHTML = `Panjang opsi seimbang & setara (rata-rata <b>${Math.round(avgLen)}</b> huruf, selisih <b>${selisih}</b> huruf / ${diffPct}%). Opsi seimbang tidak memberi petunjuk jawaban berdasarkan panjang kalimat.`;
-    } else if (diffPct <= 45) {
+        detailText.innerHTML = `Panjang opsi sangat homogen & seimbang (selisih hanya <b>${selisih}</b> huruf, aman dalam batas toleransi 1–7 huruf). Peserta tidak dapat menebak jawaban dari panjang kalimat.`;
+    } else if (selisih <= 15 || diffPct <= 35) {
         statusBadge.innerHTML = '⚖️ Cukup Seimbang';
         statusBadge.style.background = '#fef3c7';
         statusBadge.style.color = '#b45309';
-        detailText.innerHTML = `Selisih panjang <b>${selisih}</b> huruf (${diffPct}% dari rata-rata <b>${Math.round(avgLen)}</b> huruf). Rentang: Opsi ${shortest} (${minLen}) s/d Opsi ${longest} (${maxLen}).`;
+        detailText.innerHTML = `Selisih panjang <b>${selisih}</b> huruf (${diffPct}% dari rata-rata <b>${Math.round(avgLen)}</b> huruf). Rentang: Opsi ${shortest} (${minLen}) s/d Opsi ${longest} (${maxLen}). Masih cukup wajar.`;
     } else {
         statusBadge.innerHTML = '⚠️ Belum Homogen';
         statusBadge.style.background = '#ffe4e6';
         statusBadge.style.color = '#be123c';
-        detailText.innerHTML = `Perbedaan panjang mencolok (selisih <b>${selisih}</b> huruf / ${diffPct}%). Terpanjang: <b>Opsi ${longest}</b> (${maxLen} huruf), Terpendek: <b>Opsi ${shortest}</b> (${minLen} huruf). Sebaiknya diselaraskan agar peserta tidak menebak dari panjang teks.`;
+        detailText.innerHTML = `Perbedaan panjang cukup mencolok (selisih <b>${selisih}</b> huruf > 7 huruf). Terpanjang: <b>Opsi ${longest}</b> (${maxLen} huruf), Terpendek: <b>Opsi ${shortest}</b> (${minLen} huruf). Disarankan klik tombol [AI Homogenkan Opsi] agar selisihnya masuk toleransi 1–7 huruf.`;
     }
 };
 
@@ -7139,7 +7140,7 @@ ${expText ? `PEMBAHASAN RESMI: ${expText}` : ''}
 ${citeText ? `DASAR HUKUM/PASAL: ${citeText}` : ''}
 
 PEDOMAN MUTLAK HOMOGENISASI UJIAN CALON HAKIM:
-1. TARGET HOMOGENITAS: Semua pilihan jawaban (A sampai ${letters[letters.length - 1]}) harus memiliki panjang karakter yang HAMPIR SAMA / SETARA (toleransi perbedaan panjang antar opsi maksimal 10-15%).
+1. TARGET HOMOGENITAS: Semua pilihan jawaban (A sampai ${letters[letters.length - 1]}) harus memiliki panjang karakter yang seragam dan seimbang dengan TOLERANSI SELISIH 1 SAMPAI 7 HURUF SAJA (tidak harus persis sama sampai digit terakhir, asalkan perbedaan terpanjang dan terpendek maksimal 1-7 huruf dan kalimat tetap alami secara hukum).
 2. KUNCI JAWABAN BENAR (Opsi ${letterKunci}):
    - Posisinya HARUS TETAP di Opsi ${letterKunci}. Jangan menukar posisi opsi!
    - Substansi hukumnya HARUS TETAP 100% BENAR dan akurat secara hukum positif Indonesia.
