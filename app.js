@@ -2837,22 +2837,25 @@ window.startReviewMultiplayer = async function() {
     const ind = document.getElementById('modeIndicator');
     if (ind) { ind.innerText = "REVIEW MULTIPLAYER"; ind.style.background = "#f3e5f5"; ind.style.color = "#8e24aa"; ind.style.border = "1px solid #ce93d8"; }
     
-    // Pastikan kunci jawaban dan pembahasan terpasang di currentQuestions
+    // Pastikan kunci jawaban dan pembahasan terpasang di currentQuestions (Kebal Stale Cache)
     try {
         const rCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
-        const dbKey = window.currentDatabaseId || (window.latestRoomData && window.latestRoomData.modulId) || rCode;
-        const roomKunciMap = _kunciJawabanStore.get(rCode) || _kunciJawabanStore.get(dbKey) || (typeof loadKunciJawabanUjian === 'function' ? await loadKunciJawabanUjian(dbKey) : {});
-        if (currentQuestions && currentQuestions.length > 0 && roomKunciMap) {
+        const roomKunciMap = (rCode && _kunciJawabanStore.get(rCode)) ? _kunciJawabanStore.get(rCode) : {};
+        if (currentQuestions && currentQuestions.length > 0) {
             currentQuestions.forEach((q, idx) => {
+                // 1. Prioritaskan verifikasi kunci berdasarkan teks jawaban benar asli
+                if (q.jawabanBenarTeks && Array.isArray(q.options)) {
+                    const matchIdx = q.options.indexOf(q.jawabanBenarTeks);
+                    if (matchIdx !== -1) q.answer = matchIdx;
+                }
+                // 2. Jika q.answer belum ada, ambil dari roomKunciMap khusus room ini
                 const kInfo = roomKunciMap[q.id || `q_${idx}`] || roomKunciMap[idx];
-                if (kInfo) {
-                    if (typeof kInfo === 'object') {
-                        if (kInfo.answer !== undefined) q.answer = kInfo.answer;
-                        if (kInfo.explanation) q.explanation = kInfo.explanation;
-                        if (kInfo.cite) q.cite = kInfo.cite;
-                    } else {
-                        q.answer = kInfo;
+                if (kInfo && typeof kInfo === 'object') {
+                    if (q.answer === undefined || q.answer === null) {
+                        q.answer = kInfo.answer;
                     }
+                    if (!q.explanation || q.explanation === "-") q.explanation = kInfo.explanation || "-";
+                    if (!q.cite || q.cite === "-") q.cite = kInfo.cite || "-";
                 }
             });
         }
@@ -3777,10 +3780,15 @@ window.eksekusiBikinRoom = async () => {
 
         // Acak pilihan jawaban per soal dan kunci jawaban yang benar
         soalMabarFinal.forEach(q => {
-            if(q.options && q.answer !== undefined && q.answer < q.options.length) {
-                let jawabanBenar = q.options[q.answer]; 
-                shuffleArray(q.options); 
-                q.answer = q.options.indexOf(jawabanBenar); 
+            if(q.options && q.answer !== undefined && q.answer !== null) {
+                const ansIdx = parseInt(q.answer);
+                if (!isNaN(ansIdx) && ansIdx < q.options.length) {
+                    let jawabanBenar = q.options[ansIdx]; 
+                    shuffleArray(q.options); 
+                    q.answer = q.options.indexOf(jawabanBenar); 
+                    q.jawabanBenarTeks = jawabanBenar; // 🛡️ Simpan teks kunci jawaban asli agar kebal desinkronisasi index
+                    q.correctAnswerText = jawabanBenar;
+                }
             }
         });
 
@@ -5186,12 +5194,33 @@ window.pantauRoom = (kodeRoom) => {
             let myUser = typeof currentUser !== 'undefined' ? currentUser : window.currentUser;
             let gueBeneranHost = (myUser && data.hostUid === myUser.uid);
 
-            // ðŸ›‘ SINKRONISASI SOAL MABAR LANGSUNG DARI BRANKAS ROOM (ANTI-STALE CACHE)
+            // 🛑 SINKRONISASI SOAL MABAR LANGSUNG DARI BRANKAS ROOM (ANTI-STALE CACHE)
             if (!currentQuestions || currentQuestions.length === 0 || window.activeRoomCodeLoaded !== kodeRoom) {
                 window.activeRoomCodeLoaded = kodeRoom;
                 window.currentDatabaseId = data.modulId;
                 if (data.soalTersimpan && Array.isArray(data.soalTersimpan) && data.soalTersimpan.length > 0) {
                     currentQuestions = JSON.parse(JSON.stringify(data.soalTersimpan));
+
+                    // 🛡️ POPULASIKAN KUNCI JAWABAN RESMI ROOM DI MEMORI KHUSUS ROOM CODE INI!
+                    const mapKunciRoom = {};
+                    currentQuestions.forEach((q, idx) => {
+                        const idSoal = q.id || `q_${idx}`;
+                        let realIdx = (q.answer !== undefined && q.answer !== null && !isNaN(q.answer)) ? parseInt(q.answer) : null;
+                        if (q.jawabanBenarTeks && Array.isArray(q.options)) {
+                            const matchIdx = q.options.indexOf(q.jawabanBenarTeks);
+                            if (matchIdx !== -1) realIdx = matchIdx;
+                        } else if (realIdx !== null && q.options && q.options[realIdx]) {
+                            q.jawabanBenarTeks = q.options[realIdx];
+                        }
+                        mapKunciRoom[idSoal] = {
+                            answer: realIdx,
+                            correctAnswerText: q.jawabanBenarTeks || (realIdx !== null && q.options ? q.options[realIdx] : null),
+                            explanation: q.explanation || "-",
+                            cite: q.cite || "-"
+                        };
+                        mapKunciRoom[idx] = mapKunciRoom[idSoal];
+                    });
+                    _kunciJawabanStore.set(kodeRoom, mapKunciRoom);
                 } else if (typeof window.switchDatabase === 'function') {
                     await window.switchDatabase(data.modulId);
                 }
@@ -5450,12 +5479,34 @@ window.pantauRoom = (kodeRoom) => {
                     ? data.players[myUid].jawabanSekarang
                     : (typeof userAnswers !== 'undefined' && userAnswers[data.currentIdx] !== null && userAnswers[data.currentIdx] !== undefined ? userAnswers[data.currentIdx] : null);
                 
-                // 🏆 LOGIKA LIVE SCORE & PEMBAHASAN MULTIPLAYER
-                const roomKunciMap = _kunciJawabanStore.get(window.currentRoomCode) || _kunciJawabanStore.get(data.modulId) || _kunciJawabanStore.get(window.currentDatabaseId) || {};
-                const kInfo = roomKunciMap[q.id || `q_${data.currentIdx}`] || roomKunciMap[data.currentIdx];
-                const realAnswer = (typeof kInfo === 'object' && kInfo.answer !== undefined) ? kInfo.answer : (q.answer !== undefined ? q.answer : null);
-                const realExplanation = (typeof kInfo === 'object' && kInfo.explanation) ? kInfo.explanation : (q.explanation || "-");
-                const realCite = (typeof kInfo === 'object' && kInfo.cite) ? kInfo.cite : (q.cite || "-");
+                // 🏆 LOGIKA LIVE SCORE & PEMBAHASAN MULTIPLAYER (KEBAL STALE CACHE & CROSS-DEVICE SYNC)
+                let realAnswer = null;
+                // 1. Prioritaskan pencocokan teks jawaban benar asli langsung dari opsi soal room!
+                if (q.jawabanBenarTeks && Array.isArray(q.options)) {
+                    const matchIdx = q.options.indexOf(q.jawabanBenarTeks);
+                    if (matchIdx !== -1) realAnswer = matchIdx;
+                }
+                // 2. Jika belum, ambil dari q.answer murni objek soal room
+                if (realAnswer === null && q.answer !== undefined && q.answer !== null && !isNaN(q.answer)) {
+                    realAnswer = parseInt(q.answer);
+                }
+                // 3. Jika belum, ambil dari mapKunci HANYA milik room code ini (JANGAN DARI MODUL SINGLEPLAYER!)
+                if (realAnswer === null) {
+                    const rCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
+                    const roomKunciMap = rCode ? (_kunciJawabanStore.get(rCode) || {}) : {};
+                    const kInfo = roomKunciMap[q.id || `q_${data.currentIdx}`] || roomKunciMap[data.currentIdx];
+                    if (kInfo && typeof kInfo === 'object') {
+                        if (kInfo.correctAnswerText && Array.isArray(q.options)) {
+                            const matchTextIdx = q.options.indexOf(kInfo.correctAnswerText);
+                            if (matchTextIdx !== -1) realAnswer = matchTextIdx;
+                        }
+                        if (realAnswer === null && kInfo.answer !== undefined && kInfo.answer !== null && !isNaN(kInfo.answer)) {
+                            realAnswer = parseInt(kInfo.answer);
+                        }
+                    }
+                }
+                const realExplanation = q.explanation || "-";
+                const realCite = q.cite || "-";
 
                 if (realAnswer !== null && jawabanGue === realAnswer) {
                     if (window.lastScoredIdx !== data.currentIdx) {
@@ -8791,16 +8842,30 @@ window.tanyaMentorAIBedahSoal = async function(idxSoal) {
         }
     }
 
-    // Kunci Jawaban
-    let kunciIdx = (q && q.answer !== undefined) ? q.answer : -1;
+    // Kunci Jawaban (Kebal Stale Cache & Cross-Device)
+    let kunciIdx = -1;
+    if (q) {
+        if (q.jawabanBenarTeks && Array.isArray(opsiArr)) {
+            const matchIdx = opsiArr.indexOf(q.jawabanBenarTeks);
+            if (matchIdx !== -1) kunciIdx = matchIdx;
+        }
+        if (kunciIdx === -1 && q.answer !== undefined && q.answer !== null && !isNaN(q.answer)) {
+            kunciIdx = parseInt(q.answer);
+        }
+    }
     if (kunciIdx === -1) {
         const rCode = window.currentRoomCode || (typeof currentRoomCode !== 'undefined' ? currentRoomCode : null);
-        const dbKey = window.currentDatabaseId || (window.latestRoomData && window.latestRoomData.modulId) || rCode;
-        if (typeof _kunciJawabanStore !== 'undefined') {
-            const roomKunciMap = _kunciJawabanStore.get(rCode) || _kunciJawabanStore.get(dbKey) || {};
+        if (rCode && typeof _kunciJawabanStore !== 'undefined') {
+            const roomKunciMap = _kunciJawabanStore.get(rCode) || {};
             const kInfo = roomKunciMap[q?.id || `q_${targetIdx}`] || roomKunciMap[targetIdx];
             if (kInfo) {
-                kunciIdx = (typeof kInfo === 'object' && kInfo.answer !== undefined) ? kInfo.answer : (typeof kInfo === 'number' ? kInfo : -1);
+                if (kInfo.correctAnswerText && Array.isArray(opsiArr)) {
+                    const matchTextIdx = opsiArr.indexOf(kInfo.correctAnswerText);
+                    if (matchTextIdx !== -1) kunciIdx = matchTextIdx;
+                }
+                if (kunciIdx === -1) {
+                    kunciIdx = (typeof kInfo === 'object' && kInfo.answer !== undefined) ? parseInt(kInfo.answer) : (typeof kInfo === 'number' ? kInfo : -1);
+                }
             }
         }
     }
