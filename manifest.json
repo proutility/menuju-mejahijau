@@ -1,0 +1,19 @@
+{
+  "name": "PROTAMA - CBT CAKIM PA 2026",
+  "short_name": "PRO-TAMA",
+  "description": "Simulasi CBT Calon Hakim Peradilan Agama 2026 & Mabar Multiplayer",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#004d00",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "PRO-TAMA.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

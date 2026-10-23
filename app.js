@@ -933,7 +933,7 @@ window.toggleMobileRagu = function() {
 };
 
 // 5. Konfirmasi Keluar Ujian Mobile
-window.konfirmasiKeluarUjian = function() {
+window.konfirmasiKeluarUjian = async function() {
     const isRoom = !!(currentRoomCode || window.currentRoomCode);
     const msg = isRoom ? "Apakah Anda yakin ingin keluar dari room mabar dan kembali ke lobby?" : "Apakah Anda yakin ingin keluar dari sesi ujian dan kembali ke lobby?";
     const doExit = () => {
@@ -945,7 +945,8 @@ window.konfirmasiKeluarUjian = function() {
         }
     };
     if (typeof PROTAMA !== 'undefined' && PROTAMA.confirm) {
-        PROTAMA.confirm("Keluar Sesi?", msg, "warning", doExit);
+        const yakin = await PROTAMA.confirm("KELUAR SESI?", msg, "Ya, Keluar", "#d32f2f");
+        if (yakin) doExit();
     } else if (confirm(msg)) {
         doExit();
     }
@@ -972,7 +973,14 @@ window.syncMobileExamUI = function(idx) {
     // Update Header
     const mModul = document.getElementById('mExamModulTitle');
     const dModul = document.getElementById('modulTitle');
-    if (mModul && dModul) mModul.innerText = dModul.innerText;
+    if (mModul) {
+        if (isModeRoom) {
+            let rCode = currentRoomCode || window.currentRoomCode;
+            mModul.innerText = rCode ? "Room " + rCode : (dModul ? dModul.innerText : "Room Multiplayer");
+        } else if (dModul) {
+            mModul.innerText = dModul.innerText;
+        }
+    }
 
     const mQNum = document.getElementById('mExamQNumber');
     if (mQNum) mQNum.innerText = `${idx + 1}/${currentQuestions.length}`;
@@ -2588,8 +2596,10 @@ window.closeResult = function() {
     window.isReviewSelesai = true; 
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
+    const mTimer = document.getElementById('mExamTimerPill');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
+    if (mTimer) { mTimer.innerText = "00:00"; mTimer.className = 'm-exam-timer-pill timer-green'; }
 
     // KUNCI KIRI SAJA
     document.querySelectorAll('.modul-btn').forEach(btn => { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; btn.disabled = true; });
@@ -2641,8 +2651,10 @@ window.startReviewWrong = function() {
     window.isReviewSelesai = true;
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
+    const mTimer = document.getElementById('mExamTimerPill');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
+    if (mTimer) { mTimer.innerText = "00:00"; mTimer.className = 'm-exam-timer-pill timer-green'; }
 
     // KUNCI KIRI SAJA
     document.querySelectorAll('.modul-btn').forEach(btn => { btn.style.pointerEvents = 'none'; btn.style.opacity = '0.5'; btn.disabled = true; });
@@ -2699,8 +2711,10 @@ window.startReviewMultiplayer = async function() {
     window.isReviewSelesai = true;
 
     const t1 = document.getElementById('timerDisplay'); const t2 = document.getElementById('floatingTimer');
+    const mTimer = document.getElementById('mExamTimerPill');
     if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-green'; }
     if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-green'; }
+    if (mTimer) { mTimer.innerText = "00:00"; mTimer.className = 'm-exam-timer-pill timer-green'; }
 
     // 🛑 KUNCI TOTAL KIRI & KANAN ATAS (Karena Multiplayer pakai tombol ngambang)
     document.querySelectorAll('.modul-btn, .action-box button, .act-exit, .btn-action').forEach(btn => { 
@@ -5093,7 +5107,14 @@ window.pantauRoom = (kodeRoom) => {
             const fNav = document.querySelector('.footer-nav');
             if (fNav) { fNav.style.setProperty('display', 'flex', 'important'); fNav.style.visibility = 'visible'; }
             const qHead = document.querySelector('.question-header');
-            if (qHead) { qHead.style.setProperty('display', 'flex', 'important'); qHead.style.visibility = 'visible'; }
+            if (qHead) {
+                if (window.innerWidth > 768) {
+                    qHead.style.setProperty('display', 'flex', 'important');
+                    qHead.style.visibility = 'visible';
+                } else {
+                    qHead.style.setProperty('display', 'none', 'important');
+                }
+            }
 
             const qText = document.getElementById('questionText');
             const isWaitingRoomUI = qText ? qText.innerHTML.includes('WAITING ROOM') : false;
@@ -5159,6 +5180,7 @@ window.pantauRoom = (kodeRoom) => {
                     let txt = "00:" + String(menit).padStart(2, '0') + ":" + String(sisaDetik).padStart(2, '0');
                     let t1 = document.getElementById('timerDisplay');
                     let t2 = document.getElementById('floatingTimer');
+                    let mTimer = document.getElementById('mExamTimerPill');
                     
                     let panicThreshold = Math.max(5, Math.floor(durasiPerSoal * 0.25));
                     let warnThreshold = Math.max(10, Math.floor(durasiPerSoal * 0.5));
@@ -5169,6 +5191,10 @@ window.pantauRoom = (kodeRoom) => {
 
                     if (t1) { t1.innerText = txt; t1.className = 'timer-container ' + colorClass; }
                     if (t2) { t2.innerText = txt; t2.className = colorClass; }
+                    if (mTimer) {
+                        mTimer.innerText = String(menit).padStart(2, '0') + ":" + String(sisaDetik).padStart(2, '0');
+                        mTimer.className = 'm-exam-timer-pill ' + colorClass;
+                    }
                 };
                 
                 setLayarTimer(sisaWaktuRoom); 
@@ -5188,8 +5214,10 @@ window.pantauRoom = (kodeRoom) => {
                         } else {
                             let t1 = document.getElementById('timerDisplay');
                             let t2 = document.getElementById('floatingTimer');
+                            let mTimer = document.getElementById('mExamTimerPill');
                             if(t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-panic'; }
                             if(t2) { t2.innerText = "00:00:00"; t2.className = 'timer-panic'; }
+                            if(mTimer) { mTimer.innerText = "00:00"; mTimer.className = 'm-exam-timer-pill timer-panic'; }
                         }
                     }
                 }, 500);
@@ -5292,8 +5320,10 @@ window.pantauRoom = (kodeRoom) => {
             // 🛑 RESET TAMPILAN TIMER SAAT PEMBAHASAN (CEGAH ANGKA FREEZE DI DETIK TERSISA)
             let t1 = document.getElementById('timerDisplay');
             let t2 = document.getElementById('floatingTimer');
+            let mTimer = document.getElementById('mExamTimerPill');
             if (t1) { t1.innerText = "00:00:00"; t1.className = 'timer-container timer-panic'; }
             if (t2) { t2.innerText = "00:00:00"; t2.className = 'timer-panic'; } 
+            if (mTimer) { mTimer.innerText = "00:00"; mTimer.className = 'm-exam-timer-pill timer-panic'; } 
             
             if (window.activePembahasanIdx !== data.currentIdx) {
                 window.activePembahasanIdx = data.currentIdx;
@@ -11554,5 +11584,87 @@ window.resetAnswersKHI = () => {
         localStorage.removeItem("khi_modern_ans");
         window.renderStageKHI();
         window.updateStatsKHI();
+    }
+};
+
+// =========================================================================
+// 📲 PWA INSTALLATION & SERVICE WORKER HANDLER
+// =========================================================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then((reg) => {
+                console.log('PRO-TAMA PWA Service Worker terdaftar:', reg.scope);
+            })
+            .catch((err) => {
+                console.warn('PRO-TAMA PWA SW error:', err);
+            });
+    });
+}
+
+window.deferredPWAInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPWAInstallPrompt = e;
+    const b = document.getElementById('mPwaBanner');
+    if (b) b.style.display = 'flex';
+    const btn = document.getElementById('mBtnInstallPWA');
+    if (btn) btn.style.display = 'flex';
+});
+
+window.addEventListener('appinstalled', () => {
+    window.deferredPWAInstallPrompt = null;
+    const b = document.getElementById('mPwaBanner');
+    if (b) b.style.display = 'none';
+    console.log('PRO-TAMA PWA berhasil diinstal.');
+});
+
+window.installPWA = async function() {
+    if (window.deferredPWAInstallPrompt) {
+        window.deferredPWAInstallPrompt.prompt();
+        const choice = await window.deferredPWAInstallPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+            if (typeof PROTAMA !== 'undefined' && PROTAMA.toast) {
+                PROTAMA.toast('Aplikasi PRO-TAMA berhasil dipasang ke Layar Utama!', 'success');
+            }
+            window.deferredPWAInstallPrompt = null;
+            const b = document.getElementById('mPwaBanner');
+            if (b) b.style.display = 'none';
+        }
+    } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+            Swal.fire({
+                title: 'PASANG DI IPHONE / IPAD',
+                html: '<div style="text-align:left; font-size:0.95rem; line-height:1.6;">' +
+                      '<p>Untuk mengunduh dan memasang di iPhone/iPad:</p>' +
+                      '<ol style="padding-left:20px; margin:10px 0;">' +
+                      '<li>Ketuk tombol <b>Bagikan (Share)</b> <i class="fas fa-share-square" style="color:#007aff;"></i> di bilah bawah Safari.</li>' +
+                      '<li>Gulir ke bawah lalu pilih <b>"Tambah ke Layar Utama" (Add to Home Screen)</b> <i class="fas fa-plus-square"></i>.</li>' +
+                      '<li>Ketuk <b>"Tambah" (Add)</b> di pojok kanan atas.</li>' +
+                      '</ol>' +
+                      '<p style="color:#004d00; font-weight:600; margin-top:10px;">Aplikasi PRO-TAMA siap dibuka langsung dari layar HP Anda!</p>' +
+                      '</div>',
+                icon: 'info',
+                confirmButtonColor: '#004d00',
+                confirmButtonText: 'Mengerti'
+            });
+        } else {
+            Swal.fire({
+                title: 'PASANG APLIKASI DI HP',
+                html: '<div style="text-align:left; font-size:0.95rem; line-height:1.6;">' +
+                      '<p>Untuk mengunduh dan memasang di Android:</p>' +
+                      '<ol style="padding-left:20px; margin:10px 0;">' +
+                      '<li>Buka browser Chrome, Edge, atau Samsung Internet.</li>' +
+                      '<li>Ketuk menu titik tiga (<b>⋮</b>) di pojok kanan atas browser.</li>' +
+                      '<li>Pilih <b>"Instal Aplikasi"</b> atau <b>"Tambahkan ke Layar Utama"</b>.</li>' +
+                      '</ol>' +
+                      '<p style="color:#004d00; font-weight:600; margin-top:10px;">Aplikasi langsung terpasang di HP seperti aplikasi dari Play Store!</p>' +
+                      '</div>',
+                icon: 'info',
+                confirmButtonColor: '#004d00',
+                confirmButtonText: 'Siap, Mengerti'
+            });
+        }
     }
 };

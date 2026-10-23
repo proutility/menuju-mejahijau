@@ -2,6 +2,13 @@
 <html lang="id">
 <head>
     <link rel="icon" type="image/png" href="PRO-TAMA.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#004d00">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PROTAMA CBT">
+    <link rel="apple-touch-icon" href="PRO-TAMA.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
     <title>SIMULASI CBT CAKIM PA 2026</title>
@@ -182,6 +189,18 @@
                         <i class="fas fa-play"></i> Mulai Latihan CBT Mandiri
                     </button>
                 </div>
+            </div>
+
+            <!-- PWA App Install Banner Mobile -->
+            <div id="mPwaBanner" class="m-pwa-banner" onclick="window.installPWA()">
+                <div class="m-pwa-banner-left">
+                    <img src="PRO-TAMA.png" alt="App Icon" class="m-pwa-icon">
+                    <div class="m-pwa-text">
+                        <strong>Install Aplikasi PRO-TAMA</strong>
+                        <span>Akses cepat &amp; layar penuh di HP</span>
+                    </div>
+                </div>
+                <button class="m-pwa-btn"><i class="fas fa-download"></i> Pasang</button>
             </div>
 
             <!-- 3. Grid Menu Utama (6 Ikon App Saku) -->
@@ -654,6 +673,14 @@
                     </div>
                     
                     <div class="m-setting-list">
+                        <button id="mBtnInstallPWA" class="m-setting-item" onclick="window.installPWA();" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                            <i class="fas fa-download" style="color:#16a34a;"></i>
+                            <div style="flex:1; text-align:left;">
+                                <span style="font-weight:700; color:#15803d; display:block;">Download Aplikasi HP (PWA)</span>
+                                <small style="color:#64748b; font-size:0.75rem;">Pasang di layar utama HP Anda</small>
+                            </div>
+                            <span style="background:#16a34a; color:white; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:10px;">PASANG</span>
+                        </button>
                         <button id="mBtnAdminPanel" class="m-setting-item" style="display:none;" onclick="window.closeMobileAccountSheet(); window.openAdminPanel();">
                             <i class="fas fa-cogs" style="color:#2c3e50;"></i>
                             <span>Panel Admin / Editor Soal</span>
