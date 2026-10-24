@@ -7328,10 +7328,9 @@ PENTING:
 
         if (typeof PROTAMA !== 'undefined') {
             if (PROTAMA.close) PROTAMA.close();
-            const ringkasan = parsed.ringkasan ? `<div style="margin-top:10px; padding:10px; background:#f0fdf4; border-radius:8px; border:1px solid #bbf7d0; font-size:0.85rem; color:#166534; text-align:left;"><b>Catatan AI:</b><br>${parsed.ringkasan}</div>` : '';
             PROTAMA.alert(
                 "Homogenisasi Berhasil!",
-                `✨ <b>Pilihan jawaban berhasil dihomogenkan oleh AI!</b><br>Panjang kalimat antar opsi kini seimbang dan setara.<br>${ringkasan}<br><small style="color:#666;">Jika hasil cocok, silakan klik <b>Simpan Perubahan</b> di bawah. Jika ingin membatalkan, klik tombol <b>Undo</b>.</small>`,
+                `✨ <b>Pilihan jawaban berhasil dihomogenkan oleh AI!</b><br>Panjang karakter antar opsi kini seimbang dan setara.<br><small style="color:#666;">Jika hasil cocok, silakan klik <b>Simpan Perubahan</b> di bawah. Jika ingin membatalkan, klik tombol <b>↩️ Undo</b>.</small>`,
                 "success"
             );
         } else {
