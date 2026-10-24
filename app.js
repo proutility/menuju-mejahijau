@@ -6695,6 +6695,154 @@ window.switchAdminTab = (tab) => {
     if (tab === 'status' && typeof window.loadStatusAdmin === 'function') window.loadStatusAdmin();
 };
     
+// ==========================================
+// 📜 FITUR AUDIT TRAIL & JEJAK RIWAYAT EDIT SOAL
+// ==========================================
+window.tampilkanRiwayatEditorSoal = function(nomorSoal, data) {
+    let modal = document.getElementById('modalRiwayatEditSoal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalRiwayatEditSoal';
+        modal.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); z-index:9999999; align-items:center; justify-content:center; padding:15px; font-family:'Poppins', sans-serif; backdrop-filter:blur(3px);";
+        modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+        document.body.appendChild(modal);
+    }
+
+    const pembuat = data.dibuatOleh || data.pembuat || data.createdBy || "Sistem / Generator Awal";
+    let waktuBuatStr = "Awal Pembentukan Bank Soal";
+    if (data.createdAt) {
+        try {
+            const d = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            if (!isNaN(d.getTime())) {
+                waktuBuatStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB';
+            }
+        } catch(e) {}
+    }
+
+    const editorTerakhir = data.terakhirDieditOleh ? `${data.terakhirDieditNama || data.terakhirDieditOleh} (${data.terakhirDieditOleh})` : "Belum pernah diedit";
+    const roleEditor = data.terakhirDieditRole ? `<span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:700;">${data.terakhirDieditRole}</span>` : '';
+    let waktuEditStr = "-";
+    if (data.terakhirDieditWaktu) {
+        try {
+            const d = new Date(data.terakhirDieditWaktu);
+            if (!isNaN(d.getTime())) {
+                waktuEditStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB';
+            }
+        } catch(e) {}
+    }
+
+    // Bangun daftar timeline perubahan
+    const riwayatList = Array.isArray(data.riwayatEdit) ? [...data.riwayatEdit].reverse() : [];
+    let timelineHtml = "";
+
+    if (riwayatList.length > 0) {
+        timelineHtml = riwayatList.map((item, idx) => {
+            const timeStr = item.waktuFormat || (item.waktu ? new Date(item.waktu).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB' : '-');
+            const editorText = item.email ? `${item.nama || item.email} (${item.email})` : (item.nama || 'Editor');
+            const badgeRole = item.role ? `<span style="background:${item.role.includes('Super') ? '#fef3c7' : '#e0e7ff'}; color:${item.role.includes('Super') ? '#92400e' : '#3730a3'}; padding:1px 6px; border-radius:4px; font-size:0.72rem; font-weight:700;">${item.role}</span>` : '';
+            
+            const listPerubahan = (Array.isArray(item.perubahan) && item.perubahan.length > 0) 
+                ? item.perubahan.map(p => `<li style="margin-bottom:3px;">${p}</li>`).join('') 
+                : '<li>Menyimpan perubahan soal</li>';
+
+            return `
+                <div style="position:relative; padding-left:24px; padding-bottom:18px; ${idx !== riwayatList.length - 1 ? 'border-left:2px solid #cbd5e1;' : ''} margin-left:8px;">
+                    <div style="position:absolute; left:-7px; top:0; width:12px; height:12px; border-radius:50%; background:#0284c7; border:2px solid white; box-shadow:0 0 0 2px #0284c7;"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:4px;">
+                        <span style="font-weight:700; color:#1e293b; font-size:0.85rem;">
+                            <i class="fas fa-user-edit" style="color:#0284c7;"></i> ${editorText} ${badgeRole}
+                        </span>
+                        <span style="font-size:0.75rem; color:#64748b; font-weight:500;">
+                            <i class="far fa-clock"></i> ${timeStr}
+                        </span>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                        <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.5px;">Rincian Bagian yang Diubah:</span>
+                        <ul style="margin:4px 0 0 16px; padding:0; font-size:0.82rem; color:#334155; line-height:1.5;">
+                            ${listPerubahan}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        timelineHtml = `
+            <div style="text-align:center; padding:25px 15px; background:#f8fafc; border-radius:8px; border:1.5px dashed #cbd5e1; color:#64748b;">
+                <i class="fas fa-clipboard-check" style="font-size:2.2rem; color:#94a3b8; margin-bottom:10px;"></i>
+                <p style="margin:0; font-weight:600; font-size:0.88rem; color:#334155;">Belum Ada Rincian Log Revisi Sebelumnya</p>
+                <small style="color:#94a3b8; display:block; margin-top:4px;">
+                    Soal ini belum pernah diedit sejak sistem audit trail aktif. Mulai sekarang, setiap kali akun admin/editor mengubah pertanyaan, opsi, kunci, atau pembahasan, rinciannya akan otomatis tercatat di sini.
+                </small>
+            </div>
+        `;
+    }
+
+    modal.innerHTML = `
+        <div style="background:white; border-radius:14px; width:560px; max-width:95%; max-height:88vh; display:flex; flex-direction:column; box-shadow:0 20px 40px rgba(0,0,0,0.25); overflow:hidden;">
+            <!-- Modal Header -->
+            <div style="padding:16px 20px; background:linear-gradient(135deg, #0f172a, #1e293b); color:white; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:rgba(2,132,199,0.2); border:1px solid #0284c7; display:flex; align-items:center; justify-content:center; color:#38bdf8;">
+                        <i class="fas fa-history" style="font-size:1.1rem;"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin:0; font-size:1rem; font-weight:700;">Jejak Audit & Riwayat Edit</h4>
+                        <small style="color:#94a3b8; font-size:0.75rem;">Soal No. ${nomorSoal || '-'}</small>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('modalRiwayatEditSoal').style.display='none'" style="background:none; border:none; color:#94a3b8; font-size:1.5rem; cursor:pointer; line-height:1; padding:0 4px;" title="Tutup">&times;</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div style="padding:20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:16px;">
+                <!-- Ringkasan Akun -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px;">
+                        <span style="font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">
+                            <i class="fas fa-user-plus" style="color:#10b981;"></i> Pembuat Awal
+                        </span>
+                        <div style="font-weight:700; color:#0f172a; font-size:0.85rem; word-break:break-all;">
+                            ${pembuat}
+                        </div>
+                        <small style="color:#94a3b8; font-size:0.72rem; display:block; margin-top:2px;">
+                            ${waktuBuatStr}
+                        </small>
+                    </div>
+
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px;">
+                        <span style="font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">
+                            <i class="fas fa-edit" style="color:#0284c7;"></i> Terakhir Diedit
+                        </span>
+                        <div style="font-weight:700; color:#0f172a; font-size:0.85rem; word-break:break-all;">
+                            ${editorTerakhir} ${roleEditor}
+                        </div>
+                        <small style="color:#94a3b8; font-size:0.72rem; display:block; margin-top:2px;">
+                            ${waktuEditStr}
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Timeline Riwayat Perubahan -->
+                <div>
+                    <h5 style="margin:0 0 12px 0; font-size:0.85rem; font-weight:700; color:#334155; text-transform:uppercase; letter-spacing:0.5px;">
+                        <i class="fas fa-stream" style="color:#0284c7;"></i> Riwayat Perubahan & Perbaikan:
+                    </h5>
+                    <div style="padding-top:4px;">
+                        ${timelineHtml}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; text-align:right;">
+                <button onclick="document.getElementById('modalRiwayatEditSoal').style.display='none'" style="background:#475569; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:600; font-size:0.82rem; cursor:pointer;">Tutup</button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
 window.loadReviewPembahasan = async () => {
     const isSupRev = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     const modRevTarget = document.getElementById('reviewModulTarget')?.value?.trim();
@@ -6722,7 +6870,7 @@ window.loadReviewPembahasan = async () => {
         qSnap.docs.forEach((docSnap, index) => {
             const data = docSnap.data();
             const item = document.createElement('div');
-            item.style = "margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;";
+            item.style = "margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:12px;";
             
             const pembahasan = data.explanation ? data.explanation : "<em style='color:gray'>- Belum ada pembahasan -</em>";
             const sumber = data.cite ? data.cite : "-";
@@ -6739,29 +6887,64 @@ window.loadReviewPembahasan = async () => {
             }
             opsiHtml += `</div>`;
 
-            // --- 2. BIKIN TOMBOL AI (CARA AMAN TANPA STRING ONCLICK) ---
+            // --- 2. BIKIN TOMBOL HEADER (RIWAYAT EDIT & CEK AI) ---
+            const btnGroup = document.createElement('div');
+            btnGroup.style.cssText = "display:flex; gap:6px; align-items:center;";
+
+            // Tombol 📜 Riwayat Edit
+            const btnHistory = document.createElement('button');
+            btnHistory.style.cssText = "background: #0284c7; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; display:inline-flex; align-items:center; gap:5px; transition:0.2s;";
+            btnHistory.innerHTML = `<i class="fas fa-history"></i> Riwayat Edit`;
+            btnHistory.title = "Lihat akun pembuat dan riwayat edit soal ini";
+            btnHistory.onclick = function() {
+                window.tampilkanRiwayatEditorSoal(index + 1, data);
+            };
+            btnGroup.appendChild(btnHistory);
+
+            // Tombol 🤖 Cek AI
             const btnAI = document.createElement('button');
-            btnAI.style.cssText = "background: #8e44ad; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; float: right;";
+            btnAI.style.cssText = "background: #8e44ad; color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; display:inline-flex; align-items:center; gap:5px; transition:0.2s;";
             btnAI.innerHTML = `<i class="fas fa-robot"></i> Cek AI`;
-            
-            // Simpan data mentah langsung ke tombolnya (lebih aman dari kutip-kutipan)
             btnAI.onclick = function() {
-                // Encode datanya di dalam JS, bukan di dalam HTML
                 const qTeksEsc = encodeURIComponent(data.q || "");
                 const optStrEsc = encodeURIComponent(JSON.stringify(data.options || []));
                 const expEsc = encodeURIComponent(pembahasan);
                 const citeEsc = encodeURIComponent(sumber);
                 const ansIdx = data.answer;
-                
-                // Panggil fungsi AI global lu
                 window.cekValiditasAI(this, docSnap.id, qTeksEsc, optStrEsc, ansIdx, expEsc, citeEsc);
             };
+            btnGroup.appendChild(btnAI);
 
             // --- 3. BIKIN KERANGKA ITEMNYA ---
             const divHeader = document.createElement('div');
-            divHeader.style.cssText = "font-weight:bold; color:var(--primary); margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 8px;";
-            divHeader.innerHTML = `Soal No. ${index + 1} `;
-            divHeader.appendChild(btnAI); // Tempelin tombol aman lu di sini
+            divHeader.style.cssText = "font-weight:bold; color:var(--primary); margin-bottom:10px; border-bottom: 1px solid #eee; padding-bottom: 8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;";
+            
+            const spanTitle = document.createElement('span');
+            spanTitle.innerHTML = `Soal No. ${index + 1}`;
+            divHeader.appendChild(spanTitle);
+            divHeader.appendChild(btnGroup);
+
+            // Strip Jejak Editor di bawah pembahasan
+            let footerAuditHtml = "";
+            if (data.terakhirDieditOleh || data.dibuatOleh || data.pembuat || (Array.isArray(data.riwayatEdit) && data.riwayatEdit.length > 0)) {
+                const editor = data.terakhirDieditOleh || data.dibuatOleh || data.pembuat || "Sistem";
+                const editorNama = data.terakhirDieditNama ? ` (${data.terakhirDieditNama})` : '';
+                const roleBadge = data.terakhirDieditRole ? `<span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:0.72rem; font-weight:600; margin-left:4px;">${data.terakhirDieditRole}</span>` : '';
+                const waktuRaw = data.terakhirDieditWaktu || data.createdAt;
+                let waktuStr = "";
+                if (waktuRaw) {
+                    try {
+                        const d = waktuRaw.toDate ? waktuRaw.toDate() : new Date(waktuRaw);
+                        if (!isNaN(d.getTime())) waktuStr = d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB';
+                    } catch(e) {}
+                }
+                footerAuditHtml = `
+                    <div style="margin-top:10px; padding:6px 12px; background:#f8fafc; border-radius:6px; border:1px solid #e2e8f0; font-size:0.78rem; color:#64748b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                        <span><i class="fas fa-user-edit" style="color:#0284c7;"></i> Terakhir diedit: <b>${editor}</b>${editorNama} ${roleBadge}</span>
+                        ${waktuStr ? `<span><i class="far fa-clock"></i> ${waktuStr}</span>` : ''}
+                    </div>
+                `;
+            }
 
             const divContent = document.createElement('div');
             divContent.innerHTML = `
@@ -6774,6 +6957,7 @@ window.loadReviewPembahasan = async () => {
                         <i class="fas fa-book"></i> Sumber: ${sumber}
                     </div>
                 </div>
+                ${footerAuditHtml}
                 <div id="ai-result-${docSnap.id}" style="display: none; margin-top: 15px; padding: 12px; background: #f3e5f5; border-left: 4px solid #9b59b6; border-radius: 6px; font-size: 0.9rem; line-height: 1.5;"></div>
             `;
 
@@ -7355,9 +7539,36 @@ PENTING:
 
 function populateEditForm(id, data) {
     document.getElementById('editDocId').value = id;
+    window._currentEditingSoalData = JSON.parse(JSON.stringify(data || {}));
+
     const isSupPop = typeof ADMIN_EMAILS !== 'undefined' && currentUser && ADMIN_EMAILS.includes(currentUser.email);
     if (window.updateUserStatus) window.updateUserStatus(true, (isSupPop ? 'Admin' : 'Editor') + ': Edit Soal (' + (currentAdminModul || 'Modul') + ')');
     document.getElementById('editQ').value = data.q || data.pertanyaan || "";
+
+    // Tampilkan strip informasi pembuat & riwayat editor di atas form edit jika ada elemennya
+    const auditBar = document.getElementById('editMetaAuditBar');
+    if (auditBar) {
+        const pembuat = data.dibuatOleh || data.pembuat || data.createdBy || "Sistem / Generator Awal";
+        const editor = data.terakhirDieditOleh ? `${data.terakhirDieditOleh} ${data.terakhirDieditRole ? '[' + data.terakhirDieditRole + ']' : ''}` : "Belum pernah diedit";
+        let waktuEditStr = "";
+        if (data.terakhirDieditWaktu) {
+            try {
+                const d = new Date(data.terakhirDieditWaktu);
+                if (!isNaN(d.getTime())) waktuEditStr = ' (' + d.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) + ' WIB)';
+            } catch(e) {}
+        }
+        auditBar.style.display = 'flex';
+        auditBar.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span><i class="fas fa-user-plus" style="color:#10b981;"></i> Dibuat: <b>${pembuat}</b></span>
+                <span style="color:#cbd5e1;">|</span>
+                <span><i class="fas fa-user-edit" style="color:#0284c7;"></i> Terakhir diedit: <b>${editor}</b>${waktuEditStr}</span>
+            </div>
+            <button type="button" onclick="window.tampilkanRiwayatEditorSoal(document.getElementById('editDocId').value, window._currentEditingSoalData)" style="background:#0284c7; color:white; border:none; padding:3px 8px; border-radius:5px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                <i class="fas fa-history"></i> Log Lengkap
+            </button>
+        `;
+    }
     
     // Pecah opsi ke masing-masing kolom A, B, C, D, E
     const rawOpts = data.options;
@@ -7427,19 +7638,131 @@ window.simpanPerubahan = async () => {
 
     const rawAns = document.getElementById('editAns').value;
     const ans = (rawAns !== '' && !isNaN(rawAns)) ? parseInt(rawAns) : 0;
+    const newQ = document.getElementById('editQ').value.trim();
+    const newExp = document.getElementById('editExp').value.trim();
+    const newCite = document.getElementById('editCite').value.trim();
 
-    const newData = {
-        q: document.getElementById('editQ').value.trim(),
+    // 🔍 AUDIT TRAIL LOGGING: Deteksi bagian apa saja yang diedit secara spesifik
+    const oldData = window._currentEditingSoalData || {};
+    const daftarPerubahan = [];
+
+    // 1. Teks Pertanyaan
+    const oldQ = (oldData.q || oldData.pertanyaan || '').trim();
+    if (oldQ && newQ !== oldQ) {
+        daftarPerubahan.push("Mengubah teks pertanyaan");
+    }
+
+    // 2. Pilihan Jawaban (Opsi A - E)
+    const oldOpts = Array.isArray(oldData.options) ? oldData.options : (oldData.options ? String(oldData.options).split(',').map(s=>s.trim()) : []);
+    let opsiBerubah = false;
+    if (optionsArray.length !== oldOpts.length) {
+        opsiBerubah = true;
+        daftarPerubahan.push(`Mengubah struktur jumlah opsi (${oldOpts.length} ➔ ${optionsArray.length} opsi)`);
+    } else {
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        const changedLetters = [];
+        for (let i = 0; i < optionsArray.length; i++) {
+            if ((optionsArray[i] || '').trim() !== (oldOpts[i] || '').trim()) {
+                changedLetters.push(letters[i]);
+                opsiBerubah = true;
+            }
+        }
+        if (opsiBerubah) {
+            daftarPerubahan.push(`Menyesuaikan/Homogenkan teks opsi (${changedLetters.join(', ')})`);
+        }
+    }
+
+    // 3. Kunci Jawaban
+    const oldAns = (oldData.answer !== undefined && oldData.answer !== null && !isNaN(oldData.answer)) ? parseInt(oldData.answer) : null;
+    if (oldAns !== null && ans !== oldAns) {
+        const letters = ['A', 'B', 'C', 'D', 'E'];
+        const oldLetter = letters[oldAns] || oldAns;
+        const newLetter = letters[ans] || ans;
+        daftarPerubahan.push(`Mengubah kunci jawaban: Opsi ${oldLetter} ➔ Opsi ${newLetter}`);
+    }
+
+    // 4. Pembahasan
+    const oldExp = (oldData.explanation || '').trim();
+    if (newExp !== oldExp) {
+        daftarPerubahan.push("Memperbarui teks pembahasan");
+    }
+
+    // 5. Sumber / Dasar Hukum
+    const oldCite = (oldData.cite || '').trim();
+    if (newCite !== oldCite) {
+        daftarPerubahan.push("Memperbarui rujukan sumber / dasar hukum");
+    }
+
+    if (daftarPerubahan.length === 0) {
+        daftarPerubahan.push("Menyimpan ulang data soal");
+    }
+
+    const userEmail = (currentUser && currentUser.email) ? currentUser.email : "Admin";
+    const userNama = (currentUser && currentUser.displayName) ? currentUser.displayName : userEmail.split('@')[0];
+    const isSuperAdmin = typeof ADMIN_EMAILS !== 'undefined' && ADMIN_EMAILS.includes(userEmail);
+    const userRole = isSuperAdmin ? "Super Admin" : "Editor";
+
+    const waktuNow = new Date();
+    const waktuFormat = waktuNow.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }) + ' WIB';
+
+    const logEntry = {
+        email: userEmail,
+        nama: userNama,
+        role: userRole,
+        waktu: waktuNow.toISOString(),
+        waktuFormat: waktuFormat,
+        perubahan: daftarPerubahan
+    };
+
+    const updatePayload = {
+        q: newQ,
         options: optionsArray,
         answer: ans,
-        explanation: document.getElementById('editExp').value.trim(),
-        cite: document.getElementById('editCite').value.trim()
+        explanation: newExp,
+        cite: newCite,
+        terakhirDieditOleh: userEmail,
+        terakhirDieditNama: userNama,
+        terakhirDieditRole: userRole,
+        terakhirDieditWaktu: waktuNow.toISOString(),
+        riwayatEdit: arrayUnion(logEntry)
     };
+
+    if (!oldData.dibuatOleh && !oldData.pembuat) {
+        updatePayload.dibuatOleh = oldData.createdAt ? "Sistem / Generator Awal" : "Sistem";
+    }
 
     try {
         const docRef = doc(db, "bank_soal", currentAdminModul, "daftar_soal", id);
-        await updateDoc(docRef, newData);
-        alert("✅ Data terupdate!");
+        await updateDoc(docRef, updatePayload);
+
+        // Perbarui memory cache lokal agar instan sinkron
+        window._currentEditingSoalData = {
+            ...oldData,
+            ...updatePayload,
+            riwayatEdit: [ ...(oldData.riwayatEdit || []), logEntry ]
+        };
+
+        // Perbarui auditBar jika ada
+        const auditBar = document.getElementById('editMetaAuditBar');
+        if (auditBar) {
+            auditBar.style.display = 'flex';
+            auditBar.innerHTML = `
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span><i class="fas fa-user-plus" style="color:#10b981;"></i> Dibuat: <b>${updatePayload.dibuatOleh || oldData.dibuatOleh || 'Sistem'}</b></span>
+                    <span style="color:#cbd5e1;">|</span>
+                    <span><i class="fas fa-user-edit" style="color:#0284c7;"></i> Terakhir diedit: <b>${userEmail} [${userRole}]</b> (${waktuFormat})</span>
+                </div>
+                <button type="button" onclick="window.tampilkanRiwayatEditorSoal(document.getElementById('editDocId').value, window._currentEditingSoalData)" style="background:#0284c7; color:white; border:none; padding:3px 8px; border-radius:5px; font-size:0.75rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="fas fa-history"></i> Log Lengkap
+                </button>
+            `;
+        }
+
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+            PROTAMA.alert("Berhasil Disimpan", `✅ <b>Data soal berhasil diperbarui!</b><br><small style="color:#64748b;">Perubahan oleh <b>${userEmail}</b> telah dicatat ke audit trail.</small>`, "success");
+        } else {
+            alert("✅ Data terupdate!");
+        }
         window.loadSoalAdmin(); 
     } catch (e) {
         alert("Gagal update: " + e.message);
