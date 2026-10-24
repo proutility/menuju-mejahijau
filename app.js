@@ -7398,8 +7398,13 @@ PENTING:
   "Teks Opsi D baru"${hasOptE ? ',\n  "Teks Opsi E baru"' : ''}
 ]`;
 
-        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan model yang pasti aktif & super cepat):
-        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        // ⚡ MULTI-MODEL SMART ENGINE:
+        // Jika gemini-2.0-flash terkena kuota harian Free Tier (limit 20), otomatis prioritaskan gemini-1.5-flash (1500 RPD)
+        const is20QuotaHit = sessionStorage.getItem('_gemini20QuotaHit') === 'true';
+        const models = is20QuotaHit 
+            ? ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash']
+            : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+            
         let jsonText = "";
         let lastError = null;
 
@@ -7426,8 +7431,12 @@ PENTING:
                     break;
                 } else {
                     const errMsg = data.error?.message || `HTTP ${response.status}`;
+                    // Jika 429 kuota habis di gemini-2.0-flash, simpan penanda agar langsung ke 1.5-flash
+                    if (response.status === 429 && m.includes('2.0')) {
+                        sessionStorage.setItem('_gemini20QuotaHit', 'true');
+                    }
                     lastError = new Error(errMsg);
-                    console.warn(`[AI Homogen] Model ${m} gagal (${response.status}): ${errMsg}`);
+                    console.warn(`[AI Homogen] Model ${m} gagal (${response.status}): ${errMsg}. Mencoba model alternatif...`);
                 }
             } catch(err) {
                 lastError = err;
@@ -7436,6 +7445,9 @@ PENTING:
         }
 
         if (!jsonText) {
+            if (lastError && (lastError.message.includes("quota") || lastError.message.includes("Free Tier") || lastError.message.includes("429"))) {
+                throw new Error("Kuota harian Gemini Free Tier telah habis (Limit 20/hari di model gratisan). Silakan hubungkan Billing Google Cloud Rp 5,3jt di Google AI Studio (aistudio.google.com) agar kuota menjadi Unlimited, atau klik tombol [Set API Key AI] di Panel Admin.");
+            }
             throw lastError || new Error("Gagal memperoleh respon dari Gemini API.");
         }
 
@@ -9170,6 +9182,103 @@ async function getGeminiApiKey() {
     } catch(e) {}
     return window.GEMINI_API_KEY || "";
 }
+
+// ==========================================
+// 🔑 FITUR PENGATURAN API KEY GEMINI AI (PANEL ADMIN)
+// ==========================================
+window.bukaModalSettingApiKey = async function() {
+    let modal = document.getElementById('modalSettingApiKey');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalSettingApiKey';
+        modal.style.cssText = "display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.7); z-index:9999999; align-items:center; justify-content:center; padding:15px; font-family:'Poppins', sans-serif; backdrop-filter:blur(4px);";
+        modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+        document.body.appendChild(modal);
+    }
+
+    const currentKey = typeof getGeminiApiKey === 'function' ? await getGeminiApiKey() : (window.GEMINI_API_KEY || "");
+    const maskedKey = currentKey ? (currentKey.substring(0, 8) + '...' + currentKey.substring(currentKey.length - 4)) : 'Belum disetel';
+
+    modal.innerHTML = `
+        <div style="background:white; border-radius:14px; width:520px; max-width:95%; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 20px 40px rgba(0,0,0,0.3); overflow:hidden;">
+            <div style="padding:16px 20px; background:linear-gradient(135deg, #312e81, #4f46e5); color:white; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.15); display:flex; align-items:center; justify-content:center; font-size:1.1rem;">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin:0; font-size:1rem; font-weight:700;">Pengaturan API Key Gemini AI</h4>
+                        <small style="color:#c7d2fe; font-size:0.75rem;">Firestore settings/ai_config</small>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('modalSettingApiKey').style.display='none'" style="background:none; border:none; color:#c7d2fe; font-size:1.5rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+
+            <div style="padding:20px; overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:14px; font-size:0.88rem; color:#334155;">
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px;">
+                    <span style="font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block; margin-bottom:4px;">API Key Saat Ini:</span>
+                    <code style="background:#e2e8f0; padding:4px 8px; border-radius:4px; font-size:0.85rem; color:#0f172a; word-break:break-all;">${maskedKey}</code>
+                </div>
+
+                <div>
+                    <label style="font-weight:700; display:block; margin-bottom:6px; color:#1e293b;">Masukkan API Key Baru (Google AI Studio / Pay-as-you-go):</label>
+                    <input type="text" id="inputNewGeminiKey" placeholder="AIzaSy..." value="${currentKey}" style="width:100%; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:0.9rem; font-family:monospace; box-sizing:border-box;">
+                </div>
+
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px; font-size:0.82rem; line-height:1.5; color:#1e40af;">
+                    <strong style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <i class="fas fa-info-circle"></i> Cara Mengaktifkan Saldo Google Cloud Rp 5,3 Juta:
+                    </strong>
+                    <ol style="margin:4px 0 0 16px; padding:0;">
+                        <li>Buka <a href="https://aistudio.google.com/apikey" target="_blank" style="color:#2563eb; font-weight:bold; text-decoration:underline;">aistudio.google.com/apikey</a> (login dengan akun Google yang ada saldo 5,3jt).</li>
+                        <li>Klik <b>Set up billing</b> / pilih project Cloud yang ada penagihan aktifnya.</li>
+                        <li>Buat API Key baru dari project ber-billing tersebut lalu paste ke form di atas.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div style="padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px;">
+                <button onclick="document.getElementById('modalSettingApiKey').style.display='none'" style="background:#94a3b8; color:white; border:none; padding:8px 14px; border-radius:6px; font-weight:600; cursor:pointer;">Batal</button>
+                <button onclick="window.simpanGeminiApiKey()" style="background:#4f46e5; color:white; border:none; padding:8px 18px; border-radius:6px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="fas fa-save"></i> Simpan API Key
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+window.simpanGeminiApiKey = async function() {
+    const newKey = document.getElementById('inputNewGeminiKey')?.value?.trim();
+    if (!newKey) return alert("API Key tidak boleh kosong!");
+
+    try {
+        const database = window.db || (typeof db !== 'undefined' ? db : null);
+        if (!database) throw new Error("Koneksi database tidak tersedia.");
+
+        await setDoc(doc(database, "settings", "ai_config"), { 
+            apiKey: newKey,
+            diupdateOleh: (currentUser && currentUser.email) ? currentUser.email : "Admin",
+            diupdateWaktu: new Date().toISOString()
+        }, { merge: true });
+
+        window.GEMINI_API_KEY = newKey;
+        sessionStorage.removeItem('_gemini20QuotaHit');
+
+        if (document.getElementById('modalSettingApiKey')) {
+            document.getElementById('modalSettingApiKey').style.display = 'none';
+        }
+
+        if (typeof PROTAMA !== 'undefined' && PROTAMA.alert) {
+            PROTAMA.alert("Berhasil!", "✅ <b>API Key Gemini AI berhasil diperbarui!</b><br>Kunci baru telah aktif di cloud Firestore.", "success");
+        } else {
+            alert("✅ API Key berhasil disimpan!");
+        }
+    } catch(e) {
+        alert("Gagal simpan API Key: " + e.message);
+    }
+};
 
 window.tanyaMentorAIBedahSoal = async function(idxSoal) {
     let targetIdx = (typeof currentIdx === 'number' && currentIdx >= 0) ? currentIdx : 0;
