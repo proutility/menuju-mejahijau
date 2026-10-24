@@ -1,5 +1,5 @@
 // Service Worker untuk PWA PRO-TAMA CBT CAKIM PA 2026
-const CACHE_NAME = 'protama-cbt-v2';
+const CACHE_NAME = 'protama-cbt-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

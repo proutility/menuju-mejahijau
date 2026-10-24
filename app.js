@@ -7398,13 +7398,8 @@ PENTING:
   "Teks Opsi D baru"${hasOptE ? ',\n  "Teks Opsi E baru"' : ''}
 ]`;
 
-        // ⚡ MULTI-MODEL SMART ENGINE:
-        // Jika gemini-2.0-flash terkena kuota harian Free Tier (limit 20), otomatis prioritaskan gemini-1.5-flash (1500 RPD)
-        const is20QuotaHit = sessionStorage.getItem('_gemini20QuotaHit') === 'true';
-        const models = is20QuotaHit 
-            ? ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash']
-            : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
-            
+        // ⚡ MODEL GEMINI STABIL BAWAAN:
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
         let jsonText = "";
         let lastError = null;
 
@@ -7419,8 +7414,7 @@ PENTING:
                     body: JSON.stringify({ 
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
-                            temperature: 0.2,
-                            responseMimeType: "application/json"
+                            temperature: 0.2
                         }
                     })
                 });
@@ -7431,10 +7425,6 @@ PENTING:
                     break;
                 } else {
                     const errMsg = data.error?.message || `HTTP ${response.status}`;
-                    // Jika 429 kuota habis di gemini-2.0-flash, simpan penanda agar langsung ke 1.5-flash
-                    if (response.status === 429 && m.includes('2.0')) {
-                        sessionStorage.setItem('_gemini20QuotaHit', 'true');
-                    }
                     lastError = new Error(errMsg);
                     console.warn(`[AI Homogen] Model ${m} gagal (${response.status}): ${errMsg}. Mencoba model alternatif...`);
                 }
@@ -9113,8 +9103,7 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         const apiKey = await getGeminiApiKey();
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
-        // ⚡ MULTI-MODEL FAST ENGINE:
-        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
         let aiReply = "";
         let lastError = null;
 
@@ -9415,7 +9404,8 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
         // 🛡️ MULTI-MODEL FALLBACK ENGINE:
-        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        // Jika gemini-flash-latest mengalami 503 high demand spike, langsung otomatis fallback ke gemini-flash-lite-latest
+        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
         let aiText = "";
         let lastError = null;
 
