@@ -7178,7 +7178,7 @@ window.homogenkanOpsiDenganAI = async function() {
         }
 
         const prompt = `Anda adalah Ahli Penyusun Soal Ujian Calon Hakim Mahkamah Agung RI (Pakar Psikometri & Substansi Hukum Positif).
-Tugas Anda adalah melakukan HOMOGENISASI PANJANG PILIHAN JAWABAN (membuat panjang karakter dan struktur kalimat tiap opsi A sampai ${letters[letters.length - 1]} menjadi seragam, berbobot setara, dan seimbang).
+Tugas Anda: Lakukan HOMOGENISASI PANJANG PILIHAN JAWABAN (membuat panjang karakter dan struktur kalimat tiap opsi A sampai ${letters[letters.length - 1]} menjadi seragam, berbobot setara, dan seimbang).
 
 PERTANYAAN SOAL:
 "${qText}"
@@ -7190,33 +7190,32 @@ KUNCI JAWABAN BENAR: Opsi ${letterKunci} (Index ${ansIdx})
 ${expText ? `PEMBAHASAN RESMI: ${expText}` : ''}
 ${citeText ? `DASAR HUKUM/PASAL: ${citeText}` : ''}
 
-PEDOMAN MUTLAK HOMOGENISASI UJIAN CALON HAKIM:
-1. TARGET HOMOGENITAS: Semua pilihan jawaban (A sampai ${letters[letters.length - 1]}) harus memiliki panjang karakter yang seragam dan seimbang dengan TOLERANSI SELISIH 1 SAMPAI 7 HURUF SAJA (tidak harus persis sama sampai digit terakhir, asalkan perbedaan terpanjang dan terpendek maksimal 1-7 huruf dan kalimat tetap alami secara hukum).
+PEDOMAN HOMOGENISASI:
+1. TARGET HOMOGENITAS: Semua pilihan jawaban (A sampai ${letters[letters.length - 1]}) harus memiliki panjang karakter yang seragam dengan SELISIH 1 SAMPAI 7 HURUF SAJA.
 2. KUNCI JAWABAN BENAR (Opsi ${letterKunci}):
-   - Posisinya HARUS TETAP di Opsi ${letterKunci}. Jangan menukar posisi opsi!
-   - Substansi hukumnya HARUS TETAP 100% BENAR dan akurat secara hukum positif Indonesia.
+   - Posisinya HARUS TETAP di Opsi ${letterKunci}.
+   - Substansi hukumnya HARUS TETAP 100% BENAR dan sesuai pembahasan resmi.
 3. DISTRAKTOR (Opsi yang Salah):
    - Posisinya HARUS TETAP di opsi masing-masing.
    - HARUS TETAP SALAH secara hukum, namun dibuat logis dan mengecoh secara akademis (plausible distractor).
-   - JANGAN sampai penambahan kata pada distraktor membuatnya berubah menjadi benar.
-4. METODE PENYELARASAN:
-   - Jika opsi terlalu pendek: Tambahkan konteks hukum pelengkap, klausul syarat, atau rincian administratif yang relevan sehingga panjangnya seimbang.
-   - Jika opsi terlalu panjang: Ringkas kalimatnya menjadi padat dan lugas tanpa mengurangi makna inti.
-   - Gunakan struktur kalimat dan pembukaan frasa yang paralel/setara.
+4. METODE:
+   - Opsi terlalu pendek: Tambahkan klausul pelengkap/konteks hukum yang relevan agar panjangnya seimbang.
+   - Opsi terlalu panjang: Ringkas kalimatnya menjadi padat tanpa mengubah substansi.
+   - Gunakan struktur kalimat dan pembukaan frasa yang paralel.
 
-OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
-{
-  "options": [
-    "Teks Opsi A baru",
-    "Teks Opsi B baru",
-    "Teks Opsi C baru",
-    "Teks Opsi D baru"${hasOptE ? ',\n    "Teks Opsi E baru"' : ''}
-  ],
-  "ringkasan": "Penjelasan singkat bagaimana opsi diselaraskan"
-}`;
+PENTING:
+- DILARANG menggunakan tanda kutip dua (") di dalam teks opsi! Jika ada kutipan istilah hukum, gunakan tanda kutip satu (') saja (contoh: 'zina', 'jarimah').
+- Jangan sertakan awalan huruf seperti "A. " atau "B. " di dalam teks opsi.
+- OUTPUT WAJIB HANYA BERUPA JSON ARRAY BERISI ${currentOpts.length} STRING OPSI BARU (TANPA MARKDOWN, TANPA TEKS LAIN):
+[
+  "Teks Opsi A baru",
+  "Teks Opsi B baru",
+  "Teks Opsi C baru",
+  "Teks Opsi D baru"${hasOptE ? ',\n  "Teks Opsi E baru"' : ''}
+]`;
 
-        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat):
-        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan model yang pasti aktif & super cepat):
+        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let jsonText = "";
         let lastError = null;
 
@@ -7232,7 +7231,6 @@ OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
                             temperature: 0.2,
-                            maxOutputTokens: 1000,
                             responseMimeType: "application/json"
                         }
                     })
@@ -7243,12 +7241,13 @@ OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
                     jsonText = data.candidates[0].content.parts[0].text;
                     break;
                 } else {
-                    lastError = new Error(data.error?.message || `HTTP ${response.status}`);
-                    await new Promise(r => setTimeout(r, 600));
+                    const errMsg = data.error?.message || `HTTP ${response.status}`;
+                    lastError = new Error(errMsg);
+                    console.warn(`[AI Homogen] Model ${m} gagal (${response.status}): ${errMsg}`);
                 }
             } catch(err) {
                 lastError = err;
-                await new Promise(r => setTimeout(r, 600));
+                console.warn(`[AI Homogen] Fetch error model ${m}:`, err);
             }
         }
 
@@ -7256,27 +7255,68 @@ OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
             throw lastError || new Error("Gagal memperoleh respon dari Gemini API.");
         }
 
-        // Parsing JSON yang dihasilkan AI
-        let cleanJson = jsonText.trim();
-        cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
-        const startBrace = cleanJson.indexOf('{');
-        const endBrace = cleanJson.lastIndexOf('}');
-        if (startBrace !== -1 && endBrace !== -1) {
-            cleanJson = cleanJson.substring(startBrace, endBrace + 1);
+        // 🛡️ PARSER KEBAL ERROR (Mendukung JSON array langsung, objek wrapper, dan Regex Recovery):
+        let optionsResult = null;
+
+        // Metode 1: JSON.parse standar
+        try {
+            let cleanJson = jsonText.trim();
+            cleanJson = cleanJson.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+            const startBrace = cleanJson.indexOf('{');
+            const endBrace = cleanJson.lastIndexOf('}');
+            const startBracket = cleanJson.indexOf('[');
+            const endBracket = cleanJson.lastIndexOf(']');
+
+            if (startBracket !== -1 && endBracket !== -1 && (startBrace === -1 || startBracket < startBrace)) {
+                cleanJson = cleanJson.substring(startBracket, endBracket + 1);
+            } else if (startBrace !== -1 && endBrace !== -1) {
+                cleanJson = cleanJson.substring(startBrace, endBrace + 1);
+            }
+
+            const parsed = JSON.parse(cleanJson);
+            if (Array.isArray(parsed) && parsed.length >= 4) {
+                optionsResult = parsed;
+            } else if (parsed && Array.isArray(parsed.options) && parsed.options.length >= 4) {
+                optionsResult = parsed.options;
+            }
+        } catch (errParse) {
+            console.warn("[AI Homogen] Parsing JSON standar gagal, mencoba pemulihan regex...", errParse);
         }
 
-        const parsed = JSON.parse(cleanJson);
-        if (!parsed.options || !Array.isArray(parsed.options) || parsed.options.length < 4) {
+        // Metode 2: Regex Recovery Parser jika JSON mengandung kutipan/newline yang tidak ter-escape
+        if (!optionsResult) {
+            try {
+                const cleanedText = jsonText.replace(/\r?\n/g, ' ');
+                const matchArr = cleanedText.match(/\[([\s\S]*?)\]/);
+                const strToScan = matchArr ? matchArr[1] : cleanedText;
+                const matches = [];
+                const re = /"([^"\\]*(?:\\.[^"\\]*)*)"/g;
+                let m;
+                while ((m = re.exec(strToScan)) !== null) {
+                    const item = m[1].replace(/\\"/g, '"').replace(/\\n/g, ' ').trim();
+                    if (item && !item.toLowerCase().startsWith('teks opsi')) {
+                        matches.push(item);
+                    }
+                }
+                if (matches.length >= 4) {
+                    optionsResult = matches;
+                }
+            } catch (errRegex) {
+                console.warn("[AI Homogen] Regex recovery gagal:", errRegex);
+            }
+        }
+
+        if (!optionsResult || optionsResult.length < 4) {
             throw new Error("Format respon AI tidak memuat opsi yang valid.");
         }
 
         // Terapkan hasil AI ke masing-masing kotak teks opsi
-        if (document.getElementById('editOptA')) document.getElementById('editOptA').value = parsed.options[0] || optA;
-        if (document.getElementById('editOptB')) document.getElementById('editOptB').value = parsed.options[1] || optB;
-        if (document.getElementById('editOptC')) document.getElementById('editOptC').value = parsed.options[2] || optC;
-        if (document.getElementById('editOptD')) document.getElementById('editOptD').value = parsed.options[3] || optD;
+        if (document.getElementById('editOptA')) document.getElementById('editOptA').value = optionsResult[0] || optA;
+        if (document.getElementById('editOptB')) document.getElementById('editOptB').value = optionsResult[1] || optB;
+        if (document.getElementById('editOptC')) document.getElementById('editOptC').value = optionsResult[2] || optC;
+        if (document.getElementById('editOptD')) document.getElementById('editOptD').value = optionsResult[3] || optD;
         if (hasOptE && document.getElementById('editOptE')) {
-            document.getElementById('editOptE').value = parsed.options[4] || optE;
+            document.getElementById('editOptE').value = optionsResult[4] || optE;
         }
 
         window.syncEditOptToLegacy();
@@ -8739,8 +8779,8 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         const apiKey = await getGeminiApiKey();
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
-        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat):
-        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        // ⚡ MULTI-MODEL FAST ENGINE:
+        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let aiReply = "";
         let lastError = null;
 
@@ -8944,8 +8984,7 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
         // 🛡️ MULTI-MODEL FALLBACK ENGINE:
-        // Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat & latency minimal
-        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
+        const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let aiText = "";
         let lastError = null;
 
