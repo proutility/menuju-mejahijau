@@ -7215,7 +7215,8 @@ OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
   "ringkasan": "Penjelasan singkat bagaimana opsi diselaraskan"
 }`;
 
-        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat):
+        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let jsonText = "";
         let lastError = null;
 
@@ -7230,7 +7231,9 @@ OUTPUT WAJIB BERUPA JSON MURNI (TANPA MARKDOWN, TANPA TIK \`\`\`):
                     body: JSON.stringify({ 
                         contents: [{ parts: [{ text: prompt }] }],
                         generationConfig: {
-                            temperature: 0.2
+                            temperature: 0.2,
+                            maxOutputTokens: 1000,
+                            responseMimeType: "application/json"
                         }
                     })
                 });
@@ -8736,7 +8739,8 @@ window.cekValiditasAI = async (btn, idSoal, qTeksEsc, optStrEsc, ansIdx, expEsc,
         const apiKey = await getGeminiApiKey();
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
-        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        // ⚡ MULTI-MODEL FAST ENGINE (Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat):
+        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let aiReply = "";
         let lastError = null;
 
@@ -8940,8 +8944,8 @@ Format jawaban dengan rapi menggunakan poin-poin tebal.`;
         if (!apiKey) throw new Error("API Key Gemini belum disetel di Firestore settings/ai_config.");
 
         // 🛡️ MULTI-MODEL FALLBACK ENGINE:
-        // Jika gemini-flash-latest mengalami 503 high demand spike, langsung otomatis fallback ke gemini-flash-lite-latest
-        const models = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+        // Diutamakan Gemini 2.0 Flash & Lite untuk kecepatan respons kilat & latency minimal
+        const models = ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-flash-8b', 'gemini-1.5-flash', 'gemini-flash-latest'];
         let aiText = "";
         let lastError = null;
 
